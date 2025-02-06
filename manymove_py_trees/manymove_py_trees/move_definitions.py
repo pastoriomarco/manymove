@@ -1,6 +1,5 @@
 from dataclasses import dataclass
 from typing import List, Optional
-from manymove_planner.action import MoveManipulator, MoveManipulatorSequence
 from manymove_planner.msg import MovementConfig, MoveManipulatorGoal
 from manymove_planner.action import PlanManipulator
 from manymove_planner.action import ExecuteTrajectory
@@ -87,11 +86,11 @@ def create_move(movement_type: str, target=None, named_target=None, joint_values
         config=config
     )
 
-def define_single_move_goal(move: Move) -> MoveManipulator.Goal:
+def define_single_move_goal(move: Move) -> PlanManipulator.Goal:
     """
     Define and return a single MoveManipulator goal based on the Move object.
     """
-    single_goal = MoveManipulator.Goal()
+    single_goal = PlanManipulator.Goal()
     single_goal.goal.movement_type = move.movement_type
 
     if move.movement_type in ["pose", "cartesian"]:
@@ -112,36 +111,6 @@ def define_single_move_goal(move: Move) -> MoveManipulator.Goal:
     single_goal.goal.config = move.config
 
     return single_goal
-
-def define_sequence_move_goal(moves: List[Move]) -> MoveManipulatorSequence.Goal:
-    """
-    Define and return a MoveManipulatorSequence goal based on a list of Move instances.
-    """
-    seq_goal = MoveManipulatorSequence.Goal()
-
-    for move in moves:
-        move_goal = MoveManipulatorGoal()
-        move_goal.movement_type = move.movement_type
-
-        if move.movement_type in ["pose", "cartesian"]:
-            if not isinstance(move.pose_target, Pose):
-                raise TypeError(f"Target must be a Pose instance for movement type '{move.movement_type}'.")
-            move_goal.pose_target = move.pose_target
-        elif move.movement_type == "joint":
-            if not isinstance(move.joint_values, list):
-                raise TypeError("Joint values must be a list for movement type 'joint'.")
-            move_goal.joint_values = move.joint_values
-        elif move.movement_type == "named":
-            if not isinstance(move.named_target, str):
-                raise TypeError("Named target must be a string for movement type 'named'.")
-            move_goal.named_target = move.named_target
-        else:
-            raise ValueError(f"Unsupported movement type: {move.movement_type}")
-
-        move_goal.config = move.config
-        seq_goal.goals.append(move_goal)
-
-    return seq_goal
 
 def call_planning_service(node: Node, goal: MoveManipulatorGoal) -> Optional[RobotTrajectory]:
     """
