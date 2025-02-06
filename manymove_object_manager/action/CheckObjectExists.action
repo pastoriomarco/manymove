@@ -1,0 +1,13 @@
+# Goal definition
+string object_id
+
+---
+# Result definition
+bool exists
+bool is_attached
+string link_name
+string message
+
+---
+# Feedback definition
+# (No feedback needed for this simple action)

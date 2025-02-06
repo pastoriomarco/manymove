@@ -1,0 +1,11 @@
+# Goal
+string id                      # Unique identifier of the object to remove
+
+---
+# Result
+bool success                   # Indicate if the object was removed successfully
+string message                 # Additional information or error messages
+
+---
+# Feedback
+string status                  # Current status message

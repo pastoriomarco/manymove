@@ -1,0 +1,9 @@
+# Goal
+manymove_planner/MoveManipulatorGoal goal
+---
+# Result
+bool success
+moveit_msgs/RobotTrajectory trajectory
+---
+# Feedback
+float32 progress

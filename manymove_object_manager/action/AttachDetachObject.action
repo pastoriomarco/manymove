@@ -1,0 +1,13 @@
+# Goal definition
+string object_id           # Unique identifier of the object
+string link_name           # Name of the robot link to attach/detach the object
+bool attach                # true to attach, false to detach
+
+---
+# Result definition
+bool success               # Indicate if the operation was successful
+string message             # Additional information or error messages
+
+---
+# Feedback definition
+string status              # Current status message

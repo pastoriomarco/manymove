@@ -1,0 +1,18 @@
+# Goal
+string id                      # Unique identifier for the object
+string shape                   # Shape type: box, cylinder, sphere
+string mesh_file               # Path to mesh file (used if shape == "mesh")
+float64[] dimensions           # Dimensions corresponding to the shape
+geometry_msgs/Pose pose        # Pose of the object
+float64 scale_mesh_x           # Value to scale the mesh object in X axis
+float64 scale_mesh_y           # Value to scale the mesh object in Y axis
+float64 scale_mesh_z           # Value to scale the mesh object in Z axis
+
+---
+# Result
+bool success                   # Indicate if the object was added successfully
+string message                 # Additional information or error messages
+
+---
+# Feedback
+string status                  # Current status message

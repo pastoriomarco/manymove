@@ -1,0 +1,12 @@
+# Goal definition
+string object_id
+float64[] pre_transform_xyz_rpy
+float64[] post_transform_xyz_rpy
+---
+# Result definition
+geometry_msgs/Pose pose
+bool success
+string message
+---
+# Feedback definition
+string status

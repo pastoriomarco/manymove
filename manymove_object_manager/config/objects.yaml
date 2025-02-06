@@ -1,0 +1,55 @@
+objects:
+  - name: "obstacle_ground"
+    type: "box"
+    dimensions: [0.8, 0.8, 0.1]
+    pose:
+      position: {x: 0.0, y: 0.0, z: -0.05}
+      orientation: {roll: 0.0, pitch: 0.0, yaw: 0.0}
+
+  - name: "obstacle_wall"
+    type: "box"
+    dimensions: [0.8, 0.02, 0.8]
+    pose:
+      position: {x: 0.0, y: 0.4, z: 0.3}
+      orientation: {roll: 0.0, pitch: 0.0, yaw: 0.0}
+
+  - name: "graspable_cylinder"
+    type: "cylinder"
+    dimensions: [0.1, 0.005]
+    pose:
+      position: {x: 0.0, y: 0.2, z: 0.005}
+      orientation: {roll: 0.0, pitch: 1.57, yaw: 0.0}
+
+# example for mesh object  
+  - name: "mesh_object"
+    type: "mesh"
+    # this example mesh represents a tube of diameter 1m and length 1m, with a wall 0.1m thick
+    mesh_file: "package://manymove_object_manager/meshes/unit_tube.stl"
+    # we'll scale it to a tube of diameter 10mm and length 100mm
+    scale: {x: 0.01, y: 0.01, z: 0.1}
+    pose:
+      position: {x: 0.0, y: -0.2, z: 0.005}
+      orientation: {roll: 0.0, pitch: 1.57, yaw: 0.0}
+
+# # example for mesh object  
+#   - name: "mesh_object"
+#     type: "mesh"
+#     mesh_file: "package://manymove_object_manager/meshes/pneumatic_lite.stl"
+#     scale: {x: 1.0, y: 1.0, z: 1.0}
+#     pose:
+#       position: {x: 0.15, y: -0.05, z: 0.0}
+#       orientation: {roll: 0.0, pitch: 0.0, yaw: 0.0}
+
+# # example for random position object  
+#   - name: "graspable_random_cylinder"
+#     type: "cylinder"
+#     dimensions: [0.1, 0.005]
+#     # No pose provided; will be placed randomly
+
+# # example for sphere object:  
+#   - name: "custom_sphere"
+#     type: "sphere"
+#     dimensions: [0.05]
+#     pose:
+#       position: {x: 0.2, y: 0.2, z: 0.05}
+#       orientation: {roll: 0.0, pitch: 0.0, yaw: 1.57}
