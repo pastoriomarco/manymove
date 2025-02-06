@@ -689,10 +689,10 @@ namespace manymove_cpp_trees
                      "ExecuteTrajectory [%s]: Received feedback: progress = %f, in_collision = %s",
                      name().c_str(),
                      feedback->progress,
-                     feedback->in_collsion ? "true" : "false");
+                     feedback->in_collision ? "true" : "false");
 
         // If the feedback indicates a collision, set the blackboard key "stop_execution" to true.
-        if (feedback->in_collsion)
+        if (feedback->in_collision)
         {
             // Set collision_detected to true
             config().blackboard->set("collision_detected", true);

@@ -90,8 +90,8 @@ class ExecuteTrajectoryBehaviour(py_trees.behaviour.Behaviour):
         self.result_response = future.result()
 
     def feedback_callback(self, feedback_msg):
-        """
-        Called whenever feedback is published by the action server.
-        """
         feedback = feedback_msg.feedback
-        self.node.get_logger().info(f"[{self.name}] Execution progress: {feedback.progress:.2f}")
+        # Use the updated field names here
+        # self.node.get_logger().info(
+        #     f"[{self.name}] Execution progress: {feedback.progress:.3f}, in_collision: {feedback.in_collision}"
+        # )

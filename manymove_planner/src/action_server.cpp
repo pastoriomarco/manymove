@@ -363,7 +363,7 @@ private:
                             // Publish feedback.
                             auto exec_feedback = std::make_shared<manymove_planner::action::ExecuteTrajectory::Feedback>();
                             exec_feedback->progress = static_cast<float>(current_fb_time);
-                            exec_feedback->in_collsion = collision_detected.load();
+                            exec_feedback->in_collision = collision_detected.load();
                             goal_handle->publish_feedback(exec_feedback);
                         };
 
