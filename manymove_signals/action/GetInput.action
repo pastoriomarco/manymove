@@ -1,0 +1,13 @@
+# Goal
+string io_type  # "tool" or "controller"
+int16 ionum
+
+---
+# Result
+int16 value  # 1 for ON, 0 for OFF
+bool success
+string message
+
+---
+# Feedback
+string status

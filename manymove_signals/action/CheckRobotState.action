@@ -1,0 +1,12 @@
+# Goal
+---
+
+# Result
+bool ready
+int32 err
+int32 mode
+int32 state
+string message
+
+---
+# Feedback
