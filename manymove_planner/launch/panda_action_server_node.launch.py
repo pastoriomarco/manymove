@@ -52,11 +52,13 @@ def launch_setup(context, *args, **kwargs):
     action_server_node = Node(
         package='manymove_planner',
         executable='action_server_node',
+        # Don't use the "name" parameter, the name will be automatically set with {node_prefix}action_server_node to avoid duplicate nodes
         output='screen',
         parameters=[
             moveit_configs.to_dict(),
             {
-                "planner_type": "movegroup",
+                'node_prefix': "{}_".format(planning_group),
+                'planner_type': "movegroup",
                 'velocity_scaling_factor': velocity_scaling_factor,
                 'acceleration_scaling_factor': acceleration_scaling_factor,
                 'max_exec_retries': max_exec_retries,
@@ -90,7 +92,7 @@ def generate_launch_description():
         DeclareLaunchArgument('step_size', default_value='0.05', description='Step size'),
         DeclareLaunchArgument('jump_threshold', default_value='0.0', description='Jump threshold'),
         DeclareLaunchArgument('max_cartesian_speed', default_value='0.5', description='Max cartesian speed'),
-        DeclareLaunchArgument('plan_number_target', default_value='12', description='Plan number target'),
+        DeclareLaunchArgument('plan_number_target', default_value='8', description='Plan number target'),
         DeclareLaunchArgument('plan_number_limit', default_value='32', description='Plan number limit'),
         
         # DeclareLaunchArguments for planning_group, base_frame, tcp_frame

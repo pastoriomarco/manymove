@@ -41,6 +41,10 @@ int main(int argc, char **argv)
     node->declare_parameter<std::string>("robot_prefix", "");
     node->get_parameter_or<std::string>("robot_prefix", robot_prefix, "");
 
+    std::string tcp_frame;
+    node->declare_parameter<std::string>("tcp_frame", "");
+    node->get_parameter_or<std::string>("tcp_frame", tcp_frame, "");
+
     // This parameter is to be set true if we are connected to a real robot that exposes the necessary services for manymove_signals
     bool is_robot_real;
     node->declare_parameter<bool>("is_robot_real", false);
@@ -240,11 +244,11 @@ int main(int argc, char **argv)
     std::string init_mesh_obj_xml = fallbackWrapperXML("init_mesh_obj", {check_mesh_obj_xml, add_mesh_obj_xml});
 
     // the name of the link to attach the object to, and the object to manipulate
-    std::string link_name = robot_prefix + "link_tcp";
+    std::string tcp_frame_name = robot_prefix + tcp_frame;
     std::string object_to_manipulate = "graspable_mesh";
 
-    std::string attach_obj_xml = buildObjectActionXML("attach_obj_to_manipulate", createAttachObject(object_to_manipulate, link_name));
-    std::string detach_obj_xml = buildObjectActionXML("attach_obj_to_manipulate", createDetachObject(object_to_manipulate, link_name));
+    std::string attach_obj_xml = buildObjectActionXML("attach_obj_to_manipulate", createAttachObject(object_to_manipulate, tcp_frame_name));
+    std::string detach_obj_xml = buildObjectActionXML("attach_obj_to_manipulate", createDetachObject(object_to_manipulate, tcp_frame_name));
     std::string remove_obj_xml = buildObjectActionXML("remove_obj_to_manipulate", createRemoveObject(object_to_manipulate));
 
     // ----------------------------------------------------------------------------

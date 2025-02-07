@@ -49,6 +49,14 @@ int main(int argc, char **argv)
     node->declare_parameter<std::string>("robot_prefix_2", "R_");
     node->get_parameter_or<std::string>("robot_prefix_2", robot_prefix_2, "");
 
+    std::string tcp_frame_1;
+    node->declare_parameter<std::string>("tcp_frame_1", "");
+    node->get_parameter_or<std::string>("tcp_frame_1", tcp_frame_1, "");
+
+    std::string tcp_frame_2;
+    node->declare_parameter<std::string>("tcp_frame_2", "");
+    node->get_parameter_or<std::string>("tcp_frame_2", tcp_frame_2, "");
+
     // This parameter is to be set true if we are connected to a real robot that exposes the necessary services for manymove_signals
     bool is_robot_real;
     node->declare_parameter<bool>("is_robot_real", false);
@@ -100,8 +108,8 @@ int main(int argc, char **argv)
 
     std::vector<double> joint_rest_2 = {0.0, 0.785, -0.785, 0.0, -1.57, 0.0};
 
-    // both robots have a named pose "home", so no need to duplicate that
-    std::string named_home = "home";
+    std::string named_home_1 = "home";
+    std::string named_home_2 = "home";
 
     // Original pick test poses: they should be overwritten by the blackboard key that will be dynamically updated getting the grasp pose object
     Pose pick_target_1 = createPose(0.2, -0.1, 0.15, 1.0, 0.0, 0.0, 0.0);
@@ -117,7 +125,7 @@ int main(int argc, char **argv)
     Pose approach_drop_target_1 = drop_target_1;
     approach_drop_target_1.position.z += 0.02;
 
-    Pose drop_target_2 = createPose(0.3, 1.0, 0.2, 1.0, 0.0, 0.0, 0.0);
+    Pose drop_target_2 = createPose(0.3, 1.05, 0.2, 1.0, 0.0, 0.0, 0.0);
     Pose approach_drop_target_2 = drop_target_2;
     approach_drop_target_2.position.z += 0.02;
 
@@ -168,13 +176,13 @@ int main(int argc, char **argv)
 
     std::vector<Move> home_position_1 = {
         {"cartesian", "approach_drop_target_1", {}, "", move_configs["max_move"]},
-        // {"named", "", {}, named_home, move_configs["max_move"]},
+        {"named", "", {}, named_home_1, move_configs["max_move"]},
         {"joint", "", joint_rest_1, "", move_configs["max_move"]},
     };
 
     std::vector<Move> home_position_2 = {
         {"cartesian", "approach_drop_target_2", {}, "", move_configs["max_move"]},
-        // {"named", "", {}, named_home, move_configs["max_move"]},
+        {"named", "", {}, named_home_2, move_configs["max_move"]},
         {"joint", "", joint_rest_2, "", move_configs["max_move"]},
     };
 
@@ -261,17 +269,17 @@ int main(int argc, char **argv)
     std::string init_mesh_obj_xml = fallbackWrapperXML("init_mesh_obj", {check_mesh_obj_xml, add_mesh_obj_xml});
 
     // the name of the link to attach the object to, and the object to manipulate
-    std::string link_name_1 = robot_prefix_1 + "link_tcp";
-    std::string link_name_2 = robot_prefix_2 + "link_tcp";
+    std::string tcp_frame_name_1 = robot_prefix_1 + tcp_frame_1;
+    std::string tcp_frame_name_2 = robot_prefix_2 + tcp_frame_2;
     std::string object_to_manipulate_1 = "graspable_mesh";
     std::string object_to_manipulate_2 = "graspable_cylinder";
 
-    std::string attach_obj_1_xml = buildObjectActionXML("attach_obj_to_manipulate_1", createAttachObject(object_to_manipulate_1, link_name_1));
-    std::string detach_obj_1_xml = buildObjectActionXML("attach_obj_to_manipulate_1", createDetachObject(object_to_manipulate_1, link_name_1));
+    std::string attach_obj_1_xml = buildObjectActionXML("attach_obj_to_manipulate_1", createAttachObject(object_to_manipulate_1, tcp_frame_name_1));
+    std::string detach_obj_1_xml = buildObjectActionXML("attach_obj_to_manipulate_1", createDetachObject(object_to_manipulate_1, tcp_frame_name_1));
     std::string remove_obj_1_xml = buildObjectActionXML("remove_obj_to_manipulate_1", createRemoveObject(object_to_manipulate_1));
 
-    std::string attach_obj_2_xml = buildObjectActionXML("attach_obj_to_manipulate_2", createAttachObject(object_to_manipulate_2, link_name_2));
-    std::string detach_obj_2_xml = buildObjectActionXML("attach_obj_to_manipulate_2", createDetachObject(object_to_manipulate_2, link_name_2));
+    std::string attach_obj_2_xml = buildObjectActionXML("attach_obj_to_manipulate_2", createAttachObject(object_to_manipulate_2, tcp_frame_name_2));
+    std::string detach_obj_2_xml = buildObjectActionXML("attach_obj_to_manipulate_2", createDetachObject(object_to_manipulate_2, tcp_frame_name_2));
     std::string remove_obj_2_xml = buildObjectActionXML("remove_obj_to_manipulate_2", createRemoveObject(object_to_manipulate_2));
 
     // ----------------------------------------------------------------------------

@@ -18,8 +18,8 @@ namespace manymove_cpp_trees
         config.jump_threshold = 0.0;
         config.max_cartesian_speed = 0.5;
         config.max_exec_tries = 5;
-        config.plan_number_target = 8;
-        config.plan_number_limit = 32;
+        config.plan_number_target = 4;
+        config.plan_number_limit = 16;
         config.smoothing_type = "time_optimal";
         return config;
     }
@@ -43,8 +43,8 @@ namespace manymove_cpp_trees
         max_move_config.jump_threshold = 0.0;
         max_move_config.max_cartesian_speed = 0.5;
         max_move_config.max_exec_tries = 5;
-        max_move_config.plan_number_target = 8;
-        max_move_config.plan_number_limit = 32;
+        max_move_config.plan_number_target = 4;
+        max_move_config.plan_number_limit = 16;
         max_move_config.smoothing_type = "time_optimal";
 
         MovementConfig mid_move_config = max_move_config;
@@ -73,12 +73,12 @@ namespace manymove_cpp_trees
      */
     struct Move
     {
-        std::string type;                             ///< The movement type
-        std::string pose_key;                         ///< Blackboard key for dynamic pose
-        std::vector<double> joint_values;             ///< Joint values for "joint" type.
-        std::string named_target;                     ///< Named target for "named" type.
+        std::string type;                          ///< The movement type
+        std::string pose_key;                      ///< Blackboard key for dynamic pose
+        std::vector<double> joint_values;          ///< Joint values for "joint" type.
+        std::string named_target;                  ///< Named target for "named" type.
         manymove_msgs::msg::MovementConfig config; ///< Movement configuration parameters.
-        std::vector<double> start_joint_values;       ///< Starting joint values for planning.
+        std::vector<double> start_joint_values;    ///< Starting joint values for planning.
 
         Move(const std::string &type,
              const std::string &pose_key = "",

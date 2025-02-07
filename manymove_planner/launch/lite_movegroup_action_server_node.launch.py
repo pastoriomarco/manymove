@@ -55,7 +55,6 @@ def launch_setup(context, *args, **kwargs):
     plan_number_target = LaunchConfiguration('plan_number_target')
     plan_number_limit = LaunchConfiguration('plan_number_limit')
 
-    planning_group = LaunchConfiguration('planning_group')
     base_frame = LaunchConfiguration('base_frame')
     tcp_frame = LaunchConfiguration('tcp_frame')
     
@@ -114,14 +113,15 @@ def launch_setup(context, *args, **kwargs):
     ).to_moveit_configs()
 
     # Define the action_server_node with new parameters
-    # Don't use the "name" parameter, the name will be automatically {prefix}action_server_node
     action_server_node = Node(
         package='manymove_planner',
         executable='action_server_node',
+        # Don't use the "name" parameter, the name will be automatically set with {node_prefix}action_server_node to avoid duplicate nodes
         output='screen',
         parameters=[
             moveit_configs.to_dict(),
             {
+                'node_prefix': prefix.perform(context),
                 'planner_type': 'movegroup',
                 'velocity_scaling_factor': velocity_scaling_factor,
                 'acceleration_scaling_factor': acceleration_scaling_factor,
@@ -185,14 +185,12 @@ def generate_launch_description():
         DeclareLaunchArgument('step_size', default_value='0.05', description='Step size'),
         DeclareLaunchArgument('jump_threshold', default_value='0.0', description='Jump threshold'),
         DeclareLaunchArgument('max_cartesian_speed', default_value='0.5', description='Max cartesian speed'),
-        DeclareLaunchArgument('plan_number_target', default_value='12', description='Plan number target'),
-        DeclareLaunchArgument('plan_number_limit', default_value='32', description='Plan number limit'),
+        DeclareLaunchArgument('plan_number_target', default_value='8', description='Plan number target'),
+        DeclareLaunchArgument('plan_number_limit', default_value='16', description='Plan number limit'),
         
-        # New DeclareLaunchArguments for planning_group, base_frame, tcp_frame
-        DeclareLaunchArgument('planning_group', default_value='lite6', description='MoveIt planning group'),
+        # New DeclareLaunchArguments for base_frame, tcp_frame
         DeclareLaunchArgument('base_frame', default_value='link_base', description='Base frame of the robot'),
         DeclareLaunchArgument('tcp_frame', default_value='link_tcp', description='TCP (end effector) frame of the robot' ),
-        DeclareLaunchArgument('traj_controller', default_value='lite6_traj_controller', description='traj_controller action server name of the robot' ),
 
         # OpaqueFunction to set up the node
         OpaqueFunction(function=launch_setup)

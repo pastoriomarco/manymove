@@ -12,12 +12,12 @@ int main(int argc, char **argv)
     loader_options.automatically_declare_parameters_from_overrides(true);
     auto loader_node = rclcpp::Node::make_shared("param_loader_node", loader_options);
 
-    std::string planner_prefix;
-    loader_node->get_parameter_or<std::string>("planner_prefix", planner_prefix, "");
+    std::string node_prefix;
+    loader_node->get_parameter_or<std::string>("node_prefix", node_prefix, "");
 
     // Build the “real” node name from the prefix.
     // For multiple robots, e.g. "L_action_server_node" or "R_action_server_node".
-    std::string node_name = planner_prefix + "action_server_node";
+    std::string node_name = node_prefix + "action_server_node";
 
     rclcpp::NodeOptions node_options;
     node_options.automatically_declare_parameters_from_overrides(true);
@@ -27,6 +27,9 @@ int main(int argc, char **argv)
     std::string planner_type;
     node->get_parameter_or<std::string>("planner_type", planner_type, "moveitcpp");
 
+
+    std::string planner_prefix;
+    loader_node->get_parameter_or<std::string>("planner_prefix", planner_prefix, "");
     std::string planning_group;
     node->get_parameter_or<std::string>("planning_group", planning_group, "lite6");
     std::string base_frame;

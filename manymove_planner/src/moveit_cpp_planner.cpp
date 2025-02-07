@@ -320,6 +320,7 @@ std::pair<bool, moveit_msgs::msg::RobotTrajectory> MoveItCppPlanner::plan(const 
     // Set movement targets
     if ((goal_msg.goal.movement_type == "joint") || (goal_msg.goal.movement_type == "named"))
     {
+        bool goal_valid = true;
         if (goal_msg.goal.movement_type == "joint")
         {
             RCLCPP_DEBUG_STREAM(logger_, "Setting joint target");
@@ -331,12 +332,32 @@ std::pair<bool, moveit_msgs::msg::RobotTrajectory> MoveItCppPlanner::plan(const 
         {
             RCLCPP_DEBUG_STREAM(logger_, "Setting named target " << goal_msg.goal.named_target);
             planning_components_->setGoal(goal_msg.goal.named_target);
+
+            // Retrieve the list of available named targets
+            const auto available_targets = planning_components_->getNamedTargetStates();
+            // Check if the specified named target is available
+            if (std::find(available_targets.begin(), available_targets.end(), goal_msg.goal.named_target) != available_targets.end())
+            {
+                // Retrieve and print the joint values for the named target
+                auto joint_values = planning_components_->getNamedTargetStateValues(goal_msg.goal.named_target);
+                RCLCPP_DEBUG(logger_, "Joint values for named target '%s':", goal_msg.goal.named_target.c_str());
+                for (const auto &entry : joint_values)
+                {
+                    RCLCPP_DEBUG(logger_, "  %s: %f", entry.first.c_str(), entry.second);
+                }
+            }
+            else
+            {
+                RCLCPP_ERROR(logger_, "Named target '%s' not found among available targets.", goal_msg.goal.named_target.c_str());
+                goal_valid = false;
+            }
         }
 
         // Plan multiple trajectories using the plan(params) method
         int attempts = 0;
         while (attempts < goal_msg.goal.config.plan_number_limit &&
-               static_cast<int>(trajectories.size()) < goal_msg.goal.config.plan_number_target)
+               static_cast<int>(trajectories.size()) < goal_msg.goal.config.plan_number_target &&
+               goal_valid)
         {
             auto solution = planning_components_->plan();
             if (solution)
@@ -348,7 +369,7 @@ std::pair<bool, moveit_msgs::msg::RobotTrajectory> MoveItCppPlanner::plan(const 
                 double length = computePathLength(traj_msg);
 
                 trajectories.emplace_back(traj_msg, length);
-                RCLCPP_DEBUG_STREAM(logger_, "Calculated traj length: " << length);
+                RCLCPP_INFO_STREAM(logger_, "Calculated " << goal_msg.goal.movement_type << " traj length: " << length);
             }
             else
             {
@@ -447,7 +468,7 @@ std::pair<bool, moveit_msgs::msg::RobotTrajectory> MoveItCppPlanner::plan(const 
                static_cast<int>(trajectories.size()) < goal_msg.goal.config.plan_number_target)
         {
             RCLCPP_DEBUG(logger_, "Cartesian path planning attempt %d with step size %.3f, jump threshold %.3f",
-                        attempts + 1, goal_msg.goal.config.step_size, goal_msg.goal.config.jump_threshold);
+                         attempts + 1, goal_msg.goal.config.step_size, goal_msg.goal.config.jump_threshold);
 
             // Handle start state
             if (!goal_msg.goal.start_joint_values.empty())

@@ -114,8 +114,10 @@ def launch_setup(context, *args, **kwargs):
     plan_number_target = LaunchConfiguration('plan_number_target')
     plan_number_limit = LaunchConfiguration('plan_number_limit')
 
-    base_frame = LaunchConfiguration('base_frame')
-    tcp_frame = LaunchConfiguration('tcp_frame')
+    base_frame_1 = LaunchConfiguration('base_frame_1')
+    tcp_frame_1 = LaunchConfiguration('tcp_frame_1')
+    base_frame_2 = LaunchConfiguration('base_frame_2')
+    tcp_frame_2 = LaunchConfiguration('tcp_frame_2')
 
     # ================================================================
     # from: xarm_moveit_config/launch/_dual_robot_moveit_fake.launch.py
@@ -246,14 +248,15 @@ def launch_setup(context, *args, **kwargs):
     # action_server_node_name_2 = "{}action_server_node".format(prefix_2.perform(context))
 
     # Start the actual move_group node/action server
-    # Don't use the "name" parameter, the name will be automatically {prefix_1}action_server_node
     move_group_node_1 = Node(
         package='manymove_planner',
         executable='action_server_node',
+        # Don't use the "name" parameter, the name will be automatically set with {node_prefix_*}action_server_node to avoid duplicate nodes
         output='screen',
         parameters=[
             moveit_config.to_dict(),
             {
+                'node_prefix_1': prefix_1.perform(context),
                 'planner_type': 'moveitcpp',
                 'velocity_scaling_factor': velocity_scaling_factor,
                 'acceleration_scaling_factor': acceleration_scaling_factor,
@@ -266,21 +269,22 @@ def launch_setup(context, *args, **kwargs):
                 'plan_number_limit': plan_number_limit,
                 'planner_prefix': prefix_1.perform(context),
                 'planning_group': xarm_type_1, 
-                'base_frame': base_frame.perform(context), 
-                'tcp_frame': tcp_frame.perform(context), 
+                'base_frame_1': base_frame_1.perform(context), 
+                'tcp_frame_1': tcp_frame_1.perform(context), 
                 'traj_controller': "{}_traj_controller".format(xarm_type_1),
             }
         ],
     )
 
-    # Don't use the "name" parameter, the name will be automatically {prefix_2}action_server_node
     move_group_node_2 = Node(
         package='manymove_planner',
         executable='action_server_node',
+        # Don't use the "name" parameter, the name will be automatically set with {node_prefix}action_server_node to avoid duplicate nodes
         output='screen',
         parameters=[
             moveit_config.to_dict(),
             {
+                'node_prefix_2': prefix_2.perform(context),
                 'planner_type': 'moveitcpp',
                 'velocity_scaling_factor': velocity_scaling_factor,
                 'acceleration_scaling_factor': acceleration_scaling_factor,
@@ -293,8 +297,8 @@ def launch_setup(context, *args, **kwargs):
                 'plan_number_limit': plan_number_limit,
                 'planner_prefix': prefix_2.perform(context),
                 'planning_group': xarm_type_2, 
-                'base_frame': base_frame.perform(context), 
-                'tcp_frame': tcp_frame.perform(context), 
+                'base_frame_2': base_frame_2.perform(context), 
+                'tcp_frame_2': tcp_frame_2.perform(context), 
                 'traj_controller': "{}_traj_controller".format(xarm_type_2),
             }
         ],
@@ -450,8 +454,10 @@ def launch_setup(context, *args, **kwargs):
         parameters=[{
             'robot_model_1': xarm_type_1,
             'robot_prefix_1': prefix_1.perform(context),
+            'tcp_frame_1': tcp_frame_1,
             'robot_model_2': xarm_type_2,
             'robot_prefix_2': prefix_2.perform(context),
+            'tcp_frame_2': tcp_frame_2,
             'is_robot_real': False,
         }]
     )
@@ -485,10 +491,13 @@ def generate_launch_description():
         DeclareLaunchArgument('step_size', default_value='0.05', description='Step size'),
         DeclareLaunchArgument('jump_threshold', default_value='0.0', description='Jump threshold'),
         DeclareLaunchArgument('max_cartesian_speed', default_value='0.5', description='Max cartesian speed'),
-        DeclareLaunchArgument('plan_number_target', default_value='12', description='Plan number target'),
-        DeclareLaunchArgument('plan_number_limit', default_value='32', description='Plan number limit'),
-        DeclareLaunchArgument('base_frame', default_value='link_base', description='Base frame of the robot'),
-        DeclareLaunchArgument('tcp_frame', default_value='link_tcp', description='TCP (end effector) frame of the robot' ),
+        DeclareLaunchArgument('plan_number_target', default_value='8', description='Plan number target'),
+        DeclareLaunchArgument('plan_number_limit', default_value='16', description='Plan number limit'),
+
+        DeclareLaunchArgument('base_frame_1', default_value='link_base', description='Base frame of the robot 1'),
+        DeclareLaunchArgument('tcp_frame_1', default_value='link_tcp', description='TCP (end effector) frame of the robot 1' ),
+        DeclareLaunchArgument('base_frame_2', default_value='link_base', description='Base frame of the robot 2'),
+        DeclareLaunchArgument('tcp_frame_2', default_value='link_tcp', description='TCP (end effector) frame of the robot 2' ),
 
         OpaqueFunction(function=launch_setup)
     ])
