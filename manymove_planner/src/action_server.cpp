@@ -1,8 +1,8 @@
 #include "manymove_planner/planner_interface.hpp"
-#include "manymove_planner/action/plan_manipulator.hpp"
-#include "manymove_planner/action/execute_trajectory.hpp"
-#include "manymove_planner/action/unload_traj_controller.hpp"
-#include "manymove_planner/action/load_traj_controller.hpp"
+#include "manymove_msgs/action/plan_manipulator.hpp"
+#include "manymove_msgs/action/execute_trajectory.hpp"
+#include "manymove_msgs/action/unload_traj_controller.hpp"
+#include "manymove_msgs/action/load_traj_controller.hpp"
 
 #include <memory>
 #include <thread>
@@ -18,16 +18,16 @@
 class MoveManipulatorActionServer
 {
 public:
-    using PlanManipulator = manymove_planner::action::PlanManipulator;
+    using PlanManipulator = manymove_msgs::action::PlanManipulator;
     using GoalHandlePlanManipulator = rclcpp_action::ServerGoalHandle<PlanManipulator>;
 
-    using ExecuteTrajectory = manymove_planner::action::ExecuteTrajectory;
+    using ExecuteTrajectory = manymove_msgs::action::ExecuteTrajectory;
     using GoalHandleExecuteTrajectory = rclcpp_action::ServerGoalHandle<ExecuteTrajectory>;
 
-    using UnloadTrajController = manymove_planner::action::UnloadTrajController;
+    using UnloadTrajController = manymove_msgs::action::UnloadTrajController;
     using GoalHandleUnloadTrajController = rclcpp_action::ServerGoalHandle<UnloadTrajController>;
 
-    using LoadTrajController = manymove_planner::action::LoadTrajController;
+    using LoadTrajController = manymove_msgs::action::LoadTrajController;
     using GoalHandleLoadTrajController = rclcpp_action::ServerGoalHandle<LoadTrajController>;
 
     MoveManipulatorActionServer(const rclcpp::Node::SharedPtr &node,
@@ -219,7 +219,7 @@ private:
         const auto &goal_msg = goal_handle->get_goal();
 
         // 1) Plan the trajectory
-        manymove_planner::action::PlanManipulator::Goal internal_goal;
+        manymove_msgs::action::PlanManipulator::Goal internal_goal;
         internal_goal.goal = goal_msg->goal;
 
         auto [success, trajectory] = planner_->plan(internal_goal);
@@ -254,7 +254,7 @@ private:
 
     rclcpp_action::GoalResponse handle_execute_goal(
         const rclcpp_action::GoalUUID & /*uuid*/,
-        std::shared_ptr<const manymove_planner::action::ExecuteTrajectory::Goal> goal)
+        std::shared_ptr<const manymove_msgs::action::ExecuteTrajectory::Goal> goal)
     {
         if (goal->trajectory.joint_trajectory.points.empty())
         {
@@ -278,7 +278,7 @@ private:
         std::thread{[this, goal_handle]()
                     {
                         RCLCPP_INFO(node_->get_logger(), "Executing trajectory");
-                        auto result = std::make_shared<manymove_planner::action::ExecuteTrajectory::Result>();
+                        auto result = std::make_shared<manymove_msgs::action::ExecuteTrajectory::Result>();
                         const auto &goal_msg = goal_handle->get_goal();
                         moveit_msgs::msg::RobotTrajectory traj = goal_msg->trajectory;
                         const auto &points = traj.joint_trajectory.points;
@@ -361,7 +361,7 @@ private:
                             }
 
                             // Publish feedback.
-                            auto exec_feedback = std::make_shared<manymove_planner::action::ExecuteTrajectory::Feedback>();
+                            auto exec_feedback = std::make_shared<manymove_msgs::action::ExecuteTrajectory::Feedback>();
                             exec_feedback->progress = static_cast<float>(current_fb_time);
                             exec_feedback->in_collision = collision_detected.load();
                             goal_handle->publish_feedback(exec_feedback);

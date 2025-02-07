@@ -136,7 +136,7 @@ namespace manymove_cpp_trees
         // **End: Set start_joint_values based on previous move**
 
         geometry_msgs::msg::Pose dynamic_pose;
-        manymove_planner::msg::MoveManipulatorGoal move_goal;
+        manymove_msgs::msg::MoveManipulatorGoal move_goal;
 
         // Assign Move to goal
         move_goal = move_ptr->to_move_manipulator_goal();
@@ -528,19 +528,19 @@ namespace manymove_cpp_trees
         }
 
         // Create an empty goal (we won't send a real trajectory)
-        manymove_planner::action::ExecuteTrajectory::Goal stop_goal;
+        manymove_msgs::action::ExecuteTrajectory::Goal stop_goal;
         // e.g. stop_goal.trajectory is empty
 
         RCLCPP_INFO(node_->get_logger(),
                     "ExecuteTrajectory [%s]: Sending STOP goal to 'stop_motion' server...",
                     name().c_str());
 
-        auto send_goal_options = rclcpp_action::Client<manymove_planner::action::ExecuteTrajectory>::SendGoalOptions();
+        auto send_goal_options = rclcpp_action::Client<manymove_msgs::action::ExecuteTrajectory>::SendGoalOptions();
 
         // Optional: add result callback to see if STOP completed
         send_goal_options.result_callback =
             [this](const typename rclcpp_action::ClientGoalHandle<
-                   manymove_planner::action::ExecuteTrajectory>::WrappedResult &wrapped_result)
+                manymove_msgs::action::ExecuteTrajectory>::WrappedResult &wrapped_result)
         {
             if (wrapped_result.code == rclcpp_action::ResultCode::SUCCEEDED)
             {

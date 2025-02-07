@@ -13,10 +13,10 @@
 #include "rclcpp_action/rclcpp_action.hpp"
 
 // Action Definitions
-#include "manymove_signals/action/set_output.hpp"
-#include "manymove_signals/action/get_input.hpp"
-#include "manymove_signals/action/check_robot_state.hpp"
-#include "manymove_signals/action/reset_robot_state.hpp"
+#include "manymove_msgs/action/set_output.hpp"
+#include "manymove_msgs/action/get_input.hpp"
+#include "manymove_msgs/action/check_robot_state.hpp"
+#include "manymove_msgs/action/reset_robot_state.hpp"
 
 // Service Definitions
 #include "xarm_msgs/srv/set_digital_io.hpp"
@@ -30,10 +30,10 @@
 
 namespace manymove_signals
 {
-    using SetOutput = manymove_signals::action::SetOutput;
-    using GetInput = manymove_signals::action::GetInput;
-    using ResetRobotState = manymove_signals::action::ResetRobotState;
-    using CheckRobotState = manymove_signals::action::CheckRobotState;
+    using SetOutput = manymove_msgs::action::SetOutput;
+    using GetInput = manymove_msgs::action::GetInput;
+    using ResetRobotState = manymove_msgs::action::ResetRobotState;
+    using CheckRobotState = manymove_msgs::action::CheckRobotState;
 
     class SignalsNode : public rclcpp::Node
     {

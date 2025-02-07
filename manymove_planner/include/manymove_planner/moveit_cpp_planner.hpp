@@ -21,7 +21,7 @@
 #include <moveit/trajectory_processing/iterative_time_parameterization.h>
 #include <moveit/trajectory_processing/ruckig_traj_smoothing.h>
 
-#include "manymove_planner/msg/move_manipulator_goal.hpp"
+#include "manymove_msgs/msg/move_manipulator_goal.hpp"
 
 #include <control_msgs/action/follow_joint_trajectory.hpp>
 
@@ -70,7 +70,7 @@ public:
      * @param goal The PlanManipulator goal containing movement type and parameters.
      * @return A pair containing a success flag and the planned robot trajectory.
      */
-    std::pair<bool, moveit_msgs::msg::RobotTrajectory> plan(const manymove_planner::action::PlanManipulator::Goal &goal) override;
+    std::pair<bool, moveit_msgs::msg::RobotTrajectory> plan(const manymove_msgs::action::PlanManipulator::Goal &goal) override;
 
     /**
      * @brief Apply time parameterization to a single trajectory using the given movement config.
@@ -92,7 +92,7 @@ public:
      */
     std::pair<bool, moveit_msgs::msg::RobotTrajectory> applyTimeParameterization(
         const moveit_msgs::msg::RobotTrajectory &input_traj,
-        const manymove_planner::msg::MovementConfig &config);
+        const manymove_msgs::msg::MovementConfig &config);
 
     /**
      * @brief Execute a planned trajectory on the robot.

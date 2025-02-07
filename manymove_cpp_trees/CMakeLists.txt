@@ -17,6 +17,7 @@ find_package(manymove_object_manager REQUIRED)
 find_package(manymove_signals REQUIRED)
 find_package(tf2 REQUIRED)
 find_package(std_srvs REQUIRED)
+find_package(manymove_msgs REQUIRED)
 
 # Include directories
 include_directories(include)
@@ -42,6 +43,7 @@ ament_target_dependencies(bt_client
   moveit_msgs
   tf2
   std_srvs
+  manymove_msgs
 )
 
 # Add executable for BT client for dual robot
@@ -65,6 +67,7 @@ ament_target_dependencies(bt_client_dual
   moveit_msgs
   tf2
   std_srvs
+  manymove_msgs
 )
 
 # Install executable
@@ -74,7 +77,7 @@ install(TARGETS
   DESTINATION lib/${PROJECT_NAME}
 )
 
-# Install headers (tree_helper.hpp, planning_action.hpp, etc.)
+# Install headers (tree_helper.hpp, etc.)
 install(DIRECTORY include/
   DESTINATION include/
 )

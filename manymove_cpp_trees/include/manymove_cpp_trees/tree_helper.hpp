@@ -3,7 +3,7 @@
 
 #include "manymove_cpp_trees/move.hpp"
 #include "manymove_cpp_trees/object.hpp"
-#include "manymove_planner/msg/movement_config.hpp"
+#include "manymove_msgs/msg/movement_config.hpp"
 
 #include <behaviortree_cpp_v3/blackboard.h>
 

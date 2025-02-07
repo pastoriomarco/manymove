@@ -1,10 +1,12 @@
 cmake_minimum_required(VERSION 3.8)
 project(manymove_planner)
 
+# Set compiler flags
 if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
   add_compile_options(-Wall -Wextra -Wpedantic)
 endif()
 
+# Find required packages
 find_package(ament_cmake REQUIRED)
 find_package(rclcpp REQUIRED)
 find_package(moveit_core REQUIRED)
@@ -13,38 +15,23 @@ find_package(tf2_geometry_msgs REQUIRED)
 find_package(geometry_msgs REQUIRED)
 find_package(moveit_visual_tools REQUIRED)
 find_package(pluginlib REQUIRED)
-find_package(rosidl_default_generators REQUIRED)
 find_package(rclcpp_action REQUIRED)
 find_package(action_msgs REQUIRED)
 find_package(control_msgs REQUIRED)
 find_package(controller_manager_msgs REQUIRED)
+find_package(manymove_msgs REQUIRED)
 
-# Generate messages and actions
-rosidl_generate_interfaces(${PROJECT_NAME}
-  "msg/MovementConfig.msg"
-  "msg/MoveManipulatorGoal.msg"
-  "action/PlanManipulator.action"
-  "action/ExecuteTrajectory.action"
-  "action/LoadTrajController.action"
-  "action/UnloadTrajController.action"
-  DEPENDENCIES geometry_msgs action_msgs moveit_msgs
-)
-
-# Get the typesupport target for linking
-rosidl_get_typesupport_target(cpp_typesupport_target ${PROJECT_NAME} "rosidl_typesupport_cpp")
-
-ament_export_dependencies(rosidl_default_runtime)
-
+# Include public headers
 include_directories(include)
 
 ##########################
-# MoveGroupPlanner Library
+# Build Library Targets
 ##########################
+
+# Build the MoveGroupPlanner Library
 add_library(move_group_planner_lib
   src/move_group_planner.cpp
 )
-
-# Link dependencies for MoveGroupPlanner
 ament_target_dependencies(move_group_planner_lib
   rclcpp
   moveit_core
@@ -52,58 +39,33 @@ ament_target_dependencies(move_group_planner_lib
   tf2_geometry_msgs
   geometry_msgs
   control_msgs
-  rosidl_default_runtime
+  manymove_msgs
 )
 
-# Link the generated typesupport library
-target_link_libraries(move_group_planner_lib ${cpp_typesupport_target})
-
-# Install MoveGroupPlanner library
-install(TARGETS
-  move_group_planner_lib
-  DESTINATION lib
-)
-
-##########################
-# MoveItCppPlanner Library
-##########################
+# Build the MoveItCppPlanner Library
 add_library(moveit_cpp_planner_lib
   src/moveit_cpp_planner.cpp
 )
-
-# Link dependencies for MoveItCppPlanner
 ament_target_dependencies(moveit_cpp_planner_lib
   rclcpp
   moveit_core
   tf2_geometry_msgs
   geometry_msgs
   control_msgs
-  rosidl_default_runtime
+  manymove_msgs
 )
 
-# Link the generated typesupport library
-target_link_libraries(moveit_cpp_planner_lib ${cpp_typesupport_target})
-
-# Install MoveItCppPlanner library
-install(TARGETS
-  moveit_cpp_planner_lib
-  DESTINATION lib
-)
-
-###########################################
-# Move Action Server (Single and Sequence)
-###########################################
+##########################
+# Build Executable Targets (not exported)
+##########################
 add_executable(action_server_node
   src/action_server_node.cpp
   src/action_server.cpp
 )
-
-# Link both planners to the action server
 target_link_libraries(action_server_node
   move_group_planner_lib
   moveit_cpp_planner_lib
 )
-
 ament_target_dependencies(action_server_node
   rclcpp
   rclcpp_action
@@ -112,18 +74,13 @@ ament_target_dependencies(action_server_node
   tf2_geometry_msgs
   geometry_msgs
   action_msgs
-  rosidl_default_runtime
   controller_manager_msgs
+  manymove_msgs
 )
 
-install(TARGETS action_server_node
-  DESTINATION lib/${PROJECT_NAME}
+add_executable(standalone_micpp_demo
+  src/standalone_micpp_demo.cpp
 )
-
-#########################
-# Standalone MICPP Demo
-#########################
-add_executable(standalone_micpp_demo src/standalone_micpp_demo.cpp)
 ament_target_dependencies(standalone_micpp_demo
   rclcpp
   moveit_core
@@ -131,28 +88,46 @@ ament_target_dependencies(standalone_micpp_demo
   tf2_geometry_msgs
   geometry_msgs
   moveit_visual_tools
-)
-target_link_libraries(standalone_micpp_demo ${cpp_typesupport_target})
-
-install(TARGETS standalone_micpp_demo
-  DESTINATION lib/${PROJECT_NAME}
+  manymove_msgs
 )
 
-#########################
-# Install launch & config
-#########################
+##########################
+# Installation
+##########################
+# Install only the library targets for export.
+install(TARGETS 
+  move_group_planner_lib 
+  moveit_cpp_planner_lib
+  EXPORT export_${PROJECT_NAME}
+  ARCHIVE DESTINATION lib/${PROJECT_NAME}
+  LIBRARY DESTINATION lib/${PROJECT_NAME}
+  RUNTIME DESTINATION lib/${PROJECT_NAME}
+)
+
+# Install the executables without exporting them.
+install(TARGETS 
+  action_server_node 
+  standalone_micpp_demo
+  RUNTIME DESTINATION lib/${PROJECT_NAME}
+)
+
+# Install public headers and launch/config directories
+install(DIRECTORY include/
+  DESTINATION include/
+)
 install(DIRECTORY launch config
   DESTINATION share/${PROJECT_NAME}
 )
 
-install(DIRECTORY include/
-  DESTINATION include/
-)
+##########################
+# Export Targets and Dependencies
+##########################
+ament_export_targets(export_${PROJECT_NAME} HAS_LIBRARY_TARGET)
 
-#########################
-# Exporting
-#########################
-ament_export_libraries(move_group_planner_lib moveit_cpp_planner_lib)
+# Create alias targets for easier linking:
+add_library(manymove_planner::move_group_planner_lib ALIAS move_group_planner_lib)
+add_library(manymove_planner::moveit_cpp_planner_lib ALIAS moveit_cpp_planner_lib)
+
 ament_export_dependencies(
   rclcpp
   moveit_core
@@ -161,7 +136,7 @@ ament_export_dependencies(
   geometry_msgs
   action_msgs
   rclcpp_action
-  rosidl_default_runtime
+  manymove_msgs
 )
 ament_export_include_directories(include)
 

@@ -8,19 +8,19 @@
 #include <behaviortree_cpp_v3/action_node.h>
 #include <behaviortree_cpp_v3/condition_node.h>
 
-#include <manymove_planner/action/plan_manipulator.hpp>
-#include <manymove_planner/action/execute_trajectory.hpp>
+#include <manymove_msgs/action/plan_manipulator.hpp>
+#include <manymove_msgs/action/execute_trajectory.hpp>
 
-#include <manymove_object_manager/action/add_collision_object.hpp>
-#include <manymove_object_manager/action/remove_collision_object.hpp>
-#include <manymove_object_manager/action/attach_detach_object.hpp>
-#include <manymove_object_manager/action/check_object_exists.hpp>
-#include <manymove_object_manager/action/get_object_pose.hpp>
+#include <manymove_msgs/action/add_collision_object.hpp>
+#include <manymove_msgs/action/remove_collision_object.hpp>
+#include <manymove_msgs/action/attach_detach_object.hpp>
+#include <manymove_msgs/action/check_object_exists.hpp>
+#include <manymove_msgs/action/get_object_pose.hpp>
 
-#include "manymove_signals/action/set_output.hpp"
-#include "manymove_signals/action/get_input.hpp"
-#include "manymove_signals/action/check_robot_state.hpp"
-#include "manymove_signals/action/reset_robot_state.hpp"
+#include "manymove_msgs/action/set_output.hpp"
+#include "manymove_msgs/action/get_input.hpp"
+#include "manymove_msgs/action/check_robot_state.hpp"
+#include "manymove_msgs/action/reset_robot_state.hpp"
 
 #include <moveit_msgs/msg/robot_trajectory.hpp>
 #include <geometry_msgs/msg/pose.hpp>
@@ -43,7 +43,7 @@ namespace manymove_cpp_trees
     class PlanningAction : public BT::StatefulActionNode
     {
     public:
-        using PlanManipulator = manymove_planner::action::PlanManipulator;
+        using PlanManipulator = manymove_msgs::action::PlanManipulator;
         using GoalHandlePlanManipulator = rclcpp_action::ClientGoalHandle<PlanManipulator>;
 
         /**
@@ -115,7 +115,7 @@ namespace manymove_cpp_trees
     class ExecuteTrajectory : public BT::StatefulActionNode
     {
     public:
-        using ExecuteTrajectoryAction = manymove_planner::action::ExecuteTrajectory;
+        using ExecuteTrajectoryAction = manymove_msgs::action::ExecuteTrajectory;
         using GoalHandleExecuteTrajectory = rclcpp_action::ClientGoalHandle<ExecuteTrajectoryAction>;
 
         ExecuteTrajectory(const std::string &name, const BT::NodeConfiguration &config);
@@ -215,7 +215,7 @@ namespace manymove_cpp_trees
     class StopMotionAction : public BT::StatefulActionNode
     {
     public:
-        using ExecuteTrajectoryAction = manymove_planner::action::ExecuteTrajectory;
+        using ExecuteTrajectoryAction = manymove_msgs::action::ExecuteTrajectory;
         using GoalHandleExecuteTrajectory = rclcpp_action::ClientGoalHandle<ExecuteTrajectoryAction>;
 
         /**

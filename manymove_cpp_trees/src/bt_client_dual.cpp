@@ -14,10 +14,10 @@
 #include "manymove_cpp_trees/bt_converters.hpp"
 #include "manymove_cpp_trees/hmi_service_node.hpp"
 
-#include "manymove_signals/action/set_output.hpp"
-#include "manymove_signals/action/get_input.hpp"
-#include "manymove_signals/action/check_robot_state.hpp"
-#include "manymove_signals/action/reset_robot_state.hpp"
+#include "manymove_msgs/action/set_output.hpp"
+#include "manymove_msgs/action/get_input.hpp"
+#include "manymove_msgs/action/check_robot_state.hpp"
+#include "manymove_msgs/action/reset_robot_state.hpp"
 
 #include <string>
 #include <vector>

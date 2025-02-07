@@ -7,8 +7,8 @@
 
 #include <geometry_msgs/msg/pose.hpp>
 #include <moveit_msgs/msg/robot_trajectory.hpp>
-#include <manymove_planner/msg/movement_config.hpp>
-#include <manymove_planner/action/plan_manipulator.hpp>
+#include <manymove_msgs/msg/movement_config.hpp>
+#include <manymove_msgs/action/plan_manipulator.hpp>
 #include <rclcpp_action/rclcpp_action.hpp>
 #include <moveit/robot_trajectory/robot_trajectory.h>
 #include <control_msgs/action/follow_joint_trajectory.hpp>
@@ -36,7 +36,7 @@ public:
      * @param goal The target goal for the manipulator.
      * @return A pair containing a success flag (true if planning succeeded) and the planned robot trajectory.
      */
-    virtual std::pair<bool, moveit_msgs::msg::RobotTrajectory> plan(const manymove_planner::action::PlanManipulator::Goal &goal) = 0;
+    virtual std::pair<bool, moveit_msgs::msg::RobotTrajectory> plan(const manymove_msgs::action::PlanManipulator::Goal &goal) = 0;
 
     /**
      * @brief Execute a given trajectory on the manipulator.
@@ -67,7 +67,7 @@ public:
      */
     virtual std::pair<bool, moveit_msgs::msg::RobotTrajectory> applyTimeParameterization(
         const moveit_msgs::msg::RobotTrajectory &input_traj,
-        const manymove_planner::msg::MovementConfig &config) = 0;
+        const manymove_msgs::msg::MovementConfig &config) = 0;
 
     /**
      * @brief Send a controlled stop command to the robot.

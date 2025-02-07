@@ -8,19 +8,19 @@
 #include <behaviortree_cpp_v3/action_node.h>
 #include <behaviortree_cpp_v3/condition_node.h>
 
-#include <manymove_planner/action/plan_manipulator.hpp>
-#include <manymove_planner/action/execute_trajectory.hpp>
+#include <manymove_msgs/action/plan_manipulator.hpp>
+#include <manymove_msgs/action/execute_trajectory.hpp>
 
-#include <manymove_object_manager/action/add_collision_object.hpp>
-#include <manymove_object_manager/action/remove_collision_object.hpp>
-#include <manymove_object_manager/action/attach_detach_object.hpp>
-#include <manymove_object_manager/action/check_object_exists.hpp>
-#include <manymove_object_manager/action/get_object_pose.hpp>
+#include <manymove_msgs/action/add_collision_object.hpp>
+#include <manymove_msgs/action/remove_collision_object.hpp>
+#include <manymove_msgs/action/attach_detach_object.hpp>
+#include <manymove_msgs/action/check_object_exists.hpp>
+#include <manymove_msgs/action/get_object_pose.hpp>
 
-#include "manymove_signals/action/set_output.hpp"
-#include "manymove_signals/action/get_input.hpp"
-#include "manymove_signals/action/check_robot_state.hpp"
-#include "manymove_signals/action/reset_robot_state.hpp"
+#include "manymove_msgs/action/set_output.hpp"
+#include "manymove_msgs/action/get_input.hpp"
+#include "manymove_msgs/action/check_robot_state.hpp"
+#include "manymove_msgs/action/reset_robot_state.hpp"
 
 #include <moveit_msgs/msg/robot_trajectory.hpp>
 #include <geometry_msgs/msg/pose.hpp>
@@ -37,7 +37,7 @@ namespace manymove_cpp_trees
     class AddCollisionObjectAction : public BT::StatefulActionNode
     {
     public:
-        using AddCollisionObject = manymove_object_manager::action::AddCollisionObject;
+        using AddCollisionObject = manymove_msgs::action::AddCollisionObject;
         using GoalHandleAddCollisionObject = rclcpp_action::ClientGoalHandle<AddCollisionObject>;
 
         /**
@@ -106,7 +106,7 @@ namespace manymove_cpp_trees
     class RemoveCollisionObjectAction : public BT::StatefulActionNode
     {
     public:
-        using RemoveCollisionObject = manymove_object_manager::action::RemoveCollisionObject;
+        using RemoveCollisionObject = manymove_msgs::action::RemoveCollisionObject;
         using GoalHandleRemoveCollisionObject = rclcpp_action::ClientGoalHandle<RemoveCollisionObject>;
 
         /**
@@ -168,7 +168,7 @@ namespace manymove_cpp_trees
     class AttachDetachObjectAction : public BT::StatefulActionNode
     {
     public:
-        using AttachDetachObject = manymove_object_manager::action::AttachDetachObject;
+        using AttachDetachObject = manymove_msgs::action::AttachDetachObject;
         using GoalHandleAttachDetachObject = rclcpp_action::ClientGoalHandle<AttachDetachObject>;
 
         /**
@@ -234,7 +234,7 @@ namespace manymove_cpp_trees
     class CheckObjectExistsAction : public BT::StatefulActionNode
     {
     public:
-        using CheckObjectExists = manymove_object_manager::action::CheckObjectExists;
+        using CheckObjectExists = manymove_msgs::action::CheckObjectExists;
         using GoalHandleCheckObjectExists = rclcpp_action::ClientGoalHandle<CheckObjectExists>;
 
         /**
@@ -299,7 +299,7 @@ namespace manymove_cpp_trees
     class GetObjectPoseAction : public BT::StatefulActionNode
     {
     public:
-        using GetObjectPose = manymove_object_manager::action::GetObjectPose;
+        using GetObjectPose = manymove_msgs::action::GetObjectPose;
         using GoalHandleGetObjectPose = rclcpp_action::ClientGoalHandle<GetObjectPose>;
 
         /**

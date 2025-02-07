@@ -156,7 +156,7 @@ double MoveGroupPlanner::computeMaxCartesianSpeed(const robot_trajectory::RobotT
 
 std::pair<bool, moveit_msgs::msg::RobotTrajectory> MoveGroupPlanner::applyTimeParameterization(
     const moveit_msgs::msg::RobotTrajectory &input_traj,
-    const manymove_planner::msg::MovementConfig &config)
+    const manymove_msgs::msg::MovementConfig &config)
 {
     // 1) Basic checks
     if (input_traj.joint_trajectory.points.empty())
@@ -287,7 +287,7 @@ std::pair<bool, moveit_msgs::msg::RobotTrajectory> MoveGroupPlanner::applyTimePa
     return {false, moveit_msgs::msg::RobotTrajectory()};
 }
 
-std::pair<bool, moveit_msgs::msg::RobotTrajectory> MoveGroupPlanner::plan(const manymove_planner::action::PlanManipulator::Goal &goal_msg)
+std::pair<bool, moveit_msgs::msg::RobotTrajectory> MoveGroupPlanner::plan(const manymove_msgs::action::PlanManipulator::Goal &goal_msg)
 {
     std::vector<std::pair<moveit_msgs::msg::RobotTrajectory, double>> trajectories;
 

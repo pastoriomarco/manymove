@@ -23,11 +23,10 @@
   <depend>rosidl_default_generators</depend>
   <depend>rosidl_default_runtime</depend>
   <depend>controller_manager_msgs</depend>
+  <depend>manymove_msgs</depend>
 
   <test_depend>ament_lint_auto</test_depend>
   <test_depend>ament_lint_common</test_depend>
-
-  <member_of_group>rosidl_interface_packages</member_of_group>
 
   <export>
     <build_type>ament_cmake</build_type>

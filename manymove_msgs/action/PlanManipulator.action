@@ -1,5 +1,5 @@
 # Goal
-manymove_planner/MoveManipulatorGoal goal
+manymove_msgs/MoveManipulatorGoal goal
 ---
 # Result
 bool success

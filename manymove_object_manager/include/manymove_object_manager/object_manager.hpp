@@ -9,11 +9,11 @@
 #include <shape_msgs/msg/solid_primitive.hpp>
 #include <geometry_msgs/msg/quaternion.hpp>
 
-#include <manymove_object_manager/action/add_collision_object.hpp>
-#include <manymove_object_manager/action/remove_collision_object.hpp>
-#include <manymove_object_manager/action/check_object_exists.hpp>
-#include <manymove_object_manager/action/attach_detach_object.hpp>
-#include <manymove_object_manager/action/get_object_pose.hpp>
+#include <manymove_msgs/action/add_collision_object.hpp>
+#include <manymove_msgs/action/remove_collision_object.hpp>
+#include <manymove_msgs/action/check_object_exists.hpp>
+#include <manymove_msgs/action/attach_detach_object.hpp>
+#include <manymove_msgs/action/get_object_pose.hpp>
 
 #include <string>
 #include <sstream>
@@ -37,11 +37,11 @@ namespace manymove_object_manager
     {
     public:
         // Alias declarations for actions and their goal handles
-        using AddCollisionObject = manymove_object_manager::action::AddCollisionObject;
-        using RemoveCollisionObject = manymove_object_manager::action::RemoveCollisionObject;
-        using CheckObjectExists = manymove_object_manager::action::CheckObjectExists;
-        using AttachDetachObject = manymove_object_manager::action::AttachDetachObject;
-        using GetObjectPose = manymove_object_manager::action::GetObjectPose;
+        using AddCollisionObject = manymove_msgs::action::AddCollisionObject;
+        using RemoveCollisionObject = manymove_msgs::action::RemoveCollisionObject;
+        using CheckObjectExists = manymove_msgs::action::CheckObjectExists;
+        using AttachDetachObject = manymove_msgs::action::AttachDetachObject;
+        using GetObjectPose = manymove_msgs::action::GetObjectPose;
 
         using AddGoalHandle = rclcpp_action::ServerGoalHandle<AddCollisionObject>;
         using RemoveGoalHandle = rclcpp_action::ServerGoalHandle<RemoveCollisionObject>;

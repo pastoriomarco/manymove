@@ -3,4 +3,4 @@ geometry_msgs/Pose pose_target
 string named_target
 float64[] joint_values
 float64[] start_joint_values
-manymove_planner/MovementConfig config
+manymove_msgs/MovementConfig config

@@ -4,14 +4,14 @@
 #include <string>
 #include <vector>
 #include "geometry_msgs/msg/pose.hpp"
-#include "manymove_planner/msg/movement_config.hpp"
-#include "manymove_planner/msg/move_manipulator_goal.hpp"
+#include "manymove_msgs/msg/movement_config.hpp"
+#include "manymove_msgs/msg/move_manipulator_goal.hpp"
 
 namespace manymove_cpp_trees
 {
-    inline manymove_planner::msg::MovementConfig defaultMovementConfig()
+    inline manymove_msgs::msg::MovementConfig defaultMovementConfig()
     {
-        manymove_planner::msg::MovementConfig config;
+        manymove_msgs::msg::MovementConfig config;
         config.velocity_scaling_factor = 1.0;
         config.acceleration_scaling_factor = 1.0;
         config.step_size = 0.01;
@@ -31,10 +31,10 @@ namespace manymove_cpp_trees
     /**
      * @brief Return some standard MovementConfig presets (max_move, mid_move, slow_move).
      */
-    inline std::unordered_map<std::string, manymove_planner::msg::MovementConfig>
+    inline std::unordered_map<std::string, manymove_msgs::msg::MovementConfig>
     defineMovementConfigs()
     {
-        using manymove_planner::msg::MovementConfig;
+        using manymove_msgs::msg::MovementConfig;
 
         MovementConfig max_move_config;
         max_move_config.velocity_scaling_factor = 1.0;
@@ -77,14 +77,14 @@ namespace manymove_cpp_trees
         std::string pose_key;                         ///< Blackboard key for dynamic pose
         std::vector<double> joint_values;             ///< Joint values for "joint" type.
         std::string named_target;                     ///< Named target for "named" type.
-        manymove_planner::msg::MovementConfig config; ///< Movement configuration parameters.
+        manymove_msgs::msg::MovementConfig config; ///< Movement configuration parameters.
         std::vector<double> start_joint_values;       ///< Starting joint values for planning.
 
         Move(const std::string &type,
              const std::string &pose_key = "",
              const std::vector<double> &joint_values = {},
              const std::string &named_target = "",
-             const manymove_planner::msg::MovementConfig &config = defaultMovementConfig(),
+             const manymove_msgs::msg::MovementConfig &config = defaultMovementConfig(),
              const std::vector<double> &start_joint_values = {})
             : type(type),
               pose_key(pose_key),
@@ -95,9 +95,9 @@ namespace manymove_cpp_trees
         {
         }
 
-        manymove_planner::msg::MoveManipulatorGoal to_move_manipulator_goal() const
+        manymove_msgs::msg::MoveManipulatorGoal to_move_manipulator_goal() const
         {
-            manymove_planner::msg::MoveManipulatorGoal goal;
+            manymove_msgs::msg::MoveManipulatorGoal goal;
             goal.movement_type = type;
 
             if (type == "pose" || type == "cartesian")

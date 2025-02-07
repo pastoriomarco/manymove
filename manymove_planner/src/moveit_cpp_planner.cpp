@@ -1,6 +1,6 @@
 #include "manymove_planner/moveit_cpp_planner.hpp"
 
-using manymove_planner::msg::MovementConfig;
+using manymove_msgs::msg::MovementConfig;
 using namespace std::chrono_literals;
 
 MoveItCppPlanner::MoveItCppPlanner(
@@ -288,7 +288,7 @@ moveit_msgs::msg::RobotTrajectory MoveItCppPlanner::convertToMsg(const robot_tra
     return traj_msg;
 }
 
-std::pair<bool, moveit_msgs::msg::RobotTrajectory> MoveItCppPlanner::plan(const manymove_planner::action::PlanManipulator::Goal &goal_msg)
+std::pair<bool, moveit_msgs::msg::RobotTrajectory> MoveItCppPlanner::plan(const manymove_msgs::action::PlanManipulator::Goal &goal_msg)
 {
     std::vector<std::pair<moveit_msgs::msg::RobotTrajectory, double>> trajectories;
     auto robot_model_ptr = moveit_cpp_ptr_->getRobotModel();
@@ -551,7 +551,7 @@ std::pair<bool, moveit_msgs::msg::RobotTrajectory> MoveItCppPlanner::plan(const 
 
 std::pair<bool, moveit_msgs::msg::RobotTrajectory> MoveItCppPlanner::applyTimeParameterization(
     const moveit_msgs::msg::RobotTrajectory &input_traj,
-    const manymove_planner::msg::MovementConfig &config)
+    const manymove_msgs::msg::MovementConfig &config)
 {
     // 1) Basic checks
     if (input_traj.joint_trajectory.points.empty())

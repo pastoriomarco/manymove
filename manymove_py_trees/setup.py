@@ -20,8 +20,8 @@ setup(
     tests_require=['pytest'],
     entry_points={
         'console_scripts': [
-            'bt_client = manymove_py_trees.bt_client:main',
-            'bt_client_panda = manymove_py_trees.bt_client_panda:main',
+            'bt_client_fake = manymove_py_trees.bt_client_fake:main',
+            'bt_client_fake_panda = manymove_py_trees.bt_client_fake_panda:main',
         ],
     },
 )

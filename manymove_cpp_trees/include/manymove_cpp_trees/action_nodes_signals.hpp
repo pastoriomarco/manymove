@@ -7,21 +7,21 @@
 #include <rclcpp_action/rclcpp_action.hpp>
 #include <behaviortree_cpp_v3/action_node.h>
 
-#include "manymove_planner/action/plan_manipulator.hpp"
-#include "manymove_planner/action/execute_trajectory.hpp"
+#include "manymove_msgs/action/plan_manipulator.hpp"
+#include "manymove_msgs/action/execute_trajectory.hpp"
+#include "manymove_msgs/action/unload_traj_controller.hpp"
+#include "manymove_msgs/action/load_traj_controller.hpp"
 
-#include "manymove_object_manager/action/add_collision_object.hpp"
-#include "manymove_object_manager/action/remove_collision_object.hpp"
-#include "manymove_object_manager/action/attach_detach_object.hpp"
-#include "manymove_object_manager/action/check_object_exists.hpp"
-#include "manymove_object_manager/action/get_object_pose.hpp"
+#include "manymove_msgs/action/add_collision_object.hpp"
+#include "manymove_msgs/action/remove_collision_object.hpp"
+#include "manymove_msgs/action/attach_detach_object.hpp"
+#include "manymove_msgs/action/check_object_exists.hpp"
+#include "manymove_msgs/action/get_object_pose.hpp"
 
-#include "manymove_signals/action/set_output.hpp"
-#include "manymove_signals/action/get_input.hpp"
-#include "manymove_signals/action/check_robot_state.hpp"
-#include "manymove_signals/action/reset_robot_state.hpp"
-#include "manymove_planner/action/unload_traj_controller.hpp"
-#include "manymove_planner/action/load_traj_controller.hpp"
+#include "manymove_msgs/action/set_output.hpp"
+#include "manymove_msgs/action/get_input.hpp"
+#include "manymove_msgs/action/check_robot_state.hpp"
+#include "manymove_msgs/action/reset_robot_state.hpp"
 
 #include <moveit_msgs/msg/robot_trajectory.hpp>
 #include <geometry_msgs/msg/pose.hpp>
@@ -33,12 +33,12 @@ namespace manymove_cpp_trees
 {
     /**
      * @class SetOutputAction
-     * @brief Sends a goal to the "set_output" action server (manymove_signals::action::SetOutput).
+     * @brief Sends a goal to the "set_output" action server (manymove_msgs::action::SetOutput).
      */
     class SetOutputAction : public BT::StatefulActionNode
     {
     public:
-        using SetOutput = manymove_signals::action::SetOutput;
+        using SetOutput = manymove_msgs::action::SetOutput;
         using GoalHandleSetOutput = rclcpp_action::ClientGoalHandle<SetOutput>;
 
         SetOutputAction(const std::string &name,
@@ -79,12 +79,12 @@ namespace manymove_cpp_trees
 
     /**
      * @class GetInputAction
-     * @brief Reads a digital input from "get_input" action server (manymove_signals::action::GetInput).
+     * @brief Reads a digital input from "get_input" action server (manymove_msgs::action::GetInput).
      */
     class GetInputAction : public BT::StatefulActionNode
     {
     public:
-        using GetInput = manymove_signals::action::GetInput;
+        using GetInput = manymove_msgs::action::GetInput;
         using GoalHandleGetInput = rclcpp_action::ClientGoalHandle<GetInput>;
 
         GetInputAction(const std::string &name,
@@ -130,7 +130,7 @@ namespace manymove_cpp_trees
     class CheckRobotStateAction : public BT::StatefulActionNode
     {
     public:
-        using CheckRobotState = manymove_signals::action::CheckRobotState;
+        using CheckRobotState = manymove_msgs::action::CheckRobotState;
         using GoalHandleCheckRobotState = rclcpp_action::ClientGoalHandle<CheckRobotState>;
 
         CheckRobotStateAction(const std::string &name,
@@ -167,18 +167,18 @@ namespace manymove_cpp_trees
 
     /**
      * @class ResetRobotStateAction
-     * @brief Send a goal to "reset_robot_state" (manymove_signals::action::ResetRobotState).
+     * @brief Send a goal to "reset_robot_state" (manymove_msgs::action::ResetRobotState).
      */
     class ResetRobotStateAction : public BT::StatefulActionNode
     {
     public:
-        using ResetRobotState = manymove_signals::action::ResetRobotState;
+        using ResetRobotState = manymove_msgs::action::ResetRobotState;
         using GoalHandleResetRobotState = rclcpp_action::ClientGoalHandle<ResetRobotState>;
 
-        using UnloadTrajController = manymove_planner::action::UnloadTrajController;
+        using UnloadTrajController = manymove_msgs::action::UnloadTrajController;
         using GoalHandleUnloadTrajController = rclcpp_action::ClientGoalHandle<UnloadTrajController>;
 
-        using LoadTrajController = manymove_planner::action::LoadTrajController;
+        using LoadTrajController = manymove_msgs::action::LoadTrajController;
         using GoalHandleLoadTrajController = rclcpp_action::ClientGoalHandle<LoadTrajController>;
 
         ResetRobotStateAction(const std::string &name,

@@ -19,14 +19,10 @@
   <depend>tf2_geometry_msgs</depend>
   <depend>yaml_cpp_vendor</depend>
   <depend>geometric_shapes</depend>
-
-  <build_depend>rosidl_default_generators</build_depend>
-  <exec_depend>rosidl_default_runtime</exec_depend>
+  <depend>manymove_msgs</depend>
 
   <test_depend>ament_lint_auto</test_depend>
   <test_depend>ament_lint_common</test_depend>
-
-  <member_of_group>rosidl_interface_packages</member_of_group>
 
   <export>
     <build_type>ament_cmake</build_type>

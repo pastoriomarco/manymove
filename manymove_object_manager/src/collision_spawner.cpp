@@ -4,9 +4,9 @@
 #include <yaml-cpp/yaml.h>
 #include <tf2/LinearMath/Quaternion.h>
 
-#include <manymove_object_manager/action/add_collision_object.hpp>
-#include <manymove_object_manager/action/remove_collision_object.hpp>
-#include <manymove_object_manager/action/check_object_exists.hpp>
+#include <manymove_msgs/action/add_collision_object.hpp>
+#include <manymove_msgs/action/remove_collision_object.hpp>
+#include <manymove_msgs/action/check_object_exists.hpp>
 
 #include <string>
 #include <vector>
@@ -31,9 +31,9 @@ public:
         double scale_mesh_y;
     };
 
-    using AddCollisionObject = manymove_object_manager::action::AddCollisionObject;
-    using RemoveCollisionObject = manymove_object_manager::action::RemoveCollisionObject;
-    using CheckObjectExists = manymove_object_manager::action::CheckObjectExists;
+    using AddCollisionObject = manymove_msgs::action::AddCollisionObject;
+    using RemoveCollisionObject = manymove_msgs::action::RemoveCollisionObject;
+    using CheckObjectExists = manymove_msgs::action::CheckObjectExists;
 
     CollisionSpawner()
         : Node("collision_spawner"), rng_(std::random_device{}())

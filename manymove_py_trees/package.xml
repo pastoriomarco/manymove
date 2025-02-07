@@ -12,6 +12,7 @@
   <depend>py_trees</depend>
   <depend>py_trees_ros</depend>
   <depend>manymove_planner</depend>
+  <depend>manymove_msgs</depend>
 
   <test_depend>ament_copyright</test_depend>
   <test_depend>ament_flake8</test_depend>

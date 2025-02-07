@@ -1,6 +1,6 @@
 import py_trees
 import rclpy
-from manymove_planner.action import ExecuteTrajectory
+from manymove_msgs.action import ExecuteTrajectory
 from rclpy.action import ActionClient
 
 class ExecuteTrajectoryBehaviour(py_trees.behaviour.Behaviour):
