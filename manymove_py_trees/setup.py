@@ -21,6 +21,7 @@ setup(
     entry_points={
         'console_scripts': [
             'bt_client = manymove_py_trees.bt_client:main',
+            'bt_client_panda = manymove_py_trees.bt_client_panda:main',
         ],
     },
 )
