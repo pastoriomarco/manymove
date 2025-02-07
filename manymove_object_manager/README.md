@@ -1,6 +1,5 @@
 # Object Manager
 
-[![License](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](LICENSE)
 ![ROS2 Humble](https://img.shields.io/badge/ROS-2%20Humble-orange.svg)
 
 A ROS 2 package that provides a unified way to add, remove, and check the existence of collision objects in a MoveIt 2 planning scene. Unlike other approaches that rely on the `/apply_planning_scene` service, **Object Manager** uses the default MoveIt 2 topics to publish collision objects, and it exposes **action servers** to handle sequential operations (such as verifying whether objects are truly added or removed in the scene).
@@ -271,12 +270,6 @@ Contributions are welcome! Please feel free to submit issues and pull requests.
 2. Create a feature branch.
 3. Commit your changes.
 4. Open a pull request describing your work.
-
----
-
-## License
-
-This project is licensed under the [Apache 2.0 License](LICENSE).
 
 ---
 

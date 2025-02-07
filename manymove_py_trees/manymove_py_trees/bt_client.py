@@ -67,15 +67,15 @@ def main():
         create_move("named", named_target=named_home, config=movement_configs["max_move"]),
     ]
 
-    whole_sequence = [
-        create_move("joint", joint_values=joint_rest, config=movement_configs["max_move"]),
-        create_move("joint", joint_values=joint_look_sx, config=movement_configs["max_move"]),
-        create_move("joint", joint_values=joint_look_dx, config=movement_configs["max_move"]),
-        create_move("pose", target=approach_target, config=movement_configs["mid_move"]),
-        create_move("cartesian", target=pick_target, config=movement_configs["slow_move"]),
-        create_move("cartesian", target=approach_target, config=movement_configs["max_move"]),
-        create_move("named", named_target=named_home, config=movement_configs["max_move"]),
-    ]
+    # whole_sequence = [
+    #     create_move("joint", joint_values=joint_rest, config=movement_configs["max_move"]),
+    #     create_move("joint", joint_values=joint_look_sx, config=movement_configs["max_move"]),
+    #     create_move("joint", joint_values=joint_look_dx, config=movement_configs["max_move"]),
+    #     create_move("pose", target=approach_target, config=movement_configs["mid_move"]),
+    #     create_move("cartesian", target=pick_target, config=movement_configs["slow_move"]),
+    #     create_move("cartesian", target=approach_target, config=movement_configs["max_move"]),
+    #     create_move("named", named_target=named_home, config=movement_configs["max_move"]),
+    # ]
 
     # 3) Build the tree with our parallel plan/exec logic
     list_of_sequences = [rest_position, scan_surroundings, pick_sequence, home_position]
@@ -94,6 +94,7 @@ def main():
     main_seq = py_trees.composites.Sequence("Main_Sequence", True)
     main_seq.add_child(chained_branch.root)
 
+    # # I can then add other branches to test
     # main_seq.add_child(rest_branch.root)
     # main_seq.add_child(scan_branch.root)
     # main_seq.add_child(pick_branch.root)

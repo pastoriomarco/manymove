@@ -215,7 +215,3 @@ Demonstrates:
 ## Contribution
 
 Contributions are welcome. Please submit issues or pull requests for new features or bug fixes.
-
-## License
-
-This project is licensed under the Apache 2.0 License. See the `LICENSE` file for details.
