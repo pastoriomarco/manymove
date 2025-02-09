@@ -57,7 +57,7 @@ def launch_setup(context, *args, **kwargs):
         parameters=[
             moveit_configs.to_dict(),
             {
-                'node_prefix': "{}_".format(planning_group),
+                'node_prefix': "{}_".format(planning_group.perform(context)),
                 'planner_type': "movegroup",
                 'velocity_scaling_factor': velocity_scaling_factor,
                 'acceleration_scaling_factor': acceleration_scaling_factor,

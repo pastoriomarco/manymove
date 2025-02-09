@@ -1,0 +1,66 @@
+# ManyMove project for ROS2 HUMBLE
+
+## DISCLAIMER
+
+I'm building this repository mainly for my own use as a roboticist starting to deploy cobots in production using ROS2.
+This is highly experimental and comes without any warranty about stability and safety: USE AT YOUR OWN RISK.
+IMPORTANT: this repository don't cover safety functions: they MUST be implemented using the internal safety system of the robot itself and/or a suitable safety controller, depending on your country's laws. Familiarize with the safety functions configuration of your robot's controller before attempting any live operation on a real robot.
+
+## Description
+
+The `manymove` project is meant for roboticists to ease the transition to ROS2 coming from the classic frameworks of major manifacturers.
+It provides a simplified and generalized framework build robotic manipulator control logic using ROS 2 and MoveIt 2. 
+This series of packages was created around Ufactory Lite6 and UF850 cobots, but is as generalized as possible and contains also an example configuration of Franka Emika Panda, which is the default demo model for Moveit in ROS2 Humble.
+
+## Quick start
+
+- **Install ROS2 Humble, Moveit2 and xarm_ros2**:
+  - You can follow the instructions on the Humble branch of [xarm_ros2 on github](https://github.com/xArm-Developer/xarm_ros2/tree/humble)
+- **Clone `manymove` humble branch**:
+  - From <workspace_dir>/<src> run:
+  ```bash
+  git clone --branch=humble https://github.com/pastoriomarco/manymove.git
+  ```
+  **Install the dependencies**
+  - From <workspace_dir>/<src> run:
+  ```bash
+  rosdep install --from-paths . --ignore-src --rosdistro $ROS_DISTRO -y
+  ```
+- **Copy the auxiliary files to run all examples with the right configuration**:
+  - Create the `other` folder in xarm_description/meshes 
+  ```bash
+  mkdir -p <workspace_dir>/<src>/xarm_ros2/xarm_description/meshes/other
+  ```
+  - Copy pneumatic gripper's .stl file
+  ```bash
+  cp <workspace_dir>/<src>/manymove/manymove_object_manager/meshes/gimatic_pq2516/* <workspace_dir>/<src>/xarm_ros2/xarm_description/meshes/other/
+  ```
+  - Copy the user param file in xarm_api/config
+  ```bash
+  cp <workspace_dir>/<src>/manymove/manymove_planner/config/xarm_user_params.yaml <workspace_dir>/<src>/xarm_ros2/xarm_api/config/
+  ```
+
+## Examples
+
+### Launching the Action Server
+
+- **Lite 6 manipulator example launcher**:
+  ```bash
+  ros2 launch manymove_planner lite_micpp_fake_cpp_trees.launch.py
+  ```
+  
+- **Dual robot: Lite 6 and UF850 manipulators launcher example**:
+  ```bash
+  ros2 launch manymove_planner dual_micpp_fake_cpp_trees.launch.py
+  ```
+
+- **Panda Manipulator**:
+- To use with a moveit2 humble demo with Panda robot launcher in another terminal, refer to [Moveit2 tutorials getting started](https://moveit.picknik.ai/humble/doc/tutorials/getting_started/getting_started.html):
+- Terminal 1:
+  ```bash
+  ros2 launch moveit2_tutorials demo.launch.py
+  ```
+- Terminal 2:
+  ```bash
+  ros2 launch manymove_planner panda_action_server_node.launch.py
+  ```
