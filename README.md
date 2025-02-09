@@ -2,8 +2,8 @@
 
 ## DISCLAIMER
 
-I'm building this repository mainly for my own use as a roboticist starting to deploy cobots in production using ROS2.
-This is highly experimental and comes without any warranty about stability and safety: USE AT YOUR OWN RISK.
+I'm building this repository mainly for my own use as a roboticist, to deploy cobots in production using ROS2.
+This is HIGHLY EXPERIMENTAL and comes without any warranty about stability and safety: USE AT YOUR OWN RISK.
 IMPORTANT: this repository don't cover safety functions: they MUST be implemented using the internal safety system of the robot itself and/or a suitable safety controller, depending on your country's laws. Familiarize with the safety functions configuration of your robot's controller before attempting any live operation on a real robot.
 
 ## Description
