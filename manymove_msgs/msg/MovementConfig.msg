@@ -2,6 +2,9 @@ float64 velocity_scaling_factor
 float64 acceleration_scaling_factor
 float64 step_size
 float64 jump_threshold
+float64 cartesian_precision_translational
+float64 cartesian_precision_rotational
+float64 cartesian_precision_max_resolution
 float64 max_cartesian_speed
 int32 max_exec_tries
 int32 plan_number_target

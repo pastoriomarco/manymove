@@ -6,6 +6,7 @@
 #include "geometry_msgs/msg/pose.hpp"
 #include "manymove_msgs/msg/movement_config.hpp"
 #include "manymove_msgs/msg/move_manipulator_goal.hpp"
+#include <unordered_map>
 
 namespace manymove_cpp_trees
 {

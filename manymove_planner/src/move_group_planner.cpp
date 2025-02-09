@@ -202,58 +202,15 @@ std::pair<bool, moveit_msgs::msg::RobotTrajectory> MoveGroupPlanner::applyTimePa
         }
 
         bool time_param_success = false;
-        if (config.smoothing_type == "time_optimal")
-        {
-            trajectory_processing::TimeOptimalTrajectoryGeneration time_param;
-            time_param_success = time_param.computeTimeStamps(*robot_traj_ptr,
-                                                              velocity_scaling_factor,
-                                                              acceleration_scaling_factor);
-        }
-        else if (config.smoothing_type == "iterative" ||
-                 config.smoothing_type == "iterative_parabolic")
-        {
-            trajectory_processing::IterativeSplineParameterization time_param;
-            time_param_success = time_param.computeTimeStamps(*robot_traj_ptr,
-                                                              velocity_scaling_factor,
-                                                              acceleration_scaling_factor);
-        }
-        else if (config.smoothing_type == "ruckig")
-        {
-            // Ruckig-based smoothing
-            time_param_success = trajectory_processing::RuckigSmoothing::applySmoothing(
-                *robot_traj_ptr, velocity_scaling_factor, acceleration_scaling_factor);
-        }
-        else
-        {
-            // Default fallback to time_optimal
-            trajectory_processing::TimeOptimalTrajectoryGeneration time_param;
-            time_param_success = time_param.computeTimeStamps(*robot_traj_ptr,
-                                                              velocity_scaling_factor,
-                                                              acceleration_scaling_factor);
-        }
+        trajectory_processing::TimeOptimalTrajectoryGeneration time_param;
+        time_param_success = time_param.computeTimeStamps(*robot_traj_ptr,
+                                                          velocity_scaling_factor,
+                                                          acceleration_scaling_factor);
 
         if (!time_param_success)
         {
-            // Attempt fallback if TOTG or iterative fails
-            RCLCPP_ERROR(logger_, "Failed to compute time stamps with '%s'",
-                         config.smoothing_type.c_str());
-            RCLCPP_WARN(logger_, "Fallback to time-optimal smoothing...");
-
-            // Reset durations
-            for (size_t i = 1; i < robot_traj_ptr->getWayPointCount(); i++)
-            {
-                robot_traj_ptr->setWayPointDurationFromPrevious(i, 0.0);
-            }
-
-            trajectory_processing::TimeOptimalTrajectoryGeneration fallback_param;
-            bool fallback_ok = fallback_param.computeTimeStamps(*robot_traj_ptr,
-                                                                velocity_scaling_factor,
-                                                                acceleration_scaling_factor);
-            if (!fallback_ok)
-            {
-                RCLCPP_ERROR(logger_, "Fallback time-optimal smoothing also failed.");
-                return {false, moveit_msgs::msg::RobotTrajectory()};
-            }
+            RCLCPP_ERROR(logger_, "Time-optimal smoothing failed.");
+            return {false, moveit_msgs::msg::RobotTrajectory()};
         }
 
         // Check cartesian speed if needed
@@ -332,8 +289,8 @@ std::pair<bool, moveit_msgs::msg::RobotTrajectory> MoveGroupPlanner::plan(const 
             moveit::planning_interface::MoveGroupInterface::Plan plan;
             if (move_group_interface_->plan(plan) == moveit::core::MoveItErrorCode::SUCCESS)
             {
-                double length = computePathLength(plan.trajectory_);
-                trajectories.emplace_back(plan.trajectory_, length);
+                double length = computePathLength(plan.trajectory);
+                trajectories.emplace_back(plan.trajectory, length);
             }
             else
             {
@@ -355,12 +312,12 @@ std::pair<bool, moveit_msgs::msg::RobotTrajectory> MoveGroupPlanner::plan(const 
             moveit::planning_interface::MoveGroupInterface::Plan plan;
             RCLCPP_DEBUG_STREAM(logger_, "Cartesian path planning attempt with step size " << goal_msg.goal.config.step_size << ", jump threshold " << goal_msg.goal.config.jump_threshold);
             double fraction = move_group_interface_->computeCartesianPath(
-                waypoints, goal_msg.goal.config.step_size, goal_msg.goal.config.jump_threshold, plan.trajectory_);
+                waypoints, goal_msg.goal.config.step_size, goal_msg.goal.config.jump_threshold, plan.trajectory);
 
             if (fraction >= 1.0)
             {
-                double length = computePathLength(plan.trajectory_);
-                trajectories.emplace_back(plan.trajectory_, length);
+                double length = computePathLength(plan.trajectory);
+                trajectories.emplace_back(plan.trajectory, length);
             }
             else
             {

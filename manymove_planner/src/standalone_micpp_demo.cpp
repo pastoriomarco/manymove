@@ -2,15 +2,15 @@
 #include <memory>
 
 // MoveitCpp
-#include <moveit/moveit_cpp/moveit_cpp.h>
-#include <moveit/moveit_cpp/planning_component.h>
+#include <moveit/moveit_cpp/moveit_cpp.hpp>
+#include <moveit/moveit_cpp/planning_component.hpp>
 
-#include <geometry_msgs/msg/point_stamped.h>
+#include <geometry_msgs/msg/point_stamped.hpp>
 
 // For linear movements
 #include <tf2_eigen/tf2_eigen.hpp>
-#include <moveit/robot_state/robot_state.h>
-#include <moveit/robot_state/cartesian_interpolator.h>
+#include <moveit/robot_state/robot_state.hpp>
+#include <moveit/robot_state/cartesian_interpolator.hpp>
 
 // For visualization
 #include <moveit_visual_tools/moveit_visual_tools.h>
@@ -49,6 +49,8 @@ int main(int argc, char **argv)
     //
     static const std::string PLANNING_GROUP = "lite6";
     static const std::string LOGNAME = "moveit_cpp_tutorial";
+    static const std::vector<std::string> CONTROLLERS(1, "lite6_traj_controller");
+    bool blocking = true;
 
     /* Otherwise robot with zeros joint_states */
     rclcpp::sleep_for(std::chrono::seconds(1));
@@ -56,7 +58,7 @@ int main(int argc, char **argv)
     RCLCPP_INFO(LOGGER, "Starting MoveIt Tutorials...");
 
     auto moveit_cpp_ptr = std::make_shared<moveit_cpp::MoveItCpp>(node);
-    moveit_cpp_ptr->getPlanningSceneMonitor()->providePlanningSceneService();
+    moveit_cpp_ptr->getPlanningSceneMonitorNonConst()->providePlanningSceneService();
 
     auto planning_components = std::make_shared<moveit_cpp::PlanningComponent>(PLANNING_GROUP, moveit_cpp_ptr);
     auto robot_model_ptr = moveit_cpp_ptr->getRobotModel();
@@ -69,7 +71,7 @@ int main(int argc, char **argv)
     // The package MoveItVisualTools provides many capabilities for visualizing objects, robots,
     // and trajectories in RViz as well as debugging tools such as step-by-step introspection of a script
     moveit_visual_tools::MoveItVisualTools visual_tools(node, "link_base", "moveit_cpp_tutorial",
-                                                        moveit_cpp_ptr->getPlanningSceneMonitor());
+                                                        moveit_cpp_ptr->getPlanningSceneMonitorNonConst());
     visual_tools.deleteAllMarkers();
     visual_tools.loadRemoteControl();
 
@@ -112,7 +114,7 @@ int main(int argc, char **argv)
 
     // Now, we call the PlanningComponents to compute the plan and visualize it.
     // Note that we are just planning
-    auto plan_solution1 = planning_components->plan();
+    const planning_interface::MotionPlanResponse plan_solution1 = planning_components->plan();
 
     // Check if PlanningComponents succeeded in finding the plan
     if (plan_solution1)
@@ -127,7 +129,7 @@ int main(int argc, char **argv)
         visual_tools.trigger();
 
         /* Uncomment if you want to execute the plan */
-        planning_components->execute(); // Execute the plan
+        moveit_controller_manager::ExecutionStatus result = moveit_cpp_ptr->execute(plan_solution1.trajectory, blocking, CONTROLLERS); // Execute the plan
     }
 
     // Plan #1 visualization:
@@ -158,7 +160,7 @@ int main(int argc, char **argv)
     planning_components->setGoal(goal_joint_state);
 
     // Plan to the joint target
-    auto plan_solution6 = planning_components->plan();
+    const planning_interface::MotionPlanResponse plan_solution6 = planning_components->plan();
     if (plan_solution6)
     {
         // Visualize the start and goal joint states
@@ -176,7 +178,7 @@ int main(int argc, char **argv)
         visual_tools.trigger();
 
         // Execute the plan
-        planning_components->execute(); // Execute the plan
+        moveit_cpp_ptr->execute(plan_solution6.trajectory, true, CONTROLLERS); // Execute the plan
     }
 
     // Visualization
@@ -211,7 +213,7 @@ int main(int argc, char **argv)
     target_pose1.pose.position.z = 0.15;
     planning_components->setGoal(target_pose1, "link_tcp");
 
-    auto plan_solution2 = planning_components->plan();
+    const planning_interface::MotionPlanResponse plan_solution2 = planning_components->plan();
     if (plan_solution2)
     {
         moveit::core::RobotState robot_state(robot_model_ptr);
@@ -224,7 +226,7 @@ int main(int argc, char **argv)
         visual_tools.trigger();
 
         /* Uncomment if you want to execute the plan */
-        // planning_components->execute(); // Execute the plan
+        // moveit_cpp_ptr->execute(plan_solution2.trajectory, true, CONTROLLERS); // Execute the plan
     }
 
     // Plan #3 visualization:
@@ -260,7 +262,7 @@ int main(int argc, char **argv)
 
     planning_components->setGoal(target_state);
 
-    auto plan_solution3 = planning_components->plan();
+    const planning_interface::MotionPlanResponse plan_solution3 = planning_components->plan();
     if (plan_solution3)
     {
         moveit::core::RobotState robot_state(robot_model_ptr);
@@ -289,7 +291,7 @@ int main(int argc, char **argv)
         visual_tools.trigger();
 
         /* Uncomment if you want to execute the plan */
-        planning_components->execute(); // Execute the plan
+        moveit_cpp_ptr->execute(plan_solution3.trajectory, true, CONTROLLERS); // Execute the plan
     }
 
     // Plan #4 visualization:
@@ -323,7 +325,7 @@ int main(int argc, char **argv)
     planning_components->setGoal(target_pose1, "link_tcp"); // WARNING: if modified it will have to be set anew
 
     // Again we will reuse the old start that we had and plan from it.
-    auto plan_solution4 = planning_components->plan();
+    const planning_interface::MotionPlanResponse plan_solution4 = planning_components->plan();
     if (plan_solution4)
     {
         moveit::core::RobotState robot_state(robot_model_ptr);
@@ -336,7 +338,7 @@ int main(int argc, char **argv)
         visual_tools.trigger();
 
         /* Uncomment if you want to execute the plan */
-        planning_components->execute(); // Execute the plan
+        moveit_cpp_ptr->execute(plan_solution4.trajectory, true, CONTROLLERS); // Execute the plan
     }
 
     // Plan #5 visualization:
@@ -378,13 +380,13 @@ int main(int argc, char **argv)
 
     // Add object to planning scene
     { // Lock PlanningScene
-        planning_scene_monitor::LockedPlanningSceneRW scene(moveit_cpp_ptr->getPlanningSceneMonitor());
+        planning_scene_monitor::LockedPlanningSceneRW scene(moveit_cpp_ptr->getPlanningSceneMonitorNonConst());
         scene->processCollisionObjectMsg(collision_object);
     } // Unlock PlanningScene
     planning_components->setStartStateToCurrentState();
     planning_components->setGoal("home");
 
-    auto plan_solution5 = planning_components->plan();
+    const planning_interface::MotionPlanResponse plan_solution5 = planning_components->plan();
     if (plan_solution5)
     {
         visual_tools.publishText(text_pose, "Planning_Around_Collision_Object", rvt::WHITE, rvt::XLARGE);
@@ -392,7 +394,7 @@ int main(int argc, char **argv)
         visual_tools.trigger();
 
         /* Uncomment if you want to execute the plan */
-        planning_components->execute(); // Execute the plan
+        moveit_cpp_ptr->execute(plan_solution5.trajectory, true, CONTROLLERS); // Execute the plan
     }
 
     // Plan #6 visualization:
@@ -426,6 +428,7 @@ int main(int argc, char **argv)
     // Prepare a vector of RobotStatePtr for the resulting trajectory states
     std::vector<moveit::core::RobotStatePtr> trajectory_states;
     moveit::core::RobotStatePtr wp_start_state = planning_components->getStartState();
+    moveit::core::CartesianPrecision cartesian_precision{.translational = 0.001, .rotational = 0.01, .max_resolution = 1e-3};
 
     // Compute Cartesian path using the correct signature
     double fraction = moveit::core::CartesianInterpolator::computeCartesianPath(
@@ -436,7 +439,7 @@ int main(int argc, char **argv)
         waypoints,                                    // Waypoints for Cartesian motion
         true,                                         // Global reference frame
         moveit::core::MaxEEFStep(0.01),               // Maximum end-effector step size
-        moveit::core::JumpThreshold(0.0),             // Jump threshold
+        cartesian_precision,                          // Cartesian precision
         moveit::core::GroupStateValidityCallbackFn(), // No validity callback
         kinematics::KinematicsQueryOptions(),         // Default kinematics options
         nullptr                                       // No IK cost function
@@ -461,7 +464,7 @@ int main(int argc, char **argv)
 
         // Execute the trajectory
         auto trajectory_ptr = std::make_shared<robot_trajectory::RobotTrajectory>(trajectory);
-        moveit_cpp_ptr->execute(PLANNING_GROUP, trajectory_ptr);
+        moveit_cpp_ptr->execute(trajectory_ptr);
     }
     else
     {

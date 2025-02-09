@@ -53,6 +53,7 @@ ament_target_dependencies(moveit_cpp_planner_lib
   geometry_msgs
   control_msgs
   manymove_msgs
+  moveit_ros_planning
 )
 
 ##########################

@@ -15,7 +15,7 @@ MoveItCppPlanner::MoveItCppPlanner(
       traj_controller_(traj_controller)
 {
     moveit_cpp_ptr_ = std::make_shared<moveit_cpp::MoveItCpp>(node_);
-    moveit_cpp_ptr_->getPlanningSceneMonitor()->providePlanningSceneService();
+    moveit_cpp_ptr_->getPlanningSceneMonitorNonConst()->providePlanningSceneService();
 
     /**
      * The following functions were used to publish the standard topics and services needed by the manymove_object_manager package.
@@ -511,6 +511,11 @@ std::pair<bool, moveit_msgs::msg::RobotTrajectory> MoveItCppPlanner::plan(const 
             moveit::core::GroupStateValidityCallbackFn custom_callback =
                 std::bind(&MoveItCppPlanner::isStateValid, this, std::placeholders::_1, std::placeholders::_2);
 
+            moveit::core::CartesianPrecision cartesian_precision;
+            cartesian_precision.translational = 0.001;
+            cartesian_precision.rotational = 0.01;
+            cartesian_precision.max_resolution = 0.001;
+
             double fraction = moveit::core::CartesianInterpolator::computeCartesianPath(
                 start_state.get(),
                 joint_model_group_ptr,
@@ -519,7 +524,7 @@ std::pair<bool, moveit_msgs::msg::RobotTrajectory> MoveItCppPlanner::plan(const 
                 eigen_waypoints,
                 true,
                 moveit::core::MaxEEFStep(goal_msg.goal.config.step_size),
-                moveit::core::JumpThreshold(goal_msg.goal.config.jump_threshold),
+                cartesian_precision,
                 custom_callback,
                 kinematics::KinematicsQueryOptions(),
                 nullptr);
@@ -626,51 +631,11 @@ std::pair<bool, moveit_msgs::msg::RobotTrajectory> MoveItCppPlanner::applyTimePa
                                                               velocity_scaling_factor,
                                                               acceleration_scaling_factor);
         }
-        else if (config.smoothing_type == "iterative" ||
-                 config.smoothing_type == "iterative_parabolic")
-        {
-            trajectory_processing::IterativeSplineParameterization time_param;
-            time_param_success = time_param.computeTimeStamps(*robot_traj_ptr,
-                                                              velocity_scaling_factor,
-                                                              acceleration_scaling_factor);
-        }
-        else if (config.smoothing_type == "ruckig")
-        {
-            // Ruckig-based smoothing
-            time_param_success = trajectory_processing::RuckigSmoothing::applySmoothing(
-                *robot_traj_ptr, velocity_scaling_factor, acceleration_scaling_factor);
-        }
-        else
-        {
-            // Default fallback to time_optimal
-            trajectory_processing::TimeOptimalTrajectoryGeneration time_param;
-            time_param_success = time_param.computeTimeStamps(*robot_traj_ptr,
-                                                              velocity_scaling_factor,
-                                                              acceleration_scaling_factor);
-        }
 
         if (!time_param_success)
         {
-            // Attempt fallback if TOTG or iterative fails
-            RCLCPP_ERROR(logger_, "Failed to compute time stamps with '%s'",
-                         config.smoothing_type.c_str());
-            RCLCPP_WARN(logger_, "Fallback to time-optimal smoothing...");
-
-            // Reset durations
-            for (size_t i = 1; i < robot_traj_ptr->getWayPointCount(); i++)
-            {
-                robot_traj_ptr->setWayPointDurationFromPrevious(i, 0.0);
-            }
-
-            trajectory_processing::TimeOptimalTrajectoryGeneration fallback_param;
-            bool fallback_ok = fallback_param.computeTimeStamps(*robot_traj_ptr,
-                                                                velocity_scaling_factor,
-                                                                acceleration_scaling_factor);
-            if (!fallback_ok)
-            {
-                RCLCPP_ERROR(logger_, "Fallback time-optimal smoothing also failed.");
-                return {false, moveit_msgs::msg::RobotTrajectory()};
-            }
+            RCLCPP_ERROR(logger_, "Time-optimal smoothing failed.");
+            return {false, moveit_msgs::msg::RobotTrajectory()};
         }
 
         // Check cartesian speed if needed
@@ -827,7 +792,7 @@ bool MoveItCppPlanner::isStateValid(const moveit::core::RobotState *state,
     collision_request.group_name = group->getName();
 
     // 2. Access the planning scene via the PlanningSceneMonitor
-    auto psm = moveit_cpp_ptr_->getPlanningSceneMonitor();
+    auto psm = moveit_cpp_ptr_->getPlanningSceneMonitorNonConst();
     if (!psm)
     {
         RCLCPP_ERROR(logger_, "PlanningSceneMonitor is null. Cannot perform collision checking.");
