@@ -1,4 +1,4 @@
-# ManyMove project for ROS2 HUMBLE
+# ManyMove project
 
 ## DISCLAIMER
 
@@ -49,7 +49,7 @@ This series of packages was created around Ufactory Lite6 and UF850 cobots, but 
   ```bash
   colcon build
   ```
-- **Don't forget to source!**: 
+- **Don't forget to source!**
   - From `<workspace_dir>`:
   ```bash
   source ./install/setup.bash
