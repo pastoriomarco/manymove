@@ -85,8 +85,8 @@ This series of packages was created around Ufactory Lite6 and UF850 cobots, but 
 ## Credits
 
 - **To create the control logic, `manymove` leverages some great behaviortree repos:**:
-  - [BehaviorTree.cpp v3.8](https://github.com/BehaviorTree/BehaviorTree.CPP/tree/v3.8), installed through dependencies
-    -     ros-humble-behaviortree-cpp-v3)
+  - [BehaviorTree.cpp v3.8](https://github.com/BehaviorTree/BehaviorTree.CPP/tree/v3.8), installed through dependencies:
+    -     ros-humble-behaviortree-cpp-v3
     - [Groot](https://github.com/BehaviorTree/Groot), BehaviorTree.cpp v3.8's visualizer, to install from instructions in the github page.
   - [py_trees_ros](https://github.com/splintered-reality/py_trees_ros), installed through dependencies:
     -     ros-jazzy-py-trees \
