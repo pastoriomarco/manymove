@@ -1,5 +1,5 @@
 import py_trees
-from manymove_planner.action import PlanManipulator  # generated from PlanManipulator.action
+from manymove_msgs.action import PlanManipulator
 from rclpy.action import ActionClient
 
 class PlanningActionBehaviour(py_trees.behaviour.Behaviour):

@@ -580,7 +580,7 @@ namespace manymove_cpp_trees
 
         auto send_goal_options = rclcpp_action::Client<manymove_msgs::action::ExecuteTrajectory>::SendGoalOptions();
 
-        // Optional: add result callback to see if STOP completed
+        // Add result callback to see if STOP completed
         send_goal_options.result_callback =
             [this](const typename rclcpp_action::ClientGoalHandle<
                    manymove_msgs::action::ExecuteTrajectory>::WrappedResult &wrapped_result)

@@ -1,8 +1,8 @@
 from dataclasses import dataclass
 from typing import List, Optional
-from manymove_planner.msg import MovementConfig, MoveManipulatorGoal
-from manymove_planner.action import PlanManipulator
-from manymove_planner.action import ExecuteTrajectory
+from manymove_msgs.msg import MovementConfig, MoveManipulatorGoal
+from manymove_msgs.action import PlanManipulator
+from manymove_msgs.action import ExecuteTrajectory
 
 import rclpy
 from rclpy.action import ActionClient
