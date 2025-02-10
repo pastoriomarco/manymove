@@ -1,9 +1,6 @@
 # ManyMove project
-[![ManyMove Example]([https://img.youtube.com/vi/VIDEO_ID/0.jpg](https://youtu.be/s7oo4rAEnlA))]([https://www.youtube.com/watch?v=VIDEO_ID](https://youtu.be/s7oo4rAEnlA))
 
-
-[![ManyMove Example](https://youtu.be/s7oo4rAEnlA)](https://youtu.be/s7oo4rAEnlA)
-
+[![Watch the video](https://img.youtube.com/vi/s7oo4rAEnlA/0.jpg)](https://youtu.be/s7oo4rAEnlA)
 
 ## DISCLAIMER
 
