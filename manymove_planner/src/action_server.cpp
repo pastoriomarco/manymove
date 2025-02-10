@@ -321,11 +321,19 @@ private:
                             // 1) Get the robot's current actual joint positions from the feedback
                             const auto &actual_positions = feedback->actual.positions;
 
-                            // If for some reason actual_positions is empty, guard here
                             if (actual_positions.empty())
                             {
-                                RCLCPP_WARN(node_->get_logger(),
-                                            "[ActionServer] Feedback has no positions. Skipping collision check");
+                                RCLCPP_ERROR(node_->get_logger(),
+                                             "[ActionServer] Feedback has no positions. Aborting execution.");
+
+                                collision_detected = true; // or some other flag
+                                // Optionally publish feedback so the client knows we are aborting
+                                auto exec_feedback = std::make_shared<manymove_msgs::action::ExecuteTrajectory::Feedback>();
+                                exec_feedback->progress = -1.0f;
+                                exec_feedback->in_collision = true; // or special code
+                                goal_handle->publish_feedback(exec_feedback);
+
+                                // Then simply return. Your result_callback will see "collision_detected=true" and abort.
                                 return;
                             }
 
