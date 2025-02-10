@@ -4,8 +4,10 @@
 
 ## DISCLAIMER
 
-This repository is intended primarily for my own use as a roboticist, to deploy cobots in production using ROS2.
-This is HIGHLY EXPERIMENTAL and comes with no warranty of stability or safety: USE AT YOUR OWN RISK.
+This repository is intended primarily for my own use as a roboticist, to deploy cobots in production using ROS2. 
+
+This is HIGHLY EXPERIMENTAL and comes with no warranty of stability or safety: USE AT YOUR OWN RISK. 
+
 IMPORTANT SAFETY NOTICE: this repository does not cover safety functions. Safety MUST be implemented using the internal safety system of the robot's controller and/or an appropriate safety controller, in compliance with your country’s regulations. Before deploying on a real robot, ensure that safety mechanisms are correctly configured.
 
 ## Description
@@ -84,13 +86,16 @@ This series of packages was created around Ufactory Lite6 and UF850 cobots, but 
   
 ## Credits
 
-- **To create the control logic, `manymove` leverages some great behaviortree repos:**:
+- **To create the control logic, `manymove` leverages some great behaviortree repos:**
   - [BehaviorTree.cpp v3.8](https://github.com/BehaviorTree/BehaviorTree.CPP/tree/v3.8), installed through dependencies:
     -     ros-humble-behaviortree-cpp-v3
-    - [Groot](https://github.com/BehaviorTree/Groot), BehaviorTree.cpp v3.8's visualizer, to install from instructions in the github page.
+  
+  - [Groot](https://github.com/BehaviorTree/Groot), BehaviorTree.cpp v3.8's visualizer:
+    - To be installed manually following the instructions in the [github page](https://github.com/BehaviorTree/Groot?tab=readme-ov-file#dependencies-installation-and-usage)
+      
   - [py_trees_ros](https://github.com/splintered-reality/py_trees_ros), installed through dependencies:
-    -     ros-jazzy-py-trees \
-          ros-jazzy-py-trees-ros-interfaces \
-          ros-jazzy-py-trees-ros \
-          ros-jazzy-py-trees-ros-tutorials \
-          ros-jazzy-py-trees-ros-viewer
+    -     ros-humble-py-trees \
+          ros-humble-py-trees-ros-interfaces \
+          ros-humble-py-trees-ros \
+          ros-humble-py-trees-ros-tutorials \
+          ros-humble-py-trees-ros-viewer
