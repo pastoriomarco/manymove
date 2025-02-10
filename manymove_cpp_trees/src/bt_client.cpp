@@ -131,29 +131,29 @@ int main(int argc, char **argv)
      * of logically corralated moves.
      */
     std::vector<Move> rest_position = {
-        {"joint", "", joint_rest, "", move_configs["max_move"]},
+        {robot_prefix, "joint", "", joint_rest, "", move_configs["max_move"]},
     };
 
     std::vector<Move> scan_surroundings = {
-        {"joint", "", joint_look_sx, "", move_configs["max_move"]},
-        {"joint", "", joint_look_dx, "", move_configs["max_move"]},
+        {robot_prefix, "joint", "", joint_look_sx, "", move_configs["max_move"]},
+        {robot_prefix, "joint", "", joint_look_dx, "", move_configs["max_move"]},
     };
 
     // Sequences for Pick/Drop/Homing
     std::vector<Move> pick_sequence = {
-        {"pose", "approach_pick_target", {}, "", move_configs["mid_move"]},
-        {"cartesian", "pick_target", {}, "", move_configs["slow_move"]},
+        {robot_prefix, "pose", "approach_pick_target", {}, "", move_configs["mid_move"]},
+        {robot_prefix, "cartesian", "pick_target", {}, "", move_configs["slow_move"]},
     };
 
     std::vector<Move> drop_sequence = {
-        {"pose", "approach_pick_target", {}, "", move_configs["mid_move"]},
-        {"pose", "approach_drop_target", {}, "", move_configs["max_move"]},
-        {"cartesian", "drop_target", {}, "", move_configs["slow_move"]},
+        {robot_prefix, "pose", "approach_pick_target", {}, "", move_configs["mid_move"]},
+        {robot_prefix, "pose", "approach_drop_target", {}, "", move_configs["max_move"]},
+        {robot_prefix, "cartesian", "drop_target", {}, "", move_configs["slow_move"]},
     };
 
     std::vector<Move> home_position = {
-        {"cartesian", "approach_drop_target", {}, "", move_configs["max_move"]},
-        {"named", "", {}, named_home, move_configs["max_move"]},
+        {robot_prefix, "cartesian", "approach_drop_target", {}, "", move_configs["max_move"]},
+        {robot_prefix, "named", "", {}, named_home, move_configs["max_move"]},
     };
 
     /*

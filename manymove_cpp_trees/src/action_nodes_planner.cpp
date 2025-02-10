@@ -50,7 +50,7 @@ namespace manymove_cpp_trees
     BT::NodeStatus PlanningAction::onStart()
     {
         RCLCPP_DEBUG(node_->get_logger(),
-                    "PlanningAction [%s]: onStart() called.", name().c_str());
+                     "PlanningAction [%s]: onStart() called.", name().c_str());
 
         goal_sent_ = false;
         result_received_ = false;
@@ -76,6 +76,24 @@ namespace manymove_cpp_trees
             return BT::NodeStatus::FAILURE;
         }
 
+        // Retrieve the input "robot_prefix" for the current plan
+        std::string input_robot_prefix;
+        if (!getInput<std::string>("robot_prefix", input_robot_prefix))
+        {
+            input_robot_prefix = "";
+        }
+
+        // This is the prefix actually stored in the move
+        std::string stored_move_prefix = move_ptr->robot_prefix;
+
+        // Check if move prefix exists:
+        if ((!stored_move_prefix.empty()) && (stored_move_prefix != input_robot_prefix))
+        {
+            RCLCPP_ERROR(node_->get_logger(),
+                         "Move robot prefix not found or prefix mismatch: Aborting plan.");
+            return BT::NodeStatus::FAILURE;
+        }
+
         // **Begin: Set start_joint_values based on previous move**
         try
         {
@@ -83,55 +101,80 @@ namespace manymove_cpp_trees
             if (current_move_id_int > 0)
             {
                 int previous_move_id_int = current_move_id_int - 1;
+
+                // 1) Check validity_{prevID}
                 std::string validity_key = "validity_" + std::to_string(previous_move_id_int);
                 bool prev_validity = false;
+
                 if (config().blackboard->get(validity_key, prev_validity) && prev_validity)
                 {
-                    std::string trajectory_key = "trajectory_" + std::to_string(previous_move_id_int);
-                    moveit_msgs::msg::RobotTrajectory previous_traj;
-                    if (config().blackboard->get(trajectory_key, previous_traj) &&
-                        !previous_traj.joint_trajectory.points.empty())
+                    // 2) Check "move_{prevID}" to ensure same robot prefix
+                    std::string prev_move_key = "move_" + std::to_string(previous_move_id_int);
+                    std::shared_ptr<Move> prev_move_ptr;
+                    if (config().blackboard->get(prev_move_key, prev_move_ptr))
                     {
-                        // Get the last point's joint positions
-                        const auto &last_point = previous_traj.joint_trajectory.points.back();
-                        move_ptr->start_joint_values = last_point.positions;
-                        RCLCPP_INFO(node_->get_logger(),
-                                    "PlanningAction [%s]: Set start_joint_values from move_%d's trajectory.",
-                                    name().c_str(), previous_move_id_int);
+                        // If the prefixes match, THEN copy
+                        if (prev_move_ptr->robot_prefix == move_ptr->robot_prefix)
+                        {
+                            // 3) Check if trajectory_{prevID} is non-empty
+                            std::string trajectory_key = "trajectory_" + std::to_string(previous_move_id_int);
+                            moveit_msgs::msg::RobotTrajectory previous_traj;
+                            if (config().blackboard->get(trajectory_key, previous_traj) &&
+                                !previous_traj.joint_trajectory.points.empty())
+                            {
+                                // Copy last waypoint
+                                const auto &last_point = previous_traj.joint_trajectory.points.back();
+                                move_ptr->start_joint_values = last_point.positions;
+
+                                RCLCPP_INFO(node_->get_logger(),
+                                            "PlanningAction [%s]: Copied last positions from move_%d => start_joint_values. (prefix=%s)",
+                                            name().c_str(), previous_move_id_int,
+                                            move_ptr->robot_prefix.c_str());
+                            }
+                            else
+                            {
+                                // no trajectory or empty => skip
+                                move_ptr->start_joint_values.clear();
+                                RCLCPP_WARN(node_->get_logger(),
+                                            "PlanningAction [%s]: Previous trajectory '%s' missing or empty. Using empty start_joint_values.",
+                                            name().c_str(), trajectory_key.c_str());
+                            }
+                        }
+                        else
+                        {
+                            // Different robot => skip
+                            move_ptr->start_joint_values.clear();
+                            RCLCPP_INFO(node_->get_logger(),
+                                        "PlanningAction [%s]: Not copying from move_%d => different prefix (%s vs %s).",
+                                        name().c_str(), previous_move_id_int,
+                                        prev_move_ptr->robot_prefix.c_str(),
+                                        move_ptr->robot_prefix.c_str());
+                        }
                     }
                     else
                     {
-                        // Trajectory missing or empty; use empty joint state
-                        move_ptr->start_joint_values = {};
-                        RCLCPP_WARN(node_->get_logger(),
-                                    "PlanningAction [%s]: Previous trajectory '%s' missing or empty. Using empty joint state.",
-                                    name().c_str(), trajectory_key.c_str());
+                        // can't find the previous move struct => skip
+                        move_ptr->start_joint_values.clear();
                     }
                 }
                 else
                 {
-                    // Previous move invalid; use empty joint state
-                    move_ptr->start_joint_values = {};
-                    RCLCPP_WARN(node_->get_logger(),
-                                "PlanningAction [%s]: Previous move_%d is invalid. Using empty joint state.",
-                                name().c_str(), previous_move_id_int);
+                    // invalid => skip
+                    move_ptr->start_joint_values.clear();
                 }
             }
             else
             {
-                // First move; use empty joint state
-                move_ptr->start_joint_values = {};
-                RCLCPP_INFO(node_->get_logger(),
-                            "PlanningAction [%s]: First move. Using empty joint state.",
-                            name().c_str());
+                // first move => no previous
+                move_ptr->start_joint_values.clear();
             }
         }
         catch (const std::exception &e)
         {
             RCLCPP_ERROR(node_->get_logger(),
-                         "PlanningAction [%s]: Error parsing move_id '%s': %s. Using current joint state.",
+                         "PlanningAction [%s]: Error parsing move_id '%s': %s. Using empty joint state.",
                          name().c_str(), move_id_.c_str(), e.what());
-            move_ptr->start_joint_values = {};
+            move_ptr->start_joint_values.clear();
         }
         // **End: Set start_joint_values based on previous move**
 
@@ -347,8 +390,8 @@ namespace manymove_cpp_trees
     BT::NodeStatus ExecuteTrajectory::onStart()
     {
         RCLCPP_DEBUG(node_->get_logger(),
-                    "ExecuteTrajectory [%s]: onStart() called.",
-                    name().c_str());
+                     "ExecuteTrajectory [%s]: onStart() called.",
+                     name().c_str());
 
         goal_sent_ = false;
         result_received_ = false;
@@ -396,13 +439,13 @@ namespace manymove_cpp_trees
         if (execution_resumed)
         {
             RCLCPP_DEBUG(node_->get_logger(),
-                        "ExecuteTrajectory [%s]: execution_resumed is true.", name().c_str());
+                         "ExecuteTrajectory [%s]: execution_resumed is true.", name().c_str());
 
             // If we already sent a goal and are waiting for a result, cancel the goal immediately.
             if (goal_sent_ && !result_received_)
             {
                 RCLCPP_DEBUG(node_->get_logger(),
-                            "ExecuteTrajectory [%s]: Cancelling current goal due to execution_resumed.", name().c_str());
+                             "ExecuteTrajectory [%s]: Cancelling current goal due to execution_resumed.", name().c_str());
                 action_client_->async_cancel_all_goals();
             }
 
@@ -431,8 +474,8 @@ namespace manymove_cpp_trees
             config().blackboard->set(robot_prefix_ + "execution_resumed", false);
 
             RCLCPP_DEBUG(node_->get_logger(),
-                        "ExecuteTrajectory [%s]: Forcing failure due to execution_resumed; key cleared.",
-                        name().c_str());
+                         "ExecuteTrajectory [%s]: Forcing failure due to execution_resumed; key cleared.",
+                         name().c_str());
             return BT::NodeStatus::FAILURE;
         }
 
@@ -540,7 +583,7 @@ namespace manymove_cpp_trees
         // Optional: add result callback to see if STOP completed
         send_goal_options.result_callback =
             [this](const typename rclcpp_action::ClientGoalHandle<
-                manymove_msgs::action::ExecuteTrajectory>::WrappedResult &wrapped_result)
+                   manymove_msgs::action::ExecuteTrajectory>::WrappedResult &wrapped_result)
         {
             if (wrapped_result.code == rclcpp_action::ResultCode::SUCCEEDED)
             {
@@ -773,8 +816,8 @@ namespace manymove_cpp_trees
                 config().blackboard->set(validity_key, false);
 
                 RCLCPP_DEBUG(node_->get_logger(),
-                            "ResetTrajectories [%s]: Reset move_id=%d => %s cleared, %s set to false.",
-                            name().c_str(), mid, traj_key.c_str(), validity_key.c_str());
+                             "ResetTrajectories [%s]: Reset move_id=%d => %s cleared, %s set to false.",
+                             name().c_str(), mid, traj_key.c_str(), validity_key.c_str());
             }
             catch (const std::exception &e)
             {
@@ -845,8 +888,8 @@ namespace manymove_cpp_trees
     BT::NodeStatus StopMotionAction::onStart()
     {
         RCLCPP_DEBUG(node_->get_logger(),
-                    "StopMotionAction [%s]: onStart() called.",
-                    name().c_str());
+                     "StopMotionAction [%s]: onStart() called.",
+                     name().c_str());
 
         stop_goal_sent_ = false;
         stop_result_received_ = false;

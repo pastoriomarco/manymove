@@ -145,45 +145,45 @@ int main(int argc, char **argv)
 
     // Compose the sequences of moves. Each of the following sequences represent a logic
     std::vector<Move> rest_position_1 = {
-        {"joint", "", joint_rest_1, "", move_configs["max_move"]},
+        {robot_prefix_1, "joint", "", joint_rest_1, "", move_configs["max_move"]},
     };
     std::vector<Move> rest_position_2 = {
-        {"joint", "", joint_rest_2, "", move_configs["max_move"]},
+        {robot_prefix_2, "joint", "", joint_rest_2, "", move_configs["max_move"]},
     };
 
     // Sequences for Pick/Drop/Homing
     std::vector<Move> pick_sequence_1 = {
-        {"pose", "approach_pick_target_1", {}, "", move_configs["mid_move"]},
-        {"cartesian", "pick_target_1", {}, "", move_configs["slow_move"]},
+        {robot_prefix_1, "pose", "approach_pick_target_1", {}, "", move_configs["mid_move"]},
+        {robot_prefix_1, "cartesian", "pick_target_1", {}, "", move_configs["slow_move"]},
     };
 
     std::vector<Move> pick_sequence_2 = {
-        {"pose", "approach_pick_target_2", {}, "", move_configs["mid_move"]},
-        {"cartesian", "pick_target_2", {}, "", move_configs["slow_move"]},
+        {robot_prefix_2, "pose", "approach_pick_target_2", {}, "", move_configs["mid_move"]},
+        {robot_prefix_2, "cartesian", "pick_target_2", {}, "", move_configs["slow_move"]},
     };
 
     std::vector<Move> drop_sequence_1 = {
-        {"pose", "approach_pick_target_1", {}, "", move_configs["mid_move"]},
-        {"pose", "approach_drop_target_1", {}, "", move_configs["max_move"]},
-        {"cartesian", "drop_target_1", {}, "", move_configs["slow_move"]},
+        {robot_prefix_1, "pose", "approach_pick_target_1", {}, "", move_configs["mid_move"]},
+        {robot_prefix_1, "pose", "approach_drop_target_1", {}, "", move_configs["max_move"]},
+        {robot_prefix_1, "cartesian", "drop_target_1", {}, "", move_configs["slow_move"]},
     };
 
     std::vector<Move> drop_sequence_2 = {
-        {"pose", "approach_pick_target_2", {}, "", move_configs["mid_move"]},
-        {"pose", "approach_drop_target_2", {}, "", move_configs["max_move"]},
-        {"cartesian", "drop_target_2", {}, "", move_configs["slow_move"]},
+        {robot_prefix_2, "pose", "approach_pick_target_2", {}, "", move_configs["mid_move"]},
+        {robot_prefix_2, "pose", "approach_drop_target_2", {}, "", move_configs["max_move"]},
+        {robot_prefix_2, "cartesian", "drop_target_2", {}, "", move_configs["slow_move"]},
     };
 
     std::vector<Move> home_position_1 = {
-        {"cartesian", "approach_drop_target_1", {}, "", move_configs["max_move"]},
-        {"named", "", {}, named_home_1, move_configs["max_move"]},
-        {"joint", "", joint_rest_1, "", move_configs["max_move"]},
+        {robot_prefix_1, "cartesian", "approach_drop_target_1", {}, "", move_configs["max_move"]},
+        {robot_prefix_1, "named", "", {}, named_home_1, move_configs["max_move"]},
+        {robot_prefix_1, "joint", "", joint_rest_1, "", move_configs["max_move"]},
     };
 
     std::vector<Move> home_position_2 = {
-        {"cartesian", "approach_drop_target_2", {}, "", move_configs["max_move"]},
-        {"named", "", {}, named_home_2, move_configs["max_move"]},
-        {"joint", "", joint_rest_2, "", move_configs["max_move"]},
+        {robot_prefix_2, "cartesian", "approach_drop_target_2", {}, "", move_configs["max_move"]},
+        {robot_prefix_2, "named", "", {}, named_home_2, move_configs["max_move"]},
+        {robot_prefix_2, "joint", "", joint_rest_2, "", move_configs["max_move"]},
     };
 
     // build the xml snippets for the single moves of robot 1

@@ -39,6 +39,15 @@ namespace manymove_cpp_trees
             int this_move_id = g_global_move_id; // unique ID for this move
             move_ids.push_back(this_move_id);
 
+            // If it's non-empty but doesn't match, log or throw
+            if (move.robot_prefix != robot_prefix)
+            {
+                RCLCPP_ERROR(rclcpp::get_logger("bt_client_node"),
+                            "buildParallelPlanExecuteXML: Move has prefix=%s, but user gave robot_prefix=%s: INVALID MOVE.",
+                            move.robot_prefix.c_str(), robot_prefix.c_str());
+                return "<INVALID TREE: YOU TRIED TO ASSIGN A MOVE TO CREATED WITH ANOTHER ROBOT PREFIX>";
+            }
+
             // Populate the blackboard with the move
             std::string key = "move_" + std::to_string(this_move_id);
             blackboard->set(key, std::make_shared<Move>(move));

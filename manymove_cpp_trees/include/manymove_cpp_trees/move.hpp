@@ -6,6 +6,8 @@
 #include "geometry_msgs/msg/pose.hpp"
 #include "manymove_msgs/msg/movement_config.hpp"
 #include "manymove_msgs/msg/move_manipulator_goal.hpp"
+#include <unordered_map>
+
 
 namespace manymove_cpp_trees
 {
@@ -79,8 +81,10 @@ namespace manymove_cpp_trees
         std::string named_target;                  ///< Named target for "named" type.
         manymove_msgs::msg::MovementConfig config; ///< Movement configuration parameters.
         std::vector<double> start_joint_values;    ///< Starting joint values for planning.
+        std::string robot_prefix;                  ///< Prefix to correctly reference previous moves.
 
-        Move(const std::string &type,
+        Move(const std::string &robot_prefix,
+             const std::string &type,
              const std::string &pose_key = "",
              const std::vector<double> &joint_values = {},
              const std::string &named_target = "",
@@ -91,7 +95,8 @@ namespace manymove_cpp_trees
               joint_values(joint_values),
               named_target(named_target),
               config(config),
-              start_joint_values(start_joint_values)
+              start_joint_values(start_joint_values),
+              robot_prefix(robot_prefix)
         {
         }
 
