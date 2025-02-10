@@ -315,54 +315,77 @@ private:
 
                         // Feedback callback: check upcoming waypoints.
                         options.feedback_callback =
-                            [this, points, goal_handle, &collision_detected](auto /*unused_goal_handle*/,
-                                                                             const std::shared_ptr<const control_msgs::action::FollowJointTrajectory::Feedback> &feedback)
+                            [this, points, goal_handle, &collision_detected, last_idx = size_t(0)](auto /*unused_goal_handle*/,
+                                                                                                   const std::shared_ptr<const control_msgs::action::FollowJointTrajectory::Feedback> &feedback) mutable
                         {
-                            double current_fb_time = rclcpp::Duration(feedback->actual.time_from_start).seconds();
+                            // 1) Get the robot's current actual joint positions from the feedback
+                            const auto &actual_positions = feedback->actual.positions;
 
-                            // Determine the "closest" waypoint among those points whose time_from_start is <= current_fb_time.
-                            size_t closest_idx = 0;
-                            double min_dist = std::numeric_limits<double>::max();
-                            for (size_t i = 0; i < points.size(); ++i)
+                            // If for some reason actual_positions is empty, guard here
+                            if (actual_positions.empty())
                             {
-                                double pt_time = rclcpp::Duration(points[i].time_from_start).seconds();
-                                if (pt_time > current_fb_time)
-                                    break;
+                                RCLCPP_WARN(node_->get_logger(),
+                                            "[ActionServer] Feedback has no positions. Skipping collision check");
+                                return;
+                            }
+
+                            // 2) Find the new closest index by scanning from 'last_idx' forward
+                            //    until the distance starts to increase again.
+                            size_t start_idx = last_idx;
+                            double last_dist = std::numeric_limits<double>::infinity();
+                            size_t closest_idx = start_idx;
+
+                            for (size_t i = start_idx; i < points.size(); ++i)
+                            {
+                                // Compute distance between feedback->actual.positions and points[i].positions
                                 double sum_sq = 0.0;
-                                for (size_t j = 0; j < feedback->actual.positions.size() &&
-                                                   j < points[i].positions.size();
+                                for (size_t j = 0;
+                                     j < actual_positions.size() && j < points[i].positions.size();
                                      ++j)
                                 {
-                                    double diff = feedback->actual.positions[j] - points[i].positions[j];
+                                    double diff = actual_positions[j] - points[i].positions[j];
                                     sum_sq += diff * diff;
                                 }
                                 double dist = std::sqrt(sum_sq);
-                                if (dist < min_dist)
+
+                                if (dist <= last_dist)
                                 {
-                                    min_dist = dist;
+                                    // We are still getting “closer”
+                                    last_dist = dist;
                                     closest_idx = i;
+                                }
+                                else
+                                {
+                                    // The distance is now larger than the previous iteration,
+                                    // so the previous i was the best match. Stop searching.
+                                    break;
                                 }
                             }
 
-                            // Optionally, limit the number of future waypoints to check.
-                            size_t check_limit = points.size() - 1;
-                            // For instance, to check only the next 10 points:
-                            // check_limit = std::min(closest_idx + 10, points.size() - 1);
+                            // Update the last_idx for next time
+                            last_idx = closest_idx;
 
-                            // Check for collisions in future waypoints.
+                            // 3) Decide how far forward you want to collision-check.
+                            //    For instance, we can check only the next 10 points to reduce CPU usage:
+                            size_t check_limit = std::min(closest_idx + 10, points.size() - 1);
+
+                            // 4) Check collisions in the next few waypoints
                             for (size_t i = closest_idx + 1; i <= check_limit; ++i)
                             {
                                 if (!planner_->isJointStateValid(points[i].positions))
                                 {
-                                    RCLCPP_WARN(node_->get_logger(), "[ActionServer] Future waypoint %zu is in collision", i);
+                                    RCLCPP_WARN(node_->get_logger(),
+                                                "[ActionServer] Future waypoint %zu is in collision", i);
                                     collision_detected = true;
                                     break;
                                 }
                             }
 
-                            // Publish feedback.
-                            auto exec_feedback = std::make_shared<manymove_msgs::action::ExecuteTrajectory::Feedback>();
-                            exec_feedback->progress = static_cast<float>(current_fb_time);
+                            // 5) Publish *your* action feedback
+                            auto exec_feedback =
+                                std::make_shared<manymove_msgs::action::ExecuteTrajectory::Feedback>();
+                            // We no longer rely on controller time, so we can store e.g. the index or distance
+                            exec_feedback->progress = static_cast<float>(closest_idx);
                             exec_feedback->in_collision = collision_detected.load();
                             goal_handle->publish_feedback(exec_feedback);
                         };
