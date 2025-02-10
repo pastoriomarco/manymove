@@ -1,6 +1,5 @@
 # ManyMove project
-
-![ManyMove](https://github.com/pastoriomarco/manymove/blob/dfc9c7f00e11d70d5e27fd2e0c13bfcf5de6de54/media/manymove_example.gif)
+[![ManyMove Example]([https://img.youtube.com/vi/VIDEO_ID/0.jpg](https://youtu.be/s7oo4rAEnlA))]([https://www.youtube.com/watch?v=VIDEO_ID](https://youtu.be/s7oo4rAEnlA))
 
 ## DISCLAIMER
 
