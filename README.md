@@ -41,7 +41,7 @@ This series of packages was created around Ufactory Lite6 and UF850 cobots, but 
   ```
   - Copy pneumatic gripper's mesh. From `<workspace_dir>/src`:
   ```bash
-  cp ./manymove/manymove_object_manager/meshes/gimatic_pq2516/* ./xarm_ros2/xarm_description/meshes/other/
+  cp ./manymove/manymove_object_manager/meshes/custom_end_tools/* ./xarm_ros2/xarm_description/meshes/other/
   ```
   - Copy the user param file in xarm_api/config. From `<workspace_dir>/src`:
   ```bash
