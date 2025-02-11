@@ -78,12 +78,12 @@ int main(int argc, char **argv)
 
     // Robot 1
     blackboard->set(robot_prefix_1 + "collision_detected", false);
-    blackboard->set(robot_prefix_1 + "stop_execution", true);
+    blackboard->set(robot_prefix_1 + "stop_execution", false);
     blackboard->set(robot_prefix_1 + "execution_resumed", false);
 
     // Robot 2
     blackboard->set(robot_prefix_2 + "collision_detected", false);
-    blackboard->set(robot_prefix_2 + "stop_execution", true);
+    blackboard->set(robot_prefix_2 + "stop_execution", false);
     blackboard->set(robot_prefix_2 + "execution_resumed", false);
 
     // General:
@@ -121,8 +121,9 @@ int main(int argc, char **argv)
     approach_pick_target_2.position.z += 0.02;
 
     // Test poses to place the object, these are not overwritten later (for now)
-    Pose drop_target_1 = createPose(0.2, 0.0, 0.15, 1.0, 0.0, 0.0, 0.0);
+    Pose drop_target_1 = createPoseRPY(0.57, -0.25, 0.72, -0.785, -3.14, 1.57);
     Pose approach_drop_target_1 = drop_target_1;
+    approach_drop_target_1.position.x += 0.02;
     approach_drop_target_1.position.z += 0.02;
 
     Pose drop_target_2 = createPose(0.3, 1.05, 0.2, 1.0, 0.0, 0.0, 0.0);
@@ -153,7 +154,7 @@ int main(int argc, char **argv)
 
     // Sequences for Pick/Drop/Homing
     std::vector<Move> pick_sequence_1 = {
-        {robot_prefix_1, "pose", "approach_pick_target_1", {}, "", move_configs["mid_move"]},
+        {robot_prefix_1, "pose", "approach_pick_target_1", {}, "", move_configs["max_move"]},
         {robot_prefix_1, "cartesian", "pick_target_1", {}, "", move_configs["slow_move"]},
     };
 
@@ -175,8 +176,8 @@ int main(int argc, char **argv)
     };
 
     std::vector<Move> home_position_1 = {
-        {robot_prefix_1, "cartesian", "approach_drop_target_1", {}, "", move_configs["max_move"]},
-        {robot_prefix_1, "named", "", {}, named_home_1, move_configs["max_move"]},
+        {robot_prefix_1, "pose", "approach_drop_target_1", {}, "", move_configs["max_move"]},
+        // {robot_prefix_1, "named", "", {}, named_home_1, move_configs["max_move"]},
         {robot_prefix_1, "joint", "", joint_rest_1, "", move_configs["max_move"]},
     };
 
@@ -237,42 +238,39 @@ int main(int argc, char **argv)
     // 3) Build blocks for objects handling
     // ----------------------------------------------------------------------------
 
-    std::vector<double> ground_dimension = {0.8, 2.0, 0.1};
-    auto ground_pose = createPoseRPY(0.0, 0.5, -0.05, 0.0, 0.0, 0.0);
+    std::string graspable_mesh_file = "package://manymove_object_manager/meshes/unit_tube.stl";
+    std::string machine_mesh_file = "package://manymove_object_manager/meshes/custom_scene/machine.stl";
 
-    std::vector<double> wall_dimension = {0.8, 0.02, 0.8};
-    auto wall_pose = createPoseRPY(0.0, 0.5, 0.4, 0.0, 0.0, 0.0);
-
-    std::vector<double> cylinderdimension = {0.1, 0.005};
-    auto cylinderpose = createPoseRPY(0.2, 0.7, 0.105, 0.0, 1.57, 0.0);
-
-    std::string mesh_file = "package://manymove_object_manager/meshes/unit_tube.stl";
-
-    std::vector<double> mesh_scale = {0.01, 0.01, 0.1};                  //< The tube is vertical with dimension 1m x 1m x 1m. We scale it to 10x10x100 mm
-    auto mesh_pose = createPoseRPY(0.1, -0.2, 0.2005, 0.785, 1.57, 0.0); //< We place it on the floor and lay it on its side, X+ facing down
+    std::vector<double> graspable_mesh_scale = {0.01, 0.01, 0.1};
+    auto graspable_mesh_pose = createPoseRPY(1.025, -0.55, 0.8, 1.57, 2.355, 1.57);
 
     // Create object actions xml snippets (the object are created directly in the create*() functions relative to each type of object action)
-    std::string check_ground_obj_xml = buildObjectActionXML("check_ground", createCheckObjectExists("obstacle_ground"));
-    std::string check_wall_obj_xml = buildObjectActionXML("check_wall", createCheckObjectExists("obstacle_wall"));
-    std::string check_cylinder_obj_xml = buildObjectActionXML("check_cylinder", createCheckObjectExists("graspable_cylinder"));
-    std::string check_mesh_obj_xml = buildObjectActionXML("check_mesh", createCheckObjectExists("graspable_mesh"));
+    std::string check_graspable_mesh_obj_xml = buildObjectActionXML("check_graspable_mesh", createCheckObjectExists("graspable_mesh"));
+    std::string check_machine_mesh_obj_xml = buildObjectActionXML("check_machine_mesh", createCheckObjectExists("machine_mesh"));
 
-    std::string add_ground_obj_xml = buildObjectActionXML("add_ground", createAddPrimitiveObject("obstacle_ground", "box", ground_dimension, ground_pose));
-    std::string add_wall_obj_xml = buildObjectActionXML("add_wall", createAddPrimitiveObject("obstacle_wall", "box", wall_dimension, wall_pose));
-    std::string add_cylinder_obj_xml = buildObjectActionXML("add_cylinder", createAddPrimitiveObject("graspable_cylinder", "cylinder", cylinderdimension, cylinderpose));
-    std::string add_mesh_obj_xml = buildObjectActionXML("add_mesh", createAddMeshObject("graspable_mesh", mesh_pose, mesh_file, mesh_scale[0], mesh_scale[1], mesh_scale[2]));
+    std::string add_graspable_mesh_obj_xml = buildObjectActionXML(
+        "add_mesh", createAddMeshObject(
+                        "graspable_mesh",
+                        graspable_mesh_pose,
+                        graspable_mesh_file,
+                        graspable_mesh_scale[0], graspable_mesh_scale[1], graspable_mesh_scale[2]));
+
+    std::string add_machine_mesh_obj_xml = buildObjectActionXML(
+        "add_mesh", createAddMeshObject(
+                        "machine_mesh",
+                        createPoseRPY(0.0, 0.0, 0.0, 0.0, 0.0, 0.0),
+                        machine_mesh_file,
+                        1.0, 1.0, 1.0));
 
     // Compose the check and add sequence for objects
-    std::string init_ground_obj_xml = fallbackWrapperXML("init_ground_obj", {check_ground_obj_xml, add_ground_obj_xml});
-    std::string init_wall_obj_xml = fallbackWrapperXML("init_wall_obj", {check_wall_obj_xml, add_wall_obj_xml});
-    std::string init_cylinder_obj_xml = fallbackWrapperXML("init_cylinder_obj", {check_cylinder_obj_xml, add_cylinder_obj_xml});
-    std::string init_mesh_obj_xml = fallbackWrapperXML("init_mesh_obj", {check_mesh_obj_xml, add_mesh_obj_xml});
+    std::string init_graspable_mesh_obj_xml = fallbackWrapperXML("init_graspable_mesh_obj", {check_graspable_mesh_obj_xml, add_graspable_mesh_obj_xml});
+    std::string init_machine_mesh_obj_xml = fallbackWrapperXML("init_graspable_mesh_obj", {check_machine_mesh_obj_xml, add_machine_mesh_obj_xml});
 
     // the name of the link to attach the object to, and the object to manipulate
     std::string tcp_frame_name_1 = robot_prefix_1 + tcp_frame_1;
     std::string tcp_frame_name_2 = robot_prefix_2 + tcp_frame_2;
     std::string object_to_manipulate_1 = "graspable_mesh";
-    std::string object_to_manipulate_2 = "graspable_cylinder";
+    std::string object_to_manipulate_2 = "graspable_mesh";
 
     std::string attach_obj_1_xml = buildObjectActionXML("attach_obj_to_manipulate_1", createAttachObject(object_to_manipulate_1, tcp_frame_name_1));
     std::string detach_obj_1_xml = buildObjectActionXML("attach_obj_to_manipulate_1", createDetachObject(object_to_manipulate_1, tcp_frame_name_1));
@@ -293,7 +291,7 @@ int main(int argc, char **argv)
     // Define the transformation and reference orientation
     std::vector<double> pick_pre_transform_xyz_rpy_1 = {-0.002, 0.0, 0.0, 0.0, 1.57, 0.0};
     std::vector<double> approach_pre_transform_xyz_rpy_1 = {-0.05, 0.0, 0.0, 0.0, 1.57, 0.0};
-    std::vector<double> post_transform_xyz_rpy_1 = {0.0, 0.0, -0.025, 3.14, 0.0, 0.0};
+    std::vector<double> post_transform_xyz_rpy_1 = {0.0, 0.0, -0.01, 3.14, 0.0, 0.0};
 
     // Translate get_pose_action to xml tree leaf
     std::string get_pick_pose_1_xml = buildObjectActionXML(
@@ -363,7 +361,7 @@ int main(int argc, char **argv)
 
     // Let's build the full sequence in logically separated blocks:
     // General
-    std::string spawn_fixed_objects_xml = sequenceWrapperXML("SpawnFixedObjects", {init_ground_obj_xml, init_wall_obj_xml});
+    std::string spawn_fixed_objects_xml = sequenceWrapperXML("SpawnFixedObjects", {init_machine_mesh_obj_xml});
 
     // Robot 1
     std::string get_grasp_object_poses_1_xml = sequenceWrapperXML("GetGraspPoses", {get_pick_pose_1_xml, get_approach_pose_1_xml});
@@ -378,8 +376,8 @@ int main(int argc, char **argv)
     std::string open_gripper_2_xml = sequenceWrapperXML("OpenGripper", {signal_gripper_open_2_xml, detach_obj_2_xml});
 
     // Dedicated spawnable objects per robot:
-    std::string spawn_graspable_objects_1_xml = sequenceWrapperXML("SpawnGraspableObjects", {init_mesh_obj_xml});
-    std::string spawn_graspable_objects_2_xml = sequenceWrapperXML("SpawnGraspableObjects", {init_cylinder_obj_xml});
+    std::string spawn_graspable_objects_1_xml = sequenceWrapperXML("SpawnGraspableObjects", {init_graspable_mesh_obj_xml});
+    // std::string spawn_graspable_objects_2_xml = sequenceWrapperXML("SpawnGraspableObjects", {init_cylinder_obj_xml});
 
     // Parallel startup subsequences:
     std::string startup_sequence_1_xml = sequenceWrapperXML("StartUpSequence_1", {check_reset_robot_1_xml, prep_sequence_1_xml});
@@ -408,16 +406,18 @@ int main(int argc, char **argv)
     // Repeat node must have only one children, so it also wrap a Sequence child that wraps the other children
     std::string repeat_forever_wrapper_2_xml = repeatWrapperXML(
         "RepeatForever",
-        {check_reset_robot_2_xml,       //< We check if the robot is active, if not we try to reset it
-         spawn_graspable_objects_2_xml, //< We add all the objects to the scene
-         get_grasp_object_poses_2_xml,  //< We get the updated poses relative to the objects
-         go_to_pick_pose_2_xml,         //< Prep sequence and pick sequence
-         close_gripper_2_xml,           //< We attach the object
-         drop_sequence_2_xml,           //< Drop sequence
-         open_gripper_2_xml,            //< We detach the object
-         home_sequence_2_xml,           //< Homing sequence
-         remove_obj_2_xml},             //< We delete the object for it to be added on the next cycle in the original position
-        -1);                            //< num_cycles=-1 for infinite
+        {
+            check_reset_robot_2_xml, //< We check if the robot is active, if not we try to reset it
+                                     //  spawn_graspable_objects_2_xml, //< We add all the objects to the scene
+            // get_grasp_object_poses_2_xml, //< We get the updated poses relative to the objects
+            // go_to_pick_pose_2_xml,        //< Prep sequence and pick sequence
+            // close_gripper_2_xml,          //< We attach the object
+            // drop_sequence_2_xml,          //< Drop sequence
+            // open_gripper_2_xml,           //< We detach the object
+            // home_sequence_2_xml,          //< Homing sequence
+            // remove_obj_2_xml              //< We delete the object for it to be added on the next cycle in the original position
+        },
+        -1); //< num_cycles=-1 for infinite
 
     // Runningh both robot sequences in parallel:
     std::string parallel_repeat_forever_sequences_xml = parallelWrapperXML("PARALLEL_MOTION_SEQUENCES", {repeat_forever_wrapper_1_xml, repeat_forever_wrapper_2_xml}, 2, 1);

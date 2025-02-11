@@ -50,9 +50,9 @@ def launch_setup(context, *args, **kwargs):
 
     attach_to_1 = LaunchConfiguration('attach_to_1', default='world')
     attach_to_2 = LaunchConfiguration('attach_to_2', default='world')
-    attach_xyz_1 = LaunchConfiguration('attach_xyz_1', default='-0.1 0 0')
-    attach_xyz_2 = LaunchConfiguration('attach_xyz_2', default='0 1 0')
-    attach_rpy_1 = LaunchConfiguration('attach_rpy_1', default='0 0 0')
+    attach_xyz_1 = LaunchConfiguration('attach_xyz_1', default='1.005 -0.233 0.480')
+    attach_xyz_2 = LaunchConfiguration('attach_xyz_2', default='0 0 0')
+    attach_rpy_1 = LaunchConfiguration('attach_rpy_1', default='0 0 3.14')
     attach_rpy_2 = LaunchConfiguration('attach_rpy_2', default='0 0 0')
     create_attach_link_1 = LaunchConfiguration('create_attach_link_1', default=True)
     create_attach_link_2 = LaunchConfiguration('create_attach_link_2', default=False)
@@ -95,7 +95,7 @@ def launch_setup(context, *args, **kwargs):
     geometry_width_2 = LaunchConfiguration('geometry_width_2', default=geometry_width)
     geometry_mesh_filename = LaunchConfiguration('geometry_mesh_filename', default='pneumatic_lite.stl')
     geometry_mesh_filename_1 = LaunchConfiguration('geometry_mesh_filename_1', default=geometry_mesh_filename)
-    geometry_mesh_filename_2 = LaunchConfiguration('geometry_mesh_filename_2', default=geometry_mesh_filename)
+    geometry_mesh_filename_2 = LaunchConfiguration('geometry_mesh_filename_2', default='tube_holder.stl')
     geometry_mesh_origin_xyz = LaunchConfiguration('geometry_mesh_origin_xyz', default='"0 0 0"')
     geometry_mesh_origin_xyz_1 = LaunchConfiguration('geometry_mesh_origin_xyz_1', default=geometry_mesh_origin_xyz)
     geometry_mesh_origin_xyz_2 = LaunchConfiguration('geometry_mesh_origin_xyz_2', default=geometry_mesh_origin_xyz)
@@ -104,10 +104,10 @@ def launch_setup(context, *args, **kwargs):
     geometry_mesh_origin_rpy_2 = LaunchConfiguration('geometry_mesh_origin_rpy_2', default=geometry_mesh_origin_rpy)
     geometry_mesh_tcp_xyz = LaunchConfiguration('geometry_mesh_tcp_xyz', default='"0.03075 0 0.11885"')
     geometry_mesh_tcp_xyz_1 = LaunchConfiguration('geometry_mesh_tcp_xyz_1', default=geometry_mesh_tcp_xyz)
-    geometry_mesh_tcp_xyz_2 = LaunchConfiguration('geometry_mesh_tcp_xyz_2', default=geometry_mesh_tcp_xyz)
+    geometry_mesh_tcp_xyz_2 = LaunchConfiguration('geometry_mesh_tcp_xyz_2', default='"0 0 0.2"')
     geometry_mesh_tcp_rpy = LaunchConfiguration('geometry_mesh_tcp_rpy', default='"0 0.52 0"')
     geometry_mesh_tcp_rpy_1 = LaunchConfiguration('geometry_mesh_tcp_rpy_1', default=geometry_mesh_tcp_rpy)
-    geometry_mesh_tcp_rpy_2 = LaunchConfiguration('geometry_mesh_tcp_rpy_2', default=geometry_mesh_tcp_rpy)
+    geometry_mesh_tcp_rpy_2 = LaunchConfiguration('geometry_mesh_tcp_rpy_2', default='"0 0 0"')
 
     # ================================================================
     # from: src/manymove_planner/launch/lite_micpp_fake_action_server.launch.py
