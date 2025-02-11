@@ -49,7 +49,7 @@ This series of packages was created around Ufactory Lite6 and UF850 cobots, but 
   ```bash
   cp ./manymove/manymove_planner/config/xarm_user_params.yaml ./xarm_ros2/xarm_api/config/
   ```
-- **Build the packages**: 
+- **Build the packages from `<workspace_dir>`**: 
   ```bash
   colcon build
   ```
@@ -74,12 +74,13 @@ This series of packages was created around Ufactory Lite6 and UF850 cobots, but 
   ```
 
 - **Panda Manipulator**:
-- To use with a moveit2 humble demo with Panda robot launcher in another terminal, refer to [Moveit2 tutorials getting started](https://moveit.picknik.ai/humble/doc/tutorials/getting_started/getting_started.html):
-- In terminal 1:
+- To use with a moveit2_tutorials humble demo with Panda robot launcher running in another terminal.
+- To install moveit2_tutorials refer to [Moveit2 tutorials getting started](https://moveit.picknik.ai/humble/doc/tutorials/getting_started/getting_started.html).
+- In terminal 1 run:
   ```bash
   ros2 launch moveit2_tutorials demo.launch.py
   ```
-- In terminal 2:
+- In terminal 2 run:
   ```bash
   ros2 launch manymove_planner panda_action_server_node.launch.py
   ```
