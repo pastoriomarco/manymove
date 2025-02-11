@@ -62,6 +62,10 @@ int main(int argc, char **argv)
     node->declare_parameter<bool>("is_robot_real", false);
     node->get_parameter_or<bool>("is_robot_real", is_robot_real, false);
 
+    double tube_length;
+    node->declare_parameter<double>("tube_length", 0.1);
+    node->get_parameter_or<double>("tube_length", tube_length, 0.1);
+
     // ----------------------------------------------------------------------------
     // 1) Create blackboard, keys and nodes
     // ----------------------------------------------------------------------------
@@ -111,78 +115,114 @@ int main(int argc, char **argv)
     std::string named_home_1 = "home";
     std::string named_home_2 = "home";
 
-    // Original pick test poses: they should be overwritten by the blackboard key that will be dynamically updated getting the grasp pose object
+    // Original pick pose: it will be overwritten by the blackboard key that will be dynamically updated getting the grasp pose object.
+    // Note that the pose obtained from an object will refer to the object itels and will have to be modified if you want to align
+    // the TCP orientation to a direction that is not the object's Z+ (more about it later).
+    // I may also define a pick pose here to align the TCP as we want since we know the position of the object, but this mechanism
+    // will allow me to get the pose recognized by a vision system and to realign the TCP Z+ to the desired pick orientation.
     Pose pick_target_1 = createPose(0.2, -0.1, 0.15, 1.0, 0.0, 0.0, 0.0);
     Pose approach_pick_target_1 = pick_target_1;
     approach_pick_target_1.position.z += 0.02;
 
-    Pose pick_target_2 = createPose(0.2, 1.1, 0.15, 1.0, 0.0, 0.0, 0.0);
-    Pose approach_pick_target_2 = pick_target_2;
-    approach_pick_target_2.position.z += 0.02;
-
-    // Test poses to place the object, these are not overwritten later (for now)
+    // Drop pose: this is not overwritten later (for now)
+    // Note that, this pose directly refer to the pose that the TCP will allign to and it's referred to the world frame, regardless of 
+    // how the robot is oriented. For example, this pose has the Z+ facing downard, 45 degrees in the XZ plane, in between X- and Z-.
     Pose drop_target_1 = createPoseRPY(0.57, -0.25, 0.72, -0.785, -3.14, 1.57);
     Pose approach_drop_target_1 = drop_target_1;
+    // We need to modify the exit pose accordingly: we move 2cm in X+ and Z+ to obtain a 45 degree exit in the XZ plane, in the opposite
+    // direction of the Z+ of the TCP in the drop_target_1 pose.
     approach_drop_target_1.position.x += 0.02;
     approach_drop_target_1.position.z += 0.02;
 
-    Pose drop_target_2 = createPose(0.3, 1.05, 0.2, 1.0, 0.0, 0.0, 0.0);
-    Pose approach_drop_target_2 = drop_target_2;
-    approach_drop_target_2.position.z += 0.02;
+    // For each pose to get/set dynamically, rember to create a unique blackboard key accordingly.
+    // Be careful not to use names that may conflict with the keys automatically 
+    // created for the moves. (Usually move_{move_id})
+    // We also create a string to store the key name, or we'll risk to misuse it later
+    std::string pick_target_1_key_name = "pick_target_1";
+    std::string approach_pick_target_1_key_name = "approach_pick_target_1";
+    blackboard->set(pick_target_1_key_name, pick_target_1);
+    blackboard->set(approach_pick_target_1_key_name, approach_pick_target_1);
 
-    // Populate the blackboard with the poses, one unique key for each pose we want to use.
-    // Be careful not to use names that may conflict with the keys automatically created for the moves. (Usually move_{move_id})
-    blackboard->set("pick_target_1", pick_target_1);
-    blackboard->set("approach_pick_target_1", approach_pick_target_1);
+    std::string drop_target_1_key_name = "drop_target_1";
+    std::string approach_drop_target_1_key_name = "approach_drop_target_1";
+    blackboard->set(drop_target_1_key_name, drop_target_1);
+    blackboard->set(approach_drop_target_1_key_name, approach_drop_target_1);
 
-    blackboard->set("drop_target_1", drop_target_1);
-    blackboard->set("approach_drop_target_1", approach_drop_target_1);
+    // While the pick/drop pose is either dependant of object pose or fixed, we can set a fixed insert pose and a load pose that will depend
+    // on the length of the object. For this reason we've set a variable, and we also set a blackboard key here for the object's length.
+    // The blackboard key will let us set the length dynamically from the HMI if needed, without shutting down the application.
+    blackboard->set("tube_length", tube_length);
 
-    blackboard->set("pick_target_2", pick_target_2);
-    blackboard->set("approach_pick_target_2", approach_pick_target_2);
+    // We also set an grasp offset from the end of the tube, we'll use it later to define the pick pose, and now to define the insert pose
+    double grasp_offset = 0.025;
 
-    blackboard->set("drop_target_2", drop_target_2);
-    blackboard->set("approach_drop_target_2", approach_drop_target_2);
+    // We keep the naming consistent with the robot_prefix associated, or else the move will fail to plan!
+    // The insert pose will depend on the drop_target_1 pose.
+    Pose insert_target_2 = drop_target_1;
+    insert_target_2.position.y += (grasp_offset + 0.001);
+    // We approach from outside the insert position to factor the insert's length
+    Pose approach_insert_target_2 = insert_target_2;
+    approach_insert_target_2.position.y += 0.075;
+
+    std::string insert_target_2_key_name = "insert_target_2";
+    std::string approach_insert_target_2_key_name = "approach_insert_target_2";
+    blackboard->set(insert_target_2_key_name, insert_target_2);
+    blackboard->set(approach_insert_target_2_key_name, approach_insert_target_2);
+
+
+    //// TEMP: set the load a little further toward the insert direction for testing
+    Pose load_target_2 = drop_target_1;
+    load_target_2.position.y += (-0.05);
+    
+    Pose approach_load_target_2 = load_target_2;
+    approach_load_target_2.position.y += (-0.025);
+
+    std::string load_target_2_key_name = "load_target_2";
+    std::string approach_load_target_2_key_name = "approach_load_target_2";
+    blackboard->set(load_target_2_key_name, load_target_2);
+    blackboard->set(approach_load_target_2_key_name, approach_load_target_2);
 
     // Compose the sequences of moves. Each of the following sequences represent a logic
     std::vector<Move> rest_position_1 = {
         {robot_prefix_1, "joint", "", joint_rest_1, "", move_configs["max_move"]},
     };
-    std::vector<Move> rest_position_2 = {
-        {robot_prefix_2, "joint", "", joint_rest_2, "", move_configs["max_move"]},
-    };
 
-    // Sequences for Pick/Drop/Homing
     std::vector<Move> pick_sequence_1 = {
-        {robot_prefix_1, "pose", "approach_pick_target_1", {}, "", move_configs["max_move"]},
-        {robot_prefix_1, "cartesian", "pick_target_1", {}, "", move_configs["slow_move"]},
-    };
-
-    std::vector<Move> pick_sequence_2 = {
-        {robot_prefix_2, "pose", "approach_pick_target_2", {}, "", move_configs["mid_move"]},
-        {robot_prefix_2, "cartesian", "pick_target_2", {}, "", move_configs["slow_move"]},
+        {robot_prefix_1, "pose", approach_pick_target_1_key_name, {}, "", move_configs["max_move"]},
+        {robot_prefix_1, "cartesian", pick_target_1_key_name, {}, "", move_configs["slow_move"]},
     };
 
     std::vector<Move> drop_sequence_1 = {
-        {robot_prefix_1, "pose", "approach_pick_target_1", {}, "", move_configs["mid_move"]},
-        {robot_prefix_1, "pose", "approach_drop_target_1", {}, "", move_configs["max_move"]},
-        {robot_prefix_1, "cartesian", "drop_target_1", {}, "", move_configs["slow_move"]},
-    };
-
-    std::vector<Move> drop_sequence_2 = {
-        {robot_prefix_2, "pose", "approach_pick_target_2", {}, "", move_configs["mid_move"]},
-        {robot_prefix_2, "pose", "approach_drop_target_2", {}, "", move_configs["max_move"]},
-        {robot_prefix_2, "cartesian", "drop_target_2", {}, "", move_configs["slow_move"]},
+        {robot_prefix_1, "pose", approach_pick_target_1_key_name, {}, "", move_configs["mid_move"]},
+        // {robot_prefix_1, "pose", approach_drop_target_1_key_name, {}, "", move_configs["max_move"]},
+        // {robot_prefix_1, "cartesian", drop_target_1_key_name, {}, "", move_configs["slow_move"]},
+        {robot_prefix_1, "pose", drop_target_1_key_name, {}, "", move_configs["max_move"]},
     };
 
     std::vector<Move> home_position_1 = {
-        {robot_prefix_1, "pose", "approach_drop_target_1", {}, "", move_configs["max_move"]},
+        {robot_prefix_1, "pose", approach_drop_target_1_key_name, {}, "", move_configs["max_move"]},
         // {robot_prefix_1, "named", "", {}, named_home_1, move_configs["max_move"]},
         {robot_prefix_1, "joint", "", joint_rest_1, "", move_configs["max_move"]},
     };
 
+    // We keep the naming consistent with the robot_prefix associated, or else the move will fail to plan!
+    std::vector<Move> rest_position_2 = {
+        {robot_prefix_2, "joint", "", joint_rest_2, "", move_configs["max_move"]},
+    };
+
+    std::vector<Move> insert_sequence_2 = {
+        {robot_prefix_2, "pose", approach_insert_target_2_key_name, {}, "", move_configs["mid_move"]},
+        {robot_prefix_2, "cartesian", insert_target_2_key_name, {}, "", move_configs["slow_move"]},
+    };
+
+    std::vector<Move> load_sequence_2 = {
+        // {robot_prefix_2, "pose", approach_pick_target_2, {}, "", move_configs["mid_move"]},
+        {robot_prefix_2, "pose", approach_load_target_2_key_name, {}, "", move_configs["max_move"]},
+        {robot_prefix_2, "cartesian", load_target_2_key_name, {}, "", move_configs["slow_move"]},
+    };
+
     std::vector<Move> home_position_2 = {
-        {robot_prefix_2, "cartesian", "approach_drop_target_2", {}, "", move_configs["max_move"]},
+        {robot_prefix_2, "pose", approach_load_target_2_key_name, {}, "", move_configs["max_move"]},
         {robot_prefix_2, "named", "", {}, named_home_2, move_configs["max_move"]},
         {robot_prefix_2, "joint", "", joint_rest_2, "", move_configs["max_move"]},
     };
@@ -215,11 +255,11 @@ int main(int argc, char **argv)
     std::string to_rest_2_xml = buildParallelPlanExecuteXML(
         robot_prefix_2 + "toRest", rest_position_2, blackboard, robot_prefix_2, true);
 
-    std::string pick_object_2_xml = buildParallelPlanExecuteXML(
-        robot_prefix_2 + "pick", pick_sequence_2, blackboard, robot_prefix_2, true);
+    std::string insert_object_2_xml = buildParallelPlanExecuteXML(
+        robot_prefix_2 + "pick", insert_sequence_2, blackboard, robot_prefix_2, true);
 
     std::string drop_object_2_xml = buildParallelPlanExecuteXML(
-        robot_prefix_2 + "drop", drop_sequence_2, blackboard, robot_prefix_2, true);
+        robot_prefix_2 + "drop", load_sequence_2, blackboard, robot_prefix_2, true);
 
     std::string to_home_2_xml = buildParallelPlanExecuteXML(
         robot_prefix_2 + "home", home_position_2, blackboard, robot_prefix_2, true);
@@ -227,9 +267,9 @@ int main(int argc, char **argv)
     // Translate it to xml tree leaf or branch
     std::string prep_sequence_2_xml = sequenceWrapperXML(
         robot_prefix_2 + "ComposedPrepSequence", {to_rest_2_xml});
-    std::string pick_sequence_2_xml = sequenceWrapperXML(
-        robot_prefix_2 + "ComposedPickSequence", {pick_object_2_xml});
-    std::string drop_sequence_2_xml = sequenceWrapperXML(
+    std::string insert_sequence_2_xm1 = sequenceWrapperXML(
+        robot_prefix_2 + "ComposedPickSequence", {insert_object_2_xml});
+    std::string load_sequence_2_xml = sequenceWrapperXML(
         robot_prefix_2 + "ComposedDropSequence", {drop_object_2_xml});
     std::string home_sequence_2_xml = sequenceWrapperXML(
         robot_prefix_2 + "ComposedHomeSequence", {to_home_2_xml, to_rest_2_xml});
@@ -241,7 +281,7 @@ int main(int argc, char **argv)
     std::string graspable_mesh_file = "package://manymove_object_manager/meshes/unit_tube.stl";
     std::string machine_mesh_file = "package://manymove_object_manager/meshes/custom_scene/machine.stl";
 
-    std::vector<double> graspable_mesh_scale = {0.01, 0.01, 0.1};
+    std::vector<double> graspable_mesh_scale = {0.01, 0.01, tube_length};
     auto graspable_mesh_pose = createPoseRPY(1.025, -0.55, 0.8, 1.57, 2.355, 1.57);
 
     // Create object actions xml snippets (the object are created directly in the create*() functions relative to each type of object action)
@@ -291,7 +331,7 @@ int main(int argc, char **argv)
     // Define the transformation and reference orientation
     std::vector<double> pick_pre_transform_xyz_rpy_1 = {-0.002, 0.0, 0.0, 0.0, 1.57, 0.0};
     std::vector<double> approach_pre_transform_xyz_rpy_1 = {-0.05, 0.0, 0.0, 0.0, 1.57, 0.0};
-    std::vector<double> post_transform_xyz_rpy_1 = {0.0, 0.0, -0.01, 3.14, 0.0, 0.0};
+    std::vector<double> post_transform_xyz_rpy_1 = {0.0, 0.0, ((-tube_length)/2)+grasp_offset, 3.14, 0.0, 0.0};
 
     // Translate get_pose_action to xml tree leaf
     std::string get_pick_pose_1_xml = buildObjectActionXML(
@@ -371,7 +411,7 @@ int main(int argc, char **argv)
 
     // Robot 2
     std::string get_grasp_object_poses_2_xml = sequenceWrapperXML("GetGraspPoses", {get_pick_pose_2_xml, get_approach_pose_2_xml});
-    std::string go_to_pick_pose_2_xml = sequenceWrapperXML("GoToPickPose", {pick_sequence_2_xml});
+    std::string go_to_pick_pose_2_xml = sequenceWrapperXML("GoToPickPose", {insert_sequence_2_xm1});
     std::string close_gripper_2_xml = sequenceWrapperXML("CloseGripper", {signal_gripper_close_2_xml, check_gripper_close_2_xml, attach_obj_2_xml});
     std::string open_gripper_2_xml = sequenceWrapperXML("OpenGripper", {signal_gripper_open_2_xml, detach_obj_2_xml});
 
@@ -412,7 +452,7 @@ int main(int argc, char **argv)
             // get_grasp_object_poses_2_xml, //< We get the updated poses relative to the objects
             // go_to_pick_pose_2_xml,        //< Prep sequence and pick sequence
             // close_gripper_2_xml,          //< We attach the object
-            // drop_sequence_2_xml,          //< Drop sequence
+            // load_sequence_2_xml,          //< Drop sequence
             // open_gripper_2_xml,           //< We detach the object
             // home_sequence_2_xml,          //< Homing sequence
             // remove_obj_2_xml              //< We delete the object for it to be added on the next cycle in the original position
