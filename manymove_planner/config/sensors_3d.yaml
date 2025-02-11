@@ -1,0 +1,14 @@
+octomap_resolution: 0.02                                          # Sets the octomap resolution
+
+sensors:
+  - ros                                                           # Specifies that the sensor configuration named 'ros' will be used
+
+ros:
+  sensor_plugin: occupancy_map_monitor/PointCloudOctomapUpdater   # Plugin to use
+  point_cloud_topic: /camera/camera/depth/color/points            # Topic to subscribe to for point clouds
+  max_range: 2.0                                                  # Maximum range for the sensor
+  point_subsample: 1                                              # Subsampling rate for point clouds
+  padding_offset: 0.1                                             # Padding offset for the octomap
+  padding_scale: 1.0                                              # Padding scale for the octomap
+  max_update_rate: 1.0                                            # Maximum update rate for the octomap
+  filtered_cloud_topic: filtered_cloud                            # Topic to publish the filtered cloud
