@@ -128,6 +128,21 @@ namespace manymove_cpp_trees
                                    int timeout_ms = 0);
 
     /**
+     * @brief Build an XML snippet for to check if an input value corresponds to the one requested.
+     * @param node_prefix  Used to construct a unique name attribute.
+     * @param robot_prefix A prefix for the robot's action servers
+     * @param object_id    The ID of the object to wait for.
+     * @param exists       If true the function waits for the object to exist, if false for the object not to exist.
+     * @param timeout_ms   Milliseconds for timeout, if 0 then no timeout.
+     * @return A string of the XML snippet.
+     */
+    std::string buildWaitForObject(const std::string &node_prefix,
+                                   const std::string &object_id,
+                                   const std::string &robot_prefix = "",
+                                   bool exists = true,
+                                   int timeout_ms = 0);
+
+    /**
      * @brief Build an XML snippet for CheckRobotStateAction.
      * @param node_prefix  Used to construct a unique name attribute.
      * @param robot_prefix A prefix for the robot's action servers
@@ -176,8 +191,8 @@ namespace manymove_cpp_trees
      */
     std::string parallelWrapperXML(const std::string &sequence_name,
                                    const std::vector<std::string> &branches,
-                                   const int & success_threshold,
-                                   const int & failure_threshold);
+                                   const int &success_threshold,
+                                   const int &failure_threshold);
 
     /**
      * @brief Wrap multiple snippets in a <ReactiveSequence> with a given name.

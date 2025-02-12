@@ -43,8 +43,8 @@ namespace manymove_cpp_trees
             if (move.robot_prefix != robot_prefix)
             {
                 RCLCPP_ERROR(rclcpp::get_logger("bt_client_node"),
-                            "buildParallelPlanExecuteXML: Move has prefix=%s, but user gave robot_prefix=%s: INVALID MOVE.",
-                            move.robot_prefix.c_str(), robot_prefix.c_str());
+                             "buildParallelPlanExecuteXML: Move has prefix=%s, but user gave robot_prefix=%s: INVALID MOVE.",
+                             move.robot_prefix.c_str(), robot_prefix.c_str());
                 return "<INVALID TREE: YOU TRIED TO ASSIGN A MOVE TO CREATED WITH ANOTHER ROBOT PREFIX>";
             }
 
@@ -160,9 +160,16 @@ namespace manymove_cpp_trees
                 xml << "scale_mesh_z=\"" << action.scale_mesh_z << "\" ";
             }
 
-            // Serialize pose
-            std::string pose_str = serializePose(action.pose);
-            xml << "pose=\"" << pose_str << "\" ";
+            if (!action.pose_key.empty())
+            {
+                // When a key is provided, use it as a reference.
+                xml << "pose=\"{" << action.pose_key << "}\" ";
+            }
+            else
+            {
+                std::string pose_str = serializePose(action.pose);
+                xml << "pose=\"" << pose_str << "\" ";
+            }
             break;
         }
         case ObjectActionType::REMOVE:
@@ -328,6 +335,58 @@ namespace manymove_cpp_trees
 
         // If wait was set to false, return the sequence without further additions
         return sequence_xml.str();
+    }
+
+    std::string buildWaitForObject(const std::string &node_prefix,
+                                   const std::string &object_id,
+                                   const std::string &robot_prefix,
+                                   bool exists,
+                                   int timeout_ms)
+    {
+        // Construct a node name
+        std::string node_name = node_prefix + "_WaitForObject";
+
+        // Build GetInputAction
+        std::string check_obj_xml = buildObjectActionXML(node_name, createCheckObjectExists(object_id));
+
+        // TODO: hardcoded dalay, evaluate if it should be set by user or not:
+        int delay_ms = 200;
+
+        // Check here for details about <Delay> : https://github.com/BehaviorTree/BehaviorTree.CPP/issues/413
+        std::ostringstream delay_and_fail_xml;
+        delay_and_fail_xml << "<Delay delay_msec=\"" << delay_ms << "\">\n"
+                           << "<AlwaysFailure />" << "\n"
+                           << "</Delay>" << "\n";
+
+        std::string fallback_check_or_delay_xml = fallbackWrapperXML((node_name + "_Fallback"), {check_obj_xml, delay_and_fail_xml.str()});
+
+        std::ostringstream wait_xml;
+
+        // Tree modified after finding this issue:
+        // https://github.com/BehaviorTree/BehaviorTree.CPP/issues/395
+        // wait_xml << "<RetryUntilSuccessful name=\"" << node_name << "_Retry\" max_attempts=\"-1\">\n"
+        //       << fallback_check_or_delay << "\n"
+        //       << "</RetryUntilSuccessful>";
+
+        wait_xml << "<Inverter>\n"
+                 << "<KeepRunningUntilFailure>\n"
+                 << (exists ? "<Inverter>\n" : "\n")
+                 << fallback_check_or_delay_xml << "\n"
+                 << (exists ? "</Inverter>\n" : "\n")
+                 << "</KeepRunningUntilFailure>\n"
+                 << "</Inverter>\n";
+
+        if (timeout_ms > 0)
+        {
+            std::ostringstream timeout_xml;
+            timeout_xml << "<Timeout msec=\"" << timeout_ms << "\">\n"
+                        << wait_xml.str()
+                        << "</Timeout>";
+
+            return sequenceWrapperXML(node_name + "_WaitTimeout", {timeout_xml.str()});
+        }
+
+        return sequenceWrapperXML(node_name + "_WaitTimeout", {wait_xml.str()});
     }
 
     std::string buildCheckRobotStateXML(const std::string &node_prefix,

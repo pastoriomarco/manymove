@@ -44,9 +44,9 @@ namespace manymove_cpp_trees
         bool attach = true;    ///< Flag indicating whether to attach (true) or detach (false) the object.
 
         // Parameters for GET_POSE action
-        std::vector<double> pre_transform_xyz_rpy;         ///< Linear transform in x, y and z and rotation in roll, pitch, yaw of the pose of the object
+        std::vector<double> pre_transform_xyz_rpy;  ///< Linear transform in x, y and z and rotation in roll, pitch, yaw of the pose of the object
         std::vector<double> post_transform_xyz_rpy; ///< Reference orientation for the pose transform of the pose
-        std::string pose_key;                          ///< Blackboard key to store the retrieved pose (used only for GET_POSE).
+        std::string pose_key;                       ///< Blackboard key to store the retrieved pose (used only for GET_POSE).
 
         /**
          * @brief Default constructor.
@@ -133,6 +133,33 @@ namespace manymove_cpp_trees
                                             double scale_x = 1.0, double scale_y = 1.0, double scale_z = 1.0)
     {
         return ObjectAction(object_id, "mesh", {}, pose, mesh_file, scale_x, scale_y, scale_z);
+    }
+
+    /**
+     * @brief Helper function to create an ObjectAction for adding a mesh-shaped object.
+     * @param object_id Unique identifier for the object.
+     * @param pose Blackboard key containing the pose of the object.
+     * @param mesh_file Path to the mesh file.
+     * @param scale_x Scale factor along the X-axis.
+     * @param scale_y Scale factor along the Y-axis.
+     * @param scale_z Scale factor along the Z-axis.
+     * @return Configured ObjectAction.
+     */
+    inline ObjectAction createAddMeshObject(const std::string &object_id,
+                                            const std::string &pose_key,
+                                            const std::string &mesh_file,
+                                            double scale_x = 1.0, double scale_y = 1.0, double scale_z = 1.0)
+    {
+        ObjectAction action;
+        action.type = ObjectActionType::ADD;
+        action.object_id = object_id;
+        action.shape = "mesh";
+        action.pose_key = pose_key;
+        action.mesh_file = mesh_file;
+        action.scale_mesh_x = scale_x;
+        action.scale_mesh_y = scale_y;
+        action.scale_mesh_z = scale_z;
+        return action;
     }
 
     /**
