@@ -111,6 +111,7 @@ int main(int argc, char **argv)
     std::vector<double> joint_rest_1 = {0.0, -0.785, 0.785, 0.0, 1.57, 0.0};
 
     std::vector<double> joint_rest_2 = {0.0, 0.785, -0.785, 0.0, -1.57, 0.0};
+    std::vector<double> joint_ready_2 = {0.0, 0.0, -0.785, 1.57, 1.57, 0.785};
 
     std::string named_home_1 = "home";
     std::string named_home_2 = "home";
@@ -176,7 +177,8 @@ int main(int argc, char **argv)
     blackboard->set(approach_insert_target_2_key_name, approach_insert_target_2);
 
     //// TEMP: set the load target a little further toward the insert direction for testing
-    Pose load_target_2 = createPoseRPY(0.57, -0.35, 0.72, 1.57, 3.14, 0.0);;
+    Pose load_target_2 = createPoseRPY(0.57, -0.5, 0.72, 1.57, 3.14, 0.0);
+    ;
     Pose approach_load_target_2 = load_target_2;
     approach_load_target_2.position.y += 0.025;
 
@@ -186,6 +188,7 @@ int main(int argc, char **argv)
     blackboard->set(approach_load_target_2_key_name, approach_load_target_2);
 
     // Compose the sequences of moves. Each of the following sequences represent a logic
+    // ROBOT 1
     std::vector<Move> rest_position_1 = {
         {robot_prefix_1, "joint", "", joint_rest_1, "", move_configs["max_move"]},
     };
@@ -195,16 +198,16 @@ int main(int argc, char **argv)
         {robot_prefix_1, "cartesian", pick_target_1_key_name, {}, "", move_configs["slow_move"]},
     };
 
-    std::vector<Move> drop_sequence_1 = {
-        // {robot_prefix_1, "pose", approach_pick_target_1_key_name, {}, "", move_configs["mid_move"]},
-        {robot_prefix_1, "pose", approach_drop_target_1_key_name, {}, "", move_configs["max_move"]},
-        // {robot_prefix_1, "cartesian", drop_target_1_key_name, {}, "", move_configs["slow_move"]},
-        {robot_prefix_1, "pose", drop_target_1_key_name, {}, "", move_configs["mid_move"]},
-    };
-
     std::vector<Move> wait_position_1 = {
         {robot_prefix_1, "pose", approach_pick_target_1_key_name, {}, "", move_configs["mid_move"]},
-        {robot_prefix_1, "joint", "", joint_rest_1, "", move_configs["max_move"]},
+        {robot_prefix_1, "pose", approach_drop_target_1_key_name, {}, "", move_configs["max_move"]},
+        // {robot_prefix_1, "joint", "", joint_rest_1, "", move_configs["max_move"]},
+    };
+
+    std::vector<Move> drop_sequence_1 = {
+        // {robot_prefix_1, "pose", approach_pick_target_1_key_name, {}, "", move_configs["mid_move"]},
+        // {robot_prefix_1, "cartesian", drop_target_1_key_name, {}, "", move_configs["slow_move"]},
+        {robot_prefix_1, "pose", drop_target_1_key_name, {}, "", move_configs["mid_move"]},
     };
 
     std::vector<Move> exit_position_1 = {
@@ -215,6 +218,7 @@ int main(int argc, char **argv)
         {robot_prefix_1, "named", "", {}, named_home_1, move_configs["max_move"]},
     };
 
+    // ROBOT 2
     // We keep the naming consistent with the robot_prefix associated, or else the move will fail to plan!
     std::vector<Move> rest_position_2 = {
         {robot_prefix_2, "joint", "", joint_rest_2, "", move_configs["max_move"]},
@@ -227,16 +231,24 @@ int main(int argc, char **argv)
 
     std::vector<Move> load_sequence_2 = {
         // {robot_prefix_2, "pose", approach_pick_target_2, {}, "", move_configs["mid_move"]},
-        {robot_prefix_2, "pose", approach_load_target_2_key_name, {}, "", move_configs["max_move"]},
+        {robot_prefix_2, "pose", approach_load_target_2_key_name, {}, "", move_configs["mid_move"]},
         {robot_prefix_2, "cartesian", load_target_2_key_name, {}, "", move_configs["slow_move"]},
     };
 
-    std::vector<Move> home_position_2 = {
-        {robot_prefix_2, "pose", approach_load_target_2_key_name, {}, "", move_configs["max_move"]},
-        {robot_prefix_2, "named", "", {}, named_home_2, move_configs["max_move"]},
-        {robot_prefix_2, "joint", "", joint_rest_2, "", move_configs["max_move"]},
+    std::vector<Move> exit_sequence_2 = {
+        {robot_prefix_2, "cartesian", approach_insert_target_2_key_name, {}, "", move_configs["max_move"]},
+        // {robot_prefix_2, "joint", "", joint_ready_2, "", move_configs["max_move"]},
     };
 
+    std::vector<Move> ready_position_2 = {
+        {robot_prefix_2, "joint", "", joint_ready_2, "", move_configs["max_move"]},
+    };
+
+    std::vector<Move> home_position_2 = {
+        {robot_prefix_2, "named", "", {}, named_home_2, move_configs["max_move"]},
+    };
+
+    // ROBOT 1
     // build the xml snippets for the single moves of robot 1
     // or translate them directly if they are only used once
     std::string rest_move_parallel_1_xml = buildParallelPlanExecuteXML(
@@ -257,40 +269,33 @@ int main(int argc, char **argv)
     std::string home_move_parallel_1_xml = buildParallelPlanExecuteXML(
         robot_prefix_1 + "home", home_position_1, blackboard, robot_prefix_1, true);
 
-    // Translate it to xml tree leaf or branch
-    // std::string prep_sequence_1_xml = sequenceWrapperXML(
-    //     robot_prefix_1 + "ComposedPrepSequence_1", {to_rest_1_xml});
-    // std::string pick_sequence_1_xml = sequenceWrapperXML(
-    //     robot_prefix_1 + "ComposedPickSequence_1", {pick_object_1_xml});
-    // std::string drop_sequence_1_xml = sequenceWrapperXML(
-    //     robot_prefix_1 + "ComposedDropSequence_1", {drop_object_1_xml});
-    // std::string exit_sequence_1_xml = sequenceWrapperXML(
-    //     robot_prefix_1 + "ComposedExitSequence_1", {to_exit_1_xml});
+    // We can compose sequences together into a xml tree leaf or branch
     std::string home_sequence_1_xml = sequenceWrapperXML(
         robot_prefix_1 + "ComposedHomeSequence_1", {home_move_parallel_1_xml, rest_move_parallel_1_xml});
 
-    // build the xml snippets for the single moves of robot 1
-    std::string to_rest_2_xml = buildParallelPlanExecuteXML(
+    // ROBOT 2
+    // build the xml snippets for the single moves of robot 2
+    std::string rest_move_parallel_2_xml = buildParallelPlanExecuteXML(
         robot_prefix_2 + "toRest", rest_position_2, blackboard, robot_prefix_2, true);
 
-    std::string insert_object_2_xml = buildParallelPlanExecuteXML(
+    std::string insert_move_parallel_2_xml = buildParallelPlanExecuteXML(
         robot_prefix_2 + "pick", insert_sequence_2, blackboard, robot_prefix_2, true);
 
-    std::string drop_object_2_xml = buildParallelPlanExecuteXML(
+    std::string load_move_parallel_2_xml = buildParallelPlanExecuteXML(
         robot_prefix_2 + "drop", load_sequence_2, blackboard, robot_prefix_2, true);
 
-    std::string to_home_2_xml = buildParallelPlanExecuteXML(
+    std::string exit_move_parallel_2_xml = buildParallelPlanExecuteXML(
+        robot_prefix_2 + "exit", exit_sequence_2, blackboard, robot_prefix_2, true);
+
+    std::string ready_move_parallel_2_xml = buildParallelPlanExecuteXML(
+        robot_prefix_2 + "toReady", ready_position_2, blackboard, robot_prefix_2, true);
+
+    std::string home_move_parallel_2_xml = buildParallelPlanExecuteXML(
         robot_prefix_2 + "home", home_position_2, blackboard, robot_prefix_2, true);
 
-    // Translate it to xml tree leaf or branch
-    std::string prep_sequence_2_xml = sequenceWrapperXML(
-        robot_prefix_2 + "ComposedPrepSequence_2", {to_rest_2_xml});
-    std::string insert_sequence_2_xm1 = sequenceWrapperXML(
-        robot_prefix_2 + "ComposedPickSequence_2", {insert_object_2_xml});
-    std::string load_sequence_2_xml = sequenceWrapperXML(
-        robot_prefix_2 + "ComposedDropSequence_2", {drop_object_2_xml});
+    // We can compose sequences together into a xml tree leaf or branch
     std::string home_sequence_2_xml = sequenceWrapperXML(
-        robot_prefix_2 + "ComposedHomeSequence_2", {to_home_2_xml, to_rest_2_xml});
+        robot_prefix_2 + "ComposedHomeSequence_2", {home_move_parallel_2_xml, rest_move_parallel_2_xml});
 
     // ----------------------------------------------------------------------------
     // 3) Build blocks for objects handling
@@ -463,8 +468,12 @@ int main(int argc, char **argv)
     std::string go_to_exit_pose_1_xml = sequenceWrapperXML("GoToExitPose", {exit_move_parallel_1_xml});
 
     // Robot 2
+    std::string go_to_rest_pose_2_xml = sequenceWrapperXML("GoToRestPose", {rest_move_parallel_2_xml});
     std::string get_grasp_object_poses_2_xml = sequenceWrapperXML("GetGraspPoses", {get_insert_pose_2_xml, get_approach_insert_pose_2_xml});
-    std::string go_to_insert_pose_2_xml = sequenceWrapperXML("GoToPickPose", {insert_sequence_2_xm1});
+    std::string go_to_ready_pose_2_xml = sequenceWrapperXML("GoToReadyPose", {ready_move_parallel_2_xml});
+    std::string go_to_insert_pose_2_xml = sequenceWrapperXML("GoToPickPose", {insert_move_parallel_2_xml});
+    std::string go_to_load_pose_2_xml = sequenceWrapperXML("GoToLoadPose", {load_move_parallel_2_xml});
+    std::string go_to_exit_pose_2_xml = sequenceWrapperXML("GoToExitPose", {exit_move_parallel_2_xml});
     // std::string close_gripper_2_xml = sequenceWrapperXML("CloseGripper", {signal_gripper_close_2_xml, check_gripper_close_2_xml, attach_obj_2_xml});
     // std::string open_gripper_2_xml = sequenceWrapperXML("OpenGripper", {signal_gripper_open_2_xml, detach_obj_2_xml});
 
@@ -474,7 +483,7 @@ int main(int argc, char **argv)
 
     // Parallel startup subsequences:
     std::string startup_sequence_1_xml = sequenceWrapperXML("StartUpSequence_1", {check_reset_robot_1_xml, rest_move_parallel_1_xml});
-    std::string startup_sequence_2_xml = sequenceWrapperXML("StartUpSequence_2", {check_reset_robot_2_xml, prep_sequence_2_xml});
+    std::string startup_sequence_2_xml = sequenceWrapperXML("StartUpSequence_2", {check_reset_robot_2_xml, ready_move_parallel_2_xml});
     std::string parallel_sub_startup_sequences_xml = parallelWrapperXML("Parallel_startupSequences", {startup_sequence_1_xml, startup_sequence_2_xml}, 2, 1);
 
     // General startup sequence:
@@ -505,14 +514,16 @@ int main(int argc, char **argv)
         "RepeatForever",
         {
             check_reset_robot_2_xml,       //< We check if the robot is active, if not we try to reset it
+            go_to_ready_pose_2_xml,        //<
             wait_for_renamed_drop_obj_xml, //< We add all the objects to the scene
             get_grasp_object_poses_2_xml,  //< We get the updated poses relative to the objects
             go_to_insert_pose_2_xml,       //< Prep sequence and pick sequence
             attach_obj_2_xml,              //< close_gripper_2_xml,          //< We attach the object
-            load_sequence_2_xml,           //< Drop sequence
+            go_to_load_pose_2_xml,         //< Load sequence
+            go_to_exit_pose_2_xml,         //<
             detach_obj_2_xml,              //< open_gripper_2_xml,           //< We detach the object
             remove_obj_2_xml,              //< Homing sequence
-            home_sequence_2_xml            //< We delete the object for it to be added on the next cycle in the original position
+            go_to_ready_pose_2_xml         //< We delete the object for it to be added on the next cycle in the original position
         },
         -1); //< num_cycles=-1 for infinite
 
