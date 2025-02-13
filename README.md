@@ -72,6 +72,10 @@ This series of packages was created around Ufactory Lite6 and UF850 cobots, but 
   ```bash
   ros2 launch manymove_planner dual_micpp_fake_cpp_trees.launch.py
   ```
+  - Note: to run the app example with the robots in custom positions you'll have to use my fork of xarm_ros2, that I modified to handle this kind of scenario. I can follow the instructions in the above link from the original repository, just have to change the instruction on point 4.2 with:
+    ```bash
+    git clone https://github.com/xArm-Developer/xarm_ros2.git --recursive -b $ROS_DISTRO
+    ```
 
 - **Panda Manipulator**:
 - To use with a moveit2_tutorials humble demo with Panda robot launcher running in another terminal.
