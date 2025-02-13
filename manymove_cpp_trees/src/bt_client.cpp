@@ -343,7 +343,7 @@ int main(int argc, char **argv)
 
     // 8) Register node types
     BT::BehaviorTreeFactory factory;
-    registerAllNodes(factory);
+    registerAllNodeTypes(factory);
 
     // 9) Create the tree from final_tree_xml
     BT::Tree tree;

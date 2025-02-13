@@ -21,7 +21,7 @@
 
 namespace manymove_cpp_trees
 {
-    inline void registerAllNodes(BT::BehaviorTreeFactory &factory)
+    inline void registerAllNodeTypes(BT::BehaviorTreeFactory &factory)
     {
 
         factory.registerNodeType<PlanningAction>("PlanningAction");
