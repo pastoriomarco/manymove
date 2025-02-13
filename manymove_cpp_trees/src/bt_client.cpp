@@ -343,27 +343,7 @@ int main(int argc, char **argv)
 
     // 8) Register node types
     BT::BehaviorTreeFactory factory;
-
-    factory.registerNodeType<PlanningAction>("PlanningAction");
-    factory.registerNodeType<ExecuteTrajectory>("ExecuteTrajectory");
-    factory.registerNodeType<ResetTrajectories>("ResetTrajectories");
-
-    factory.registerNodeType<AddCollisionObjectAction>("AddCollisionObjectAction");
-    factory.registerNodeType<RemoveCollisionObjectAction>("RemoveCollisionObjectAction");
-    factory.registerNodeType<AttachDetachObjectAction>("AttachDetachObjectAction");
-    factory.registerNodeType<CheckObjectExistsAction>("CheckObjectExistsAction");
-    factory.registerNodeType<GetObjectPoseAction>("GetObjectPoseAction");
-
-    factory.registerNodeType<SetOutputAction>("SetOutputAction");
-    factory.registerNodeType<GetInputAction>("GetInputAction");
-    factory.registerNodeType<CheckRobotStateAction>("CheckRobotStateAction");
-    factory.registerNodeType<ResetRobotStateAction>("ResetRobotStateAction");
-    factory.registerNodeType<StopMotionAction>("StopMotionAction");
-
-    factory.registerNodeType<CheckBlackboardKeyValue>("CheckBlackboardKeyValue");
-    factory.registerNodeType<SetBlackboardKeyValue>("SetBlackboardKeyValue");
-    factory.registerNodeType<BT::RetryNode>("RetryNode");
-    factory.registerNodeType<RetryPauseAbortNode>("RetryPauseAbortNode");
+    registerAllNodes(factory);
 
     // 9) Create the tree from final_tree_xml
     BT::Tree tree;

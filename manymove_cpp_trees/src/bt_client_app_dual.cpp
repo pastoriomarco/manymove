@@ -178,7 +178,6 @@ int main(int argc, char **argv)
 
     //// TEMP: set the load target a little further toward the insert direction for testing
     Pose load_target_2 = createPoseRPY(0.57, -0.5, 0.72, 1.57, 3.14, 0.0);
-    ;
     Pose approach_load_target_2 = load_target_2;
     approach_load_target_2.position.y += 0.025;
 
@@ -612,27 +611,7 @@ int main(int argc, char **argv)
 
     // 8) Register node types
     BT::BehaviorTreeFactory factory;
-
-    factory.registerNodeType<PlanningAction>("PlanningAction");
-    factory.registerNodeType<ExecuteTrajectory>("ExecuteTrajectory");
-    factory.registerNodeType<ResetTrajectories>("ResetTrajectories");
-
-    factory.registerNodeType<AddCollisionObjectAction>("AddCollisionObjectAction");
-    factory.registerNodeType<RemoveCollisionObjectAction>("RemoveCollisionObjectAction");
-    factory.registerNodeType<AttachDetachObjectAction>("AttachDetachObjectAction");
-    factory.registerNodeType<CheckObjectExistsAction>("CheckObjectExistsAction");
-    factory.registerNodeType<GetObjectPoseAction>("GetObjectPoseAction");
-
-    factory.registerNodeType<SetOutputAction>("SetOutputAction");
-    factory.registerNodeType<GetInputAction>("GetInputAction");
-    factory.registerNodeType<CheckRobotStateAction>("CheckRobotStateAction");
-    factory.registerNodeType<ResetRobotStateAction>("ResetRobotStateAction");
-    factory.registerNodeType<StopMotionAction>("StopMotionAction");
-
-    factory.registerNodeType<CheckBlackboardKeyValue>("CheckBlackboardKeyValue");
-    factory.registerNodeType<SetBlackboardKeyValue>("SetBlackboardKeyValue");
-    factory.registerNodeType<BT::RetryNode>("RetryNode");
-    factory.registerNodeType<RetryPauseAbortNode>("RetryPauseAbortNode");
+    registerAllNodes(factory);
 
     // 9) Create the tree from final_tree_xml
     BT::Tree tree;

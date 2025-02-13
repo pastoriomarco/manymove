@@ -7,6 +7,12 @@
 
 #include <behaviortree_cpp_v3/blackboard.h>
 
+#include <behaviortree_cpp_v3/bt_factory.h>
+#include "manymove_cpp_trees/action_nodes_objects.hpp"
+#include "manymove_cpp_trees/action_nodes_planner.hpp"
+#include "manymove_cpp_trees/action_nodes_signals.hpp"
+#include "manymove_cpp_trees/action_nodes_logic.hpp"
+
 #include <string>
 #include <vector>
 #include <unordered_map>
@@ -15,6 +21,31 @@
 
 namespace manymove_cpp_trees
 {
+    inline void registerAllNodes(BT::BehaviorTreeFactory &factory)
+    {
+
+        factory.registerNodeType<PlanningAction>("PlanningAction");
+        factory.registerNodeType<ExecuteTrajectory>("ExecuteTrajectory");
+        factory.registerNodeType<ResetTrajectories>("ResetTrajectories");
+
+        factory.registerNodeType<AddCollisionObjectAction>("AddCollisionObjectAction");
+        factory.registerNodeType<RemoveCollisionObjectAction>("RemoveCollisionObjectAction");
+        factory.registerNodeType<AttachDetachObjectAction>("AttachDetachObjectAction");
+        factory.registerNodeType<CheckObjectExistsAction>("CheckObjectExistsAction");
+        factory.registerNodeType<GetObjectPoseAction>("GetObjectPoseAction");
+
+        factory.registerNodeType<SetOutputAction>("SetOutputAction");
+        factory.registerNodeType<GetInputAction>("GetInputAction");
+        factory.registerNodeType<CheckRobotStateAction>("CheckRobotStateAction");
+        factory.registerNodeType<ResetRobotStateAction>("ResetRobotStateAction");
+        factory.registerNodeType<StopMotionAction>("StopMotionAction");
+
+        factory.registerNodeType<CheckBlackboardKeyValue>("CheckBlackboardKeyValue");
+        factory.registerNodeType<SetBlackboardKeyValue>("SetBlackboardKeyValue");
+        factory.registerNodeType<BT::RetryNode>("RetryNode");
+        factory.registerNodeType<RetryPauseAbortNode>("RetryPauseAbortNode");
+    }
+
     // ----------------------------------------------------------------------------
     // Builder functions to build xml tree snippets programmatically
     // ----------------------------------------------------------------------------
