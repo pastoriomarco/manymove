@@ -1,0 +1,45 @@
+planning_scene_monitor_options:
+  name: "planning_scene_monitor"
+  robot_description: "robot_description"
+  joint_state_topic: "/M_ufactory/joint_states"
+  attached_collision_object_topic: "/attached_collision_object"
+  publish_planning_scene_topic: "/planning_scene"
+  monitored_planning_scene_topic: "/monitored_planning_scene"
+  wait_for_initial_state_timeout: 10.0
+
+planning_pipelines:
+  pipeline_names: ["ompl"]
+
+plan_request_params:
+  planning_attempts: 1
+  planning_pipeline: ompl
+  planner_id: RRTConnect
+  max_velocity_scaling_factor: 1.0
+  max_acceleration_scaling_factor: 1.0
+
+# # # -------------------------------------
+# # # ADDITIONAL OPTIONAL PARAMETERS BELOW
+# # # TO CHECK IF AVAILABLE IN CURRENT MOVEIT VERSION
+# # # -------------------------------------
+
+# # 1. Parallel planning or multi-threading
+# ompl:
+#   planning_plugin: "ompl_interface/OMPLPlanner"
+#   # E.g., run multiple planners in parallel, each configured differently
+#   # Or set advanced settings for the chosen planner
+#   # ...
+#   # Example:
+#   # default_planner_config: RRTstar
+#   use_parallel_planning: true
+#   planning_threads: 4
+
+# # 2. Trajectory Execution Settings (used if you use TrajectoryExecutionManager)
+# trajectory_execution:
+#   # If you do want to use them
+#   allowed_start_tolerance: 0.01
+#   execution_duration_monitoring: true
+#   execution_duration_scaling: 1.2
+#   allowable_collisions: false  # e.g., this can force a collision check
+
+# # 3. Logging or debugging
+# debug: false  # or true if you want verbose logs

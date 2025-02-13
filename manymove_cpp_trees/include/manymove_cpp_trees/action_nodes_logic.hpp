@@ -3,6 +3,7 @@
 
 #include <behaviortree_cpp_v3/decorator_node.h>
 #include <behaviortree_cpp_v3/condition_node.h>
+#include <behaviortree_cpp_v3/action_node.h>
 
 namespace manymove_cpp_trees
 {
@@ -30,11 +31,11 @@ namespace manymove_cpp_trees
     };
 
     /**
-     * @class CheckBlackboardValue
+     * @class CheckBlackboardKeyValue
      * @brief A simple condition node that checks if a blackboard key
-     *        matches an expected integer value.
+     *        matches an expected string value.
      */
-    class CheckBlackboardValue : public BT::ConditionNode
+    class CheckBlackboardKeyValue : public BT::ConditionNode
     {
     public:
         /**
@@ -42,17 +43,17 @@ namespace manymove_cpp_trees
          * @param name The node's name in the XML
          * @param config The node's configuration (ports, blackboard, etc.)
          */
-        CheckBlackboardValue(const std::string &name,
-                             const BT::NodeConfiguration &config);
+        CheckBlackboardKeyValue(const std::string &name,
+                                const BT::NodeConfiguration &config);
 
         /**
-         * @brief Required BT ports: "key" (the blackboard key) and "value" (the expected integer).
+         * @brief Required BT ports: "key" (the blackboard key) and "value" (the expected value).
          */
         static BT::PortsList providedPorts()
         {
             return {
                 BT::InputPort<std::string>("key", "Name of the blackboard key to check"),
-                BT::InputPort<int>("value", "Expected integer value"),
+                BT::InputPort<std::string>("value", "Expected value"),
                 BT::InputPort<std::string>("robot_prefix", "Optional robot namespace prefix, e.g. 'R_' or 'L_'."),
             };
         }
@@ -62,6 +63,34 @@ namespace manymove_cpp_trees
          * @brief The main check. Returns SUCCESS if the blackboard's "key"
          *        equals the expected "value", otherwise FAILURE.
          */
+        BT::NodeStatus tick() override;
+    };
+
+    /**
+     * @class SetBlackboardKeyValue
+     * @brief A node that sets a blackboard key to a given string value.
+     *
+     * Usage example in XML:
+     *   <SetBlackboardKeyValue name="SetKeyExample" key="some_key" value="foo"/>
+     */
+    class SetBlackboardKeyValue : public BT::SyncActionNode
+    {
+    public:
+        // Constructor
+        SetBlackboardKeyValue(const std::string &name, const BT::NodeConfiguration &config)
+            : BT::SyncActionNode(name, config)
+        {
+        }
+
+        // Required interface: which ports are needed/offered?
+        static BT::PortsList providedPorts()
+        {
+            return {
+                BT::InputPort<std::string>("key", "Blackboard key to set"),
+                BT::InputPort<std::string>("value", "Value to set (as a string)")};
+        }
+
+        // The main tick function; sets the blackboard key to the specified string
         BT::NodeStatus tick() override;
     };
 

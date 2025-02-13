@@ -347,12 +347,30 @@ def launch_setup(context, *args, **kwargs):
     # from: xarm_moveit_config/launch/_dual_robot_moveit_common2.launch.py
     # ================================================================
 
-    xyz_1 = attach_xyz_1.perform(context)[1:-1].split(' ')
-    rpy_1 = attach_rpy_1.perform(context)[1:-1].split(' ')
-    xyz_2 = attach_xyz_2.perform(context)[1:-1].split(' ')
-    rpy_2 = attach_rpy_2.perform(context)[1:-1].split(' ')
-    args_1 = xyz_1 + rpy_1 + [attach_to_1.perform(context), '{}link_base'.format(prefix_1.perform(context))]
-    args_2 = xyz_2 + rpy_2 + [attach_to_2.perform(context), '{}link_base'.format(prefix_2.perform(context))]
+    xyz_1 = attach_xyz_1.perform(context).split(' ')
+    rpy_1 = attach_rpy_1.perform(context).split(' ')
+    xyz_2 = attach_xyz_2.perform(context).split(' ')
+    rpy_2 = attach_rpy_2.perform(context).split(' ')
+    args_1 = [
+        '--x', xyz_1[0],
+        '--y', xyz_1[1],
+        '--z', xyz_1[2],
+        '--roll', rpy_1[0],
+        '--pitch', rpy_1[1],
+        '--yaw', rpy_1[2],
+        '--frame-id', attach_to_1.perform(context),
+        '--child-frame-id', f"{prefix_1.perform(context)}link_base"
+    ]
+    args_2 = [
+        '--x', xyz_2[0],
+        '--y', xyz_2[1],
+        '--z', xyz_2[2],
+        '--roll', rpy_2[0],
+        '--pitch', rpy_2[1],
+        '--yaw', rpy_2[2],
+        '--frame-id', attach_to_2.perform(context),
+        '--child-frame-id', f"{prefix_2.perform(context)}link_base"
+    ]
 
     # Static TF
     static_tf_1 = Node(

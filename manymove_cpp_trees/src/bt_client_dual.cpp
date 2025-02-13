@@ -189,16 +189,16 @@ int main(int argc, char **argv)
     // build the xml snippets for the single moves of robot 1
     // or translate them directly if they are only used once
     std::string to_rest_1_xml = buildParallelPlanExecuteXML(
-        robot_prefix_1 + "toRest", rest_position_1, blackboard, robot_prefix_1, true);
+        robot_prefix_1, robot_prefix_1 + "toRest", rest_position_1, blackboard, true);
 
     std::string pick_object_1_xml = buildParallelPlanExecuteXML(
-        robot_prefix_1 + "pick", pick_sequence_1, blackboard, robot_prefix_1, true);
+        robot_prefix_1, robot_prefix_1 + "pick", pick_sequence_1, blackboard, true);
 
     std::string drop_object_1_xml = buildParallelPlanExecuteXML(
-        robot_prefix_1 + "drop", drop_sequence_1, blackboard, robot_prefix_1, true);
+        robot_prefix_1, robot_prefix_1 + "drop", drop_sequence_1, blackboard, true);
 
     std::string to_home_1_xml = buildParallelPlanExecuteXML(
-        robot_prefix_1 + "home", home_position_1, blackboard, robot_prefix_1, true);
+        robot_prefix_1, robot_prefix_1 + "home", home_position_1, blackboard, true);
 
     // Translate it to xml tree leaf or branch
     std::string prep_sequence_1_xml = sequenceWrapperXML(
@@ -212,16 +212,16 @@ int main(int argc, char **argv)
 
     // build the xml snippets for the single moves of robot 1
     std::string to_rest_2_xml = buildParallelPlanExecuteXML(
-        robot_prefix_2 + "toRest", rest_position_2, blackboard, robot_prefix_2, true);
+        robot_prefix_2, robot_prefix_2 + "toRest", rest_position_2, blackboard, true);
 
     std::string pick_object_2_xml = buildParallelPlanExecuteXML(
-        robot_prefix_2 + "pick", pick_sequence_2, blackboard, robot_prefix_2, true);
+        robot_prefix_2, robot_prefix_2 + "pick", pick_sequence_2, blackboard, true);
 
     std::string drop_object_2_xml = buildParallelPlanExecuteXML(
-        robot_prefix_2 + "drop", drop_sequence_2, blackboard, robot_prefix_2, true);
+        robot_prefix_2, robot_prefix_2 + "drop", drop_sequence_2, blackboard, true);
 
     std::string to_home_2_xml = buildParallelPlanExecuteXML(
-        robot_prefix_2 + "home", home_position_2, blackboard, robot_prefix_2, true);
+        robot_prefix_2, robot_prefix_2 + "home", home_position_2, blackboard, true);
 
     // Translate it to xml tree leaf or branch
     std::string prep_sequence_2_xml = sequenceWrapperXML(
@@ -338,22 +338,22 @@ int main(int argc, char **argv)
 
     // Let's send and receive signals only if the robot is real, and let's fake a delay on inputs otherwise
     // Robot 1
-    std::string signal_gripper_close_1_xml = (is_robot_real ? buildSetOutputXML("GripperClose", "controller", 0, 1, robot_prefix_1) : "");
-    std::string signal_gripper_open_1_xml = (is_robot_real ? buildSetOutputXML("GripperOpen", "controller", 0, 0, robot_prefix_1) : "");
-    std::string check_gripper_close_1_xml = (is_robot_real ? buildCheckInputXML("WaitForSensor", "controller", 0, 1, robot_prefix_1, true, 0) : "<Delay delay_msec=\"250\">\n<AlwaysSuccess />\n</Delay>\n");
-    std::string check_gripper_open_1_xml = (is_robot_real ? buildCheckInputXML("WaitForSensor", "controller", 0, 0, robot_prefix_1, true, 0) : "<Delay delay_msec=\"250\">\n  <AlwaysSuccess />\n</Delay>\n");
-    std::string check_robot_state_1_xml = buildCheckRobotStateXML("CheckRobot", robot_prefix_1, "robot_ready", "error_code", "robot_mode", "robot_state", "robot_msg");
-    std::string reset_robot_state_1_xml = buildResetRobotStateXML("ResetRobot", robot_prefix_1, robot_model_1);
+    std::string signal_gripper_close_1_xml = (is_robot_real ? buildSetOutputXML(robot_prefix_1, "GripperClose", "controller", 0, 1) : "");
+    std::string signal_gripper_open_1_xml = (is_robot_real ? buildSetOutputXML(robot_prefix_1, "GripperOpen", "controller", 0, 0) : "");
+    std::string check_gripper_close_1_xml = (is_robot_real ? buildCheckInputXML(robot_prefix_1, "WaitForSensor", "controller", 0, 1, true, 0) : "<Delay delay_msec=\"250\">\n<AlwaysSuccess />\n</Delay>\n");
+    std::string check_gripper_open_1_xml = (is_robot_real ? buildCheckInputXML(robot_prefix_1, "WaitForSensor", "controller", 0, 0, true, 0) : "<Delay delay_msec=\"250\">\n  <AlwaysSuccess />\n</Delay>\n");
+    std::string check_robot_state_1_xml = buildCheckRobotStateXML(robot_prefix_1, "CheckRobot", "robot_ready", "error_code", "robot_mode", "robot_state", "robot_msg");
+    std::string reset_robot_state_1_xml = buildResetRobotStateXML(robot_prefix_1, "ResetRobot", robot_model_1);
 
     std::string check_reset_robot_1_xml = (is_robot_real ? fallbackWrapperXML(robot_prefix_1 + "CheckResetFallback", {check_robot_state_1_xml, reset_robot_state_1_xml}) : "<Delay delay_msec=\"250\">\n<AlwaysSuccess />\n</Delay>\n");
 
     // Robot 2
-    std::string signal_gripper_close_2_xml = (is_robot_real ? buildSetOutputXML("GripperClose", "controller", 0, 1, robot_prefix_2) : "");
-    std::string signal_gripper_open_2_xml = (is_robot_real ? buildSetOutputXML("GripperOpen", "controller", 0, 0, robot_prefix_2) : "");
-    std::string check_gripper_close_2_xml = (is_robot_real ? buildCheckInputXML("WaitForSensor", "controller", 0, 1, robot_prefix_2, true, 0) : "<Delay delay_msec=\"250\">\n<AlwaysSuccess />\n</Delay>\n");
-    std::string check_gripper_open_2_xml = (is_robot_real ? buildCheckInputXML("WaitForSensor", "controller", 0, 0, robot_prefix_2, true, 0) : "<Delay delay_msec=\"250\">\n  <AlwaysSuccess />\n</Delay>\n");
-    std::string check_robot_state_2_xml = buildCheckRobotStateXML("CheckRobot", robot_prefix_2, "robot_ready", "error_code", "robot_mode", "robot_state", "robot_msg");
-    std::string reset_robot_state_2_xml = buildResetRobotStateXML("ResetRobot", robot_prefix_2, robot_model_2);
+    std::string signal_gripper_close_2_xml = (is_robot_real ? buildSetOutputXML(robot_prefix_2, "GripperClose", "controller", 0, 1) : "");
+    std::string signal_gripper_open_2_xml = (is_robot_real ? buildSetOutputXML(robot_prefix_2, "GripperOpen", "controller", 0, 0) : "");
+    std::string check_gripper_close_2_xml = (is_robot_real ? buildCheckInputXML(robot_prefix_2, "WaitForSensor", "controller", 0, 1, true, 0) : "<Delay delay_msec=\"250\">\n<AlwaysSuccess />\n</Delay>\n");
+    std::string check_gripper_open_2_xml = (is_robot_real ? buildCheckInputXML(robot_prefix_2, "WaitForSensor", "controller", 0, 0, true, 0) : "<Delay delay_msec=\"250\">\n  <AlwaysSuccess />\n</Delay>\n");
+    std::string check_robot_state_2_xml = buildCheckRobotStateXML(robot_prefix_2, "CheckRobot", "robot_ready", "error_code", "robot_mode", "robot_state", "robot_msg");
+    std::string reset_robot_state_2_xml = buildResetRobotStateXML(robot_prefix_2, "ResetRobot", robot_model_2);
 
     std::string check_reset_robot_2_xml = (is_robot_real ? fallbackWrapperXML(robot_prefix_2 + "CheckResetFallback", {check_robot_state_2_xml, reset_robot_state_2_xml}) : "<Delay delay_msec=\"250\">\n<AlwaysSuccess />\n</Delay>\n");
 
@@ -453,7 +453,8 @@ int main(int argc, char **argv)
     factory.registerNodeType<ResetRobotStateAction>("ResetRobotStateAction");
     factory.registerNodeType<StopMotionAction>("StopMotionAction");
 
-    factory.registerNodeType<CheckBlackboardValue>("CheckBlackboardValue");
+    factory.registerNodeType<CheckBlackboardKeyValue>("CheckBlackboardKeyValueInt");
+    factory.registerNodeType<SetBlackboardKeyValue>("SetBlackboardKeyValue");
     factory.registerNodeType<BT::RetryNode>("RetryNode");
     factory.registerNodeType<RetryPauseAbortNode>("RetryPauseAbortNode");
 

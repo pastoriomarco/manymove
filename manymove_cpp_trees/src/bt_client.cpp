@@ -171,19 +171,19 @@ int main(int argc, char **argv)
      * sense of what's in that variable.
      */
     std::string to_rest_xml = buildParallelPlanExecuteXML(
-        robot_prefix + "toRest", rest_position, blackboard, robot_prefix, true);
+        robot_prefix, robot_prefix + "toRest", rest_position, blackboard, true);
 
     std::string scan_around_xml = buildParallelPlanExecuteXML(
-        robot_prefix + "scanAround", scan_surroundings, blackboard, robot_prefix, true);
+        robot_prefix, robot_prefix + "scanAround", scan_surroundings, blackboard, true);
 
     std::string pick_object_xml = buildParallelPlanExecuteXML(
-        robot_prefix + "pick", pick_sequence, blackboard, robot_prefix, true);
+        robot_prefix, robot_prefix + "pick", pick_sequence, blackboard, true);
 
     std::string drop_object_xml = buildParallelPlanExecuteXML(
-        robot_prefix + "drop", drop_sequence, blackboard, robot_prefix, true);
+        robot_prefix, robot_prefix + "drop", drop_sequence, blackboard, true);
 
     std::string to_home_xml = buildParallelPlanExecuteXML(
-        robot_prefix + "home", home_position, blackboard, robot_prefix, true);
+        robot_prefix, robot_prefix + "home", home_position, blackboard, true);
 
     /*
      * Combine the parallel move sequence blocks in logic sequences for the entire logic.
@@ -288,12 +288,12 @@ int main(int argc, char **argv)
 
     // Let's send and receive signals only if the robot is real, and let's fake a delay on inputs otherwise
 
-    std::string signal_gripper_close_xml = (is_robot_real ? buildSetOutputXML("GripperClose", "controller", 0, 1, robot_prefix) : "");
-    std::string signal_gripper_open_xml = (is_robot_real ? buildSetOutputXML("GripperOpen", "controller", 0, 0, robot_prefix) : "");
-    std::string check_gripper_close_xml = (is_robot_real ? buildCheckInputXML("WaitForSensor", "controller", 0, 1, robot_prefix, true, 0) : "<Delay delay_msec=\"250\">\n<AlwaysSuccess />\n</Delay>\n");
-    std::string check_gripper_open_xml = (is_robot_real ? buildCheckInputXML("WaitForSensor", "controller", 0, 0, robot_prefix, true, 0) : "<Delay delay_msec=\"250\">\n  <AlwaysSuccess />\n</Delay>\n");
-    std::string check_robot_state_xml = buildCheckRobotStateXML("CheckRobot", robot_prefix, "robot_ready", "error_code", "robot_mode", "robot_state", "robot_msg");
-    std::string reset_robot_state_xml = buildResetRobotStateXML("ResetRobot", robot_prefix, robot_model);
+    std::string signal_gripper_close_xml = (is_robot_real ? buildSetOutputXML(robot_prefix, "GripperClose", "controller", 0, 1) : "");
+    std::string signal_gripper_open_xml = (is_robot_real ? buildSetOutputXML(robot_prefix, "GripperOpen", "controller", 0, 0) : "");
+    std::string check_gripper_close_xml = (is_robot_real ? buildCheckInputXML(robot_prefix, "WaitForSensor", "controller", 0, 1, true, 0) : "<Delay delay_msec=\"250\">\n<AlwaysSuccess />\n</Delay>\n");
+    std::string check_gripper_open_xml = (is_robot_real ? buildCheckInputXML(robot_prefix, "WaitForSensor", "controller", 0, 0, true, 0) : "<Delay delay_msec=\"250\">\n  <AlwaysSuccess />\n</Delay>\n");
+    std::string check_robot_state_xml = buildCheckRobotStateXML(robot_prefix, "CheckRobot", "robot_ready", "error_code", "robot_mode", "robot_state", "robot_msg");
+    std::string reset_robot_state_xml = buildResetRobotStateXML(robot_prefix, "ResetRobot", robot_model);
 
     std::string check_reset_robot_xml = (is_robot_real ? fallbackWrapperXML(robot_prefix + "CheckResetFallback", {check_robot_state_xml, reset_robot_state_xml}) : "<Delay delay_msec=\"250\">\n<AlwaysSuccess />\n</Delay>\n");
 
@@ -360,7 +360,8 @@ int main(int argc, char **argv)
     factory.registerNodeType<ResetRobotStateAction>("ResetRobotStateAction");
     factory.registerNodeType<StopMotionAction>("StopMotionAction");
 
-    factory.registerNodeType<CheckBlackboardValue>("CheckBlackboardValue");
+    factory.registerNodeType<CheckBlackboardKeyValue>("CheckBlackboardKeyValue");
+    factory.registerNodeType<SetBlackboardKeyValue>("SetBlackboardKeyValue");
     factory.registerNodeType<BT::RetryNode>("RetryNode");
     factory.registerNodeType<RetryPauseAbortNode>("RetryPauseAbortNode");
 

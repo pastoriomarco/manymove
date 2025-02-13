@@ -65,10 +65,10 @@ namespace manymove_cpp_trees
      * @param reset_trajs This condition generates the ResetTrajectories leaf node to reset all the sequence's trajs before planning and executing
      * @return A string with the generated XML snippet
      */
-    std::string buildParallelPlanExecuteXML(const std::string &node_prefix,
+    std::string buildParallelPlanExecuteXML(const std::string &robot_prefix,
+                                            const std::string &node_prefix,
                                             const std::vector<Move> &moves,
                                             BT::Blackboard::Ptr blackboard,
-                                            const std::string &robot_prefix = "",
                                             bool reset_trajs = true);
 
     /**
@@ -89,11 +89,11 @@ namespace manymove_cpp_trees
      * @param robot_prefix A prefix for the robot's action servers
      * @return A string of the XML snippet.
      */
-    std::string buildSetOutputXML(const std::string &node_prefix,
+    std::string buildSetOutputXML(const std::string &robot_prefix,
+                                  const std::string &node_prefix,
                                   const std::string &io_type,
                                   int ionum,
-                                  int value,
-                                  const std::string &robot_prefix = "");
+                                  int value);
 
     /**
      * @brief Build an XML snippet for GetInputAction.
@@ -103,10 +103,10 @@ namespace manymove_cpp_trees
      * @param robot_prefix A prefix for the robot's action servers
      * @return A string of the XML snippet.
      */
-    std::string buildGetInputXML(const std::string &node_prefix,
+    std::string buildGetInputXML(const std::string &robot_prefix,
+                                 const std::string &node_prefix,
                                  const std::string &io_type,
-                                 int ionum,
-                                 const std::string &robot_prefix = "");
+                                 int ionum);
 
     /**
      * @brief Build an XML snippet for to check if an input value corresponds to the one requested.
@@ -119,28 +119,58 @@ namespace manymove_cpp_trees
      * @param timeout_ms   Milliseconds for timeout, if 0 then no timeout.
      * @return A string of the XML snippet.
      */
-    std::string buildCheckInputXML(const std::string &node_prefix,
+    std::string buildCheckInputXML(const std::string &robot_prefix,
+                                   const std::string &node_prefix,
                                    const std::string &io_type,
                                    int ionum,
                                    int value,
-                                   const std::string &robot_prefix = "",
                                    bool wait = true,
                                    int timeout_ms = 0);
 
     /**
-     * @brief Build an XML snippet for to check if an input value corresponds to the one requested.
+     * @brief Build an XML snippet for to compare the result of the check if an object exist on the scene.
      * @param node_prefix  Used to construct a unique name attribute.
-     * @param robot_prefix A prefix for the robot's action servers
+     * @param robot_prefix A prefix for the robot's action servers.
      * @param object_id    The ID of the object to wait for.
      * @param exists       If true the function waits for the object to exist, if false for the object not to exist.
      * @param timeout_ms   Milliseconds for timeout, if 0 then no timeout.
      * @return A string of the XML snippet.
      */
-    std::string buildWaitForObject(const std::string &node_prefix,
+    std::string buildWaitForObject(const std::string &robot_prefix,
+                                   const std::string &node_prefix,
                                    const std::string &object_id,
-                                   const std::string &robot_prefix = "",
                                    bool exists = true,
                                    int timeout_ms = 0);
+
+    /**
+     * @brief Build an XML snippet for to check if an input value corresponds to the one requested.
+     * @param node_prefix       Used to construct a unique name attribute.
+     * @param robot_prefix      A prefix for the robot's action servers
+     * @param key_id            The ID of the key to wait for.
+     * @param expected_value    Expected value of the key to compare to.
+     * @param timeout_ms        Milliseconds for timeout, if 0 then no timeout.
+     * @return A string of the XML snippet.
+     */
+    std::string buildWaitForKey(const std::string &robot_prefix,
+                                const std::string &node_prefix,
+                                const std::string &key_id,
+                                const std::string &expected_value,
+                                int timeout_ms = 0);
+
+    /**
+     * @brief Build an XML snippet for SetBlackboardKeyValue.
+     *
+     * @param robot_prefix    A prefix for the robot's action servers (not strictly needed,
+     *                        but we keep consistency with other build* functions).
+     * @param node_prefix     Used to construct a unique name attribute for the node.
+     * @param key             The name of the blackboard key to set.
+     * @param value           The value to store in the blackboard key.
+     * @return A string with the generated XML snippet for the SetBlackboardKeyValue node.
+     */
+    std::string buildSetBlackboardKey(const std::string &robot_prefix,
+                                      const std::string &node_prefix,
+                                      const std::string &key,
+                                      const std::string &value);
 
     /**
      * @brief Build an XML snippet for CheckRobotStateAction.
@@ -153,8 +183,8 @@ namespace manymove_cpp_trees
      * @param message_key  (optional) Blackboard key for the "message" output.
      * @return A string of the XML snippet.
      */
-    std::string buildCheckRobotStateXML(const std::string &node_prefix,
-                                        const std::string &robot_prefix = "",
+    std::string buildCheckRobotStateXML(const std::string &robot_prefix,
+                                        const std::string &node_prefix,
                                         const std::string &ready_key = "",
                                         const std::string &err_key = "",
                                         const std::string &mode_key = "",
@@ -168,12 +198,12 @@ namespace manymove_cpp_trees
      *  The Blackboard key for the "success" output is always "robot_state_success".
      * @return A string of the XML snippet.
      */
-    std::string buildResetRobotStateXML(const std::string &node_prefix,
-                                        const std::string &robot_prefix = "",
+    std::string buildResetRobotStateXML(const std::string &robot_prefix,
+                                        const std::string &node_prefix,
                                         const std::string &robot_model = "");
 
-    std::string buildStopMotionXML(const std::string &node_prefix,
-                                   const std::string &robot_prefix,
+    std::string buildStopMotionXML(const std::string &robot_prefix,
+                                   const std::string &node_prefix,
                                    double deceleration_time);
 
     // ----------------------------------------------------------------------------

@@ -49,7 +49,7 @@ namespace manymove_cpp_trees
                 child_node_->halt();
             /**
              * If we get here there have been a collision detected. With the above call we make the
-             * execution halt so the StopMotion will be called. Then the ExecuteTrajectory node will 
+             * execution halt so the StopMotion will be called. Then the ExecuteTrajectory node will
              * start and immediately fail: this is required because we can then jump to the planning node
              * of the Fallback child. If we reset the collision_detected here, the ExecuteTrajectory
              * node would wait forever for a valid trajectory, but there wouldn't be any PlanningAction
@@ -85,38 +85,38 @@ namespace manymove_cpp_trees
     }
 
     // ---------------------------------------------------------------
-    // CheckBlackboardValue Implementation
+    // CheckBlackboardKeyValue Implementation
     // ---------------------------------------------------------------
-    CheckBlackboardValue::CheckBlackboardValue(const std::string &name,
-                                               const BT::NodeConfiguration &config)
+    CheckBlackboardKeyValue::CheckBlackboardKeyValue(const std::string &name,
+                                                     const BT::NodeConfiguration &config)
         : BT::ConditionNode(name, config)
     {
         // If you need to confirm the blackboard is present:
         if (!config.blackboard)
         {
-            throw BT::RuntimeError("CheckBlackboardValue: no blackboard provided.");
+            throw BT::RuntimeError("CheckBlackboardKeyValue: no blackboard provided.");
         }
         // If you needed an rclcpp node for logging, you could do:
         // config.blackboard->get("node", node_);
         // but this condition node typically doesn't require an ROS node.
     }
 
-    BT::NodeStatus CheckBlackboardValue::tick()
+    BT::NodeStatus CheckBlackboardKeyValue::tick()
     {
         // 1) Extract input ports "key" and "value"
         std::string key;
-        int expected_value;
+        std::string expected_value;
         if (!getInput<std::string>("key", key))
         {
-            throw BT::RuntimeError("CheckBlackboardValue: Missing required input [key]");
+            throw BT::RuntimeError("CheckBlackboardKeyValue: Missing required input [key]");
         }
-        if (!getInput<int>("value", expected_value))
+        if (!getInput<std::string>("value", expected_value))
         {
-            throw BT::RuntimeError("CheckBlackboardValue: Missing required input [value]");
+            throw BT::RuntimeError("CheckBlackboardKeyValue: Missing required input [value]");
         }
 
         // 2) Read the blackboard
-        int actual_value = 0;
+        std::string actual_value = "";
         if (!config().blackboard->get(key, actual_value))
         {
             // Key not found => we fail
@@ -134,6 +134,32 @@ namespace manymove_cpp_trees
             // Condition not satisfied => FAILURE
             return BT::NodeStatus::FAILURE;
         }
+    }
+
+    // ---------------------------------------------------------------
+    // SetBlackboardKeyValue Implementation
+    // ---------------------------------------------------------------
+    BT::NodeStatus SetBlackboardKeyValue::tick()
+    {
+        // 1) Read the "key" port
+        std::string key;
+        if (!getInput<std::string>("key", key))
+        {
+            throw BT::RuntimeError("SetBlackboardKeyValue: Missing required input port [key]");
+        }
+
+        // 2) Read the "value" port
+        std::string value_str;
+        if (!getInput<std::string>("value", value_str))
+        {
+            throw BT::RuntimeError("SetBlackboardKeyValue: Missing required input port [value]");
+        }
+
+        // 3) Set the key in the blackboard to the string
+        config().blackboard->set(key, value_str);
+
+        // 4) Return SUCCESS to indicate we’ve completed setting the key
+        return BT::NodeStatus::SUCCESS;
     }
 
 } // namespace manymove_cpp_trees

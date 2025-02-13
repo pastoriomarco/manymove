@@ -31,8 +31,8 @@ def launch_setup(context, *args, **kwargs):
     model1300 = LaunchConfiguration('model1300', default=False)
     robot_sn = LaunchConfiguration('robot_sn', default='')
     attach_to = LaunchConfiguration('attach_to', default='world')
-    attach_xyz = LaunchConfiguration('attach_xyz', default='"0 0 0"')
-    attach_rpy = LaunchConfiguration('attach_rpy', default='"0 0 0"')
+    attach_xyz = LaunchConfiguration('attach_xyz', default='0 0 0')
+    attach_rpy = LaunchConfiguration('attach_rpy', default='0 0 0')
     mesh_suffix = LaunchConfiguration('mesh_suffix', default='stl')
     kinematics_suffix = LaunchConfiguration('kinematics_suffix', default='')
 
@@ -147,7 +147,7 @@ def launch_setup(context, *args, **kwargs):
         ).robot_description()
         .planning_scene_monitor(publish_robot_description=True, publish_robot_description_semantic=True)
         .planning_pipelines(pipelines=["ompl"])
-        .moveit_cpp(file_path=get_package_share_directory("manymove_planner") + "/config/moveit_cpp_real_ufactory.yaml")
+        .moveit_cpp(file_path=get_package_share_directory("manymove_planner") + f"/config/moveit_cpp_real_{prefix.perform(context)}ufactory.yaml",)
         .to_moveit_configs()
     )
     
@@ -242,10 +242,18 @@ def launch_setup(context, *args, **kwargs):
         ]
     )
 
-    xyz = attach_xyz.perform(context)[1:-1].split(' ')
-    rpy = attach_rpy.perform(context)[1:-1].split(' ')
-    arguments = xyz + rpy + [attach_to.perform(context), '{}link_base'.format(prefix.perform(context))]
-
+    xyz_1 = attach_xyz.perform(context).split(' ')
+    rpy_1 = attach_rpy.perform(context).split(' ')
+    arguments = [
+        '--x', xyz_1[0],
+        '--y', xyz_1[1],
+        '--z', xyz_1[2],
+        '--roll', rpy_1[0],
+        '--pitch', rpy_1[1],
+        '--yaw', rpy_1[2],
+        '--frame-id', attach_to.perform(context),
+        '--child-frame-id', f"{prefix.perform(context)}link_base"
+    ]
     # Static TF
     static_tf = Node(
         package='tf2_ros',

@@ -11,10 +11,10 @@ namespace manymove_cpp_trees
     // Builder functions to build xml tree snippets programmatically
     // ----------------------------------------------------------------------------
 
-    std::string buildParallelPlanExecuteXML(const std::string &node_prefix,
+    std::string buildParallelPlanExecuteXML(const std::string &robot_prefix,
+                                            const std::string &node_prefix,
                                             const std::vector<Move> &moves,
                                             BT::Blackboard::Ptr blackboard,
-                                            const std::string &robot_prefix,
                                             bool reset_trajs)
     {
         std::ostringstream xml;
@@ -56,6 +56,7 @@ namespace manymove_cpp_trees
 
             std::ostringstream partial_planning_seq;
 
+            // create the planning action
             partial_planning_seq << "      <PlanningAction"
                                  << " name=\"PlanMove_" << this_move_id << "\""
                                  << " move_id=\"" << this_move_id << "\""
@@ -66,8 +67,10 @@ namespace manymove_cpp_trees
                                  << " pose_key=\"" << move.pose_key << "\""
                                  << "/>\n";
 
+            // add the planning action to the planning sequence
             planning_seq << partial_planning_seq.str();
 
+            // create the execution action, with a stop-safe retry mechanism and with the planning action as fallback
             execution_seq << "    <RetryPauseAbortNode name=\"StopSafe_Retry_" << this_move_id << "\""
                           << " collision_detected=\"{" << robot_prefix << "collision_detected}\""
                           << " stop_execution=\"{" << robot_prefix << "stop_execution}\""
@@ -215,11 +218,11 @@ namespace manymove_cpp_trees
         return xml.str();
     }
 
-    std::string buildSetOutputXML(const std::string &node_prefix,
+    std::string buildSetOutputXML(const std::string &robot_prefix,
+                                  const std::string &node_prefix,
                                   const std::string &io_type,
                                   int ionum,
-                                  int value,
-                                  const std::string &robot_prefix)
+                                  int value)
     {
         // Construct a node name
         std::string node_name = node_prefix + "_SetOutput";
@@ -239,10 +242,10 @@ namespace manymove_cpp_trees
         return xml.str();
     }
 
-    std::string buildGetInputXML(const std::string &node_prefix,
+    std::string buildGetInputXML(const std::string &robot_prefix,
+                                 const std::string &node_prefix,
                                  const std::string &io_type,
-                                 int ionum,
-                                 const std::string &robot_prefix)
+                                 int ionum)
     {
         // Construct a node name
         std::string node_name = node_prefix + "_GetInput";
@@ -264,26 +267,26 @@ namespace manymove_cpp_trees
         return xml.str();
     }
 
-    std::string buildCheckInputXML(const std::string &node_prefix,
+    std::string buildCheckInputXML(const std::string &robot_prefix,
+                                   const std::string &node_prefix,
                                    const std::string &io_type,
                                    int ionum,
                                    int value,
-                                   const std::string &robot_prefix,
                                    bool wait,
                                    int timeout_ms)
     {
         // Construct a node name
-        std::string node_name = node_prefix + "_CheckInput";
+        std::string node_name = robot_prefix + node_prefix + "_CheckInput";
 
         // The value can be 0 or 1, so we trim anything different from 0 or 1. If it's not 0, then it is 1.
         int value_to_check = (value == 0 ? 0 : 1);
 
         // Build GetInputAction
-        std::string check_input_xml = buildGetInputXML(node_name, io_type, ionum, robot_prefix);
+        std::string check_input_xml = buildGetInputXML(robot_prefix, node_name, io_type, ionum);
 
-        // Build the CheckBlackboardValue node
+        // Build the CheckBlackboardKeyValue node
         std::ostringstream inner_xml;
-        inner_xml << "<Condition ID=\"CheckBlackboardValue\""
+        inner_xml << "<Condition ID=\"CheckBlackboardKeyValue\""
                   << " key=\"" << io_type << "_" << ionum << "\""
                   << " value=\"" << value_to_check << "\" />";
 
@@ -293,7 +296,7 @@ namespace manymove_cpp_trees
 
         if (wait)
         {
-            // TODO: hardcoded dalay, evaluate if it should be set by user or not:
+            /// TODO: hardcoded dalay, evaluate if it should be set by user or not:
             int delay_ms = 200;
 
             // Check here for details about <Delay> : https://github.com/BehaviorTree/BehaviorTree.CPP/issues/413
@@ -327,30 +330,30 @@ namespace manymove_cpp_trees
                             << wait_xml.str()
                             << "</Timeout>";
 
-                return sequenceWrapperXML(node_name + "_WaitTimeout", {timeout_xml.str()});
+                return sequenceWrapperXML(node_name + "_WaitCheckInputTimeout", {timeout_xml.str()});
             }
 
-            return sequenceWrapperXML(node_name + "_WaitTimeout", {wait_xml.str()});
+            return sequenceWrapperXML(node_name + "_WaitCheckInput", {wait_xml.str()});
         }
 
         // If wait was set to false, return the sequence without further additions
         return sequence_xml.str();
     }
 
-    std::string buildWaitForObject(const std::string &node_prefix,
+    std::string buildWaitForObject(const std::string &robot_prefix,
+                                   const std::string &node_prefix,
                                    const std::string &object_id,
-                                   const std::string &robot_prefix,
                                    bool exists,
                                    int timeout_ms)
     {
         // Construct a node name
-        std::string node_name = node_prefix + "_WaitForObject";
+        std::string node_name = robot_prefix + node_prefix + "_WaitForObject";
 
         // Build GetInputAction
         std::string check_obj_xml = buildObjectActionXML(node_name, createCheckObjectExists(object_id));
 
-        // TODO: hardcoded dalay, evaluate if it should be set by user or not:
-        int delay_ms = 200;
+        /// TODO: hardcoded dalay, evaluate if it should be set by user or not:
+        int delay_ms = 250;
 
         // Check here for details about <Delay> : https://github.com/BehaviorTree/BehaviorTree.CPP/issues/413
         std::ostringstream delay_and_fail_xml;
@@ -383,14 +386,87 @@ namespace manymove_cpp_trees
                         << wait_xml.str()
                         << "</Timeout>";
 
-            return sequenceWrapperXML(node_name + "_WaitTimeout", {timeout_xml.str()});
+            return sequenceWrapperXML(node_name + "_WaitForObjectTimeout", {timeout_xml.str()});
         }
 
-        return sequenceWrapperXML(node_name + "_WaitTimeout", {wait_xml.str()});
+        return sequenceWrapperXML(node_name + "_WaitForObject", {wait_xml.str()});
     }
 
-    std::string buildCheckRobotStateXML(const std::string &node_prefix,
-                                        const std::string &robot_prefix,
+    std::string buildWaitForKey(const std::string &robot_prefix,
+                                const std::string &node_prefix,
+                                const std::string &key_id,
+                                const std::string &expected_value,
+                                int timeout_ms)
+    {
+        // Construct a unique node name.
+        std::string node_name = robot_prefix + node_prefix + "_WaitForKey";
+
+        // Create a condition that compares the blackboard key to the expected value.
+        std::ostringstream condition;
+        condition << "<Condition ID=\"CheckBlackboardKeyValue\""
+                  << " key=\"" << key_id << "\""
+                  << " value=\"" << expected_value << "\" />";
+
+        /// TODO: hardcoded dalay, evaluate if it should be set by user or not:
+        int delay_ms = 250;
+
+        // Check here for details about <Delay> : https://github.com/BehaviorTree/BehaviorTree.CPP/issues/413
+        std::ostringstream delay_and_fail_xml;
+        delay_and_fail_xml << "<Delay delay_msec=\"" << delay_ms << "\">\n"
+                           << "<AlwaysFailure />" << "\n"
+                           << "</Delay>" << "\n";
+
+        std::string fallback_check_or_delay_xml = fallbackWrapperXML((node_name + "_Fallback"), {condition.str(), delay_and_fail_xml.str()});
+
+        std::ostringstream wait_xml;
+
+        // Tree modified after finding this issue:
+        // https://github.com/BehaviorTree/BehaviorTree.CPP/issues/395
+        // wait_xml << "<RetryUntilSuccessful name=\"" << node_name << "_Retry\" max_attempts=\"-1\">\n"
+        //       << fallback_check_or_delay << "\n"
+        //       << "</RetryUntilSuccessful>";
+
+        wait_xml << "<Inverter>\n"
+                 << "<KeepRunningUntilFailure>\n"
+                 << "<Inverter>\n"
+                 << fallback_check_or_delay_xml << "\n"
+                 << "</Inverter>\n"
+                 << "</KeepRunningUntilFailure>\n"
+                 << "</Inverter>\n";
+
+        if (timeout_ms > 0)
+        {
+            std::ostringstream timeout_xml;
+            timeout_xml << "<Timeout msec=\"" << timeout_ms << "\">\n"
+                        << wait_xml.str()
+                        << "</Timeout>";
+
+            return sequenceWrapperXML(node_name + "_WaitForKeyTimeout", {timeout_xml.str()});
+        }
+
+        return sequenceWrapperXML(node_name + "_WaitForKey", {wait_xml.str()});
+    }
+
+    std::string buildSetBlackboardKey(const std::string &robot_prefix,
+                                      const std::string &node_prefix,
+                                      const std::string &key,
+                                      const std::string &value)
+    {
+        // Construct a node name
+        std::string node_name = node_prefix + "_SetKey";
+
+        // Build the XML snippet
+        std::ostringstream xml;
+        xml << "<SetBlackboardKeyValue "
+            << "name=\"" << node_name << "\" "
+            << "key=\"" << key << "\" "
+            << "value=\"" << value << "\"/>";
+
+        return xml.str();
+    }
+
+    std::string buildCheckRobotStateXML(const std::string &robot_prefix,
+                                        const std::string &node_prefix,
                                         const std::string &ready_key,
                                         const std::string &err_key,
                                         const std::string &mode_key,
@@ -431,8 +507,8 @@ namespace manymove_cpp_trees
         return xml.str();
     }
 
-    std::string buildResetRobotStateXML(const std::string &node_prefix,
-                                        const std::string &robot_prefix,
+    std::string buildResetRobotStateXML(const std::string &robot_prefix,
+                                        const std::string &node_prefix,
                                         const std::string &robot_model)
     {
         // Construct a node name
@@ -451,13 +527,13 @@ namespace manymove_cpp_trees
 
         return sequenceWrapperXML(
             node_name + "_WaitTimeout",
-            {xml.str(), buildStopMotionXML(node_prefix, robot_prefix, 0.25)});
+            {xml.str(), buildStopMotionXML(robot_prefix, node_prefix, 0.25)});
 
         return xml.str();
     }
 
-    std::string buildStopMotionXML(const std::string &node_prefix,
-                                   const std::string &robot_prefix,
+    std::string buildStopMotionXML(const std::string &robot_prefix,
+                                   const std::string &node_prefix,
                                    double deceleration_time)
     {
         // Construct a node name
