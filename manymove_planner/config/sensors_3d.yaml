@@ -12,3 +12,9 @@ ros:
   padding_scale: 1.0                                              # Padding scale for the octomap
   max_update_rate: 1.0                                            # Maximum update rate for the octomap
   filtered_cloud_topic: filtered_cloud                            # Topic to publish the filtered cloud
+
+## To paste inside src/xarm_ros2/xarm_moveit_config/config/<robot_name>
+## If the robot the camera is attached to has a non-empty prefix, create a modified file than has the prefix in the camera name:
+# point_cloud_topic: /camera/<prefix>camera/depth/color/points
+## Also, launch the realsense node adding the prefix to the camera name:
+# ros2 launch realsense2_camera rs_launch.py depth_module.depth_profile:=1280x720x30 pointcloud.enable:=true pointcloud.stream_filter:=0 camera_name:=L_camera
