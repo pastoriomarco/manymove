@@ -565,8 +565,8 @@ int main(int argc, char **argv)
             go_to_pick_pose_1_xml,                        //< Pick move sequence
             close_gripper_1_xml,                          //< We attach the object
             go_to_wait_pose_1_xml,                        //< x
-            wait_for_renamed_obj_removed_xml,             //< x
             wait_for_robot_2_out_of_working_position_xml, //<
+            wait_for_renamed_obj_removed_xml,             //< x
             go_to_drop_pose_1_xml,                        //< Drop move sequence            detach_obj_1_xml,                             //<
             set_robot_1_in_working_position_xml,          //<
             wait_for_robot_2_in_working_position_xml,     //<
