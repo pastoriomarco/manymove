@@ -300,12 +300,14 @@ int main(int argc, char **argv)
         "get_pick_pose_1", createGetObjectPose(
                                object_to_manipulate_1,
                                pick_pose_key_1,
+                               "world",
                                pick_pre_transform_xyz_rpy_1,
                                post_transform_xyz_rpy_1));
     std::string get_approach_pose_1_xml = buildObjectActionXML(
         "get_approach_pose_1", createGetObjectPose(
                                    object_to_manipulate_1,
                                    approach_pose_key_1,
+                                   "world",
                                    approach_pre_transform_xyz_rpy_1,
                                    post_transform_xyz_rpy_1));
 
@@ -323,12 +325,14 @@ int main(int argc, char **argv)
         "get_pick_pose_2", createGetObjectPose(
                                object_to_manipulate_2,
                                pick_pose_key_2,
+                               "world",
                                pick_pre_transform_xyz_rpy_2,
                                post_transform_xyz_rpy_2));
     std::string get_approach_pose_2_xml = buildObjectActionXML(
         "get_approach_pose_2", createGetObjectPose(
                                    object_to_manipulate_2,
                                    approach_pose_key_2,
+                                   "world",
                                    approach_pre_transform_xyz_rpy_2,
                                    post_transform_xyz_rpy_2));
 

@@ -661,6 +661,12 @@ namespace manymove_cpp_trees
         goal_sent_ = false;
         result_received_ = false;
         action_result_ = GetObjectPose::Result();
+        std::string reference_link;
+        if (!getInput<std::string>("link_name", reference_link))
+        {
+            // default: empty => means "world" or "no specific link"
+            reference_link = "";
+        }
 
         // Retrieve input ports
         if (!getInput<std::string>("object_id", object_id_))
@@ -705,6 +711,7 @@ namespace manymove_cpp_trees
         goal_msg.object_id = object_id_;
         goal_msg.pre_transform_xyz_rpy = pre_transform_xyz_rpy_;
         goal_msg.post_transform_xyz_rpy = post_transform_xyz_rpy_;
+        goal_msg.link_name = reference_link;
 
         RCLCPP_INFO(node_->get_logger(), "GetObjectPoseAction: Sending goal for object '%s'.", object_id_.c_str());
 

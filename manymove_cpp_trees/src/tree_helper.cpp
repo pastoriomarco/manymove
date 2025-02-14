@@ -200,6 +200,7 @@ namespace manymove_cpp_trees
             std::string reference_orient_str = serializeVector(action.post_transform_xyz_rpy);
             xml << "pre_transform_xyz_rpy=\"" << transform_str << "\" ";
             xml << "post_transform_xyz_rpy=\"" << reference_orient_str << "\" ";
+            xml << "link_name=\"" << action.link_name << "\" ";
 
             // Serialize pose_key if it's not empty
             if (!action.pose_key.empty())

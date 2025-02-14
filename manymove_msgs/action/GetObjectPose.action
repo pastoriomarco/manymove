@@ -2,6 +2,7 @@
 string object_id
 float64[] pre_transform_xyz_rpy
 float64[] post_transform_xyz_rpy
+string link_name
 ---
 # Result definition
 geometry_msgs/Pose pose

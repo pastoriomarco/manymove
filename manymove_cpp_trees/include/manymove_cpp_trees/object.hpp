@@ -43,7 +43,7 @@ namespace manymove_cpp_trees
         std::string link_name; ///< Name of the robot link to attach/detach the object.
         bool attach = true;    ///< Flag indicating whether to attach (true) or detach (false) the object.
 
-        // Parameters for GET_POSE action
+        // Parameters for GET_POSE action (also uses the link_name for relative)
         std::vector<double> pre_transform_xyz_rpy;  ///< Linear transform in x, y and z and rotation in roll, pitch, yaw of the pose of the object
         std::vector<double> post_transform_xyz_rpy; ///< Reference orientation for the pose transform of the pose
         std::string pose_key;                       ///< Blackboard key to store the retrieved pose (used only for GET_POSE).
@@ -95,9 +95,10 @@ namespace manymove_cpp_trees
          * @param rpy Reference orientation in format {roll, pitch, yaw}.
          * @param key Blackboard key to store the retrieved pose.
          */
-        ObjectAction(const std::string &obj_id, const std::string &key, const std::vector<double> &pre_xyz_rpy = {0.0, 0.0, 0.0, 0.0, 0.0, 0.0}, const std::vector<double> &post_xyz_rpy = {0.0, 0.0, 0.0})
+        ObjectAction(const std::string &obj_id, const std::string &key, const std::string &link_name,const std::vector<double> &pre_xyz_rpy = {0.0, 0.0, 0.0, 0.0, 0.0, 0.0}, const std::vector<double> &post_xyz_rpy = {0.0, 0.0, 0.0, 0.0, 0.0, 0.0})
             : type(ObjectActionType::GET_POSE), object_id(obj_id),
               pose_key(key),
+              link_name(link_name),
               pre_transform_xyz_rpy(pre_xyz_rpy), post_transform_xyz_rpy(post_xyz_rpy) {}
     };
 
@@ -217,10 +218,11 @@ namespace manymove_cpp_trees
      */
     inline ObjectAction createGetObjectPose(const std::string &object_id,
                                             const std::string &key,
+                                            const std::string &link_name,
                                             const std::vector<double> &pre_xyz_rpy = {0.0, 0.0, 0.0, 0.0, 0.0, 0.0},
                                             const std::vector<double> &post_xyz_rpy = {0.0, 0.0, 0.0, 0.0, 0.0, 0.0})
     {
-        return ObjectAction(object_id, key, pre_xyz_rpy, post_xyz_rpy);
+        return ObjectAction(object_id, key, link_name, pre_xyz_rpy, post_xyz_rpy);
     }
 
 } // namespace manymove_cpp_trees

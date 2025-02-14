@@ -320,6 +320,7 @@ namespace manymove_cpp_trees
                 BT::InputPort<std::vector<double>>("pre_transform_xyz_rpy", "Offset and rotation {x, y, z, roll, pitch, yaw}"),
                 BT::InputPort<std::vector<double>>("post_transform_xyz_rpy", "Reference orientation {roll, pitch, yaw}"),
                 BT::InputPort<std::string>("pose_key", "Blackboard key to store the retrieved pose"),
+                BT::InputPort<std::string>("link_name", ""),
                 BT::OutputPort<geometry_msgs::msg::Pose>("pose", "Pose after transformations")};
         }
 

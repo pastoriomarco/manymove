@@ -675,7 +675,7 @@ namespace manymove_object_manager
         [[maybe_unused]] const rclcpp_action::GoalUUID &uuid,
         std::shared_ptr<const GetObjectPose::Goal> goal)
     {
-        RCLCPP_INFO(this->get_logger(), "Received GetObjectPose goal for object: %s", goal->object_id.c_str());
+        RCLCPP_INFO(this->get_logger(), "Received GetObjectPose goal for object: %s, reference link: %s", goal->object_id.c_str(), goal->link_name.c_str());
 
         if (goal->object_id.empty())
         {
@@ -699,126 +699,182 @@ namespace manymove_object_manager
         auto goal = goal_handle->get_goal();
         auto result = std::make_shared<GetObjectPose::Result>();
 
-        // Retrieve the object data
+        // 1. Retrieve the CollisionObject from the planning scene
         auto collision_object_opt = getObjectDataById(goal->object_id);
         if (!collision_object_opt)
         {
-            RCLCPP_ERROR(this->get_logger(), "Failed to retrieve object '%s' from planning scene.", goal->object_id.c_str());
+            RCLCPP_ERROR(this->get_logger(),
+                         "Failed to retrieve object '%s' from planning scene.",
+                         goal->object_id.c_str());
             result->success = false;
             result->message = "Object not found in planning scene.";
             goal_handle->abort(result);
             return;
         }
 
+        // 2. The object's pose is stored in either "world" (frame_id_) or
+        //    the attached link's frame if attached
         geometry_msgs::msg::Pose object_pose = collision_object_opt->pose;
+
+        bool is_attached = attachedObjectExists(goal->object_id);
+        std::string object_frame = frame_id_; // assume 'world' by default
+        if (is_attached)
+        {
+            auto maybe_link = getAttachedObjectLinkById(goal->object_id);
+            if (!maybe_link)
+            {
+                RCLCPP_ERROR(this->get_logger(),
+                             "Failed to get attached link for object '%s'.",
+                             goal->object_id.c_str());
+                result->success = false;
+                result->message = "Failed to determine attached link.";
+                goal_handle->abort(result);
+                return;
+            }
+            // If attached, the object_pose is in this link's frame
+            object_frame = maybe_link.value();
+        }
+
+        // 3. If needed, transform from 'object_frame' => 'goal->link_name'
+        //    only if the user specifies a different link_name
+        if (!goal->link_name.empty() && goal->link_name != object_frame)
+        {
+            tf2_ros::Buffer tfBuffer(this->get_clock());
+            tf2_ros::TransformListener tfListener(tfBuffer, this, true);
+
+            try
+            {
+                geometry_msgs::msg::TransformStamped transformStamped =
+                    tfBuffer.lookupTransform(
+                        goal->link_name, // target frame
+                        object_frame,    // source frame
+                        tf2::TimePointZero,
+                        tf2::durationFromSec(1.0));
+
+                // Apply that transform
+                geometry_msgs::msg::Pose transformed_pose;
+                tf2::doTransform(object_pose, transformed_pose, transformStamped);
+                object_pose = transformed_pose;
+            }
+            catch (const tf2::TransformException &ex)
+            {
+                RCLCPP_ERROR(this->get_logger(),
+                             "Failed to lookup transform from '%s' to '%s': %s",
+                             object_frame.c_str(), goal->link_name.c_str(), ex.what());
+                result->success = false;
+                result->message = "Transform error.";
+                goal_handle->abort(result);
+                return;
+            }
+        }
+
+        // 4. Now we apply the pre-/post- transformations to the pose in the final frame
 
         try
         {
-            // Validate the input
+            // Validate arrays
             if (goal->pre_transform_xyz_rpy.size() != 6)
             {
-                throw std::invalid_argument("pre_transform_xyz_rpy must have exactly 6 elements (x, y, z, roll, pitch, yaw).");
+                throw std::invalid_argument(
+                    "pre_transform_xyz_rpy must have exactly 6 elements (x,y,z,roll,pitch,yaw).");
             }
             if (goal->post_transform_xyz_rpy.size() != 6)
             {
-                throw std::invalid_argument("post_transform_xyz_rpy must have exactly 6 elements (x, y, z, roll, pitch, yaw).");
+                throw std::invalid_argument(
+                    "post_transform_xyz_rpy must have exactly 6 elements (x,y,z,roll,pitch,yaw).");
             }
 
-            // Step 1: Initialize a zero pose (identity transform)
+            // Steps 1..8 from the original snippet
+            // ------------------------------------
+            // Step 1: Start with identity
             tf2::Transform combined_transform;
-            combined_transform.setIdentity(); // Zero translation and no rotation
+            combined_transform.setIdentity();
 
-            // Step 2: Apply rotation from pre_transform_xyz_rpy (roll, pitch, yaw)
-            tf2::Quaternion transform_rotation;
-            transform_rotation.setRPY(
-                goal->pre_transform_xyz_rpy[3], // Roll
-                goal->pre_transform_xyz_rpy[4], // Pitch
-                goal->pre_transform_xyz_rpy[5]  // Yaw
-            );
-            tf2::Transform transform_rotation_tf;
-            transform_rotation_tf.setRotation(transform_rotation);
-            transform_rotation_tf.setOrigin(tf2::Vector3(0, 0, 0)); // No translation
-            combined_transform = transform_rotation_tf * combined_transform;
+            // Step 2: Rotation from pre_transform_xyz_rpy (roll, pitch, yaw)
+            tf2::Quaternion pre_rot;
+            pre_rot.setRPY(goal->pre_transform_xyz_rpy[3],
+                           goal->pre_transform_xyz_rpy[4],
+                           goal->pre_transform_xyz_rpy[5]);
+            tf2::Transform pre_rot_tf;
+            pre_rot_tf.setRotation(pre_rot);
+            pre_rot_tf.setOrigin(tf2::Vector3(0, 0, 0));
+            combined_transform = pre_rot_tf * combined_transform;
 
-            // Step 3: Apply translation from pre_transform_xyz_rpy (x, y, z)
-            tf2::Vector3 transform_translation(
-                goal->pre_transform_xyz_rpy[0], // X
-                goal->pre_transform_xyz_rpy[1], // Y
-                goal->pre_transform_xyz_rpy[2]  // Z
-            );
-            tf2::Transform transform_translation_tf;
-            transform_translation_tf.setIdentity();
-            transform_translation_tf.setOrigin(transform_translation);
-            combined_transform = transform_translation_tf * combined_transform;
+            // Step 3: Translation from pre_transform_xyz_rpy (x, y, z)
+            tf2::Vector3 pre_trans(goal->pre_transform_xyz_rpy[0],
+                                   goal->pre_transform_xyz_rpy[1],
+                                   goal->pre_transform_xyz_rpy[2]);
+            tf2::Transform pre_trans_tf;
+            pre_trans_tf.setIdentity();
+            pre_trans_tf.setOrigin(pre_trans);
+            combined_transform = pre_trans_tf * combined_transform;
 
-            // Step 4: Apply rotation from post_transform_xyz_rpy (roll, pitch, yaw)
-            tf2::Quaternion reference_rotation_quat;
-            reference_rotation_quat.setRPY(
-                goal->post_transform_xyz_rpy[3], // Roll
-                goal->post_transform_xyz_rpy[4], // Pitch
-                goal->post_transform_xyz_rpy[5]  // Yaw
-            );
-            tf2::Transform reference_rotation_tf;
-            reference_rotation_tf.setRotation(reference_rotation_quat);
-            reference_rotation_tf.setOrigin(tf2::Vector3(0, 0, 0)); // No translation
-            combined_transform = reference_rotation_tf * combined_transform;
+            // Step 4: Rotation from post_transform_xyz_rpy (roll, pitch, yaw)
+            tf2::Quaternion post_rot;
+            post_rot.setRPY(goal->post_transform_xyz_rpy[3],
+                            goal->post_transform_xyz_rpy[4],
+                            goal->post_transform_xyz_rpy[5]);
+            tf2::Transform post_rot_tf;
+            post_rot_tf.setRotation(post_rot);
+            post_rot_tf.setOrigin(tf2::Vector3(0, 0, 0));
+            combined_transform = post_rot_tf * combined_transform;
 
-            // Step 7: Apply translation from post_transform_xyz_rpy (x, y, z)
-            tf2::Vector3 reference_translation(
-                goal->post_transform_xyz_rpy[0], // X
-                goal->post_transform_xyz_rpy[1], // Y
-                goal->post_transform_xyz_rpy[2]  // Z
-            );
-            tf2::Transform reference_translation_tf;
-            reference_translation_tf.setIdentity();
-            reference_translation_tf.setOrigin(reference_translation);
-            combined_transform = reference_translation_tf * combined_transform;
+            // Step 7: Translation from post_transform_xyz_rpy (x, y, z)
+            tf2::Vector3 post_trans(goal->post_transform_xyz_rpy[0],
+                                    goal->post_transform_xyz_rpy[1],
+                                    goal->post_transform_xyz_rpy[2]);
+            tf2::Transform post_trans_tf;
+            post_trans_tf.setIdentity();
+            post_trans_tf.setOrigin(post_trans);
+            combined_transform = post_trans_tf * combined_transform;
 
-            // Step 5: Apply rotation from the object's original orientation
-            tf2::Quaternion object_original_quat(
+            // Step 5: Rotation from the object's original orientation
+            tf2::Quaternion obj_quat(
                 object_pose.orientation.x,
                 object_pose.orientation.y,
                 object_pose.orientation.z,
                 object_pose.orientation.w);
-            tf2::Transform object_rotation_tf;
-            object_rotation_tf.setRotation(object_original_quat);
-            object_rotation_tf.setOrigin(tf2::Vector3(0, 0, 0)); // No translation
-            combined_transform = object_rotation_tf * combined_transform;
+            tf2::Transform obj_rot_tf;
+            obj_rot_tf.setRotation(obj_quat);
+            obj_rot_tf.setOrigin(tf2::Vector3(0, 0, 0));
+            combined_transform = obj_rot_tf * combined_transform;
 
-            // Step 6: Apply translation from the object's original position
-            tf2::Vector3 object_original_position(
+            // Step 6: Translation from the object's original position
+            tf2::Vector3 obj_trans(
                 object_pose.position.x,
                 object_pose.position.y,
                 object_pose.position.z);
-            tf2::Transform object_translation_tf;
-            object_translation_tf.setIdentity();
-            object_translation_tf.setOrigin(object_original_position);
-            combined_transform = object_translation_tf * combined_transform;
+            tf2::Transform obj_trans_tf;
+            obj_trans_tf.setIdentity();
+            obj_trans_tf.setOrigin(obj_trans);
+            combined_transform = obj_trans_tf * combined_transform;
 
-            // Step 8: Extract the final pose from the combined transform
+            // Step 8: Extract final pose
             geometry_msgs::msg::Pose final_pose;
             final_pose.position.x = combined_transform.getOrigin().x();
             final_pose.position.y = combined_transform.getOrigin().y();
             final_pose.position.z = combined_transform.getOrigin().z();
 
             tf2::Quaternion final_quat = combined_transform.getRotation();
-            final_quat.normalize(); // Ensure the quaternion is normalized
+            final_quat.normalize();
             final_pose.orientation.x = final_quat.x();
             final_pose.orientation.y = final_quat.y();
             final_pose.orientation.z = final_quat.z();
             final_pose.orientation.w = final_quat.w();
 
-            // Set the result
+            // 5. Set and return result
             result->pose = final_pose;
             result->success = true;
             result->message = "Pose updated successfully with updated transformation logic.";
             goal_handle->succeed(result);
 
             RCLCPP_INFO(this->get_logger(),
-                        "Object '%s' updated successfully. Final pose: position (%.3f, %.3f, %.3f), orientation (%.3f, %.3f, %.3f, %.3f)",
+                        "Object '%s' updated successfully. Final pose: "
+                        "position (%.3f, %.3f, %.3f), orientation (%.3f, %.3f, %.3f, %.3f)",
                         goal->object_id.c_str(),
                         final_pose.position.x, final_pose.position.y, final_pose.position.z,
-                        final_pose.orientation.x, final_pose.orientation.y, final_pose.orientation.z, final_pose.orientation.w);
+                        final_pose.orientation.x, final_pose.orientation.y,
+                        final_pose.orientation.z, final_pose.orientation.w);
         }
         catch (const std::exception &e)
         {

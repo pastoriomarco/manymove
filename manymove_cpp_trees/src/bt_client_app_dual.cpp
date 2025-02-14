@@ -230,7 +230,7 @@ int main(int argc, char **argv)
 
     std::vector<Move> load_sequence_2 = {
         // {robot_prefix_2, "pose", approach_pick_target_2, {}, "", move_configs["mid_move"]},
-        {robot_prefix_2, "pose", approach_load_target_2_key_name, {}, "", move_configs["mid_move"]},
+        {robot_prefix_2, "cartesian", approach_load_target_2_key_name, {}, "", move_configs["mid_move"]},
         {robot_prefix_2, "cartesian", load_target_2_key_name, {}, "", move_configs["slow_move"]},
     };
 
@@ -368,6 +368,7 @@ int main(int argc, char **argv)
         createGetObjectPose(
             object_to_manipulate_1,
             pick_target_1_key_name,
+            "world",
             pick_pre_transform_xyz_rpy_1,
             post_transform_xyz_rpy_1));
 
@@ -376,6 +377,7 @@ int main(int argc, char **argv)
         createGetObjectPose(
             object_to_manipulate_1,
             approach_pick_target_1_key_name,
+            "world",
             approach_pre_transform_xyz_rpy_1,
             post_transform_xyz_rpy_1));
 
@@ -384,7 +386,8 @@ int main(int argc, char **argv)
         "get_dropped_obj_pose",
         createGetObjectPose(
             object_to_manipulate_1,
-            dropped_target_key_name));
+            dropped_target_key_name,
+            "world"));
 
     std::string rename_obj_1_xml = sequenceWrapperXML("rename_obj_to_manipulate_1", {get_dropped_object_pose_xml, remove_obj_1_xml, add_renamed_mesh_obj_xml, check_renamed_mesh_obj_xml});
 
@@ -399,6 +402,7 @@ int main(int argc, char **argv)
         createGetObjectPose(
             object_to_manipulate_1,
             insert_target_2_key_name,
+            "world",
             insert_pre_transform_xyz_rpy_2,
             post_transform_xyz_rpy_2));
 
@@ -407,6 +411,7 @@ int main(int argc, char **argv)
         createGetObjectPose(
             object_to_manipulate_1,
             approach_insert_target_2_key_name,
+            "world",
             approach_insert_pre_transform_xyz_rpy_2,
             post_transform_xyz_rpy_2));
 
@@ -523,7 +528,7 @@ int main(int argc, char **argv)
     std::string close_gripper_1_xml = sequenceWrapperXML("CloseGripper", {signal_gripper_close_1_xml, check_gripper_close_1_xml, attach_obj_1_xml});
     std::string go_to_wait_pose_1_xml = sequenceWrapperXML("GoToWaitPose", {wait_move_parallel_1_xml});
     std::string go_to_drop_pose_1_xml = sequenceWrapperXML("GoToDropPose", {drop_move_parallel_1_xml});
-    // std::string open_gripper_1_xml = sequenceWrapperXML("OpenGripper", {signal_gripper_open_1_xml, detach_obj_1_xml});
+    std::string open_gripper_1_xml = sequenceWrapperXML("OpenGripper", {signal_gripper_open_1_xml, detach_obj_1_xml});
     std::string go_to_exit_pose_1_xml = sequenceWrapperXML("GoToExitPose", {exit_move_parallel_1_xml});
 
     // Robot 2
@@ -562,11 +567,10 @@ int main(int argc, char **argv)
             go_to_wait_pose_1_xml,                        //< x
             wait_for_renamed_obj_removed_xml,             //< x
             wait_for_robot_2_out_of_working_position_xml, //<
-            go_to_drop_pose_1_xml,                        //< Drop move sequence
-            detach_obj_1_xml,                             //<
+            go_to_drop_pose_1_xml,                        //< Drop move sequence            detach_obj_1_xml,                             //<
             set_robot_1_in_working_position_xml,          //<
             wait_for_robot_2_in_working_position_xml,     //<
-            signal_gripper_open_1_xml,                    // open_gripper_1_xml,                           //< We detach the object
+            open_gripper_1_xml,                           //< We detach the object
             rename_obj_1_xml,                             //< We rename the object for the other robot to use, we will add the original one back on the next cycle in the original position
             go_to_exit_pose_1_xml,                        //< Exit move sequence
         },
