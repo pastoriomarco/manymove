@@ -485,6 +485,7 @@ namespace manymove_cpp_trees
             if (!dataReady())
             {
                 auto elapsed = std::chrono::steady_clock::now() - wait_start_time_;
+                /// TODO: the planning should fail before this timeout, must check what actually happens if it doesn't
                 int max_time = 64;
                 if (elapsed > std::chrono::seconds(max_time))
                 {

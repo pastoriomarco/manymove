@@ -27,7 +27,7 @@ This series of packages was created around Ufactory Lite6 and UF850 cobots, but 
   - You can use for example ~/dev_ws as in xarm_ros2 repo, or define an appropriate workspace.
   - From here on I'll refer to the installation directory of the workspace as `<workspace_dir>`
 - **Clone `manymove` humble branch**:
-  - From `<workspace_dir>/src`:
+  - From `<workspace_dir>`:
   ```bash
   git clone --branch=humble https://github.com/pastoriomarco/manymove.git
   ```
@@ -37,17 +37,17 @@ This series of packages was created around Ufactory Lite6 and UF850 cobots, but 
   rosdep install --from-paths . --ignore-src --rosdistro $ROS_DISTRO -y
   ```
 - **Copy the auxiliary files to run all examples with the right configuration**:
-  - Create the `other` folder in xarm_description/meshes. From `<workspace_dir>/src`:
+  - Create the `other` folder in xarm_description/meshes. From `<workspace_dir>` run:
   ```bash
-  mkdir -p ./xarm_ros2/xarm_description/meshes/other
+  mkdir -p ./src/xarm_ros2/xarm_description/meshes/other
   ```
-  - Copy pneumatic gripper's mesh. From `<workspace_dir>/src`:
+  - Copy pneumatic gripper's mesh. From `<workspace_dir>` run:
   ```bash
-  cp ./manymove/manymove_object_manager/meshes/custom_end_tools/* ./xarm_ros2/xarm_description/meshes/other/
+  cp ./src/manymove/manymove_object_manager/meshes/custom_end_tools/* ./src/xarm_ros2/xarm_description/meshes/other/
   ```
-  - Copy the user param file in xarm_api/config. From `<workspace_dir>/src`:
+  - Copy the user param file in xarm_api/config. From `<workspace_dir>` run:
   ```bash
-  cp ./manymove/manymove_planner/config/xarm_user_params.yaml ./xarm_ros2/xarm_api/config/
+  cp ./src/manymove/manymove_planner/config/xarm_user_params.yaml ./src/xarm_ros2/xarm_api/config/
   ```
 - **Build the packages from `<workspace_dir>`**: 
   ```bash

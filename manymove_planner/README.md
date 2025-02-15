@@ -1,217 +1,183 @@
 # ManyMove Planner
 
-The `manymove_planner` project is meant for roboticists to ease the transition to ROS2 coming from the classic frameworks of major manifacturers.
-It provides a simplified and robust framework for planning and executing robotic manipulator movements using ROS 2 and MoveIt 2. 
-It supports diverse robots, with example configurations of Franka Emika Panda, which is the default demo model for Moveit, and Ufactory Lite6 and UF850.
+This package provides a **simplified yet flexible** set of motion planning and trajectory execution action servers for robotic manipulators, built on **ROS 2** and **MoveIt 2**. It is part of the **`manymove`** project and is highly experimental. **Use at your own risk**; see the main repository’s disclaimer regarding safety and stability.
 
-## Features
+`manymove_planner` exposes action servers that make possible to organize the planning and execution actions in logic builder packages using a unified interface, without having to worry if the underlying implementation uses MoveGroupInterface or MoveitCPP.
+It supports diverse robots, with an example configuration for Franka Emika Panda, which is the default demo model for Moveit, but most of the exmples are built around Ufactory Lite6 and UF850, simply because I'm going in production with these first.
 
-- **Action-Based Motion Control**:
-  - Single move goals with joint, position or Cartesian targets.
-  - Sequential move goals for executing a series of movements.
-- **Integration with MoveIt 2**:
-  - Supports motion planning, Cartesian path planning, and time parameterization.
-- **Flexible Planner Options**:
-  - Choose between MoveItCppPlanner and MoveGroupPlanner for motion planning.
-- **Customizable Parameters**:
-  - Control velocity, acceleration, Cartesian motion constraints, and more via ROS parameters or launch files.
+## Overview
 
-## Architecture Overview
+### Key Functionalities
 
-1. **Planner Interface**:
-   - Defines abstract methods for planning, execution, and time parameterization.
-   - Implemented by `MoveItCppPlanner` and `MoveGroupPlanner`.
-2. **Action Server**:
-   - Handles incoming motion requests and delegates tasks to the chosen planner.
-   - Provides feedback and manages action lifecycle.
-3. **Action Server Node**:
-   - Configures and initializes the appropriate planner and action server.
-   - Supports runtime parameter configuration.
-4. **Client Node**:
-   - Demonstrates sending single and sequence motion goals.
+- **Plan Manipulator Motions**\
+  Accepts single-goal planning requests via the `PlanManipulator` action (joint, named, pose, or Cartesian targets).\
+  Applies time parameterization to generate smooth, velocity-scaled trajectories.
 
-## Message and Action Definitions
+- **Execute Trajectory**\
+  Executes a pre-computed `RobotTrajectory` using a standard FollowJointTrajectory controller.\
+  Provides feedback on collision checks during execution (verifies upcoming waypoints).
 
-### **MovementConfig.msg**
-Defines the configuration parameters for robotic movements:
+- **Stop Motion**\
+  Issues a controlled stop command to smoothly decelerate the manipulator.
 
-**Planning parameters for all movements:**
-- `velocity_scaling_factor`: Factor to scale the velocity (0.0 - 1.0), set on planner parameters, potentially modified by `manymove_planner` functions.
-- `acceleration_scaling_factor`: Factor to scale the acceleration (0.0 - 1.0), set on planner parameters, potentially modified by `manymove_planner` functions.
-- `max_cartesian_speed`: Maximum speed for Cartesian movements (m/s), enforced by `manymove_planner` functions.
-- `smoothing_type`: Type of trajectory smoothing (e.g., time-optimal, spline), configured for `manymove_planner` functions.
+- **Load & Unload Controllers**\
+  Offers dedicated actions (`LoadTrajController` and `UnloadTrajController`) for dynamic controller management (e.g., loading a new trajectory controller or unloading one at runtime).
 
-**Planning parameters only for Cartesian/linear movements:**
-- `step_size`: Step size for Cartesian planning.
-- `jump_threshold`: Threshold to avoid jumps in Cartesian paths.
+### Architecture
 
-**Planning parameters for optimizing path length with repeated planning attempts:**
-- `plan_number_target`: Target number of plans for sampling-based planners.
-- `plan_number_limit`: Limit on the number of plans for sampling-based planners.
+1. **Planner Interface**\
+   An abstract C++ interface (`planner_interface.hpp`) defining essential methods:
 
-**Execution parameters:**
-- `max_exec_tries`: Maximum execution attempts for retrying plans.
+   - `plan(...)`: path planning for joint, named, pose, or Cartesian goals.
+   - `applyTimeParameterization(...)`: smoothing and velocity constraint application.
+   - `executeTrajectory(...)`: sends trajectories to the robot’s controller.
+   - `sendControlledStop(...)`: gently stops motion on demand.
 
-### **MoveManipulatorGoal.msg**
-Represents a single goal for manipulator movement:
+2. **Planner Implementations**
 
-**IMPORTANT:** Only one type of movement is considered for each move, determined by the `movement_type` variable. If other movement fields are specified, they will be ignored unless correctly aligned with `movement_type`.
+   - **`MoveItCppPlanner`**: Uses MoveItCpp for planning, collision checks, and parametric trajectory generation.
+   - **`MoveGroupPlanner`**: (Alternative) leverages `move_group_interface` for those who prefer MoveGroup’s standard pipeline.
 
-- `movement_type`: Type of movement (`pose`, `joint`, `named`, or `cartesian`).
-- `pose_target`: Desired pose for the manipulator, used for `pose` or `cartesian` moves.
-- `named_target`: Predefined named target position, used for `named` joint moves.
-- `joint_values`: Specific joint values for the manipulator, used for `joint` moves.
+3. **Action Servers** (in `action_server.cpp` & `action_server_node.cpp`):
 
-**IMPORTANT:**
-`start_joint_values` should be specified only if planning a trajectory that does not start from the current robot position. If a trajectory planned with `start_joint_values` is executed from a different start position, the execution will fail.
+   - **`plan_manipulator`**: Receives planning requests, returns the resulting `RobotTrajectory`.
+   - **`execute_manipulator_traj`**: Executes a given `RobotTrajectory`, checking collisions during execution.
+   - **`stop_motion`**: Sends a single-point, decelerating trajectory to stop the manipulator safely.
+   - **`load_trajectory_controller`**\*\* / \*\*\*\*`unload_trajectory_controller`\*\*: Dynamically loads/unloads a trajectory controller.
 
-- `start_joint_values`: Starting joint configuration for non-default planning.
-- `config`: Configuration parameters for movement, defined in `MovementConfig`.
+4. **ROS 2 Node**
 
+   - The main node (`action_server_node`) loads parameters and spins up the chosen planner plus the action servers.
+   - Supports **prefixes** (e.g., `prefix:=L_` or `prefix:=R_`) for multi-robot setups.
 
-### **MoveManipulator.action**
-Defines the structure for single-move actions:
-- **Goal**:
-  - `goal`: A `MoveManipulatorGoal` object specifying the desired movement.
-- **Result**:
-  - `success`: Boolean indicating whether the movement succeeded.
-  - `message`: Detailed message about the result.
-- **Feedback**:
-  - `progress`: Progress of the movement as a percentage (0.0 - 100.0).
+---
 
-### **MoveManipulatorSequence.action**
-Defines the structure for sequential-move actions:
-- **Goal**:
-  - `goals`: An array of `MoveManipulatorGoal` objects for the sequence.
-- **Result**:
-  - `success`: Boolean indicating whether the sequence succeeded.
-  - `message`: Detailed message about the result.
-- **Feedback**:
-  - `progress`: Progress of the sequence as a percentage (0.0 - 100.0).
+## Installation & Dependencies
 
-## Requirements
+Please refer to the main [**ManyMove README**](../README.md) for overall setup instructions, build steps, and prerequisites.
 
-- ROS 2 (tested on Humble)
-- MoveIt 2 & its relative robot package
+### Controllers
 
-## Installation
+This package expects a standard `FollowJointTrajectory`-type controller (e.g., a `JointTrajectoryController`). Use the included actions to dynamically load or unload controllers if needed.
 
-### Dependencies
-Ensure ROS 2 and MoveIt 2 are installed. Follow the [MoveIt 2 installation guide](https://moveit.ros.org/install/) for your platform.
-
-### Build Instructions
-1. Clone the repository into your workspace:
-   ```bash
-   cd ~/ros2_ws/src
-   git clone <repository_url> manymove_planner
-   ```
-
-2. Build the workspace:
-   ```bash
-   cd ~/ros2_ws
-   colcon build
-   ```
-
-3. Source the workspace:
-   ```bash
-   source ~/ros2_ws/install/setup.bash
-   ```
+---
 
 ## Usage
 
-### Launching the Action Server
+### Launching a Fake Robot & Action Server
 
-- **Lite Series Manipulator**:
-  ```bash
-  ros2 launch manymove_planner lite_action_server_node.launch.py
-  ```
+A typical example uses a **UFactory Lite 6** manipulator in a fake simulation:
 
-- **UF850 Manipulator**:
-  ```bash
-  ros2 launch manymove_planner uf850_action_server_node.launch.py
-  ```
+```bash
+ros2 launch manymove_planner lite_micpp_fake_action_server.launch.py
+```
 
-- **Panda Manipulator**:
-  ```bash
-  ros2 launch manymove_planner panda_action_server_node.launch.py
-  ```
+This:
 
-- **Custom Configuration**:
-  ```bash
-  ros2 launch manymove_planner manymove_planner.launch.py
-  ```
+- Spawns a mock `ros2_control_node` for the Lite6.
+- Launches **RViz** (with MoveIt 2).
+- Starts the **`action_server_node`** with `planner_type=moveitcpp`.
+- Publishes transforms, joint states, etc.
 
-### Client Example
+### Action Topics
 
-- **Single Goal**:
-  Sends a single motion request (e.g., moving to a pose or joint target).
-  ```bash
-  ros2 run manymove_planner client_example_node
-  ```
+Once launched, you should see:
 
-- **Sequence of Goals**:
-  Demonstrates planning and executing a series of moves with feedback.
-  The feedback is needed to understand at what point of the motion sequence the robot currently is, and to use this info to manage an execution failure.
+- `/<prefix>plan_manipulator`
+- `/<prefix>execute_manipulator_traj`
+- `/<prefix>stop_motion`
+- `/<prefix>load_trajectory_controller`
+- `/<prefix>unload_trajectory_controller`
 
-### Configuration Parameters
+(`prefix` may be empty or something like `L_`.)
 
-- **Planner Type**:
-  - Choose `moveitcpp` or `movegroup` planners:
-    ```bash
-    --ros-args -p planner_type:=moveitcpp
-    ```
+### Sending Goals
 
-- **Motion Planning Parameters**:
-  - Define the planning group, base frame, and tool frame:
-    ```bash
-    --ros-args -p planning_group:=<group_name> -p base_frame:=<frame_name> -p tcp_frame:=<frame_name>
-    ```
+**PlanManipulator**
 
-- **Velocity and Acceleration**:
-  - Configure motion scaling factors:
-    ```bash
-    --ros-args -p velocity_scaling_factor:=0.5 -p acceleration_scaling_factor:=0.5
-    ```
+- Send a goal specifying `movement_type` = `"joint"`, `"named"`, `"pose"`, or `"cartesian"`.
+- Receives a planned (and time-parameterized) `RobotTrajectory`.
 
-- **Cartesian Constraints**:
-  - Limit Cartesian speeds:
-    ```bash
-    --ros-args -p max_cartesian_speed:=0.5
-    ```
+**ExecuteTrajectory**
 
-### Workflow
+- Provide a `RobotTrajectory` (often the result of `PlanManipulator`).
+- The server executes it and provides feedback/collision checks.
 
-1. **Client Sends Request**:
-   - A single or sequence motion goal is sent using the `MoveManipulator` or `MoveManipulatorSequence` action.
-2. **Action Server Processes Request**:
-   - Handles the goal, plans a trajectory, applies time parameterization, and executes it using the configured planner.
-3. **Feedback and Results**:
-   - For sequences, periodic feedback is provided during execution.
-   - Final results are sent to the client on completion or failure.
+**StopMotion**
 
-## Core Components
+- Send a simple goal to `<prefix>stop_motion` for a controlled stop.
 
-### **Planner Interface**
-Defines a common interface for motion planners, including methods for:
-- Planning single and sequence trajectories.
-- Executing trajectories with or without feedback.
-- Applying time parameterization.
+**Load/Unload Trajectory Controllers**
 
-### **MoveItCppPlanner**
-Uses MoveItCpp for planning and execution. Supports:
-- Flexible configurations.
-- Integration with MoveIt trajectory smoothing and parameterization.
+- Dynamically manage underlying controllers: note that this part was created as a workaround to a bug that made&#x20;
 
-### **Action Server**
-Manages action lifecycle for single and sequential moves:
-- Processes goals and cancellations.
-- Executes planned trajectories using the configured planner.
+---
 
-### **Client Example Node**
-Demonstrates:
-- Sending single or sequence motion goals.
-- Configuring movement parameters such as velocity and acceleration.
+## Configuration & Parameters
 
-## Contribution
+Key parameters (often set via launch files):
 
-Contributions are welcome. Please submit issues or pull requests for new features or bug fixes.
+- **`planner_type`**:
+
+  - Selects the underlying planning approach.
+  - Valid options: `"moveitcpp"` (default) or `"movegroup"`.
+
+- **`planning_group`**:
+
+  - Sets the MoveIt planning group name for the manipulator (e.g., `"lite6"`).
+
+- **`base_frame`**:
+
+  - The robot’s base link frame.
+
+- **`tcp_frame`**:
+
+  - The manipulator’s end-effector (TCP) frame.
+
+- **`velocity_scaling_factor`**:
+
+  - Scales overall motion velocity (0.0 to 1.0).
+
+- **`acceleration_scaling_factor`**:
+
+  - Scales overall motion acceleration (0.0 to 1.0).
+
+- **`max_cartesian_speed`**:
+
+  - Limits Cartesian speed in m/s during trajectory execution.
+
+- **`step_size`**:
+
+  - Step size for Cartesian path planning.
+
+- **`jump_threshold`**:
+
+  - Threshold for detecting abrupt jumps in Cartesian planning.
+
+- **`plan_number_target`**:
+
+  - Target number of planning attempts for sampling-based planners.
+
+- **`plan_number_limit`**:
+
+  - Maximum number of planning attempts before giving up.
+
+- **`traj_controller`**:
+
+  - Specifies the name of the FollowJointTrajectory controller for execution.
+
+### `max_cartesian_speed` Parameter
+
+This parameter was introduced to ensure the manipulator’s linear velocity does not exceed a given limit. If a planned trajectory’s computed Cartesian speed surpasses `max_cartesian_speed`, the system automatically scales down the `velocity_scaling_factor` to keep the motion under that threshold. This helps maintain safer, more controlled movements without sacrificing time parameterization.
+
+## Notes & Disclaimer
+
+- This package does **not** provide safety features. Always configure appropriate safety systems on your robot controller.
+- It is highly experimental; use with caution.
+- See the [manymove main README](../README.md) for disclaimers, licensing, and credits.
+
+---
+
+## Contributing
+
+Contributions and issue reports are welcome. If you encounter bugs or have suggestions, please open an issue or pull request in the main **[manymove](https://github.com/pastoriomarco/manymove)** repository.
