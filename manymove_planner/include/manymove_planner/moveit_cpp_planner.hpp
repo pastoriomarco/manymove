@@ -17,8 +17,6 @@
 #include <moveit_msgs/msg/robot_trajectory.hpp>
 #include <moveit/robot_state/cartesian_interpolator.h>
 #include <moveit/trajectory_processing/time_optimal_trajectory_generation.h>
-#include <moveit/trajectory_processing/iterative_spline_parameterization.h>
-#include <moveit/trajectory_processing/iterative_time_parameterization.h>
 #include <moveit/trajectory_processing/ruckig_traj_smoothing.h>
 
 #include "manymove_msgs/msg/move_manipulator_goal.hpp"

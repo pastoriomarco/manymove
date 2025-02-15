@@ -608,6 +608,7 @@ std::pair<bool, moveit_msgs::msg::RobotTrajectory> MoveItCppPlanner::applyTimePa
     double velocity_scaling_factor = config.velocity_scaling_factor;
     double acceleration_scaling_factor = config.acceleration_scaling_factor;
 
+    /// TODO: very if this many iterations are needed:
     const int max_iterations = 32;
     for (int iteration = 0; iteration < max_iterations; ++iteration)
     {
@@ -626,14 +627,7 @@ std::pair<bool, moveit_msgs::msg::RobotTrajectory> MoveItCppPlanner::applyTimePa
                                                               velocity_scaling_factor,
                                                               acceleration_scaling_factor);
         }
-        else if (config.smoothing_type == "iterative" ||
-                 config.smoothing_type == "iterative_parabolic")
-        {
-            trajectory_processing::IterativeSplineParameterization time_param;
-            time_param_success = time_param.computeTimeStamps(*robot_traj_ptr,
-                                                              velocity_scaling_factor,
-                                                              acceleration_scaling_factor);
-        }
+        /// TODO: Is ruckig still developed? Is it worth keeping since it doesn't work on cartesian paths? To test.
         else if (config.smoothing_type == "ruckig")
         {
             // Ruckig-based smoothing
@@ -651,7 +645,7 @@ std::pair<bool, moveit_msgs::msg::RobotTrajectory> MoveItCppPlanner::applyTimePa
 
         if (!time_param_success)
         {
-            // Attempt fallback if TOTG or iterative fails
+            // Attempt fallback if first try fails, try TOTG (again)
             RCLCPP_ERROR(logger_, "Failed to compute time stamps with '%s'",
                          config.smoothing_type.c_str());
             RCLCPP_WARN(logger_, "Fallback to time-optimal smoothing...");
