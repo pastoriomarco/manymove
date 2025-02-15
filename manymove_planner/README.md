@@ -1,6 +1,6 @@
 # ManyMove Planner
 
-This package provides a **simplified yet flexible** set of motion planning and trajectory execution action servers for robotic manipulators, built on **ROS 2** and **MoveIt 2**. It is part of the **`manymove`** project and is highly experimental. **Use at your own risk**; see the main repository’s disclaimer regarding safety and stability.
+This package provides a **simplified** set of motion planning and trajectory execution action servers for robotic manipulators, built on **ROS 2** and **MoveIt 2**. It is part of the **`manymove`** project and is highly experimental. **Use at your own risk**; see the main repository’s disclaimer regarding safety and stability.
 
 `manymove_planner` exposes action servers that make possible to organize the planning and execution actions in logic builder packages using a unified interface, without having to worry if the underlying implementation uses MoveGroupInterface or MoveitCPP.
 It supports diverse robots, with an example configuration for Franka Emika Panda, which is the default demo model for Moveit, but most of the exmples are built around Ufactory Lite6 and UF850, simply because I'm going in production with these first.
@@ -43,7 +43,7 @@ It supports diverse robots, with an example configuration for Franka Emika Panda
    - **`plan_manipulator`**: Receives planning requests, returns the resulting `RobotTrajectory`.
    - **`execute_manipulator_traj`**: Executes a given `RobotTrajectory`, checking collisions during execution.
    - **`stop_motion`**: Sends a single-point, decelerating trajectory to stop the manipulator safely.
-   - **`load_trajectory_controller`**\*\* / \*\*\*\*`unload_trajectory_controller`\*\*: Dynamically loads/unloads a trajectory controller.
+   - **`load_trajectory_controller` / `unload_trajectory_controller`**: Dynamically loads/unloads a trajectory controller.
 
 4. **ROS 2 Node**
 
@@ -175,9 +175,3 @@ This parameter was introduced to ensure the manipulator’s linear velocity does
 - This package does **not** provide safety features. Always configure appropriate safety systems on your robot controller.
 - It is highly experimental; use with caution.
 - See the [manymove main README](../README.md) for disclaimers, licensing, and credits.
-
----
-
-## Contributing
-
-Contributions and issue reports are welcome. If you encounter bugs or have suggestions, please open an issue or pull request in the main **[manymove](https://github.com/pastoriomarco/manymove)** repository.
