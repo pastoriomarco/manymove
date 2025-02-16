@@ -169,18 +169,3 @@ In a typical usage scenario:
 - **Feedback Welcome**: Please open an issue or pull request if you find improvements or have suggestions.
 
 Enjoy experimenting with ManyMove in your ROS2 environment, but remember to keep safety a top priority!
-
-
-- **To create the control logic, `manymove` leverages some great behaviortree repos:**
-  - [BehaviorTree.cpp v3.8](https://github.com/BehaviorTree/BehaviorTree.CPP/tree/v3.8), installed through dependencies:
-    -     ros-humble-behaviortree-cpp-v3
-  
-  - [Groot](https://github.com/BehaviorTree/Groot), BehaviorTree.cpp v3.8's visualizer:
-    - To be installed manually following the instructions in the [github page](https://github.com/BehaviorTree/Groot?tab=readme-ov-file#dependencies-installation-and-usage)
-      
-  - [py_trees_ros](https://github.com/splintered-reality/py_trees_ros), installed through dependencies:
-    -     ros-humble-py-trees \
-          ros-humble-py-trees-ros-interfaces \
-          ros-humble-py-trees-ros \
-          ros-humble-py-trees-ros-tutorials \
-          ros-humble-py-trees-ros-viewer
