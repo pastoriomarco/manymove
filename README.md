@@ -118,6 +118,12 @@ This repository is composed of several sub-packages, each handling different res
   ```bash
   ros2 launch manymove_planner dual_micpp_fake_cpp_trees.launch.py
   ```
+  - Note: to run the app example with the robots in custom positions you'll have to use the fork of xarm_ros2 modified to handle this kind of scenario. Follow the instructions in the above link from the original repository, but change the instruction on point 4.2 with:
+    ```bash
+    git clone https://github.com/xArm-Developer/xarm_ros2.git --recursive -b $ROS_DISTRO
+    ```
+
+
 - **Panda Manipulator**  
   1. In terminal 1 (with `moveit2_tutorials` installed):
      ```bash
@@ -150,7 +156,8 @@ In a typical usage scenario:
 
 - **BehaviorTree.CPP v3.8** installed through ROS dependencies (`ros-humble-behaviortree-cpp-v3`)  
   and its visualizer [Groot](https://github.com/BehaviorTree/Groot).
-- **py_trees_ros** from [splintered-reality/py_trees_ros](https://github.com/splintered-reality/py_trees_ros).
+    - Groot is to be installed manually following the instructions in the [github page](https://github.com/BehaviorTree/Groot?tab=readme-ov-file#dependencies-installation-and-usage)
+- **py_trees_ros** from [splintered-reality/py_trees_ros](https://github.com/splintered-reality/py_trees_ros), installed through ROS dependencies, including its visualizer **ros-humble-py-trees-ros-viewer**.
 - The MoveIt 2 community and [xarm_ros2 on GitHub](https://github.com/xArm-Developer/xarm_ros2/tree/humble) for the underlying robot drivers and examples.
 
 ---
@@ -162,3 +169,18 @@ In a typical usage scenario:
 - **Feedback Welcome**: Please open an issue or pull request if you find improvements or have suggestions.
 
 Enjoy experimenting with ManyMove in your ROS2 environment, but remember to keep safety a top priority!
+
+
+- **To create the control logic, `manymove` leverages some great behaviortree repos:**
+  - [BehaviorTree.cpp v3.8](https://github.com/BehaviorTree/BehaviorTree.CPP/tree/v3.8), installed through dependencies:
+    -     ros-humble-behaviortree-cpp-v3
+  
+  - [Groot](https://github.com/BehaviorTree/Groot), BehaviorTree.cpp v3.8's visualizer:
+    - To be installed manually following the instructions in the [github page](https://github.com/BehaviorTree/Groot?tab=readme-ov-file#dependencies-installation-and-usage)
+      
+  - [py_trees_ros](https://github.com/splintered-reality/py_trees_ros), installed through dependencies:
+    -     ros-humble-py-trees \
+          ros-humble-py-trees-ros-interfaces \
+          ros-humble-py-trees-ros \
+          ros-humble-py-trees-ros-tutorials \
+          ros-humble-py-trees-ros-viewer
