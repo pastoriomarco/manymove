@@ -19,7 +19,6 @@ def launch_setup(context, *args, **kwargs):
     planning_group = LaunchConfiguration('planning_group')
     base_frame = LaunchConfiguration('base_frame')
     tcp_frame = LaunchConfiguration('tcp_frame')
-    tcp_frame = LaunchConfiguration('tcp_frame')
     traj_controller = LaunchConfiguration('traj_controller')
 
     ros2_control_hardware_type = DeclareLaunchArgument(
@@ -45,8 +44,6 @@ def launch_setup(context, *args, **kwargs):
         )
         .to_moveit_configs()
     )
-    
-
 
     # Define the action_server_node with new parameters
     action_server_node = Node(
@@ -77,9 +74,58 @@ def launch_setup(context, *args, **kwargs):
         ],
     )
 
+    # ================================================================
+    # launch manymove_object_manager
+    # ================================================================
+
+    # Object Manager node
+    object_manager_node = Node(
+        package='manymove_object_manager',
+        executable='object_manager_node',
+        name='object_manager_node',
+        output='screen',
+        parameters=[{'frame_id': 'world'}]
+    )
+
+    # ================================================================
+    # launch manymove_hmi
+    # ================================================================
+
+    # HMI node
+    manymove_hmi_node = Node(
+        package='manymove_hmi',
+        executable='manymove_hmi_executable',
+        # name='manymove_hmi_node',
+        output='screen',
+        # parameters=[{
+        #     'robot_prefixes': [prefix.perform(context)],
+        # }]
+    )
+
+    # ================================================================
+    # launch manymove_cpp_trees
+    # ================================================================
+
+    # behaviortree.cpp node
+    manymove_cpp_trees_node = Node(
+        package='manymove_cpp_trees',
+        executable='bt_client_panda',
+        # name='manymove_cpp_tree_node',
+        output='screen',
+        parameters=[{
+            'robot_model': planning_group,
+            # 'robot_prefix': prefix,
+            'tcp_frame': tcp_frame,
+            'is_robot_real': False,
+        }]
+    )
+
     return [
         ros2_control_hardware_type,
         action_server_node,
+        object_manager_node,
+        manymove_hmi_node,
+        manymove_cpp_trees_node
     ]
 
 def generate_launch_description():

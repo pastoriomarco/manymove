@@ -15,7 +15,6 @@
 #include <geometry_msgs/msg/pose_stamped.hpp>
 #include <moveit_msgs/msg/robot_trajectory.hpp>
 #include <moveit/trajectory_processing/time_optimal_trajectory_generation.h>
-#include <moveit/trajectory_processing/iterative_spline_parameterization.h>
 #include <moveit/trajectory_processing/ruckig_traj_smoothing.h>
 #include <moveit/robot_trajectory/robot_trajectory.h>
 

@@ -194,7 +194,7 @@ int main(int argc, char **argv)
 
     std::vector<Move> pick_sequence_1 = {
         {robot_prefix_1, "pose", approach_pick_target_1_key_name, {}, "", move_configs["max_move"]},
-        {robot_prefix_1, "cartesian", pick_target_1_key_name, {}, "", move_configs["slow_move"]},
+        {robot_prefix_1, "cartesian", pick_target_1_key_name, {}, "", move_configs["cartesian_slow_move"]},
     };
 
     std::vector<Move> wait_position_1 = {
@@ -225,13 +225,13 @@ int main(int argc, char **argv)
 
     std::vector<Move> insert_sequence_2 = {
         {robot_prefix_2, "pose", approach_insert_target_2_key_name, {}, "", move_configs["max_move"]},
-        {robot_prefix_2, "cartesian", insert_target_2_key_name, {}, "", move_configs["slow_move"]},
+        {robot_prefix_2, "cartesian", insert_target_2_key_name, {}, "", move_configs["cartesian_slow_move"]},
     };
 
     std::vector<Move> load_sequence_2 = {
         // {robot_prefix_2, "pose", approach_pick_target_2, {}, "", move_configs["mid_move"]},
         {robot_prefix_2, "cartesian", approach_load_target_2_key_name, {}, "", move_configs["mid_move"]},
-        {robot_prefix_2, "cartesian", load_target_2_key_name, {}, "", move_configs["slow_move"]},
+        {robot_prefix_2, "cartesian", load_target_2_key_name, {}, "", move_configs["cartesian_slow_move"]},
     };
 
     std::vector<Move> exit_sequence_2 = {

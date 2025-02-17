@@ -42,7 +42,7 @@ MoveGroupPlanner::MoveGroupPlanner(
         planning_scene_monitor_->startSceneMonitor("/monitored_planning_scene");
 
         // Optional: start listening to the robot state topic
-        // planning_scene_monitor_->startStateMonitor();
+        planning_scene_monitor_->startStateMonitor();
 
         // If you want world geometry updates (collision objects) via /collision_object, etc.
         planning_scene_monitor_->startWorldGeometryMonitor();
@@ -209,14 +209,6 @@ std::pair<bool, moveit_msgs::msg::RobotTrajectory> MoveGroupPlanner::applyTimePa
                                                               velocity_scaling_factor,
                                                               acceleration_scaling_factor);
         }
-        else if (config.smoothing_type == "iterative" ||
-                 config.smoothing_type == "iterative_parabolic")
-        {
-            trajectory_processing::IterativeSplineParameterization time_param;
-            time_param_success = time_param.computeTimeStamps(*robot_traj_ptr,
-                                                              velocity_scaling_factor,
-                                                              acceleration_scaling_factor);
-        }
         else if (config.smoothing_type == "ruckig")
         {
             // Ruckig-based smoothing
@@ -234,7 +226,7 @@ std::pair<bool, moveit_msgs::msg::RobotTrajectory> MoveGroupPlanner::applyTimePa
 
         if (!time_param_success)
         {
-            // Attempt fallback if TOTG or iterative fails
+            // Attempt fallback if TOTG or rockig fails
             RCLCPP_ERROR(logger_, "Failed to compute time stamps with '%s'",
                          config.smoothing_type.c_str());
             RCLCPP_WARN(logger_, "Fallback to time-optimal smoothing...");
@@ -611,7 +603,6 @@ bool MoveGroupPlanner::isStateValid(const moveit::core::RobotState *state,
         return true; // fallback: allow
     }
 
-    // Lock the scene for read-only
     planning_scene_monitor::LockedPlanningSceneRO locked_scene(planning_scene_monitor_);
     if (!locked_scene)
     {
@@ -619,29 +610,42 @@ bool MoveGroupPlanner::isStateValid(const moveit::core::RobotState *state,
         return true; // fallback
     }
 
-    // Create a copy of the state for collision checking
-    // Or we can just pass *state directly, see below
     moveit::core::RobotState temp_state(*state);
-    temp_state.update(); // Make sure transforms are up to date
+    temp_state.update();
 
-    // Prepare the collision request
     collision_detection::CollisionRequest collision_request;
     collision_detection::CollisionResult collision_result;
-    collision_request.contacts = true;
-    collision_request.max_contacts = 10;
+    collision_request.contacts = true;   // Enable contact reporting
+    collision_request.max_contacts = 10; // Adjust as needed
     collision_request.group_name = group->getName();
 
-    // Check collision
     locked_scene->checkCollision(collision_request, collision_result, temp_state);
 
     if (collision_result.collision)
     {
-        RCLCPP_WARN(logger_,
-                    "[MoveGroupPlanner] Collision detected in custom isStateValid() (group='%s').",
-                    group->getName().c_str());
+        RCLCPP_WARN(logger_, "[MoveGroupPlanner] Collision detected in isStateValid() (group='%s').", group->getName().c_str());
+
+        // Print contact pairs
+        for (const auto &contact : collision_result.contacts)
+        {
+            RCLCPP_WARN(logger_, "Collision between: '%s' and '%s'", contact.first.first.c_str(), contact.first.second.c_str());
+        }
+
+        // Print gripper finger positions
+        Eigen::Isometry3d left_finger_transform = temp_state.getGlobalLinkTransform("panda_leftfinger");
+        Eigen::Isometry3d right_finger_transform = temp_state.getGlobalLinkTransform("panda_rightfinger");
+
+        RCLCPP_WARN(logger_, "Left Finger Position: x=%.4f, y=%.4f, z=%.4f",
+                    left_finger_transform.translation().x(),
+                    left_finger_transform.translation().y(),
+                    left_finger_transform.translation().z());
+
+        RCLCPP_WARN(logger_, "Right Finger Position: x=%.4f, y=%.4f, z=%.4f",
+                    right_finger_transform.translation().x(),
+                    right_finger_transform.translation().y(),
+                    right_finger_transform.translation().z());
     }
 
-    // Return true if no collision
     return !collision_result.collision;
 }
 
