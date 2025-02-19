@@ -18,6 +18,7 @@ find_package(manymove_signals REQUIRED)
 find_package(tf2 REQUIRED)
 find_package(std_srvs REQUIRED)
 find_package(manymove_msgs REQUIRED)
+find_package(control_msgs REQUIRED)
 
 # Include directories
 include_directories(include)

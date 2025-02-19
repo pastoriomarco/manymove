@@ -46,8 +46,6 @@ rosidl_generate_interfaces(${PROJECT_NAME}
   "action/CheckRobotState.action"
   "action/ResetRobotState.action"
 
-  "action/GripperCmd.action"
-
 DEPENDENCIES
     geometry_msgs
     shape_msgs
