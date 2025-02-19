@@ -13,6 +13,7 @@
 #include "manymove_cpp_trees/action_nodes_signals.hpp"
 #include "manymove_cpp_trees/action_nodes_logic.hpp"
 #include "manymove_cpp_trees/action_nodes_gripper.hpp"
+#include "manymove_cpp_trees/bt_converters.hpp"
 
 #include <string>
 #include <vector>

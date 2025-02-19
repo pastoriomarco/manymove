@@ -22,7 +22,15 @@ GripperCommandAction::GripperCommandAction(const std::string& name, const BT::No
     throw BT::RuntimeError("GripperCommandAction: 'node' not found in blackboard.");
   }
 
-  action_client_ = rclcpp_action::create_client<GripperCommand>(node_, "/panda_hand_controller/gripper_cmd");
+  // Retrieve the action server name from the input port
+  std::string action_server_name;
+  if (!getInput<std::string>("action_server", action_server_name))
+  {
+    RCLCPP_ERROR(node_->get_logger(), "Missing input [action_server]");
+    throw BT::RuntimeError("GripperCommandAction: Missing input [action_server]");
+  }
+
+  action_client_ = rclcpp_action::create_client<GripperCommand>(node_, action_server_name);
 }
 
 BT::NodeStatus GripperCommandAction::onStart()

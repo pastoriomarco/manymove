@@ -2,6 +2,7 @@
 #define MANYMOVE_CPP_TREES_ACTION_NODES_OBJECTS_HPP
 
 #include "manymove_cpp_trees/move.hpp"
+#include "manymove_cpp_trees/bt_converters.hpp"
 
 #include <rclcpp/rclcpp.hpp>
 #include <rclcpp_action/rclcpp_action.hpp>
@@ -187,7 +188,9 @@ namespace manymove_cpp_trees
             return {
                 BT::InputPort<std::string>("object_id", "Unique identifier for the object"),
                 BT::InputPort<std::string>("link_name", "Name of the link to attach/detach the object"),
-                BT::InputPort<bool>("attach", true, "True to attach, False to detach")};
+                BT::InputPort<bool>("attach", true, "True to attach, False to detach"),
+                BT::InputPort<std::vector<std::string>>("touch_links", std::vector<std::string>{},
+                                                        "List of robot links to exclude from collision checking") };
         }
 
     protected:

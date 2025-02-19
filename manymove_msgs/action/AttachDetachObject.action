@@ -2,6 +2,7 @@
 string object_id           # Unique identifier of the object
 string link_name           # Name of the robot link to attach/detach the object
 bool attach                # true to attach, false to detach
+string[] touch_links       # (Optional) List of robot links to exclude from collision checking
 
 ---
 # Result definition

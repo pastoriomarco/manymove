@@ -365,7 +365,6 @@ namespace manymove_cpp_trees
         result_received_ = false;
         action_result_ = AttachDetachObject::Result();
 
-        // Retrieve input ports
         if (!getInput<std::string>("object_id", object_id_))
         {
             RCLCPP_ERROR(node_->get_logger(), "AttachDetachObjectAction: Missing required input 'object_id'.");
@@ -384,15 +383,23 @@ namespace manymove_cpp_trees
             attach_ = true;
         }
 
-        // Create and send the goal
+        // Retrieve the optional "touch_links" input
+        std::vector<std::string> touch_links;
+        if (!getInput("touch_links", touch_links))
+        {
+            RCLCPP_WARN(node_->get_logger(), "AttachDetachObjectAction: No 'touch_links' provided, defaulting to empty.");
+            touch_links = std::vector<std::string>{};
+        }
+
         auto goal_msg = AttachDetachObject::Goal();
         goal_msg.object_id = object_id_;
         goal_msg.link_name = link_name_;
         goal_msg.attach = attach_;
+        goal_msg.touch_links = touch_links; 
 
         std::string action = attach_ ? "attaching" : "detaching";
-        RCLCPP_INFO(node_->get_logger(), "AttachDetachObjectAction: Sending goal for %s object '%s' to link '%s'.",
-                    action.c_str(), object_id_.c_str(), link_name_.c_str());
+        RCLCPP_INFO(node_->get_logger(), "AttachDetachObjectAction: Sending goal for %s object '%s' to link '%s'. Touch links size: '%li'",
+                    action.c_str(), object_id_.c_str(), link_name_.c_str(), touch_links.size());
 
         auto send_goal_options = rclcpp_action::Client<AttachDetachObject>::SendGoalOptions();
         send_goal_options.goal_response_callback =
@@ -405,6 +412,7 @@ namespace manymove_cpp_trees
 
         return BT::NodeStatus::RUNNING;
     }
+
 
     BT::NodeStatus AttachDetachObjectAction::onRunning()
     {

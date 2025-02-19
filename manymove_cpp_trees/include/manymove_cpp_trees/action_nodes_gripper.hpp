@@ -21,6 +21,7 @@ public:
   {
     return { BT::InputPort<double>("position", 0.0, "Desired gripper position"),
              BT::InputPort<double>("max_effort", 0.0, "Maximum effort"),
+             BT::InputPort<std::string>("action_server", "/panda_hand_controller/gripper_cmd", "Action server name"),
              BT::OutputPort<double>("current_position", "Current gripper position"),
              BT::OutputPort<bool>("success", "Command execution success") };
   }

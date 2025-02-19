@@ -40,8 +40,9 @@ namespace manymove_cpp_trees
         double scale_mesh_z = 1.0;      ///< Scale factor along the Z-axis for mesh objects.
 
         // Parameters for ATTACH and DETACH actions
-        std::string link_name; ///< Name of the robot link to attach/detach the object.
-        bool attach = true;    ///< Flag indicating whether to attach (true) or detach (false) the object.
+        std::string link_name;                  ///< Name of the robot link to attach/detach the object.
+        bool attach = true;                     ///< Flag indicating whether to attach (true) or detach (false) the object.
+        std::vector<std::string> touch_links;   ///< (Optional) List of robot links to exclude from collision checking.
 
         // Parameters for GET_POSE action (also uses the link_name for relative)
         std::vector<double> pre_transform_xyz_rpy;  ///< Linear transform in x, y and z and rotation in roll, pitch, yaw of the pose of the object
@@ -77,9 +78,16 @@ namespace manymove_cpp_trees
          * @param link Link name.
          * @param att Attach flag (true for attach, false for detach).
          */
-        ObjectAction(const std::string &obj_id, const std::string &link, bool att)
+        ObjectAction(const std::string &obj_id,
+                     const std::string &link,
+                     bool att,
+                     const std::vector<std::string>& tlinks = {})
             : type(att ? ObjectActionType::ATTACH : ObjectActionType::DETACH),
-              object_id(obj_id), link_name(link), attach(att) {}
+                object_id(obj_id), 
+                link_name(link), 
+                attach(att),
+                touch_links(tlinks) {}
+
 
         /**
          * @brief Parameterized constructor for CHECK action.
@@ -169,9 +177,11 @@ namespace manymove_cpp_trees
      * @param link_name Name of the robot link to attach the object to.
      * @return Configured ObjectAction.
      */
-    inline ObjectAction createAttachObject(const std::string &object_id, const std::string &link_name)
+    inline ObjectAction createAttachObject(const std::string &object_id, 
+                                           const std::string &link_name,
+                                           const std::vector<std::string> &touch_links = {})
     {
-        return ObjectAction(object_id, link_name, true);
+    return ObjectAction(object_id, link_name, true, touch_links);
     }
 
     /**

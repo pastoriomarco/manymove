@@ -516,6 +516,11 @@ namespace manymove_object_manager
         {
             attached_object.object.operation = moveit_msgs::msg::CollisionObject::ADD;
             attached_object.detach_posture = trajectory_msgs::msg::JointTrajectory();
+         
+            if (!goal->touch_links.empty())
+            {
+                attached_object.touch_links = goal->touch_links;
+            }
         }
         else
         {

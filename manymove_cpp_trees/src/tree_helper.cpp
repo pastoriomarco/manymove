@@ -186,6 +186,12 @@ namespace manymove_cpp_trees
             // Link name and attach flag
             xml << "link_name=\"" << action.link_name << "\" ";
             xml << "attach=\"" << (action.attach ? "true" : "false") << "\" ";
+            
+            // If touch_links is not empty, serialize it as a comma-separated list.
+            if (!action.touch_links.empty())
+            {
+                xml << "touch_links=\"" << BT::convertToString(action.touch_links) << "\" ";
+            }
             break;
         }
         case ObjectActionType::CHECK:

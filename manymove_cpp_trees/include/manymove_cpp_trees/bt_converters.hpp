@@ -100,6 +100,63 @@ namespace BT
         oss << "]";
         return oss.str();
     }
+    
+    template <>
+    inline std::vector<std::string> convertFromString(StringView str)
+    {
+        std::vector<std::string> vec;
+        std::string s(str);
+        std::istringstream iss(s);
+        std::string value;
+
+        // Expecting format: [str1,str2,str3]
+        if (s.front() != '[' || s.back() != ']')
+        {
+            throw BT::RuntimeError("Failed to parse vector<string>: missing opening/closing brackets.");
+        }
+
+        // Remove the brackets
+        s = s.substr(1, s.size() - 2);
+
+        std::istringstream ss(s);
+        while (std::getline(ss, value, ','))
+        {
+            vec.push_back(value);
+        }
+
+        return vec;
+    }
+
+    inline std::string convertToString(const std::vector<std::string> &vec)
+    {
+        std::ostringstream oss;
+        oss << "[";
+        for (size_t i = 0; i < vec.size(); ++i)
+        {
+            oss << vec[i];
+            if (i < vec.size() - 1)
+            {
+                oss << ",";
+            }
+        }
+        oss << "]";
+        return oss.str();
+    }
+
+    template <>
+    inline std::string toStr<std::vector<std::string>>(std::vector<std::string> value)
+    {
+        std::ostringstream oss;
+        oss << "[";
+        for (size_t i = 0; i < value.size(); ++i)
+        {
+            oss << value[i];
+            if (i < value.size() - 1) oss << ",";
+        }
+        oss << "]";
+        return oss.str();
+    }
+
 }
 
 #endif // MANYMOVE_CPP_TREES_BT_CONVERTERS_HPP

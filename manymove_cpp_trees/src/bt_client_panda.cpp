@@ -240,7 +240,10 @@ int main(int argc, char **argv)
     std::string tcp_frame_name = robot_prefix + tcp_frame;
     std::string object_to_manipulate = "graspable_mesh";
 
-    std::string attach_obj_xml = buildObjectActionXML("attach_obj_to_manipulate", createAttachObject(object_to_manipulate, tcp_frame_name));
+    std::string attach_obj_xml = buildObjectActionXML("attach_obj_to_manipulate", createAttachObject(
+        object_to_manipulate, 
+        tcp_frame_name, 
+        { "panda_leftfinger", "panda_rightfinger", "panda_hand" }));
     std::string detach_obj_xml = buildObjectActionXML("attach_obj_to_manipulate", createDetachObject(object_to_manipulate, tcp_frame_name));
     std::string remove_obj_xml = buildObjectActionXML("remove_obj_to_manipulate", createRemoveObject(object_to_manipulate));
 
@@ -290,8 +293,8 @@ int main(int argc, char **argv)
     std::string check_reset_robot_xml = (is_robot_real ? fallbackWrapperXML(robot_prefix + "CheckResetFallback", {check_robot_state_xml, reset_robot_state_xml}) : "<Delay delay_msec=\"250\">\n<AlwaysSuccess />\n</Delay>\n");
 
     // Setting commands for gripper open/close
-    std::string move_gripper_close_xml = ("<GripperCommandAction position=\"0.007\" max_effort=\"1.0\"/>");
-    std::string move_gripper_open_xml = ("<GripperCommandAction position=\"0.025\" max_effort=\"1.0\"/>");
+    std::string move_gripper_close_xml = ("<GripperCommandAction position=\"0.004\" max_effort=\"1.0\" action_server=\"/panda_hand_controller/gripper_cmd\"/>");
+    std::string move_gripper_open_xml = ("<GripperCommandAction position=\"0.025\" max_effort=\"1.0\" action_server=\"/panda_hand_controller/gripper_cmd\"/>");
 
     // ----------------------------------------------------------------------------
     // 6) Combine the objects and moves in a sequences that can run a number of times:
