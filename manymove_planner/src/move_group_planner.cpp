@@ -611,13 +611,24 @@ bool MoveGroupPlanner::isStateValid(const moveit::core::RobotState *state,
     }
 
     moveit::core::RobotState temp_state(*state);
+    // adding this part to update all joints positions as update() alone didn't update the mimic joints
+    {
+        std::lock_guard<std::mutex> lock(js_mutex_);
+        for (const auto &entry : current_positions_)
+        {
+            const std::string &joint_name = entry.first;
+            double joint_value = entry.second;
+
+            temp_state.setVariablePosition(joint_name, joint_value);
+        }
+    }
     temp_state.update();
 
     collision_detection::CollisionRequest collision_request;
     collision_detection::CollisionResult collision_result;
-    collision_request.contacts = true;   // Enable contact reporting
-    collision_request.max_contacts = 10; // Adjust as needed
-    collision_request.group_name = group->getName();
+    collision_request.contacts = true;  // Enable contact reporting
+    collision_request.max_contacts = 1; // Adjust as needed
+    // collision_request.group_name = group->getName();
 
     locked_scene->checkCollision(collision_request, collision_result, temp_state);
 

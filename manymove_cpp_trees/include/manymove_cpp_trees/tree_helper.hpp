@@ -12,6 +12,7 @@
 #include "manymove_cpp_trees/action_nodes_planner.hpp"
 #include "manymove_cpp_trees/action_nodes_signals.hpp"
 #include "manymove_cpp_trees/action_nodes_logic.hpp"
+#include "manymove_cpp_trees/action_nodes_gripper.hpp"
 
 #include <string>
 #include <vector>
@@ -44,6 +45,7 @@ namespace manymove_cpp_trees
         factory.registerNodeType<SetBlackboardKeyValue>("SetBlackboardKeyValue");
         factory.registerNodeType<BT::RetryNode>("RetryNode");
         factory.registerNodeType<RetryPauseAbortNode>("RetryPauseAbortNode");
+        factory.registerNodeType<GripperCommandAction>("GripperCommandAction");
     }
 
     // ----------------------------------------------------------------------------

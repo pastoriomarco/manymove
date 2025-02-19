@@ -29,6 +29,7 @@ add_executable(bt_client
     src/action_nodes_signals.cpp
     src/action_nodes_objects.cpp
     src/action_nodes_logic.cpp
+    src/action_nodes_gripper.cpp
     src/hmi_service_node.cpp
     src/tree_helper.cpp
 )
@@ -53,6 +54,7 @@ add_executable(bt_client_dual
     src/action_nodes_signals.cpp
     src/action_nodes_objects.cpp
     src/action_nodes_logic.cpp
+    src/action_nodes_gripper.cpp
     src/hmi_service_node.cpp
     src/tree_helper.cpp
 )
@@ -77,6 +79,7 @@ add_executable(bt_client_app_dual
     src/action_nodes_signals.cpp
     src/action_nodes_objects.cpp
     src/action_nodes_logic.cpp
+    src/action_nodes_gripper.cpp
     src/hmi_service_node.cpp
     src/tree_helper.cpp
 )
@@ -101,6 +104,7 @@ add_executable(bt_client_panda
     src/action_nodes_signals.cpp
     src/action_nodes_objects.cpp
     src/action_nodes_logic.cpp
+    src/action_nodes_gripper.cpp
     src/hmi_service_node.cpp
     src/tree_helper.cpp
 )

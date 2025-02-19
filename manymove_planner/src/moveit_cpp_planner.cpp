@@ -837,8 +837,18 @@ bool MoveItCppPlanner::isStateValid(const moveit::core::RobotState *state,
 
     // 3. Clone the given RobotState to update transforms if needed
     moveit::core::RobotState temp_state(*state);
-    // Make sure transforms in temp_state are up-to-date
-    temp_state.update(); // or temp_state.updateLinkTransforms();
+    // adding this part to update all joints positions as update() alone didn't update the mimic joints
+    {
+        std::lock_guard<std::mutex> lock(js_mutex_);
+        for (const auto &entry : current_positions_)
+        {
+            const std::string &joint_name = entry.first;
+            double joint_value = entry.second;
+
+            temp_state.setVariablePosition(joint_name, joint_value);
+        }
+    }
+    temp_state.update(); 
 
     // 4. Perform the collision check
     locked_scene->checkCollision(collision_request, collision_result, temp_state);
@@ -975,7 +985,7 @@ void MoveItCppPlanner::jointStateCallback(const sensor_msgs::msg::JointState::Sh
 
 bool MoveItCppPlanner::isJointStateValid(const std::vector<double> &joint_positions) const
 {
-    // 1) Create a RobotState from the planner's RobotModel
+    // Create a RobotState from the planner's RobotModel
     auto robot_model = moveit_cpp_ptr_->getRobotModel();
     if (!robot_model)
     {
@@ -990,13 +1000,12 @@ bool MoveItCppPlanner::isJointStateValid(const std::vector<double> &joint_positi
         return false;
     }
 
-    // 2) Construct a RobotState
     moveit::core::RobotState temp_state(robot_model);
     // set all joints to default or current first
     temp_state.setToDefaultValues();
     temp_state.setJointGroupPositions(jmg, joint_positions);
     temp_state.update();
 
-    // 3) Reuse the existing isStateValid(...) by passing `&temp_state, jmg`
+    // Reuse the existing isStateValid(...) by passing `&temp_state, jmg`
     return isStateValid(&temp_state, jmg);
 }

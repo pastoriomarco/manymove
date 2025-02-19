@@ -193,7 +193,7 @@ private:
     rclcpp_action::Client<control_msgs::action::FollowJointTrajectory>::SharedPtr follow_joint_traj_client_; ///< Action client for FollowJointTrajectory.
     rclcpp::Subscription<sensor_msgs::msg::JointState>::SharedPtr joint_state_sub_;                          ///< /joint_states subscriber.
 
-    std::mutex js_mutex_;
+    mutable std::mutex js_mutex_;
     std::map<std::string, double> current_positions_;
     std::map<std::string, double> current_velocities_;
 };
