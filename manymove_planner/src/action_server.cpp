@@ -327,10 +327,10 @@ private:
                                              "[ActionServer] Feedback has no positions. Aborting execution.");
 
                                 collision_detected = true; // or some other flag
-                                // Optionally publish feedback so the client knows we are aborting
+                                // publish feedback so the client knows we are aborting
                                 auto exec_feedback = std::make_shared<manymove_msgs::action::ExecuteTrajectory::Feedback>();
                                 exec_feedback->progress = -1.0f;
-                                exec_feedback->in_collision = true; // or special code
+                                exec_feedback->in_collision = true; 
                                 goal_handle->publish_feedback(exec_feedback);
 
                                 // Then simply return. Your result_callback will see "collision_detected=true" and abort.

@@ -176,16 +176,6 @@ int main(int argc, char **argv)
     blackboard->set(insert_target_2_key_name, insert_target_2);
     blackboard->set(approach_insert_target_2_key_name, approach_insert_target_2);
 
-    // //// TEMP: set the load target a little further toward the insert direction for testing
-    // Pose load_target_2 = createPoseRPY(0.57, -0.5, 0.72, 1.57, 3.14, 0.0);
-    // Pose approach_load_target_2 = load_target_2;
-    // approach_load_target_2.position.y += 0.025;
-
-    // std::string load_target_2_key_name = "load_target_2";
-    // std::string approach_load_target_2_key_name = "approach_load_target_2";
-    // blackboard->set(load_target_2_key_name, load_target_2);
-    // blackboard->set(approach_load_target_2_key_name, approach_load_target_2);
-
     //
 
     //
@@ -247,7 +237,7 @@ int main(int argc, char **argv)
 
     // We save the name of the endplate mesh since we'll use it to get the pose for the second robot to load the object in the machine
     std::string endplate_name = "endplate_mesh";
-    Pose endplate_pose = createPoseRPY(0.571, -0.6235, 0.725, 1.57, 0.0, 0.0);
+    Pose endplate_pose = createPoseRPY(0.571, -0.6235, 0.725, 1.57, 3.14, 0.0);
     Pose endplate_approach_pose = endplate_pose;
     endplate_approach_pose.position.y += 0.05;
 
@@ -297,7 +287,7 @@ int main(int argc, char **argv)
 
     // Define the transformation and reference orientation
     std::vector<double> pick_pre_transform_xyz_rpy_1 = {-0.002, 0.0, 0.0, 0.0, 1.57, 0.0};
-    std::vector<double> approach_pick_pre_transform_xyz_rpy_1 = {-0.05, 0.0, 0.0, 0.0, 1.57, 0.0};
+    std::vector<double> approach_pick_pre_transform_xyz_rpy_1 = {-0.07, 0.0, 0.0, 0.0, 1.57, 0.0};
     std::vector<double> pick_post_transform_xyz_rpy_1 = {0.0, 0.0, ((-tube_length) / 2) + grasp_offset, 3.14, 0.0, 0.0};
 
     // Translate get_pose_action to xml tree leaf
@@ -354,31 +344,44 @@ int main(int argc, char **argv)
             approach_insert_pre_transform_xyz_rpy_2,
             post_insert_transform_xyz_rpy_2));
 
-    // Now for the endplate to load the object in the machine:
+    //
 
+    //
+
+    //
+
+    //
+
+    //
+    
+    // Now for the endplate to load the object in the machine:
     // Define the transformation and reference orientation
-    std::vector<double> load_pre_transform_xyz_rpy_1 = {0.0, 0.0, 0.0, 0.0, 0.0, 0.0};
-    std::vector<double> approach_load_pre_transform_xyz_rpy_1 = {0.0, 0.025, 0.0, 0.0, 0.0, 0.0};
-    std::vector<double> load_post_transform_xyz_rpy_1 = {0.0, (tube_length), 0.0, 0.0, 0.0, 0.0};
+    std::vector<double> load_pre_transform_xyz_rpy_2 = {0.0, 0.0, 0.0, 0.0, 0.0, 0.0};
+    std::vector<double> approach_load_pre_transform_xyz_rpy_2 = {0.0, 0.0, -0.025, 0.0, 0.0, 0.0};
+    std::vector<double> load_post_transform_xyz_rpy_2 = {0.0, 0.0, -tube_length, 0.0, 0.0, 0.0};
+    // std::vector<double> load_post_transform_xyz_rpy_2 = {0.0, 0.0, -tube_length/2, 0.0, 0.0, 0.0}; // to check for collision
 
     // Translate get_pose_action to xml tree leaf
-    std::string get_load_pose_1_xml = buildObjectActionXML(
+    std::string get_load_pose_2_xml = buildObjectActionXML(
         "get_load_pose_2",
         createGetObjectPose(
             endplate_name,
             load_target_2_key_name,
             "world",
-            load_pre_transform_xyz_rpy_1,
-            load_post_transform_xyz_rpy_1));
+            load_pre_transform_xyz_rpy_2,
+            load_post_transform_xyz_rpy_2));
 
-    std::string get_approach_load_pose_1_xml = buildObjectActionXML(
+    std::string get_approach_load_pose_2_xml = buildObjectActionXML(
         "get_approach_load_pose_2",
         createGetObjectPose(
             endplate_name,
             approach_load_target_2_key_name,
             "world",
-            approach_load_pre_transform_xyz_rpy_1,
-            load_post_transform_xyz_rpy_1));
+            approach_load_pre_transform_xyz_rpy_2,
+            load_post_transform_xyz_rpy_2));
+
+    // Wrapping load pose retrieval in a sequence
+    std::string get_load_poses_from_endplate_xml = sequenceWrapperXML("get_load_poses_from_endplate", {get_load_pose_2_xml, get_approach_load_pose_2_xml});
 
     // To help coordinating robot cycles, I create branches to wait for the existance (or absence) of an object.
     std::string wait_for_renamed_drop_obj_xml = buildWaitForObject(
@@ -623,12 +626,9 @@ int main(int argc, char **argv)
     std::string go_to_insert_pose_2_xml = sequenceWrapperXML("GoToPickPose", {insert_move_parallel_2_xml});
     std::string go_to_load_pose_2_xml = sequenceWrapperXML("GoToLoadPose", {load_move_parallel_2_xml});
     std::string go_to_exit_pose_2_xml = sequenceWrapperXML("GoToExitPose", {exit_move_parallel_2_xml});
-    // std::string close_gripper_2_xml = sequenceWrapperXML("CloseGripper", {signal_gripper_close_2_xml, check_gripper_close_2_xml, attach_obj_2_xml});
-    // std::string open_gripper_2_xml = sequenceWrapperXML("OpenGripper", {signal_gripper_open_2_xml, detach_obj_2_xml});
 
     // Dedicated spawnable objects per robot:
     std::string spawn_graspable_objects_1_xml = sequenceWrapperXML("SpawnGraspableObjects", {init_graspable_mesh_obj_xml});
-    // std::string spawn_graspable_objects_2_xml = sequenceWrapperXML("SpawnGraspableObjects", {init_cylinder_obj_xml});
 
     // Parallel startup subsequences:
     std::string startup_sequence_1_xml = sequenceWrapperXML("StartUpSequence_1", {check_reset_robot_1_xml, rest_move_parallel_1_xml});
@@ -636,7 +636,7 @@ int main(int argc, char **argv)
     std::string parallel_sub_startup_sequences_xml = parallelWrapperXML("Parallel_startupSequences", {startup_sequence_1_xml, startup_sequence_2_xml}, 2, 1);
 
     // General startup sequence:
-    std::string startup_sequence_xml = sequenceWrapperXML("StartUpSequence", {check_reset_robot_1_xml, spawn_fixed_objects_xml, parallel_sub_startup_sequences_xml});
+    std::string startup_sequence_xml = sequenceWrapperXML("StartUpSequence", {spawn_fixed_objects_xml, check_reset_robot_1_xml, parallel_sub_startup_sequences_xml, get_load_poses_from_endplate_xml});
 
     // ROBOT 1
     // Repeat node must have only one children, so it also wrap a Sequence child that wraps the other children

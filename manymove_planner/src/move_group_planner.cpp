@@ -267,7 +267,7 @@ std::pair<bool, moveit_msgs::msg::RobotTrajectory> MoveGroupPlanner::applyTimePa
             velocity_scaling_factor *= scale;
 
             // If it's too small, we abort
-            if (velocity_scaling_factor < 0.01 || acceleration_scaling_factor < 0.01)
+            if (velocity_scaling_factor < 0.001 || acceleration_scaling_factor < 0.001)
             {
                 RCLCPP_ERROR(logger_, "Scaling factors too small to limit Cartesian speed.");
                 return {false, moveit_msgs::msg::RobotTrajectory()};
