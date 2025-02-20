@@ -287,16 +287,8 @@ int main(int argc, char **argv)
                                  post_transform_xyz_rpy));
 
     // ----------------------------------------------------------------------------
-    // 5) Define Signals and Gripper calls:
+    // 5) Define Gripper commands:
     // ----------------------------------------------------------------------------
-
-    // Let's send and receive signals only if the robot is real, and let's fake a delay on inputs otherwise
-    // std::string check_gripper_close_xml = (is_robot_real ? buildCheckInputXML(robot_prefix, "WaitForSensor", "controller", 0, 1, true, 0) : "<Delay delay_msec=\"250\">\n<AlwaysSuccess />\n</Delay>\n");
-    // std::string check_gripper_open_xml = (is_robot_real ? buildCheckInputXML(robot_prefix, "WaitForSensor", "controller", 0, 0, true, 0) : "<Delay delay_msec=\"250\">\n  <AlwaysSuccess />\n</Delay>\n");
-    std::string check_robot_state_xml = buildCheckRobotStateXML(robot_prefix, "CheckRobot", "robot_ready", "error_code", "robot_mode", "robot_state", "robot_msg");
-    std::string reset_robot_state_xml = buildResetRobotStateXML(robot_prefix, "ResetRobot", robot_model);
-
-    std::string check_reset_robot_xml = (is_robot_real ? fallbackWrapperXML(robot_prefix + "CheckResetFallback", {check_robot_state_xml, reset_robot_state_xml}) : "<Delay delay_msec=\"250\">\n<AlwaysSuccess />\n</Delay>\n");
 
     // Setting commands for gripper open/close
     std::string move_gripper_close_xml =
@@ -316,13 +308,12 @@ int main(int argc, char **argv)
     std::string close_gripper_xml = sequenceWrapperXML("CloseGripper", {attach_obj_xml, move_gripper_close_xml});
     std::string open_gripper_xml = sequenceWrapperXML("OpenGripper", {move_gripper_open_xml, detach_obj_xml});
 
-    std::string startup_sequence_xml = sequenceWrapperXML("StartUpSequence", {check_reset_robot_xml, spawn_fixed_objects_xml, prep_sequence_xml, move_gripper_open_xml});
+    std::string startup_sequence_xml = sequenceWrapperXML("StartUpSequence", {spawn_fixed_objects_xml, prep_sequence_xml, move_gripper_open_xml});
 
     // Repeat node must have only one children, so it also wrap a Sequence child that wraps the other children
     std::string repeat_forever_wrapper_xml = repeatWrapperXML(
         "RepeatForever",
-        {check_reset_robot_xml,       //< We check if the robot is active, if not we try to reset it
-         spawn_graspable_objects_xml, //< We add all the objects to the scene
+        {spawn_graspable_objects_xml, //< We add all the objects to the scene
          get_grasp_object_poses_xml,  //< We get the updated poses relative to the objects
          go_to_pick_pose_xml,         //< Prep sequence and pick sequence
          close_gripper_xml,           //< We attach the object
@@ -332,12 +323,7 @@ int main(int argc, char **argv)
          remove_obj_xml},             //< We delete the object for it to be added on the next cycle in the original position
         -1);                          //< num_cycles=-1 for infinite
 
-    // Combine prep_sequence_xml and pick_sequence_xml in a <Repeat> node single <Sequence>
-    //    => Repeat node must have only one children, so it also wrap a Sequence child that wraps the other childs
-    // std::string repeat_forever_wrapper_xml = repeatWrapperXML(
-    //     "RepeatForever", {object_then_moves_xml}, -1); // num_cycles=-1 for infinite
-
-    //    => MasterSequence with RepeatForever as child to set BehaviorTree ID and root main_tree_to_execute in the XML
+    // GlobalMasterSequence with RepeatForever as child to set BehaviorTree ID and root main_tree_to_execute in the XML
     std::vector<std::string> master_branches_xml = {startup_sequence_xml, repeat_forever_wrapper_xml};
     std::string master_body = sequenceWrapperXML("GlobalMasterSequence", master_branches_xml);
 

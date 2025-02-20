@@ -289,7 +289,6 @@ int main(int argc, char **argv)
     // ----------------------------------------------------------------------------
 
     // Let's send and receive signals only if the robot is real, and let's fake a delay on inputs otherwise
-
     std::string signal_gripper_close_xml = (is_robot_real ? buildSetOutputXML(robot_prefix, "GripperClose", "controller", 0, 1) : "");
     std::string signal_gripper_open_xml = (is_robot_real ? buildSetOutputXML(robot_prefix, "GripperOpen", "controller", 0, 0) : "");
     std::string check_gripper_close_xml = (is_robot_real ? buildCheckInputXML(robot_prefix, "WaitForSensor", "controller", 0, 1, true, 0) : "<Delay delay_msec=\"250\">\n<AlwaysSuccess />\n</Delay>\n");
@@ -327,12 +326,7 @@ int main(int argc, char **argv)
          remove_obj_xml},             //< We delete the object for it to be added on the next cycle in the original position
         -1);                          //< num_cycles=-1 for infinite
 
-    // Combine prep_sequence_xml and pick_sequence_xml in a <Repeat> node single <Sequence>
-    //    => Repeat node must have only one children, so it also wrap a Sequence child that wraps the other childs
-    // std::string repeat_forever_wrapper_xml = repeatWrapperXML(
-    //     "RepeatForever", {object_then_moves_xml}, -1); // num_cycles=-1 for infinite
-
-    //    => MasterSequence with RepeatForever as child to set BehaviorTree ID and root main_tree_to_execute in the XML
+    // GlobalMasterSequence with RepeatForever as child to set BehaviorTree ID and root main_tree_to_execute in the XML
     std::vector<std::string> master_branches_xml = {startup_sequence_xml, repeat_forever_wrapper_xml};
     std::string master_body = sequenceWrapperXML("GlobalMasterSequence", master_branches_xml);
 
