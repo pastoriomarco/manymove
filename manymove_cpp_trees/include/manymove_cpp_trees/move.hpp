@@ -55,7 +55,7 @@ namespace manymove_cpp_trees
         max_move_config.jump_threshold = 0.0;
         max_move_config.max_cartesian_speed = 0.5;
         max_move_config.max_exec_tries = 5;
-        max_move_config.plan_number_target = 4;
+        max_move_config.plan_number_target = 8;
         max_move_config.plan_number_limit = 16;
         max_move_config.smoothing_type = "time_optimal";
 

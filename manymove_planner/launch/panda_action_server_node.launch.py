@@ -21,6 +21,9 @@ def launch_setup(context, *args, **kwargs):
     tcp_frame = LaunchConfiguration('tcp_frame')
     traj_controller = LaunchConfiguration('traj_controller')
 
+    gripper_action_server = LaunchConfiguration('gripper_action_server'),
+    contact_links = LaunchConfiguration('contact_links'),
+
     ros2_control_hardware_type = DeclareLaunchArgument(
         "ros2_control_hardware_type",
         default_value="mock_components",
@@ -116,6 +119,8 @@ def launch_setup(context, *args, **kwargs):
             'robot_model': planning_group,
             # 'robot_prefix': prefix,
             'tcp_frame': tcp_frame,
+            'gripper_action_server': gripper_action_server,
+            'contact_links': contact_links,
             'is_robot_real': False,
         }]
     )
@@ -146,6 +151,8 @@ def generate_launch_description():
         DeclareLaunchArgument('base_frame', default_value='panda_link0', description='Base frame of the robot'),
         DeclareLaunchArgument('tcp_frame', default_value='panda_link8', description='TCP (end effector) frame of the robot' ),
         DeclareLaunchArgument('traj_controller', default_value='panda_arm_controller', description='traj_controller action server name of the robot' ),
+        DeclareLaunchArgument('gripper_action_server', default_value='/panda_hand_controller/gripper_cmd', description='Name of the action server to control the gripper'),
+        DeclareLaunchArgument('contact_links', default_value='["panda_leftfinger", "panda_rightfinger", "panda_hand"]', description='List of links to exclude from collision checking'),
 
         # OpaqueFunction to set up the node
         OpaqueFunction(function=launch_setup)

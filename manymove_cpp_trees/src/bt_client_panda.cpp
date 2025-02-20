@@ -45,6 +45,14 @@ int main(int argc, char **argv)
     node->declare_parameter<std::string>("tcp_frame", "panda_link8");
     node->get_parameter_or<std::string>("tcp_frame", tcp_frame, "");
 
+    std::string gripper_action_server;
+    node->declare_parameter<std::string>("gripper_action_server", "/panda_hand_controller/gripper_cmd");
+    node->get_parameter_or<std::string>("gripper_action_server", gripper_action_server, "");
+
+    std::vector<std::string> contact_links;
+    node->declare_parameter<std::vector<std::string>>("contact_links", {"panda_leftfinger", "panda_rightfinger", "panda_hand"});
+    node->get_parameter_or<std::vector<std::string>>("contact_links", contact_links, {});
+
     // This parameter is to be set true if we are connected to a real robot that exposes the necessary services for manymove_signals
     bool is_robot_real;
     node->declare_parameter<bool>("is_robot_real", false);
@@ -68,7 +76,7 @@ int main(int argc, char **argv)
     blackboard->set(robot_prefix + "abort_mission", false);
     RCLCPP_INFO(node->get_logger(), "Blackboard: created execution control keys");
 
-    // Create the HMI Service Node and pass the same blackboard 
+    // Create the HMI Service Node and pass the same blackboard
     auto hmi_node = std::make_shared<manymove_cpp_trees::HMIServiceNode>(robot_prefix + "hmi_service_node", blackboard, robot_prefix);
     RCLCPP_INFO(node->get_logger(), "HMI Service Node instantiated.");
 
@@ -103,7 +111,7 @@ int main(int argc, char **argv)
     approach_pick_target.position.z += 0.02;
 
     // Test poses to place the object, these are not overwritten later (for now)
-    Pose drop_target = createPose(0.4, 0.0, 0.35, 1.0, 0.0, 0.0, 0.0);
+    Pose drop_target = createPoseRPY(0.4, 0.0, 0.35, 3.14, 0.0, -0.785);
     Pose approach_drop_target = drop_target;
     approach_drop_target.position.z += 0.02;
 
@@ -135,21 +143,19 @@ int main(int argc, char **argv)
     // Sequences for Pick/Drop/Homing
     std::vector<Move> pick_sequence = {
         {robot_prefix, "pose", "approach_pick_target", {}, "", move_configs["mid_move"]},
-        // {robot_prefix, "cartesian", "pick_target", {}, "", move_configs["slow_move"]},
-        {robot_prefix, "cartesian", "pick_target", {}, "", move_configs["slow_move"]},
+        {robot_prefix, "cartesian", "pick_target", {}, "", move_configs["cartesian_slow_move"]},
     };
 
     std::vector<Move> drop_sequence = {
-        {robot_prefix, "pose", "approach_pick_target", {}, "", move_configs["mid_move"]},
+        {robot_prefix, "cartesian", "approach_pick_target", {}, "", move_configs["mid_move"]},
         {robot_prefix, "pose", "approach_drop_target", {}, "", move_configs["max_move"]},
-        // {robot_prefix, "cartesian", "drop_target", {}, "", move_configs["slow_move"]},
-        {robot_prefix, "cartesian", "drop_target", {}, "", move_configs["slow_move"]},
+        {robot_prefix, "cartesian", "drop_target", {}, "", move_configs["cartesian_slow_move"]},
     };
 
     std::vector<Move> home_position = {
-        // {robot_prefix, "cartesian", "approach_drop_target", {}, "", move_configs["max_move"]},
         {robot_prefix, "cartesian", "approach_drop_target", {}, "", move_configs["max_move"]},
-        {robot_prefix, "named", "", {}, named_home, move_configs["max_move"]},
+        {robot_prefix, "joint", "", joint_ready, "", move_configs["max_move"]},
+        // {robot_prefix, "named", "", {}, named_home, move_configs["max_move"]},
     };
 
     /*
@@ -217,7 +223,7 @@ int main(int argc, char **argv)
     std::string mesh_file = "package://manymove_object_manager/meshes/unit_tube.stl";
 
     std::vector<double> mesh_scale = {0.01, 0.01, 0.1};                  //< The tube is vertical with dimension 1m x 1m x 1m. We scale it to 10x10x100 mm
-    auto mesh_pose = createPoseRPY(0.3, -0.2, 0.2005, 0.785, 1.57, 0.0); //< We place it on the floor and lay it on its side, X+ facing down
+    auto mesh_pose = createPoseRPY(0.1, -0.3, 0.2005, 0.785, 1.57, 0.0); //< We place it on the floor and lay it on its side, X+ facing down
 
     // Create object actions xml snippets (the object are created directly in the create*() functions relative to each type of object action)
     std::string check_ground_obj_xml = buildObjectActionXML("check_ground", createCheckObjectExists("obstacle_ground"));
@@ -241,9 +247,9 @@ int main(int argc, char **argv)
     std::string object_to_manipulate = "graspable_mesh";
 
     std::string attach_obj_xml = buildObjectActionXML("attach_obj_to_manipulate", createAttachObject(
-        object_to_manipulate, 
-        tcp_frame_name, 
-        { "panda_leftfinger", "panda_rightfinger", "panda_hand" }));
+                                                                                      object_to_manipulate,
+                                                                                      tcp_frame_name,
+                                                                                      contact_links));
     std::string detach_obj_xml = buildObjectActionXML("attach_obj_to_manipulate", createDetachObject(object_to_manipulate, tcp_frame_name));
     std::string remove_obj_xml = buildObjectActionXML("remove_obj_to_manipulate", createRemoveObject(object_to_manipulate));
 
@@ -293,8 +299,10 @@ int main(int argc, char **argv)
     std::string check_reset_robot_xml = (is_robot_real ? fallbackWrapperXML(robot_prefix + "CheckResetFallback", {check_robot_state_xml, reset_robot_state_xml}) : "<Delay delay_msec=\"250\">\n<AlwaysSuccess />\n</Delay>\n");
 
     // Setting commands for gripper open/close
-    std::string move_gripper_close_xml = ("<GripperCommandAction position=\"0.004\" max_effort=\"1.0\" action_server=\"/panda_hand_controller/gripper_cmd\"/>");
-    std::string move_gripper_open_xml = ("<GripperCommandAction position=\"0.025\" max_effort=\"1.0\" action_server=\"/panda_hand_controller/gripper_cmd\"/>");
+    std::string move_gripper_close_xml =
+        "<GripperCommandAction position=\"0.004\" max_effort=\"1.0\" action_server=\"" + gripper_action_server + "\"/>";
+    std::string move_gripper_open_xml =
+        "<GripperCommandAction position=\"0.025\" max_effort=\"1.0\" action_server=\"" + gripper_action_server + "\"/>";
 
     // ----------------------------------------------------------------------------
     // 6) Combine the objects and moves in a sequences that can run a number of times:

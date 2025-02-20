@@ -1,0 +1,11 @@
+manymove_cpp_trees:
+  ros__parameters:
+    robot_model: "panda_arm"
+    robot_prefix: ""
+    tcp_frame: "panda_link8"
+    gripper_action_server: "/panda_hand_controller/gripper_cmd"
+    contact_links:
+      - panda_leftfinger
+      - panda_rightfinger
+      - panda_hand
+    is_robot_real: false
