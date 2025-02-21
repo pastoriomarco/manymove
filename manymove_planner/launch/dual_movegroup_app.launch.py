@@ -1,0 +1,504 @@
+
+import os
+from ament_index_python import get_package_share_directory
+from launch import LaunchDescription
+from launch.actions import OpaqueFunction, DeclareLaunchArgument, IncludeLaunchDescription
+from launch_ros.actions import Node
+from uf_ros_lib.moveit_configs_builder import DualMoveItConfigsBuilder
+from uf_ros_lib.uf_robot_utils import generate_dual_ros2_control_params_temp_file
+from launch.launch_description_sources import PythonLaunchDescriptionSource
+from launch.substitutions import LaunchConfiguration, PathJoinSubstitution
+from launch_ros.substitutions import FindPackageShare
+
+def launch_setup(context, *args, **kwargs):
+    dof = LaunchConfiguration('dof', default=6)
+    dof_1 = LaunchConfiguration('dof_1', default=dof)
+    dof_2 = LaunchConfiguration('dof_2', default=dof)
+    robot_type = LaunchConfiguration('robot_type', default='lite')
+    robot_type_1 = LaunchConfiguration('robot_type_1', default='lite')#default=robot_type)
+    robot_type_2 = LaunchConfiguration('robot_type_2', default='uf850')#default=robot_type)
+    prefix_1 = LaunchConfiguration('prefix_1', default='L_')
+    prefix_2 = LaunchConfiguration('prefix_2', default='R_')
+    hw_ns = LaunchConfiguration('hw_ns', default='ufactory')
+    limited = LaunchConfiguration('limited', default=True)
+    effort_control = LaunchConfiguration('effort_control', default=False)
+    velocity_control = LaunchConfiguration('velocity_control', default=False)
+    model1300 = LaunchConfiguration('model1300', default=False)
+    model1300_1 = LaunchConfiguration('model1300_1', default=model1300)
+    model1300_2 = LaunchConfiguration('model1300_2', default=model1300)
+    robot_sn = LaunchConfiguration('robot_sn', default='')
+    robot_sn_1 = LaunchConfiguration('robot_sn_1', default=robot_sn)
+    robot_sn_2 = LaunchConfiguration('robot_sn_2', default=robot_sn)
+    mesh_suffix = LaunchConfiguration('mesh_suffix', default='stl')
+    kinematics_suffix = LaunchConfiguration('kinematics_suffix', default='')
+    kinematics_suffix_1 = LaunchConfiguration('kinematics_suffix_1', default=kinematics_suffix)
+    kinematics_suffix_2 = LaunchConfiguration('kinematics_suffix_2', default=kinematics_suffix)
+
+    attach_to_1 = LaunchConfiguration('attach_to_1', default='world')
+    attach_to_2 = LaunchConfiguration('attach_to_2', default='world')
+    attach_xyz_1 = LaunchConfiguration('attach_xyz_1', default='1.005 -0.233 0.480')
+    attach_xyz_2 = LaunchConfiguration('attach_xyz_2', default='0 0 0')
+    attach_rpy_1 = LaunchConfiguration('attach_rpy_1', default='0 0 3.14')
+    attach_rpy_2 = LaunchConfiguration('attach_rpy_2', default='0 0 0')
+    create_attach_link_1 = LaunchConfiguration('create_attach_link_1', default=True)
+    create_attach_link_2 = LaunchConfiguration('create_attach_link_2', default=False)
+
+    add_gripper = LaunchConfiguration('add_gripper', default=False)
+    add_gripper_1 = LaunchConfiguration('add_gripper_1', default=add_gripper)
+    add_gripper_2 = LaunchConfiguration('add_gripper_2', default=add_gripper)
+    add_vacuum_gripper = LaunchConfiguration('add_vacuum_gripper', default=False)
+    add_vacuum_gripper_1 = LaunchConfiguration('add_vacuum_gripper_1', default=add_vacuum_gripper)
+    add_vacuum_gripper_2 = LaunchConfiguration('add_vacuum_gripper_2', default=add_vacuum_gripper)
+    add_bio_gripper = LaunchConfiguration('add_bio_gripper', default=False)
+    add_bio_gripper_1 = LaunchConfiguration('add_bio_gripper_1', default=add_bio_gripper)
+    add_bio_gripper_2 = LaunchConfiguration('add_bio_gripper_2', default=add_bio_gripper)
+    add_realsense_d435i = LaunchConfiguration('add_realsense_d435i', default=False)
+    add_realsense_d435i_1 = LaunchConfiguration('add_realsense_d435i_1', default=add_realsense_d435i)
+    add_realsense_d435i_2 = LaunchConfiguration('add_realsense_d435i_2', default=add_realsense_d435i)
+    add_d435i_links = LaunchConfiguration('add_d435i_links', default=False)
+    add_d435i_links_1 = LaunchConfiguration('add_d435i_links_1', default=add_d435i_links)
+    add_d435i_links_2 = LaunchConfiguration('add_d435i_links_2', default=add_d435i_links)
+    add_other_geometry = LaunchConfiguration('add_other_geometry', default=True)
+    add_other_geometry_1 = LaunchConfiguration('add_other_geometry_1', default=add_other_geometry)
+    add_other_geometry_2 = LaunchConfiguration('add_other_geometry_2', default=add_other_geometry)
+    geometry_type = LaunchConfiguration('geometry_type', default='mesh')
+    geometry_type_1 = LaunchConfiguration('geometry_type_1', default=geometry_type)
+    geometry_type_2 = LaunchConfiguration('geometry_type_2', default=geometry_type)
+    geometry_mass = LaunchConfiguration('geometry_mass', default=0.3)
+    geometry_mass_1 = LaunchConfiguration('geometry_mass_1', default=geometry_mass)
+    geometry_mass_2 = LaunchConfiguration('geometry_mass_2', default=geometry_mass)
+    geometry_height = LaunchConfiguration('geometry_height', default=0.1)
+    geometry_height_1 = LaunchConfiguration('geometry_height_1', default=geometry_height)
+    geometry_height_2 = LaunchConfiguration('geometry_height_2', default=geometry_height)
+    geometry_radius = LaunchConfiguration('geometry_radius', default=0.1)
+    geometry_radius_1 = LaunchConfiguration('geometry_radius_1', default=geometry_radius)
+    geometry_radius_2 = LaunchConfiguration('geometry_radius_2', default=geometry_radius)
+    geometry_length = LaunchConfiguration('geometry_length', default=0.1)
+    geometry_length_1 = LaunchConfiguration('geometry_length_1', default=geometry_length)
+    geometry_length_2 = LaunchConfiguration('geometry_length_2', default=geometry_length)
+    geometry_width = LaunchConfiguration('geometry_width', default=0.1)
+    geometry_width_1 = LaunchConfiguration('geometry_width_1', default=geometry_width)
+    geometry_width_2 = LaunchConfiguration('geometry_width_2', default=geometry_width)
+    geometry_mesh_filename = LaunchConfiguration('geometry_mesh_filename', default='pneumatic_lite.stl')
+    geometry_mesh_filename_1 = LaunchConfiguration('geometry_mesh_filename_1', default=geometry_mesh_filename)
+    geometry_mesh_filename_2 = LaunchConfiguration('geometry_mesh_filename_2', default='tube_holder.stl')
+    geometry_mesh_origin_xyz = LaunchConfiguration('geometry_mesh_origin_xyz', default='"0 0 0"')
+    geometry_mesh_origin_xyz_1 = LaunchConfiguration('geometry_mesh_origin_xyz_1', default=geometry_mesh_origin_xyz)
+    geometry_mesh_origin_xyz_2 = LaunchConfiguration('geometry_mesh_origin_xyz_2', default=geometry_mesh_origin_xyz)
+    geometry_mesh_origin_rpy = LaunchConfiguration('geometry_mesh_origin_rpy', default='"0 0 0"')
+    geometry_mesh_origin_rpy_1 = LaunchConfiguration('geometry_mesh_origin_rpy_1', default=geometry_mesh_origin_rpy)
+    geometry_mesh_origin_rpy_2 = LaunchConfiguration('geometry_mesh_origin_rpy_2', default=geometry_mesh_origin_rpy)
+    geometry_mesh_tcp_xyz = LaunchConfiguration('geometry_mesh_tcp_xyz', default='"0.03075 0 0.11885"')
+    geometry_mesh_tcp_xyz_1 = LaunchConfiguration('geometry_mesh_tcp_xyz_1', default=geometry_mesh_tcp_xyz)
+    geometry_mesh_tcp_xyz_2 = LaunchConfiguration('geometry_mesh_tcp_xyz_2', default='"0 0 0.257"')
+    geometry_mesh_tcp_rpy = LaunchConfiguration('geometry_mesh_tcp_rpy', default='"0 0.52 0"')
+    geometry_mesh_tcp_rpy_1 = LaunchConfiguration('geometry_mesh_tcp_rpy_1', default=geometry_mesh_tcp_rpy)
+    geometry_mesh_tcp_rpy_2 = LaunchConfiguration('geometry_mesh_tcp_rpy_2', default='"0 0 0"')
+
+    # ================================================================
+    # from: src/manymove_planner/launch/lite_micpp_fake_action_server.launch.py
+    # ================================================================
+
+    velocity_scaling_factor = LaunchConfiguration('velocity_scaling_factor')
+    acceleration_scaling_factor = LaunchConfiguration('acceleration_scaling_factor')
+    max_exec_retries = LaunchConfiguration('max_exec_retries')
+    smoothing_type = LaunchConfiguration('smoothing_type')
+    step_size = LaunchConfiguration('step_size')
+    jump_threshold = LaunchConfiguration('jump_threshold')
+    max_cartesian_speed = LaunchConfiguration('max_cartesian_speed')
+    plan_number_target = LaunchConfiguration('plan_number_target')
+    plan_number_limit = LaunchConfiguration('plan_number_limit')
+
+    base_frame_1 = LaunchConfiguration('base_frame_1')
+    tcp_frame_1 = LaunchConfiguration('tcp_frame_1')
+    base_frame_2 = LaunchConfiguration('base_frame_2')
+    tcp_frame_2 = LaunchConfiguration('tcp_frame_2')
+
+    # no_gui_ctrl = LaunchConfiguration('no_gui_ctrl', default=False)
+    ros_namespace = LaunchConfiguration('ros_namespace', default='').perform(context)
+
+    ros2_control_plugin = 'uf_robot_hardware/UFRobotFakeSystemHardware'
+    controllers_name = 'fake_controllers'
+    xarm_type_1 = '{}{}'.format(robot_type_1.perform(context), dof_1.perform(context) if robot_type_1.perform(context) in ('xarm', 'lite') else '')
+    xarm_type_2 = '{}{}'.format(robot_type_2.perform(context), dof_2.perform(context) if robot_type_2.perform(context) in ('xarm', 'lite') else '')
+
+    ros2_control_params = generate_dual_ros2_control_params_temp_file(
+        os.path.join(get_package_share_directory('xarm_controller'), 'config', '{}_controllers.yaml'.format(xarm_type_1)),
+        os.path.join(get_package_share_directory('xarm_controller'), 'config', '{}_controllers.yaml'.format(xarm_type_2)),
+        prefix_1=prefix_1.perform(context), 
+        prefix_2=prefix_2.perform(context), 
+        add_gripper_1=add_gripper_1.perform(context) in ('True', 'true'),
+        add_gripper_2=add_gripper_2.perform(context) in ('True', 'true'),
+        add_bio_gripper_1=add_bio_gripper_1.perform(context) in ('True', 'true'),
+        add_bio_gripper_2=add_bio_gripper_2.perform(context) in ('True', 'true'),
+        ros_namespace=ros_namespace,
+        robot_type_1=robot_type_1.perform(context), 
+        robot_type_2=robot_type_2.perform(context), 
+    )
+
+    # ================================================================
+
+    moveit_config = (
+        DualMoveItConfigsBuilder(
+            context=context,
+            controllers_name=controllers_name,
+            dof_1=dof_1,
+            dof_2=dof_2,
+            robot_type_1=robot_type_1,
+            robot_type_2=robot_type_2,
+            prefix_1=prefix_1,
+            prefix_2=prefix_2,
+            hw_ns=hw_ns,
+            limited=limited,
+            effort_control=effort_control,
+            velocity_control=velocity_control,
+            model1300_1=model1300_1,
+            model1300_2=model1300_2,
+            robot_sn_1=robot_sn_1,
+            robot_sn_2=robot_sn_2,
+            mesh_suffix=mesh_suffix,
+            kinematics_suffix_1=kinematics_suffix_1,
+            kinematics_suffix_2=kinematics_suffix_2,
+            ros2_control_plugin=ros2_control_plugin,
+            ros2_control_params=ros2_control_params,
+
+            attach_to_1 = attach_to_1,
+            attach_to_2 = attach_to_2,
+            attach_xyz_1 = attach_xyz_1,
+            attach_xyz_2 = attach_xyz_2,
+            attach_rpy_1 = attach_rpy_1,
+            attach_rpy_2 = attach_rpy_2,
+            create_attach_link_1 = create_attach_link_1,
+            create_attach_link_2 = create_attach_link_2,
+            
+            add_gripper_1=add_gripper_1,
+            add_gripper_2=add_gripper_2,
+            add_vacuum_gripper_1=add_vacuum_gripper_1,
+            add_vacuum_gripper_2=add_vacuum_gripper_2,
+            add_bio_gripper_1=add_bio_gripper_1,
+            add_bio_gripper_2=add_bio_gripper_2,
+            add_realsense_d435i_1=add_realsense_d435i_1,
+            add_realsense_d435i_2=add_realsense_d435i_2,
+            add_d435i_links_1=add_d435i_links_1,
+            add_d435i_links_2=add_d435i_links_2,
+            add_other_geometry_1=add_other_geometry_1,
+            add_other_geometry_2=add_other_geometry_2,
+            geometry_type_1=geometry_type_1,
+            geometry_type_2=geometry_type_2,
+            geometry_mass_1=geometry_mass_1,
+            geometry_mass_2=geometry_mass_2,
+            geometry_height_1=geometry_height_1,
+            geometry_height_2=geometry_height_2,
+            geometry_radius_1=geometry_radius_1,
+            geometry_radius_2=geometry_radius_2,
+            geometry_length_1=geometry_length_1,
+            geometry_length_2=geometry_length_2,
+            geometry_width_1=geometry_width_1,
+            geometry_width_2=geometry_width_2,
+            geometry_mesh_filename_1=geometry_mesh_filename_1,
+            geometry_mesh_filename_2=geometry_mesh_filename_2,
+            geometry_mesh_origin_xyz_1=geometry_mesh_origin_xyz_1,
+            geometry_mesh_origin_xyz_2=geometry_mesh_origin_xyz_2,
+            geometry_mesh_origin_rpy_1=geometry_mesh_origin_rpy_1,
+            geometry_mesh_origin_rpy_2=geometry_mesh_origin_rpy_2,
+            geometry_mesh_tcp_xyz_1=geometry_mesh_tcp_xyz_1,
+            geometry_mesh_tcp_xyz_2=geometry_mesh_tcp_xyz_2,
+            geometry_mesh_tcp_rpy_1=geometry_mesh_tcp_rpy_1,
+            geometry_mesh_tcp_rpy_2=geometry_mesh_tcp_rpy_2,
+        ).planning_scene_monitor(publish_robot_description=True, publish_robot_description_semantic=True)
+        .planning_pipelines(pipelines=["ompl"])
+        .moveit_cpp(file_path=get_package_share_directory("manymove_planner") + "/config/moveit_cpp.yaml")
+    ).to_moveit_configs()
+
+    # Start the actual move_group node/action server
+    move_group_node_1 = Node(
+        package='manymove_planner',
+        executable='action_server_node',
+        # Don't use the "name" parameter, the name will be automatically set with {node_prefix_*}action_server_node to avoid duplicate nodes
+        output='screen',
+        parameters=[
+            moveit_config.to_dict(),
+            {
+                'node_prefix_1': prefix_1.perform(context),
+                'planner_type': 'movegroup',
+                'velocity_scaling_factor': velocity_scaling_factor,
+                'acceleration_scaling_factor': acceleration_scaling_factor,
+                'max_exec_retries': max_exec_retries,
+                'smoothing_type': smoothing_type,
+                'step_size': step_size,
+                'jump_threshold': jump_threshold,
+                'max_cartesian_speed': max_cartesian_speed,
+                'plan_number_target': plan_number_target,
+                'plan_number_limit': plan_number_limit,
+                'planner_prefix': prefix_1.perform(context),
+                'planning_group': xarm_type_1, 
+                'base_frame_1': base_frame_1.perform(context), 
+                'tcp_frame_1': tcp_frame_1.perform(context), 
+                'traj_controller': "{}_traj_controller".format(xarm_type_1),
+            }
+        ],
+    )
+
+    move_group_node_2 = Node(
+        package='manymove_planner',
+        executable='action_server_node',
+        # Don't use the "name" parameter, the name will be automatically set with {node_prefix}action_server_node to avoid duplicate nodes
+        output='screen',
+        parameters=[
+            moveit_config.to_dict(),
+            {
+                'node_prefix_2': prefix_2.perform(context),
+                'planner_type': 'movegroup',
+                'velocity_scaling_factor': velocity_scaling_factor,
+                'acceleration_scaling_factor': acceleration_scaling_factor,
+                'max_exec_retries': max_exec_retries,
+                'smoothing_type': smoothing_type,
+                'step_size': step_size,
+                'jump_threshold': jump_threshold,
+                'max_cartesian_speed': max_cartesian_speed,
+                'plan_number_target': plan_number_target,
+                'plan_number_limit': plan_number_limit,
+                'planner_prefix': prefix_2.perform(context),
+                'planning_group': xarm_type_2, 
+                'base_frame_2': base_frame_2.perform(context), 
+                'tcp_frame_2': tcp_frame_2.perform(context), 
+                'traj_controller': "{}_traj_controller".format(xarm_type_2),
+            }
+        ],
+    )
+
+
+    # ================================================================
+    # launch manymove_object_manager
+    # ================================================================
+
+    # Object Manager node
+    object_manager_node = Node(
+        package='manymove_object_manager',
+        executable='object_manager_node',
+        name='object_manager_node',
+        output='screen',
+        parameters=[{'frame_id': 'world'}]
+    )
+
+    # ================================================================
+    # launch manymove_hmi
+    # ================================================================
+
+    # HMI node
+    manymove_hmi_node = Node(
+        package='manymove_hmi',
+        executable='manymove_hmi_executable',
+        # name='manymove_hmi_node',
+        output='screen',
+        parameters=[{
+            'robot_prefixes': [prefix_1.perform(context), prefix_2.perform(context)],
+        }]
+    )
+
+    # ================================================================
+    # launch manymove_cpp_trees
+    # ================================================================
+
+    # behaviortree.cpp node
+    manymove_cpp_trees_node = Node(
+        package='manymove_cpp_trees',
+        executable='bt_client_app_dual',
+        # name='manymove_cpp_tree_node',
+        output='screen',
+        parameters=[{
+            'robot_model_1': xarm_type_1,
+            'robot_prefix_1': prefix_1.perform(context),
+            'tcp_frame_1': tcp_frame_1,
+            'robot_model_2': xarm_type_2,
+            'robot_prefix_2': prefix_2.perform(context),
+            'tcp_frame_2': tcp_frame_2,
+            'is_robot_real': False,
+        }]
+    )
+
+    # ================================================================
+    # RETURN
+    # ================================================================
+
+    return [
+        move_group_node_1,
+        move_group_node_2,
+        object_manager_node,
+        manymove_hmi_node,
+        manymove_cpp_trees_node
+    ] 
+
+def generate_launch_description():
+    dof = LaunchConfiguration('dof', default=6)
+    dof_1 = LaunchConfiguration('dof_1', default=dof)
+    dof_2 = LaunchConfiguration('dof_2', default=dof)
+    robot_type = LaunchConfiguration('robot_type', default='lite')
+    robot_type_1 = LaunchConfiguration('robot_type_1', default='lite')#default=robot_type)
+    robot_type_2 = LaunchConfiguration('robot_type_2', default='uf850')#default=robot_type)
+    prefix_1 = LaunchConfiguration('prefix_1', default='L_')
+    prefix_2 = LaunchConfiguration('prefix_2', default='R_')
+    hw_ns = LaunchConfiguration('hw_ns', default='ufactory')
+    limited = LaunchConfiguration('limited', default=True)
+    effort_control = LaunchConfiguration('effort_control', default=False)
+    velocity_control = LaunchConfiguration('velocity_control', default=False)
+    model1300 = LaunchConfiguration('model1300', default=False)
+    model1300_1 = LaunchConfiguration('model1300_1', default=model1300)
+    model1300_2 = LaunchConfiguration('model1300_2', default=model1300)
+    robot_sn = LaunchConfiguration('robot_sn', default='')
+    robot_sn_1 = LaunchConfiguration('robot_sn_1', default=robot_sn)
+    robot_sn_2 = LaunchConfiguration('robot_sn_2', default=robot_sn)
+    mesh_suffix = LaunchConfiguration('mesh_suffix', default='stl')
+    kinematics_suffix = LaunchConfiguration('kinematics_suffix', default='')
+    kinematics_suffix_1 = LaunchConfiguration('kinematics_suffix_1', default=kinematics_suffix)
+    kinematics_suffix_2 = LaunchConfiguration('kinematics_suffix_2', default=kinematics_suffix)
+
+    attach_to_1 = LaunchConfiguration('attach_to_1', default='world')
+    attach_to_2 = LaunchConfiguration('attach_to_2', default='world')
+    attach_xyz_1 = LaunchConfiguration('attach_xyz_1', default='1.005 -0.233 0.480')
+    attach_xyz_2 = LaunchConfiguration('attach_xyz_2', default='0 0 0.001')
+    attach_rpy_1 = LaunchConfiguration('attach_rpy_1', default='0 0 3.14')
+    attach_rpy_2 = LaunchConfiguration('attach_rpy_2', default='0 0 0')
+    create_attach_link_1 = LaunchConfiguration('create_attach_link_1', default=True)
+    create_attach_link_2 = LaunchConfiguration('create_attach_link_2', default=False)
+
+    add_gripper = LaunchConfiguration('add_gripper', default=False)
+    add_gripper_1 = LaunchConfiguration('add_gripper_1', default=add_gripper)
+    add_gripper_2 = LaunchConfiguration('add_gripper_2', default=add_gripper)
+    add_vacuum_gripper = LaunchConfiguration('add_vacuum_gripper', default=False)
+    add_vacuum_gripper_1 = LaunchConfiguration('add_vacuum_gripper_1', default=add_vacuum_gripper)
+    add_vacuum_gripper_2 = LaunchConfiguration('add_vacuum_gripper_2', default=add_vacuum_gripper)
+    add_bio_gripper = LaunchConfiguration('add_bio_gripper', default=False)
+    add_bio_gripper_1 = LaunchConfiguration('add_bio_gripper_1', default=add_bio_gripper)
+    add_bio_gripper_2 = LaunchConfiguration('add_bio_gripper_2', default=add_bio_gripper)
+    add_realsense_d435i = LaunchConfiguration('add_realsense_d435i', default=False)
+    add_realsense_d435i_1 = LaunchConfiguration('add_realsense_d435i_1', default=add_realsense_d435i)
+    add_realsense_d435i_2 = LaunchConfiguration('add_realsense_d435i_2', default=add_realsense_d435i)
+    add_d435i_links = LaunchConfiguration('add_d435i_links', default=False)
+    add_d435i_links_1 = LaunchConfiguration('add_d435i_links_1', default=add_d435i_links)
+    add_d435i_links_2 = LaunchConfiguration('add_d435i_links_2', default=add_d435i_links)
+    add_other_geometry = LaunchConfiguration('add_other_geometry', default=True)
+    add_other_geometry_1 = LaunchConfiguration('add_other_geometry_1', default=add_other_geometry)
+    add_other_geometry_2 = LaunchConfiguration('add_other_geometry_2', default=add_other_geometry)
+    geometry_type = LaunchConfiguration('geometry_type', default='mesh')
+    geometry_type_1 = LaunchConfiguration('geometry_type_1', default=geometry_type)
+    geometry_type_2 = LaunchConfiguration('geometry_type_2', default=geometry_type)
+    geometry_mass = LaunchConfiguration('geometry_mass', default=0.3)
+    geometry_mass_1 = LaunchConfiguration('geometry_mass_1', default=geometry_mass)
+    geometry_mass_2 = LaunchConfiguration('geometry_mass_2', default=geometry_mass)
+    geometry_height = LaunchConfiguration('geometry_height', default=0.1)
+    geometry_height_1 = LaunchConfiguration('geometry_height_1', default=geometry_height)
+    geometry_height_2 = LaunchConfiguration('geometry_height_2', default=geometry_height)
+    geometry_radius = LaunchConfiguration('geometry_radius', default=0.1)
+    geometry_radius_1 = LaunchConfiguration('geometry_radius_1', default=geometry_radius)
+    geometry_radius_2 = LaunchConfiguration('geometry_radius_2', default=geometry_radius)
+    geometry_length = LaunchConfiguration('geometry_length', default=0.1)
+    geometry_length_1 = LaunchConfiguration('geometry_length_1', default=geometry_length)
+    geometry_length_2 = LaunchConfiguration('geometry_length_2', default=geometry_length)
+    geometry_width = LaunchConfiguration('geometry_width', default=0.1)
+    geometry_width_1 = LaunchConfiguration('geometry_width_1', default=geometry_width)
+    geometry_width_2 = LaunchConfiguration('geometry_width_2', default=geometry_width)
+    geometry_mesh_filename = LaunchConfiguration('geometry_mesh_filename', default='pneumatic_lite.stl')
+    geometry_mesh_filename_1 = LaunchConfiguration('geometry_mesh_filename_1', default=geometry_mesh_filename)
+    geometry_mesh_filename_2 = LaunchConfiguration('geometry_mesh_filename_2', default='tube_holder.stl')
+    geometry_mesh_origin_xyz = LaunchConfiguration('geometry_mesh_origin_xyz', default='"0 0 0"')
+    geometry_mesh_origin_xyz_1 = LaunchConfiguration('geometry_mesh_origin_xyz_1', default=geometry_mesh_origin_xyz)
+    geometry_mesh_origin_xyz_2 = LaunchConfiguration('geometry_mesh_origin_xyz_2', default=geometry_mesh_origin_xyz)
+    geometry_mesh_origin_rpy = LaunchConfiguration('geometry_mesh_origin_rpy', default='"0 0 0"')
+    geometry_mesh_origin_rpy_1 = LaunchConfiguration('geometry_mesh_origin_rpy_1', default=geometry_mesh_origin_rpy)
+    geometry_mesh_origin_rpy_2 = LaunchConfiguration('geometry_mesh_origin_rpy_2', default=geometry_mesh_origin_rpy)
+    geometry_mesh_tcp_xyz = LaunchConfiguration('geometry_mesh_tcp_xyz', default='"0.03075 0 0.11885"')
+    geometry_mesh_tcp_xyz_1 = LaunchConfiguration('geometry_mesh_tcp_xyz_1', default=geometry_mesh_tcp_xyz)
+    geometry_mesh_tcp_xyz_2 = LaunchConfiguration('geometry_mesh_tcp_xyz_2', default='"0 0 0.257"')
+    geometry_mesh_tcp_rpy = LaunchConfiguration('geometry_mesh_tcp_rpy', default='"0 0.52 0"')
+    geometry_mesh_tcp_rpy_1 = LaunchConfiguration('geometry_mesh_tcp_rpy_1', default=geometry_mesh_tcp_rpy)
+    geometry_mesh_tcp_rpy_2 = LaunchConfiguration('geometry_mesh_tcp_rpy_2', default='"0 0 0"')
+    
+    # robot moveit fake launch
+    # xarm_moveit_config/launch/_dual_robot_moveit_fake.launch.py
+    robot_moveit_fake_launch = IncludeLaunchDescription(
+        PythonLaunchDescriptionSource(PathJoinSubstitution([FindPackageShare('xarm_moveit_config'), 'launch', '_dual_robot_moveit_fake.launch.py'])),
+        launch_arguments={
+            'dof_1': dof_1,
+            'dof_2': dof_2,
+            'robot_type_1': robot_type_1,
+            'robot_type_2': robot_type_2,
+            'prefix_1': prefix_1,
+            'prefix_2': prefix_2,
+            'hw_ns': hw_ns,
+            'limited': limited,
+            'effort_control': effort_control,
+            'velocity_control': velocity_control,
+            'model1300_1': model1300_1,
+            'model1300_2': model1300_2,
+            'robot_sn_1': robot_sn_1,
+            'robot_sn_2': robot_sn_2,
+            'mesh_suffix': mesh_suffix,
+            'kinematics_suffix_1': kinematics_suffix_1,
+            'kinematics_suffix_2': kinematics_suffix_2,
+            'attach_to_1': attach_to_1,
+            'attach_to_2': attach_to_2,
+            'attach_xyz_1': attach_xyz_1,
+            'attach_xyz_2': attach_xyz_2,
+            'attach_rpy_1': attach_rpy_1,
+            'attach_rpy_2': attach_rpy_2,
+            'create_attach_link_1': create_attach_link_1,
+            'create_attach_link_2': create_attach_link_2,
+            'add_gripper_1': add_gripper_1,
+            'add_gripper_2': add_gripper_2,
+            'add_vacuum_gripper_1': add_vacuum_gripper_1,
+            'add_vacuum_gripper_2': add_vacuum_gripper_2,
+            'add_bio_gripper_1': add_bio_gripper_1,
+            'add_bio_gripper_2': add_bio_gripper_2,
+            'add_realsense_d435i_1': add_realsense_d435i_1,
+            'add_realsense_d435i_2': add_realsense_d435i_2,
+            'add_d435i_links_1': add_d435i_links_1,
+            'add_d435i_links_2': add_d435i_links_2,
+            'add_other_geometry_1': add_other_geometry_1,
+            'add_other_geometry_2': add_other_geometry_2,
+            'geometry_type_1': geometry_type_1,
+            'geometry_type_2': geometry_type_2,
+            'geometry_mass_1': geometry_mass_1,
+            'geometry_mass_2': geometry_mass_2,
+            'geometry_height_1': geometry_height_1,
+            'geometry_height_2': geometry_height_2,
+            'geometry_radius_1': geometry_radius_1,
+            'geometry_radius_2': geometry_radius_2,
+            'geometry_length_1': geometry_length_1,
+            'geometry_length_2': geometry_length_2,
+            'geometry_width_1': geometry_width_1,
+            'geometry_width_2': geometry_width_2,
+            'geometry_mesh_filename_1': geometry_mesh_filename_1,
+            'geometry_mesh_filename_2': geometry_mesh_filename_2,
+            'geometry_mesh_origin_xyz_1': geometry_mesh_origin_xyz_1,
+            'geometry_mesh_origin_xyz_2': geometry_mesh_origin_xyz_2,
+            'geometry_mesh_origin_rpy_1': geometry_mesh_origin_rpy_1,
+            'geometry_mesh_origin_rpy_2': geometry_mesh_origin_rpy_2,
+            'geometry_mesh_tcp_xyz_1': geometry_mesh_tcp_xyz_1,
+            'geometry_mesh_tcp_xyz_2': geometry_mesh_tcp_xyz_2,
+            'geometry_mesh_tcp_rpy_1': geometry_mesh_tcp_rpy_1,
+            'geometry_mesh_tcp_rpy_2': geometry_mesh_tcp_rpy_2,
+        }.items(),
+    )
+    
+    return LaunchDescription([
+        robot_moveit_fake_launch,
+
+        DeclareLaunchArgument('planner_type', default_value='moveitcpp', description='Type of planner to use: moveitcpp or movegroup'),
+        DeclareLaunchArgument('velocity_scaling_factor', default_value='0.5', description='Velocity scaling factor'),
+        DeclareLaunchArgument('acceleration_scaling_factor', default_value='0.5', description='Acceleration scaling factor'),
+        DeclareLaunchArgument('max_exec_retries', default_value='5', description='Maximum number of retries'),
+        DeclareLaunchArgument('smoothing_type', default_value='time_optimal', description='Smoothing type'),
+        DeclareLaunchArgument('step_size', default_value='0.05', description='Step size'),
+        DeclareLaunchArgument('jump_threshold', default_value='0.0', description='Jump threshold'),
+        DeclareLaunchArgument('max_cartesian_speed', default_value='0.5', description='Max cartesian speed'),
+        DeclareLaunchArgument('plan_number_target', default_value='8', description='Plan number target'),
+        DeclareLaunchArgument('plan_number_limit', default_value='16', description='Plan number limit'),
+
+        DeclareLaunchArgument('base_frame_1', default_value='link_base', description='Base frame of the robot 1'),
+        DeclareLaunchArgument('tcp_frame_1', default_value='link_tcp', description='TCP (end effector) frame of the robot 1' ),
+        DeclareLaunchArgument('base_frame_2', default_value='link_base', description='Base frame of the robot 2'),
+        DeclareLaunchArgument('tcp_frame_2', default_value='link_tcp', description='TCP (end effector) frame of the robot 2' ),
+
+        OpaqueFunction(function=launch_setup)
+    ])
