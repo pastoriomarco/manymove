@@ -100,21 +100,13 @@ int main(int argc, char **argv)
     auto hmi_node_2 = std::make_shared<manymove_cpp_trees::HMIServiceNode>(robot_prefix_2 + "hmi_service_node", blackboard, robot_prefix_2);
     RCLCPP_INFO(node->get_logger(), "HMI Service Nodes instantiated.");
 
+    //
+
     // ----------------------------------------------------------------------------
-    // 2) Setup moves
+    // 2) Build blocks for poses and objects handling
     // ----------------------------------------------------------------------------
 
-    auto move_configs = defineMovementConfigs();
-
-    // We define the joint targets we need for the joint moves as vectors of doubles.
-    // Be careful that the number of values must match the number of DOF of the robot (here, 6 DOF)
-    std::vector<double> joint_rest_1 = {0.0, -0.785, 0.785, 0.0, 1.57, 0.0};
-
-    std::vector<double> joint_rest_2 = {0.0, 0.785, -0.785, 0.0, -1.57, 0.0};
-    std::vector<double> joint_ready_2 = {0.3, -0.372, -1.582, 1.67, 1.845, 0.375};
-
-    std::string named_home_1 = "home";
-    std::string named_home_2 = "home";
+    //
 
     // Original pick pose: it will be overwritten by the blackboard key that will be dynamically updated getting the grasp pose object.
     // Note that the pose obtained from an object will refer to the object itels and will have to be modified if you want to align
@@ -176,19 +168,6 @@ int main(int argc, char **argv)
     blackboard->set(insert_target_2_key_name, insert_target_2);
     blackboard->set(approach_insert_target_2_key_name, approach_insert_target_2);
 
-    //
-
-    //
-
-    //
-
-    //
-
-    //
-
-    // ----------------------------------------------------------------------------
-    // 3) Build blocks for objects handling
-    // ----------------------------------------------------------------------------
     std::string object_to_manipulate_1 = "graspable_mesh";
     std::string object_to_manipulate_2 = "renamed_mesh";
 
@@ -281,9 +260,13 @@ int main(int argc, char **argv)
     std::string detach_obj_2_xml = buildObjectActionXML("attach_obj_to_manipulate_2", createDetachObject(object_to_manipulate_2, tcp_frame_name_2));
     std::string remove_obj_2_xml = buildObjectActionXML("remove_obj_to_manipulate_2", createRemoveObject(object_to_manipulate_2));
 
+    //
+
     // ----------------------------------------------------------------------------
-    // 4) Add GetObjectPoseAction Node and nodes to attach/detach objects
+    // 3) Add GetObjectPoseAction Node and nodes to attach/detach objects
     // ----------------------------------------------------------------------------
+
+    //
 
     // Define the transformation and reference orientation
     std::vector<double> pick_pre_transform_xyz_rpy_1 = {-0.002, 0.0, 0.0, 0.0, 1.57, 0.0};
@@ -348,12 +331,6 @@ int main(int argc, char **argv)
 
     //
 
-    //
-
-    //
-
-    //
-    
     // Now for the endplate to load the object in the machine:
     // Define the transformation and reference orientation
     std::vector<double> load_pre_transform_xyz_rpy_2 = {0.0, 0.0, 0.0, 0.0, 0.0, 0.0};
@@ -458,13 +435,23 @@ int main(int argc, char **argv)
 
     //
 
-    //
+    // ----------------------------------------------------------------------------
+    // 4) Setup moves
+    // ----------------------------------------------------------------------------
 
     //
 
-    //
+    auto move_configs = defineMovementConfigs();
 
-    //
+    // We define the joint targets we need for the joint moves as vectors of doubles.
+    // Be careful that the number of values must match the number of DOF of the robot (here, 6 DOF)
+    std::vector<double> joint_rest_1 = {0.0, -0.785, 0.785, 0.0, 1.57, 0.0};
+
+    std::vector<double> joint_rest_2 = {0.0, 0.785, -0.785, 0.0, -1.57, 0.0};
+    std::vector<double> joint_ready_2 = {0.3, -0.372, -1.582, 1.67, 1.845, 0.375};
+
+    std::string named_home_1 = "home";
+    std::string named_home_2 = "home";
 
     // Compose the sequences of moves. Each of the following sequences represent a logic
     // ROBOT 1
@@ -576,9 +563,13 @@ int main(int argc, char **argv)
     std::string home_sequence_2_xml = sequenceWrapperXML(
         robot_prefix_2 + "ComposedHomeSequence_2", {home_move_parallel_2_xml, rest_move_parallel_2_xml});
 
+    //
+
     // ----------------------------------------------------------------------------
     // 5) Define Signals calls:
     // ----------------------------------------------------------------------------
+
+    //
 
     // Let's send and receive signals only if the robot is real, and let's fake a delay on inputs otherwise
     // Robot 1
@@ -601,9 +592,13 @@ int main(int argc, char **argv)
 
     std::string check_reset_robot_2_xml = (is_robot_real ? fallbackWrapperXML(robot_prefix_2 + "CheckResetFallback", {check_robot_state_2_xml, reset_robot_state_2_xml}) : "<Delay delay_msec=\"250\">\n<AlwaysSuccess />\n</Delay>\n");
 
+    //
+
     // ----------------------------------------------------------------------------
     // 6) Combine the objects and moves in a sequences that can run a number of times:
     // ----------------------------------------------------------------------------
+
+    //
 
     // Let's build the full sequence in logically separated blocks:
     // General
@@ -690,19 +685,33 @@ int main(int argc, char **argv)
     std::vector<std::string> master_branches_xml = {startup_sequence_xml, parallel_repeat_forever_sequences_xml};
     std::string master_body = sequenceWrapperXML("GlobalMasterSequence", master_branches_xml);
 
+    //
+
     // ----------------------------------------------------------------------------
     // 7) Wrap everything into a top-level <root> with <BehaviorTree ID="MasterTree">
     // ----------------------------------------------------------------------------
+
+    //
 
     std::string final_tree_xml = mainTreeWrapperXML("MasterTree", master_body);
 
     RCLCPP_INFO(node->get_logger(), "=== Programmatically Generated Tree XML ===\n%s", final_tree_xml.c_str());
 
+    //
+
     // 8) Register node types
+
+    //
+
     BT::BehaviorTreeFactory factory;
     registerAllNodeTypes(factory);
 
+    //
+
     // 9) Create the tree from final_tree_xml
+
+    //
+
     BT::Tree tree;
     try
     {
@@ -714,7 +723,12 @@ int main(int argc, char **argv)
         return 1;
     }
 
+    //
+
     // 10) ZMQ publisher (optional, to visualize in Groot)
+
+    //
+
     BT::PublisherZMQ publisher(tree);
 
     // Create a MultiThreadedExecutor so that both nodes can be spun concurrently.
@@ -723,7 +737,12 @@ int main(int argc, char **argv)
     executor.add_node(hmi_node_1);
     executor.add_node(hmi_node_2);
 
+    //
+
     // 11) Tick the tree in a loop.
+
+    //
+
     rclcpp::Rate rate(100);
     while (rclcpp::ok())
     {
