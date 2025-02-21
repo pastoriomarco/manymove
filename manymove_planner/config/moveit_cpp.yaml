@@ -18,7 +18,7 @@ plan_request_params:
   max_acceleration_scaling_factor: 1.0
 
 # # # -------------------------------------
-# # # ADDITIONAL OPTIONAL PARAMETERS BELOW
+# # # ADDITIONAL PARAMETERS TO TEST BELOW
 # # # TO CHECK IF AVAILABLE IN CURRENT MOVEIT VERSION
 # # # -------------------------------------
 

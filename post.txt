@@ -2,7 +2,7 @@ Hi everyone,
 I'd like to show I little project I'm working on. I call it ManyMove, and it's intended as a plaform for simplified and generalized manipulators programming with ROS.
 I need to give a little background before talking about it, and I'm writing this preamble not (just) to present myself but mostly to give context on the design choices I made for this project.
 I have a computer science education but I never became a software programmer. 
-After my studies I decides to make a job of other passions, and I ended up dedicating a good part of my career to automation: not working as an integrator, but as an end user.
+After my studies I decided to make a job of other passions, and I ended up dedicating a good part of my career to automation: not working as an integrator, but as an end user.
 As many of you may know too well, not being able to afford technology doesn't necessarily mean having to give up using it, there's just a lot more work and learning in the process of taking it to production.
 Not surprisingly, the lack of funding for cutting edge automation is very common for small to medium companies, which are the most diffuse in Italy, where I'm from, as in many other countries.
 In this context, I mostly used robots and cobots for machine tending applications.
