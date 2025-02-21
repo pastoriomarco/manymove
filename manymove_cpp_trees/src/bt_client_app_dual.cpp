@@ -179,6 +179,12 @@ int main(int argc, char **argv)
     std::vector<double> graspable_mesh_scale = {0.01, 0.01, tube_length};
     auto graspable_mesh_pose = createPoseRPY(((tube_length / 2) + 0.973 + 0.005), -0.6465, 0.8055, 1.57, 2.05, 1.57);
 
+    // std::vector<double> cylinderdimension = {0.01, 0.1};
+    // auto cylinderpose = createPoseRPY(0.571, -0.6235, 0.725, 1.57, 3.14, 0.0);
+    // std::string check_cylinder_obj_xml = buildObjectActionXML("check_cylinder", createCheckObjectExists("graspable_cylinder"));
+    // std::string add_cylinder_obj_xml = buildObjectActionXML("add_cylinder", createAddPrimitiveObject("graspable_cylinder", "cylinder", cylinderdimension, cylinderpose));
+    // std::string init_cylinder_obj_xml = fallbackWrapperXML("init_cylinder_obj", {check_cylinder_obj_xml, add_cylinder_obj_xml});
+
     // Create object actions xml snippets (the object are created directly in the create*() functions relative to each type of object action)
     std::string check_graspable_mesh_obj_xml = buildObjectActionXML("check_" + object_to_manipulate_1, createCheckObjectExists(object_to_manipulate_1));
     std::string check_renamed_mesh_obj_xml = buildObjectActionXML("check_" + object_to_manipulate_2, createCheckObjectExists(object_to_manipulate_2));
@@ -302,7 +308,12 @@ int main(int argc, char **argv)
 
     std::string rename_obj_1_xml = sequenceWrapperXML("rename_obj_to_manipulate_1", {get_dropped_object_pose_xml, remove_obj_1_xml, add_renamed_mesh_obj_xml, check_renamed_mesh_obj_xml});
 
+    //
+
     // Now for the object to drop on the loading shaft of the second robot's gripper:
+
+    //
+
     // Define the transformation and reference orientation
     std::vector<double> insert_pre_transform_xyz_rpy_2 = {0.0, 0.0, 0.0, 0.0, 0.0, 0.0};
     std::vector<double> approach_insert_pre_transform_xyz_rpy_2 = {0.0, 0.0, -0.05, 0.0, 0.0, 0.0};
@@ -329,9 +340,10 @@ int main(int argc, char **argv)
 
     //
 
+    // Now for the endplate to load the object in the machine:
+
     //
 
-    // Now for the endplate to load the object in the machine:
     // Define the transformation and reference orientation
     std::vector<double> load_pre_transform_xyz_rpy_2 = {0.0, 0.0, 0.0, 0.0, 0.0, 0.0};
     std::vector<double> approach_load_pre_transform_xyz_rpy_2 = {0.0, 0.0, -0.025, 0.0, 0.0, 0.0};
@@ -602,7 +614,7 @@ int main(int argc, char **argv)
 
     // Let's build the full sequence in logically separated blocks:
     // General
-    std::string spawn_fixed_objects_xml = sequenceWrapperXML("SpawnFixedObjects", {init_machine_mesh_obj_xml, init_endplate_mesh_obj_xml, init_slider_mesh_obj_xml});
+    std::string spawn_fixed_objects_xml = sequenceWrapperXML("SpawnFixedObjects", {init_machine_mesh_obj_xml, init_endplate_mesh_obj_xml, init_slider_mesh_obj_xml}); //, init_cylinder_obj_xml});
 
     // Robot 1
     std::string go_to_rest_pose_1_xml = sequenceWrapperXML("GoToRestPose", {rest_move_parallel_1_xml});
@@ -631,14 +643,13 @@ int main(int argc, char **argv)
     std::string parallel_sub_startup_sequences_xml = parallelWrapperXML("Parallel_startupSequences", {startup_sequence_1_xml, startup_sequence_2_xml}, 2, 1);
 
     // General startup sequence:
-    std::string startup_sequence_xml = sequenceWrapperXML("StartUpSequence", {spawn_fixed_objects_xml, check_reset_robot_1_xml, parallel_sub_startup_sequences_xml, get_load_poses_from_endplate_xml});
+    std::string startup_sequence_xml = sequenceWrapperXML("StartUpSequence", {spawn_fixed_objects_xml, parallel_sub_startup_sequences_xml, get_load_poses_from_endplate_xml});
 
     // ROBOT 1
     // Repeat node must have only one children, so it also wrap a Sequence child that wraps the other children
     std::string repeat_forever_wrapper_1_xml = repeatWrapperXML(
         "RepeatForever",
         {
-            check_reset_robot_1_xml,                      //< We check if the robot is active, if not we try to reset it
             set_robot_1_out_of_working_position,          //<
             spawn_graspable_objects_1_xml,                //< We add all the objects to the scene
             get_grasp_object_poses_1_xml,                 //< We get the updated poses relative to the objects
@@ -661,7 +672,6 @@ int main(int argc, char **argv)
     std::string repeat_forever_wrapper_2_xml = repeatWrapperXML(
         "RepeatForever",
         {
-            check_reset_robot_2_xml,                      //< We check if the robot is active, if not we try to reset it
             set_robot_2_out_of_working_position_xml,      //<
             wait_for_robot_1_in_working_position_xml,     //<
             get_grasp_object_poses_2_xml,                 //< We get the updated poses relative to the objects

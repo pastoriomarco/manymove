@@ -20,7 +20,6 @@ find_package(action_msgs REQUIRED)
 find_package(control_msgs REQUIRED)
 find_package(controller_manager_msgs REQUIRED)
 find_package(manymove_msgs REQUIRED)
-find_package(moveit_ros_planning_interface REQUIRED)
 
 # Include public headers
 include_directories(include)
