@@ -263,9 +263,6 @@ def launch_setup(context, *args, **kwargs):
     # instead of: xarm_moveit_config/launch/_dual_robot_moveit_common2.launch.py
     # ================================================================
 
-    # action_server_node_name_1 = "{}action_server_node".format(prefix_1.perform(context))
-    # action_server_node_name_2 = "{}action_server_node".format(prefix_2.perform(context))
-
     # Start the actual move_group node/action server
     move_group_node_1 = Node(
         package='manymove_planner',
