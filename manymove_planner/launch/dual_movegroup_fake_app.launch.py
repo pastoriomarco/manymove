@@ -333,7 +333,7 @@ def launch_setup(context, *args, **kwargs):
 
     # Launch RViz
     rviz_config_file = (
-        get_package_share_directory("manymove_planner") + "/config/micpp_demo_dual.rviz"
+        get_package_share_directory("manymove_planner") + "/config/micpp_demo_dual_app.rviz"
     )
 
     rviz_node = Node(

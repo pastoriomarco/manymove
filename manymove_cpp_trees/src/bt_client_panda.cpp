@@ -263,8 +263,14 @@ int main(int argc, char **argv)
     // Define the transformation and reference orientation
     /*
      * The reference orientation determines how the tranform behaves: if we leave the reference orientation to all zeroes the
-     * transform of the object will be referred to the world frame or, if it's attached, to the frame it is attached to.
-     * Since we may want to grasp an object, we may need to move [TODO]...
+     * transform of the object will be referred to the frame we specify, here the "world" frame.
+     * Since we want to grasp the object aligning the Z axis of the gripper perpendicularly to the Z axis of the object, we need
+     * to rotate the Y 90 degrees, so 1.57 radians. Also, the center of the jaws is about 0.102 m from the link we defined as TCP, 
+     * so we move the pick position consequently in the X- direction. The approach position is further away of about 5 cm.
+     * Since the Panda's gripper is rotated about 45 degrees, we also need to ad this rotation to align it to the object. Getting
+     * this right with just one transform can be not very intuitive, so I also set up the function to enable a second transform.
+     * Here the second transform is the same for both poses, and creates a decentered grasping pose sliding in the original Z axis
+     * and then rotating of 45 degrees (0.785 rad) in the original X axis. 
      */
     std::vector<double> pick_pre_transform_xyz_rpy = {-0.102, 0.0, 0.0, 0.0, 1.57, 0.0};
     std::vector<double> approach_pre_transform_xyz_rpy = {-0.15, 0.0, 0.0, 0.0, 1.57, 0.0};

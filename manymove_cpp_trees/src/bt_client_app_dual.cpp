@@ -32,6 +32,10 @@ int main(int argc, char **argv)
     auto node = rclcpp::Node::make_shared("bt_client_node");
     RCLCPP_INFO(node->get_logger(), "BT Client Node started (Purely Programmatic XML).");
 
+    // ----------------------------------------------------------------------------
+    // Create params for robots
+    // ----------------------------------------------------------------------------
+
     std::string robot_model_1;
     node->declare_parameter<std::string>("robot_model_1", "lite6");
     node->get_parameter_or<std::string>("robot_model_1", robot_model_1, "");
@@ -67,7 +71,7 @@ int main(int argc, char **argv)
     node->get_parameter_or<double>("tube_length", tube_length, 0.1);
 
     // ----------------------------------------------------------------------------
-    // 1) Create blackboard, keys and nodes
+    // Create blackboard, keys and nodes
     // ----------------------------------------------------------------------------
 
     auto blackboard = BT::Blackboard::create();
@@ -103,95 +107,38 @@ int main(int argc, char **argv)
     //
 
     // ----------------------------------------------------------------------------
-    // 2) Build blocks for poses and objects handling
+    // Build blocks for poses and objects handling
     // ----------------------------------------------------------------------------
 
-    //
+    /**
+     * The pose we'll use here all refer to some object: we'll create all the necessary constructs for each object.
+     * The first object is the one that will be picked by the first robot. Here we assume it is placed in a known position by a mechanical
+     * distributor. We will need to have the pose recognized by a vision system in the future, so we already create all the constructs necessary
+     * to be able to update the pose dynamically during execution.`
+     */
 
-    // Original pick pose: it will be overwritten by the blackboard key that will be dynamically updated getting the grasp pose object.
-    // Note that the pose obtained from an object will refer to the object itels and will have to be modified if you want to align
-    // the TCP orientation to a direction that is not the object's Z+ (more about it later).
-    // I may also define a pick pose here to align the TCP as we want since we know the position of the object, but this mechanism
-    // will allow me to get the pose recognized by a vision system and to realign the TCP Z+ to the desired pick orientation.
-    Pose pick_target_1 = createPose(0.2, -0.1, 0.15, 1.0, 0.0, 0.0, 0.0);
-    Pose approach_pick_target_1 = pick_target_1;
-    approach_pick_target_1.position.z += 0.02;
-
-    // Drop pose: this is not overwritten later (for now)
-    // Note that, this pose directly refer to the pose that the TCP will allign to and it's referred to the world frame, regardless of
-    // how the robot is oriented. For example, this pose has the Z+ facing downard, 45 degrees in the XZ plane, in between X- and Z-.
-    Pose drop_target_1 = createPoseRPY(0.57, -0.25, 0.72, -0.785, -3.14, 1.57);
-    Pose approach_drop_target_1 = drop_target_1;
-    // We need to modify the exit pose accordingly: we move 5cm in X+ and Z+ to obtain a 45 degree exit in the XZ plane, in the opposite
-    // direction of the Z+ of the TCP in the drop_target_1 pose.
-    approach_drop_target_1.position.x += 0.075;
-    approach_drop_target_1.position.z += 0.075;
-
-    // For each pose to get/set dynamically, rember to create a unique blackboard key accordingly.
-    // Be careful not to use names that may conflict with the keys automatically
-    // created for the moves. (Usually move_{move_id})
-    // We also create a string to store the key name, or we'll risk to misuse it later
-    std::string pick_target_1_key_name = "pick_target_1";
-    std::string approach_pick_target_1_key_name = "approach_pick_target_1";
-    blackboard->set(pick_target_1_key_name, pick_target_1);
-    blackboard->set(approach_pick_target_1_key_name, approach_pick_target_1);
-
-    std::string drop_target_1_key_name = "drop_target_1";
-    std::string approach_drop_target_1_key_name = "approach_drop_target_1";
-    blackboard->set(drop_target_1_key_name, drop_target_1);
-    blackboard->set(approach_drop_target_1_key_name, approach_drop_target_1);
-
-    // Once the object will be moved, the drop position will have to be retrieved with the new pose of the object, so I need a new blackboard
-    // key for the new pose:
-    std::string dropped_target_key_name = "dropped_target";
-    // then I set a temporary value, it will be overwritten later:
-    blackboard->set(dropped_target_key_name, drop_target_1);
-
-    // While the pick/drop pose is either dependant of object pose or fixed, we can set a fixed insert pose and a load pose that will depend
-    // on the length of the object. For this reason we've set a variable, and we also set a blackboard key here for the object's length.
-    // The blackboard key will let us set the length dynamically from the HMI if needed, without shutting down the application.
-    blackboard->set("tube_length", tube_length);
-
-    // We also set an grasp offset from the end of the tube, we'll use it later to define the pick pose, and now to define the insert pose
-    double grasp_offset = 0.025;
-
-    // We keep the naming consistent with the robot_prefix associated, or else the move will fail to plan!
-    // The insert pose will depend on the drop_target_1 pose.
-    Pose insert_target_2 = drop_target_1;
-    insert_target_2.position.y += (grasp_offset + 0.002);
-    // We approach from outside the insert position to factor the insert's length
-    Pose approach_insert_target_2 = insert_target_2;
-    approach_insert_target_2.position.y += 0.075;
-
-    std::string insert_target_2_key_name = "insert_target_2";
-    std::string approach_insert_target_2_key_name = "approach_insert_target_2";
-    blackboard->set(insert_target_2_key_name, insert_target_2);
-    blackboard->set(approach_insert_target_2_key_name, approach_insert_target_2);
-
+    // We set a name for the object to be manipulated, and all the required info to create it and insert it in the scene
     std::string object_to_manipulate_1 = "graspable_mesh";
-    std::string object_to_manipulate_2 = "renamed_mesh";
-
     std::string graspable_mesh_file = "package://manymove_object_manager/meshes/unit_tube.stl";
-    std::string machine_mesh_file = "package://manymove_object_manager/meshes/custom_scene/machine.stl";
-    std::string endplate_mesh_file = "package://manymove_object_manager/meshes/custom_scene/end_plate.stl";
-    std::string slider_mesh_file = "package://manymove_object_manager/meshes/custom_scene/slider.stl";
 
+    /** 
+     * The tube is 1m diameter x 1m high, with the center of mass corrisponding to the origin with the axis aligned to Z axis. 
+     * This way, thanks to the variable for tube lenght defined previously, we can scale as needed. To make the application more versatile,
+     * in the future we can also make so the dimensions depend on a blackboard key and let the user modify it from the HMI. 
+     */
     std::vector<double> graspable_mesh_scale = {0.01, 0.01, tube_length};
+
+    /**
+     * This is the pose for the object, aligned so the X+ axis corresponds to the exit direction from the distributor's holder. 
+     * Since the gripper is aligned to the Z axis, we'll have to modify it later to get the grasp pose. Note we could approach from any direction
+     * perpendicular to the Z axis of the object, but defining one specific alignment lets us define a specific direction for grasping.
+     */
     auto graspable_mesh_pose = createPoseRPY(((tube_length / 2) + 0.973 + 0.005), -0.6465, 0.8055, 1.57, 2.05, 1.57);
 
-    // std::vector<double> cylinderdimension = {0.01, 0.1};
-    // auto cylinderpose = createPoseRPY(0.571, -0.6235, 0.725, 1.57, 3.14, 0.0);
-    // std::string check_cylinder_obj_xml = buildObjectActionXML("check_cylinder", createCheckObjectExists("graspable_cylinder"));
-    // std::string add_cylinder_obj_xml = buildObjectActionXML("add_cylinder", createAddPrimitiveObject("graspable_cylinder", "cylinder", cylinderdimension, cylinderpose));
-    // std::string init_cylinder_obj_xml = fallbackWrapperXML("init_cylinder_obj", {check_cylinder_obj_xml, add_cylinder_obj_xml});
-
-    // Create object actions xml snippets (the object are created directly in the create*() functions relative to each type of object action)
+    // 
     std::string check_graspable_mesh_obj_xml = buildObjectActionXML("check_" + object_to_manipulate_1, createCheckObjectExists(object_to_manipulate_1));
-    std::string check_renamed_mesh_obj_xml = buildObjectActionXML("check_" + object_to_manipulate_2, createCheckObjectExists(object_to_manipulate_2));
-    std::string check_machine_mesh_obj_xml = buildObjectActionXML("check_machine_mesh", createCheckObjectExists("machine_mesh"));
-    std::string check_endplate_mesh_obj_xml = buildObjectActionXML("check_endplate_mesh", createCheckObjectExists("endplate_mesh"));
-    std::string check_slider_mesh_obj_xml = buildObjectActionXML("check_slider_mesh", createCheckObjectExists("slider_mesh"));
 
+    // We create the xml snippet to add the mesh to the scene through a behaviortree action.
     std::string add_graspable_mesh_obj_xml = buildObjectActionXML(
         "add_graspable_mesh",
         createAddMeshObject(
@@ -200,86 +147,67 @@ int main(int argc, char **argv)
             graspable_mesh_file,
             graspable_mesh_scale[0], graspable_mesh_scale[1], graspable_mesh_scale[2]));
 
-    // When we switch from a robot to another we remove the object from the scene to free up the name to add it again concurrently
-    // Then we add it again in the same position as the removed object but with another name, so it will be used by the other
-    // robot to plan while checking for collisions
-    std::string add_renamed_mesh_obj_xml = buildObjectActionXML(
-        "add_renamed_mesh",
-        createAddMeshObject(
-            object_to_manipulate_2,
-            dropped_target_key_name, // We use the overload with the blakboard key to retrive it dynamically
-            graspable_mesh_file,
-            graspable_mesh_scale[0], graspable_mesh_scale[1], graspable_mesh_scale[2]));
-
-    // Here we add the objects that create the scene
-    std::string add_machine_mesh_obj_xml = buildObjectActionXML(
-        "add_machine_mesh",
-        createAddMeshObject(
-            "machine_mesh",
-            createPoseRPY(0.0, 0.0, 0.0, 0.0, 0.0, 0.0),
-            machine_mesh_file,
-            1.0, 1.0, 1.0));
-
-    // We save the name of the endplate mesh since we'll use it to get the pose for the second robot to load the object in the machine
-    std::string endplate_name = "endplate_mesh";
-    Pose endplate_pose = createPoseRPY(0.571, -0.6235, 0.725, 1.57, 3.14, 0.0);
-    Pose endplate_approach_pose = endplate_pose;
-    endplate_approach_pose.position.y += 0.05;
-
-    // We build the same variables we build for the graspable objects also for the endplate on the machine
-    std::string load_target_2_key_name = "load_target_2";
-    std::string approach_load_target_2_key_name = "approach_load_target_2";
-    blackboard->set(load_target_2_key_name, endplate_pose);
-    blackboard->set(approach_load_target_2_key_name, endplate_approach_pose);
-
-    std::string add_endplate_mesh_obj_xml = buildObjectActionXML(
-        "add_endplate_mesh",
-        createAddMeshObject(
-            endplate_name,
-            load_target_2_key_name,
-            endplate_mesh_file,
-            1.0, 1.0, 1.0));
-
-    std::string add_slider_mesh_obj_xml = buildObjectActionXML(
-        "add_slider_mesh",
-        createAddMeshObject(
-            "slider_mesh",
-            createPoseRPY(((tube_length) + 0.01), 0.0, 0.0, 0.0, 0.0, 0.0),
-            slider_mesh_file,
-            1.0, 1.0, 1.0));
-
-    // Compose the check and add sequence for objects
+    // We define a logic fallback to check if the object is already on the scene, and if not we add it.
     std::string init_graspable_mesh_obj_xml = fallbackWrapperXML("init_graspable_mesh_obj", {check_graspable_mesh_obj_xml, add_graspable_mesh_obj_xml});
-    std::string init_machine_mesh_obj_xml = fallbackWrapperXML("init_machine_mesh_obj", {check_machine_mesh_obj_xml, add_machine_mesh_obj_xml});
-    std::string init_endplate_mesh_obj_xml = fallbackWrapperXML("init_endplate_mesh_obj", {check_endplate_mesh_obj_xml, add_endplate_mesh_obj_xml});
-    std::string init_slider_mesh_obj_xml = fallbackWrapperXML("init_slider_mesh_obj", {check_slider_mesh_obj_xml, add_slider_mesh_obj_xml});
 
-    // the name of the link to attach the object to, and the object to manipulate
+    // We define the name of the link to attach the object to
     std::string tcp_frame_name_1 = robot_prefix_1 + tcp_frame_1;
-    std::string tcp_frame_name_2 = robot_prefix_2 + tcp_frame_2;
 
+    // Then we create the xml snippets to attach, detach the object to/from a link, and to remove it from the scene. 
     std::string attach_obj_1_xml = buildObjectActionXML("attach_obj_to_manipulate_1", createAttachObject(object_to_manipulate_1, tcp_frame_name_1));
     std::string detach_obj_1_xml = buildObjectActionXML("attach_obj_to_manipulate_1", createDetachObject(object_to_manipulate_1, tcp_frame_name_1));
     std::string remove_obj_1_xml = buildObjectActionXML("remove_obj_to_manipulate_1", createRemoveObject(object_to_manipulate_1));
 
-    std::string attach_obj_2_xml = buildObjectActionXML("attach_obj_to_manipulate_2", createAttachObject(object_to_manipulate_2, tcp_frame_name_2));
-    std::string detach_obj_2_xml = buildObjectActionXML("attach_obj_to_manipulate_2", createDetachObject(object_to_manipulate_2, tcp_frame_name_2));
-    std::string remove_obj_2_xml = buildObjectActionXML("remove_obj_to_manipulate_2", createRemoveObject(object_to_manipulate_2));
+    //Now that we all we need for the first object, we can create the first poses relative to it.
 
-    //
+    /**
+     * Original pick pose: it will be overwritten by the blackboard key that will be dynamically updated getting the grasp pose object. 
+     * Note that the pose obtained from an object will refer to the object itels and will have to be modified if you want to align
+     * the TCP orientation to a direction that is not the object's Z+ (more about it later).
+     * We may also define a pick pose here to align the TCP as we want since we know the position of the object, but this mechanism
+     * will allow to get the pose recognized by a vision system and to realign the TCP Z+ to the desired pick orientation.
+     * Since this pose will be overwritten, we use an all zeros pose that would not be reachable anyway.
+     */
+    Pose pick_target_1 = createPose(0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0);
 
-    // ----------------------------------------------------------------------------
-    // 3) Add GetObjectPoseAction Node and nodes to attach/detach objects
-    // ----------------------------------------------------------------------------
+    /**
+     * The approach pose to pick the object will have one or more of the positions of the pick pose modified to create a linear movement in the 
+     * appropriate direction. Here, the effective approach position will be assigned dynamically later, we just copy the original pick position. 
+     */
+    Pose approach_pick_target_1 = pick_target_1;
+    // approach_pick_target_1.position.z += 0.02; // since this will be defined later, we don't need it here 
 
-    //
+    /**
+     * For each pose to get/set dynamically, rember to create a unique blackboard key accordingly.
+     * Be careful not to use names that may conflict with the keys automatically
+     * created for the moves. (Usually move_{move_id})
+     * We also create a string to store the key name, or we'll risk to misuse it later if we change it here
+     */
+    std::string pick_target_1_key_name = "pick_target_1";
+    std::string approach_pick_target_1_key_name = "approach_pick_target_1";
+    blackboard->set(pick_target_1_key_name, pick_target_1);
+    blackboard->set(approach_pick_target_1_key_name, approach_pick_target_1);
 
+    /**
+     * Next we define how we pick the object. When we get a pose from an object in the scene, the orientation will depend on how the object was
+     * inserted in the scene and, if it's a mesh, from the object's orientation in the original file. The gripper's approach direction is oriented 
+     * on its Z axis, but this object should be grasped perpendicularly to the object's Z axis. thus we need to modify the orientation to align it.
+     * Given the original mesh file and the shape of the gripper's jaws, we want to move the reference pick point -2mm in the x direction, and rotate 
+     * it 90 degrees on Y axis, thus obtaining a pick orientation that aligns with the object's X axis.
+     * The approach direction will just have to be some cm further, depending on the applcation: here, -7cm is about ok. 
+     */
     // Define the transformation and reference orientation
     std::vector<double> pick_pre_transform_xyz_rpy_1 = {-0.002, 0.0, 0.0, 0.0, 1.57, 0.0};
     std::vector<double> approach_pick_pre_transform_xyz_rpy_1 = {-0.07, 0.0, 0.0, 0.0, 1.57, 0.0};
+
+    // We want the pick pose to be at a fixed distance from the end of the tube regardless of the length so we set a grasp offset:
+    double grasp_offset = 0.025;
     std::vector<double> pick_post_transform_xyz_rpy_1 = {0.0, 0.0, ((-tube_length) / 2) + grasp_offset, 3.14, 0.0, 0.0};
 
-    // Translate get_pose_action to xml tree leaf
+    /**
+     * Now we use all the variables we created until now to define the xml snippets that will get the pick and approach poses of the object dynamically,
+     * modified as we set in the transforms and relative to the "world" frame.
+     */
     std::string get_pick_pose_1_xml = buildObjectActionXML(
         "get_pick_pose_1",
         createGetObjectPose(
@@ -298,27 +226,167 @@ int main(int argc, char **argv)
             approach_pick_pre_transform_xyz_rpy_1,
             pick_post_transform_xyz_rpy_1));
 
-    // We get the pose of the dropped object to use to rename it
+
+    // ----------------------------------------------------------------------------            
+    /**
+     * With this the completed all the required snippets to handle the fist object and the first pose.
+     * We'll proceed here with all the other objects and poses, commenting only where something changes from what we saw until now. 
+     */
+    // ----------------------------------------------------------------------------
+
+    /** 
+     * Drop pose: this is not overwritten later, as it doesn't need to change dynamically in this application.
+     * Note that this pose directly refer to the pose that the TCP will allign to and it's referred to the world frame.
+     * For example, this pose has the Z+ facing downard, 45 degrees in the XZ plane, in between X- and Z-.
+     */
+    Pose drop_target_1 = createPoseRPY(0.57, -0.25, 0.72, -0.785, -3.14, 1.57);
+    Pose approach_drop_target_1 = drop_target_1;
+    // We need to modify the exit pose accordingly: we move in X+ and Z+ to obtain a 45 degree exit in the XZ plane, in the opposite
+    // direction of the Z+ of the TCP in the drop_target_1 pose.
+    approach_drop_target_1.position.x += 0.075;
+    approach_drop_target_1.position.z += 0.075;
+
+    // We still create the blackboard key, even if we don't modify the pose later, since the pose is always passed through blackboard keys for consistency
+    std::string drop_target_1_key_name = "drop_target_1";
+    std::string approach_drop_target_1_key_name = "approach_drop_target_1";
+    blackboard->set(drop_target_1_key_name, drop_target_1);
+    blackboard->set(approach_drop_target_1_key_name, approach_drop_target_1);
+
+    //
+
+    // We name the second object to manipulate, which is the first object renamed
+    // After we drop the obect on the other robot we want to respawn the original one, but we rename it. We start by defining the new name:
+    std::string object_to_manipulate_2 = "renamed_mesh";
+
+    // Create object actions xml snippets (the object are created directly in the create*() functions relative to each type of object action)
+    std::string check_renamed_mesh_obj_xml = buildObjectActionXML("check_" + object_to_manipulate_2, createCheckObjectExists(object_to_manipulate_2));
+
+    /**
+     * Once the object will be moved, the drop position will have to be retrieved with the new pose of the object, so I need a new blackboard
+     * key for the new pose. Note the 
+     */
+    std::string dropped_target_key_name = "dropped_target";
+    // Then I set a temporary value, it will be overwritten later:
+    blackboard->set(dropped_target_key_name, drop_target_1);
+
+    /**
+    * When we switch from a robot to another we remove the object from the scene to free up the name to add it again concurrently
+    * Then we add it again in the same position as the removed object but with another name, so it will be used by the other
+    * robot to plan while checking for collisions
+     */
+    std::string add_renamed_mesh_obj_xml = buildObjectActionXML(
+        "add_renamed_mesh",
+        createAddMeshObject(
+            object_to_manipulate_2,
+            dropped_target_key_name, // We use the overload with the blakboard key to retrive it dynamically
+            graspable_mesh_file,
+            graspable_mesh_scale[0], graspable_mesh_scale[1], graspable_mesh_scale[2]));
+
+    /** 
+     * We get the pose of the dropped object to use it to insert the renamed object
+     * Note that this pose is only used to reinsert the object in the scene: to get the insert pose for the second object we will get
+     * the pose of the newly created object and transform that for the TCP pose. 
+     */
     std::string get_dropped_object_pose_xml = buildObjectActionXML(
         "get_dropped_obj_pose",
         createGetObjectPose(
             object_to_manipulate_1,
             dropped_target_key_name,
             "world"));
-
+        
+    // Here we put together all the snippets to rename the object
     std::string rename_obj_1_xml = sequenceWrapperXML("rename_obj_to_manipulate_1", {get_dropped_object_pose_xml, remove_obj_1_xml, add_renamed_mesh_obj_xml, check_renamed_mesh_obj_xml});
 
     //
 
-    // Now for the object to drop on the loading shaft of the second robot's gripper:
+    // We keep the naming consistent with the robot_prefix associated, or else the move will fail to plan!
+    // The insert pose will depend on the drop_target_1 pose.
+    Pose insert_target_2 = drop_target_1;
+    insert_target_2.position.y += (grasp_offset + 0.002);
+    // We approach from outside the insert position to factor the insert's length
+    Pose approach_insert_target_2 = insert_target_2;
+    approach_insert_target_2.position.y += 0.075;
+
+    std::string insert_target_2_key_name = "insert_target_2";
+    std::string approach_insert_target_2_key_name = "approach_insert_target_2";
+    blackboard->set(insert_target_2_key_name, insert_target_2);
+    blackboard->set(approach_insert_target_2_key_name, approach_insert_target_2);
+
+    // We define the other elements on the scene. We only 
+    std::string machine_mesh_file = "package://manymove_object_manager/meshes/custom_scene/machine.stl";
+    std::string slider_mesh_file = "package://manymove_object_manager/meshes/custom_scene/slider.stl";
+    std::string endplate_mesh_file = "package://manymove_object_manager/meshes/custom_scene/end_plate.stl";
+
+    std::string check_machine_mesh_obj_xml = buildObjectActionXML("check_machine_mesh", createCheckObjectExists("machine_mesh"));
+    std::string check_slider_mesh_obj_xml = buildObjectActionXML("check_slider_mesh", createCheckObjectExists("slider_mesh"));
+    std::string check_endplate_mesh_obj_xml = buildObjectActionXML("check_endplate_mesh", createCheckObjectExists("endplate_mesh"));
+
+    // Here we add the objects that create the scene. The machine is in a fixed position
+    std::string add_machine_mesh_obj_xml = buildObjectActionXML(
+        "add_machine_mesh",
+        createAddMeshObject(
+            "machine_mesh",
+            createPoseRPY(0.0, 0.0, 0.0, 0.0, 0.0, 0.0),
+            machine_mesh_file,
+            1.0, 1.0, 1.0));
+
+    // The slider is in a variable position. We still use the tube_length variable and not a dedicated blackboard key, this may change
+    // if we want to set the length from HMI
+    std::string add_slider_mesh_obj_xml = buildObjectActionXML(
+        "add_slider_mesh",
+        createAddMeshObject(
+            "slider_mesh",
+            createPoseRPY(((tube_length) + 0.01), 0.0, 0.0, 0.0, 0.0, 0.0),
+            slider_mesh_file,
+            1.0, 1.0, 1.0));
+
+    // Save the name of the endplate mesh since we'll use it to get the pose for the second robot to load the object in the machine
+    std::string endplate_name = "endplate_mesh";
+    Pose endplate_pose = createPoseRPY(0.571, -0.6235, 0.725, 1.57, 3.14, 0.0);
+    Pose endplate_approach_pose = endplate_pose;
+    endplate_approach_pose.position.y += 0.05;
+
+    // Build the same variables we build for the graspable objects also for the endplate on the machine
+    std::string load_target_2_key_name = "load_target_2";
+    std::string approach_load_target_2_key_name = "approach_load_target_2";
+    blackboard->set(load_target_2_key_name, endplate_pose);
+    blackboard->set(approach_load_target_2_key_name, endplate_approach_pose);
+
+    std::string add_endplate_mesh_obj_xml = buildObjectActionXML(
+        "add_endplate_mesh",
+        createAddMeshObject(
+            endplate_name,
+            load_target_2_key_name,
+            endplate_mesh_file,
+            1.0, 1.0, 1.0));
+
+    // Compose the check and add sequence for objects
+    std::string init_machine_mesh_obj_xml = fallbackWrapperXML("init_machine_mesh_obj", {check_machine_mesh_obj_xml, add_machine_mesh_obj_xml});
+    std::string init_endplate_mesh_obj_xml = fallbackWrapperXML("init_endplate_mesh_obj", {check_endplate_mesh_obj_xml, add_endplate_mesh_obj_xml});
+    std::string init_slider_mesh_obj_xml = fallbackWrapperXML("init_slider_mesh_obj", {check_slider_mesh_obj_xml, add_slider_mesh_obj_xml});
+
+    // Set the name for the TCP of ROBOT 2 
+    std::string tcp_frame_name_2 = robot_prefix_2 + tcp_frame_2;
+
+    // Create the xml snippets to attach/detach the second object to manipulate to/from a link, and to remove it from the scene
+    std::string attach_obj_2_xml = buildObjectActionXML("attach_obj_to_manipulate_2", createAttachObject(object_to_manipulate_2, tcp_frame_name_2));
+    std::string detach_obj_2_xml = buildObjectActionXML("attach_obj_to_manipulate_2", createDetachObject(object_to_manipulate_2, tcp_frame_name_2));
+    std::string remove_obj_2_xml = buildObjectActionXML("remove_obj_to_manipulate_2", createRemoveObject(object_to_manipulate_2));
 
     //
+
+    // Now for the object to drop on the loading shaft of the second robot's gripper:
 
     // Define the transformation and reference orientation
     std::vector<double> insert_pre_transform_xyz_rpy_2 = {0.0, 0.0, 0.0, 0.0, 0.0, 0.0};
     std::vector<double> approach_insert_pre_transform_xyz_rpy_2 = {0.0, 0.0, -0.05, 0.0, 0.0, 0.0};
     std::vector<double> post_insert_transform_xyz_rpy_2 = {0.0, 0.0, ((-tube_length) / 2), 0.0, 0.0, -0.785};
 
+    /**
+     * A little note here: we can use both object_to_manipulate_1 or object_to_manipulate_2 to get the object pose, the difference is when you want
+     * to read the pose. Below you'll see where the get_grasp_object_poses_2_xml is placed, which is BEFORE the object is released from the gripper
+     * of the first robot, thus the renamed object doesn't exist yet.
+     */
     // Translate get_pose_action to xml tree leaf
     std::string get_insert_pose_2_xml = buildObjectActionXML(
         "get_insert_pose_2",
@@ -341,8 +409,6 @@ int main(int argc, char **argv)
     //
 
     // Now for the endplate to load the object in the machine:
-
-    //
 
     // Define the transformation and reference orientation
     std::vector<double> load_pre_transform_xyz_rpy_2 = {0.0, 0.0, 0.0, 0.0, 0.0, 0.0};
@@ -448,10 +514,8 @@ int main(int argc, char **argv)
     //
 
     // ----------------------------------------------------------------------------
-    // 4) Setup moves
+    // Setup moves
     // ----------------------------------------------------------------------------
-
-    //
 
     auto move_configs = defineMovementConfigs();
 
@@ -471,6 +535,7 @@ int main(int argc, char **argv)
         {robot_prefix_1, "joint", "", joint_rest_1, "", move_configs["max_move"]},
     };
 
+    // Here we begin using the blackboard key names that are linked to poses derived from the objects:
     std::vector<Move> pick_sequence_1 = {
         {robot_prefix_1, "pose", approach_pick_target_1_key_name, {}, "", move_configs["max_move"]},
         {robot_prefix_1, "cartesian", pick_target_1_key_name, {}, "", move_configs["cartesian_slow_move"]},
@@ -578,10 +643,8 @@ int main(int argc, char **argv)
     //
 
     // ----------------------------------------------------------------------------
-    // 5) Define Signals calls:
+    // Define Signals calls:
     // ----------------------------------------------------------------------------
-
-    //
 
     // Let's send and receive signals only if the robot is real, and let's fake a delay on inputs otherwise
     // Robot 1
@@ -595,10 +658,6 @@ int main(int argc, char **argv)
     std::string check_reset_robot_1_xml = (is_robot_real ? fallbackWrapperXML(robot_prefix_1 + "CheckResetFallback", {check_robot_state_1_xml, reset_robot_state_1_xml}) : "<Delay delay_msec=\"250\">\n<AlwaysSuccess />\n</Delay>\n");
 
     // Robot 2
-    std::string signal_gripper_close_2_xml = (is_robot_real ? buildSetOutputXML(robot_prefix_2, "GripperClose", "controller", 0, 1) : "");
-    std::string signal_gripper_open_2_xml = (is_robot_real ? buildSetOutputXML(robot_prefix_2, "GripperOpen", "controller", 0, 0) : "");
-    std::string check_gripper_close_2_xml = (is_robot_real ? buildCheckInputXML(robot_prefix_2, "WaitForSensor", "controller", 0, 1, true, 0) : "<Delay delay_msec=\"250\">\n<AlwaysSuccess />\n</Delay>\n");
-    std::string check_gripper_open_2_xml = (is_robot_real ? buildCheckInputXML(robot_prefix_2, "WaitForSensor", "controller", 0, 0, true, 0) : "<Delay delay_msec=\"250\">\n  <AlwaysSuccess />\n</Delay>\n");
     std::string check_robot_state_2_xml = buildCheckRobotStateXML(robot_prefix_2, "CheckRobot", "robot_ready", "error_code", "robot_mode", "robot_state", "robot_msg");
     std::string reset_robot_state_2_xml = buildResetRobotStateXML(robot_prefix_2, "ResetRobot", robot_model_2);
 
@@ -607,10 +666,8 @@ int main(int argc, char **argv)
     //
 
     // ----------------------------------------------------------------------------
-    // 6) Combine the objects and moves in a sequences that can run a number of times:
+    // Combine the objects and moves in a sequences that can run a number of times:
     // ----------------------------------------------------------------------------
-
-    //
 
     // Let's build the full sequence in logically separated blocks:
     // General
@@ -623,7 +680,7 @@ int main(int argc, char **argv)
     std::string close_gripper_1_xml = sequenceWrapperXML("CloseGripper", {signal_gripper_close_1_xml, check_gripper_close_1_xml, attach_obj_1_xml});
     std::string go_to_wait_pose_1_xml = sequenceWrapperXML("GoToWaitPose", {wait_move_parallel_1_xml});
     std::string go_to_drop_pose_1_xml = sequenceWrapperXML("GoToDropPose", {drop_move_parallel_1_xml});
-    std::string open_gripper_1_xml = sequenceWrapperXML("OpenGripper", {signal_gripper_open_1_xml, detach_obj_1_xml});
+    std::string open_gripper_1_xml = sequenceWrapperXML("OpenGripper", {signal_gripper_open_1_xml, detach_obj_1_xml, check_gripper_open_1_xml});
     std::string go_to_exit_pose_1_xml = sequenceWrapperXML("GoToExitPose", {exit_move_parallel_1_xml});
 
     // Robot 2
@@ -655,10 +712,10 @@ int main(int argc, char **argv)
             get_grasp_object_poses_1_xml,                 //< We get the updated poses relative to the objects
             go_to_pick_pose_1_xml,                        //< Pick move sequence
             close_gripper_1_xml,                          //< We attach the object
-            go_to_wait_pose_1_xml,                        //< x
+            go_to_wait_pose_1_xml,                        //< 
             wait_for_robot_2_out_of_working_position_xml, //<
-            wait_for_renamed_obj_removed_xml,             //< x
-            go_to_drop_pose_1_xml,                        //< Drop move sequence            detach_obj_1_xml,                             //<
+            wait_for_renamed_obj_removed_xml,             //< 
+            go_to_drop_pose_1_xml,                        //< Drop move sequence
             set_robot_1_in_working_position_xml,          //<
             wait_for_robot_2_in_working_position_xml,     //<
             open_gripper_1_xml,                           //< We detach the object
@@ -679,10 +736,10 @@ int main(int argc, char **argv)
             set_robot_2_in_working_position,              //<
             wait_for_robot_1_out_of_working_position_xml, //<
             wait_for_renamed_drop_obj_xml,                //<
-            attach_obj_2_xml,                             //< close_gripper_2_xml,          //< We attach the object
+            attach_obj_2_xml,                             //< We attach the object
             go_to_load_pose_2_xml,                        //< Load sequence
             go_to_exit_pose_2_xml,                        //<
-            detach_obj_2_xml,                             //< open_gripper_2_xml,           //< We detach the object
+            detach_obj_2_xml,                             //< We detach the object
             remove_obj_2_xml,                             //< Homing sequence
             go_to_ready_pose_2_xml,                       //< We delete the object for it to be added on the next cycle in the original position
         },
@@ -698,10 +755,8 @@ int main(int argc, char **argv)
     //
 
     // ----------------------------------------------------------------------------
-    // 7) Wrap everything into a top-level <root> with <BehaviorTree ID="MasterTree">
+    // Wrap everything into a top-level <root> with <BehaviorTree ID="MasterTree">
     // ----------------------------------------------------------------------------
-
-    //
 
     std::string final_tree_xml = mainTreeWrapperXML("MasterTree", master_body);
 
@@ -709,19 +764,13 @@ int main(int argc, char **argv)
 
     //
 
-    // 8) Register node types
-
-    //
-
+    // Register node types
     BT::BehaviorTreeFactory factory;
     registerAllNodeTypes(factory);
 
     //
 
-    // 9) Create the tree from final_tree_xml
-
-    //
-
+    // Create the tree from final_tree_xml
     BT::Tree tree;
     try
     {
@@ -733,12 +782,7 @@ int main(int argc, char **argv)
         return 1;
     }
 
-    //
-
-    // 10) ZMQ publisher (optional, to visualize in Groot)
-
-    //
-
+    // ZMQ publisher (optional, to visualize in Groot)
     BT::PublisherZMQ publisher(tree);
 
     // Create a MultiThreadedExecutor so that both nodes can be spun concurrently.
@@ -749,10 +793,7 @@ int main(int argc, char **argv)
 
     //
 
-    // 11) Tick the tree in a loop.
-
-    //
-
+    // Tick the tree in a loop.
     rclcpp::Rate rate(100);
     while (rclcpp::ok())
     {
