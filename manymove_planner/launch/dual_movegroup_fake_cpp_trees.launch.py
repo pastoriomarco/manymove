@@ -217,7 +217,7 @@ def launch_setup(context, *args, **kwargs):
             geometry_mesh_tcp_rpy_2=geometry_mesh_tcp_rpy_2,
         ).planning_scene_monitor(publish_robot_description=True, publish_robot_description_semantic=True)
         .planning_pipelines(pipelines=["ompl"])
-        .moveit_cpp(file_path=get_package_share_directory("manymove_planner") + "/config/moveit_cpp.yaml")
+        # .moveit_cpp(file_path=get_package_share_directory("manymove_planner") + "/config/moveit_cpp.yaml")
     ).to_moveit_configs()
 
     # robot state publisher node
@@ -265,7 +265,7 @@ def launch_setup(context, *args, **kwargs):
             moveit_config.to_dict(),
             {
                 'node_prefix_1': prefix_1.perform(context),
-                'planner_type': 'moveitcpp',
+                'planner_type': 'movegroup',
                 'velocity_scaling_factor': velocity_scaling_factor,
                 'acceleration_scaling_factor': acceleration_scaling_factor,
                 'max_exec_retries': max_exec_retries,
@@ -293,7 +293,7 @@ def launch_setup(context, *args, **kwargs):
             moveit_config.to_dict(),
             {
                 'node_prefix_2': prefix_2.perform(context),
-                'planner_type': 'moveitcpp',
+                'planner_type': 'movegroup',
                 'velocity_scaling_factor': velocity_scaling_factor,
                 'acceleration_scaling_factor': acceleration_scaling_factor,
                 'max_exec_retries': max_exec_retries,
@@ -492,7 +492,7 @@ def launch_setup(context, *args, **kwargs):
 
 def generate_launch_description():
     return LaunchDescription([
-        DeclareLaunchArgument('planner_type', default_value='moveitcpp', description='Type of planner to use: moveitcpp or movegroup'),
+        # DeclareLaunchArgument('planner_type', default_value='moveitcpp', description='Type of planner to use: moveitcpp or movegroup'), #hardcoded
         DeclareLaunchArgument('velocity_scaling_factor', default_value='0.5', description='Velocity scaling factor'),
         DeclareLaunchArgument('acceleration_scaling_factor', default_value='0.5', description='Acceleration scaling factor'),
         DeclareLaunchArgument('max_exec_retries', default_value='5', description='Maximum number of retries'),
