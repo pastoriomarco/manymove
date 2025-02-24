@@ -111,16 +111,23 @@ This repository is composed of several sub-packages, each handling different res
 ### Launching the Action Server
 
 - **Lite 6 manipulator example** 
+  with MoveItCPP:
   ```bash
   ros2 launch manymove_planner lite_micpp_fake_cpp_trees.launch.py
   ```
+  
+  with MoveGroupInterface:
+  ```bash
+  ros2 launch manymove_planner lite_movegroup_fake_cpp_trees.launch.py
+  ```
+
 - **Dual robot (Lite 6 + UF850) example**  
   ```bash
   ros2 launch manymove_planner dual_micpp_fake_cpp_trees.launch.py
   ```
   - Note: to run the app example with the robots in custom positions you'll have to use the fork of xarm_ros2 modified to handle this kind of scenario. Follow the instructions in the above link from the original repository, but change the instruction on point 4.2 with:
     ```bash
-    git clone https://github.com/xArm-Developer/xarm_ros2.git --recursive -b $ROS_DISTRO
+    git clone https://github.com/pastoriomarco/xarm_ros2.git --recursive -b $ROS_DISTRO
     ```
 
 
