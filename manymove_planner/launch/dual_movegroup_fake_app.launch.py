@@ -80,7 +80,7 @@ def launch_setup(context, *args, **kwargs):
     geometry_type_2 = LaunchConfiguration('geometry_type_2', default=geometry_type)
     geometry_mass = LaunchConfiguration('geometry_mass', default=0.3)
     geometry_mass_1 = LaunchConfiguration('geometry_mass_1', default=geometry_mass)
-    geometry_mass_2 = LaunchConfiguration('geometry_mass_2', default=geometry_mass)
+    geometry_mass_2 = LaunchConfiguration('geometry_mass_2', default=0.75)
     geometry_height = LaunchConfiguration('geometry_height', default=0.1)
     geometry_height_1 = LaunchConfiguration('geometry_height_1', default=geometry_height)
     geometry_height_2 = LaunchConfiguration('geometry_height_2', default=geometry_height)

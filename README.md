@@ -110,7 +110,7 @@ This repository is composed of several sub-packages, each handling different res
 
 ### Launching the Action Server
 
-- **Lite 6 manipulator example**  
+- **Lite 6 manipulator example** 
   ```bash
   ros2 launch manymove_planner lite_micpp_fake_cpp_trees.launch.py
   ```
@@ -131,7 +131,7 @@ This repository is composed of several sub-packages, each handling different res
      ```
   2. In terminal 2:
      ```bash
-     ros2 launch manymove_planner panda_action_server_node.launch.py
+     ros2 launch manymove_planner panda_fake_cpp_trees.launch.py
      ```
 
 These launch files spin up the appropriate environment (fake or real) plus the nodes that handle planning, object management, signals, and optional HMI components. You can then interact with these action servers and send them requests using the provided C++ or Python-based behavior tree clients.

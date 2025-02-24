@@ -185,7 +185,7 @@ def launch_setup(context, *args, **kwargs):
     # The defaults on the action_server_node.cpp are made for lite6, so we don't need to input them here
 
     # Start the actual move_group node/action server
-    move_group_node = Node(
+    action_server_node = Node(
         package='manymove_planner',
         executable='action_server_node',
         # Don't use the "name" parameter, the name will be automatically set with {node_prefix}action_server_node to avoid duplicate nodes
@@ -351,7 +351,7 @@ def launch_setup(context, *args, **kwargs):
         robot_description_launch,
         rviz2_node,
         static_tf,
-        move_group_node,
+        action_server_node,
         joint_state_publisher_node,
         ros2_control_launch,
         control_node,

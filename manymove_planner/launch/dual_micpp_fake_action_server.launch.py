@@ -244,8 +244,8 @@ def launch_setup(context, *args, **kwargs):
     # instead of: xarm_moveit_config/launch/_dual_robot_moveit_common2.launch.py
     # ================================================================
 
-    # Start the actual move_group node/action server
-    move_group_node_1 = Node(
+    # Start the actual action_server node
+    action_server_node_1 = Node(
         package='manymove_planner',
         executable='action_server_node',
         # Don't use the "name" parameter, the name will be automatically set with {node_prefix_*}action_server_node to avoid duplicate nodes
@@ -273,7 +273,7 @@ def launch_setup(context, *args, **kwargs):
         ],
     )
 
-    move_group_node_2 = Node(
+    action_server_node_2 = Node(
         package='manymove_planner',
         executable='action_server_node',
         # Don't use the "name" parameter, the name will be automatically set with {node_prefix_*}action_server_node to avoid duplicate nodes
@@ -444,8 +444,8 @@ def launch_setup(context, *args, **kwargs):
 
     return [
         robot_state_publisher_node,
-        move_group_node_1,
-        move_group_node_2,
+        action_server_node_1,
+        action_server_node_2,
         rviz_node,
         static_tf_1,
         static_tf_2,

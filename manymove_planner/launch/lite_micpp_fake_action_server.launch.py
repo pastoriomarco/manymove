@@ -131,7 +131,7 @@ def launch_setup(context, *args, **kwargs):
     moveit_config_dict = moveit_config.to_dict()
 
     # Start the move_group node/action servers
-    move_group_node = Node(
+    action_server_node = Node(
         package='manymove_planner',
         executable='action_server_node',
         # Don't use the "name" parameter, the name will be automatically set with {node_prefix}action_server_node to avoid duplicate nodes
@@ -271,7 +271,7 @@ def launch_setup(context, *args, **kwargs):
     return [
         robot_state_publisher,
         joint_state_broadcaster,
-        move_group_node,
+        action_server_node,
         static_tf,
         ros2_control_node,
         rviz_node,
