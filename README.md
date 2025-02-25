@@ -131,7 +131,7 @@ This repository is composed of several sub-packages, each handling different res
     ```
 
 
-- **Panda Manipulator**  
+- **Panda Manipulator** (requires the installation of [moveit2_tutorials](https://moveit.picknik.ai/humble/doc/tutorials/getting_started/getting_started.html) )
   1. In terminal 1 (with `moveit2_tutorials` installed):
      ```bash
      ros2 launch moveit2_tutorials demo.launch.py
