@@ -68,6 +68,8 @@ This series of packages was created around Ufactory Lite6 and UF850 cobots, but 
 ---
 
   ## Project Structure
+  
+![ManyMove structure](https://github.com/pastoriomarco/manymove/media/manymove_structure.png)
 
 This repository is composed of several sub-packages, each handling different responsibilities in the overall robotic application:
 
