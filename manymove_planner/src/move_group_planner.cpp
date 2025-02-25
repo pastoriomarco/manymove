@@ -642,19 +642,20 @@ bool MoveGroupPlanner::isStateValid(const moveit::core::RobotState *state,
             RCLCPP_WARN(logger_, "Collision between: '%s' and '%s'", contact.first.first.c_str(), contact.first.second.c_str());
         }
 
-        // Print gripper finger positions
-        Eigen::Isometry3d left_finger_transform = temp_state.getGlobalLinkTransform("panda_leftfinger");
-        Eigen::Isometry3d right_finger_transform = temp_state.getGlobalLinkTransform("panda_rightfinger");
+        // // Old code to debug panda fingers positions // //
+        // // Print gripper finger positions
+        // Eigen::Isometry3d left_finger_transform = temp_state.getGlobalLinkTransform("panda_leftfinger");
+        // Eigen::Isometry3d right_finger_transform = temp_state.getGlobalLinkTransform("panda_rightfinger");
 
-        RCLCPP_WARN(logger_, "Left Finger Position: x=%.4f, y=%.4f, z=%.4f",
-                    left_finger_transform.translation().x(),
-                    left_finger_transform.translation().y(),
-                    left_finger_transform.translation().z());
+        // RCLCPP_WARN(logger_, "Left Finger Position: x=%.4f, y=%.4f, z=%.4f",
+        //             left_finger_transform.translation().x(),
+        //             left_finger_transform.translation().y(),
+        //             left_finger_transform.translation().z());
 
-        RCLCPP_WARN(logger_, "Right Finger Position: x=%.4f, y=%.4f, z=%.4f",
-                    right_finger_transform.translation().x(),
-                    right_finger_transform.translation().y(),
-                    right_finger_transform.translation().z());
+        // RCLCPP_WARN(logger_, "Right Finger Position: x=%.4f, y=%.4f, z=%.4f",
+        //             right_finger_transform.translation().x(),
+        //             right_finger_transform.translation().y(),
+        //             right_finger_transform.translation().z());
     }
 
     return !collision_result.collision;

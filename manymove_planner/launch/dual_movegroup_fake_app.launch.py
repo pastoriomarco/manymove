@@ -51,7 +51,7 @@ def launch_setup(context, *args, **kwargs):
     attach_to_1 = LaunchConfiguration('attach_to_1', default='world')
     attach_to_2 = LaunchConfiguration('attach_to_2', default='world')
     attach_xyz_1 = LaunchConfiguration('attach_xyz_1', default='1.005 -0.233 0.480')
-    attach_xyz_2 = LaunchConfiguration('attach_xyz_2', default='0 0 0.001')
+    attach_xyz_2 = LaunchConfiguration('attach_xyz_2', default='0 0 0')
     attach_rpy_1 = LaunchConfiguration('attach_rpy_1', default='0 0 3.14')
     attach_rpy_2 = LaunchConfiguration('attach_rpy_2', default='0 0 0')
     create_attach_link_1 = LaunchConfiguration('create_attach_link_1', default=True)

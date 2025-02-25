@@ -213,7 +213,7 @@ int main(int argc, char **argv)
     // 3) Build blocks for objects handling
     // ----------------------------------------------------------------------------
     std::vector<double> ground_dimension = {0.8, 0.8, 0.1};
-    auto ground_pose = createPoseRPY(0.0, 0.0, -0.05, 0.0, 0.0, 0.0);
+    auto ground_pose = createPoseRPY(0.0, 0.0, -0.051, 0.0, 0.0, 0.0);
 
     std::vector<double> wall_dimension = {0.8, 0.02, 0.8};
     auto wall_pose = createPoseRPY(0.0, 0.4, 0.3, 0.0, 0.0, 0.0);

@@ -326,7 +326,7 @@ int main(int argc, char **argv)
         "add_machine_mesh",
         createAddMeshObject(
             "machine_mesh",
-            createPoseRPY(0.0, 0.0, 0.0, 0.0, 0.0, 0.0),
+            createPoseRPY(0.0, 0.0, -0.001, 0.0, 0.0, 0.0),
             machine_mesh_file,
             1.0, 1.0, 1.0));
 

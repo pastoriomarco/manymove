@@ -238,7 +238,7 @@ int main(int argc, char **argv)
     // ----------------------------------------------------------------------------
 
     std::vector<double> ground_dimension = {0.8, 2.0, 0.1};
-    auto ground_pose = createPoseRPY(0.0, 0.5, -0.05, 0.0, 0.0, 0.0);
+    auto ground_pose = createPoseRPY(0.0, 0.5, -0.051, 0.0, 0.0, 0.0);
 
     std::vector<double> wall_dimension = {0.8, 0.02, 0.8};
     auto wall_pose = createPoseRPY(0.0, 0.5, 0.4, 0.0, 0.0, 0.0);
