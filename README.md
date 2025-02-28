@@ -139,21 +139,19 @@ This repository is composed of several sub-packages, each handling different res
 
 
 - **Panda Manipulator** (requires the installation of [moveit2_tutorials](https://moveit.picknik.ai/humble/doc/tutorials/getting_started/getting_started.html) )
-  1. In terminal 1 (with `moveit2_tutorials` installed):
+  In **terminal 1** (with `moveit2_tutorials` installed):
      ```bash
      ros2 launch moveit2_tutorials demo.launch.py
      ```
-  2. In terminal 2:
-    with MoveGroupInterface and BehaviorTree.CPP:
+  In **terminal 2**, with MoveGroupInterface and BehaviorTree.CPP:
      ```bash
      ros2 launch manymove_planner panda_fake_cpp_trees.launch.py
      ```
 
-    with MoveGroupInterface and py_trees (minimal):
+   **Alternative**: **in terminal 2**, with MoveGroupInterface and py_trees (minimal):
      ```bash
      ros2 launch manymove_planner panda_fake_py_trees.launch.py
      ```
-- 
 
 These launch files spin up the appropriate environment (fake or real) plus the nodes that handle planning, object management, signals, and optional HMI components. You can then interact with these action servers and send them requests using the provided C++ or Python-based behavior tree clients.
 
