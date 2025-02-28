@@ -110,20 +110,25 @@ This repository is composed of several sub-packages, each handling different res
 
 ## Examples
 
-### Launching the Action Server
+### Launching the Examples
 
-- **Lite 6 manipulator example** 
-  with MoveItCPP:
+- **Lite 6 manipulator** 
+  with MoveItCPP and BehaviorTree.CPP:
   ```bash
   ros2 launch manymove_planner lite_micpp_fake_cpp_trees.launch.py
   ```
   
-  with MoveGroupInterface:
+  with MoveGroupInterface and BehaviorTree.CPP:
   ```bash
   ros2 launch manymove_planner lite_movegroup_fake_cpp_trees.launch.py
   ```
+  
+  with MoveGroupInterface and py_trees (minimal):
+  ```bash
+  ros2 launch manymove_planner lite_movegroup_fake_py_trees.launch.py
+  ```
 
-- **Dual robot (Lite 6 + UF850) example**  
+- **Dual robot (Lite 6 + UF850)**  
   ```bash
   ros2 launch manymove_planner dual_micpp_fake_cpp_trees.launch.py
   ```
@@ -139,9 +144,16 @@ This repository is composed of several sub-packages, each handling different res
      ros2 launch moveit2_tutorials demo.launch.py
      ```
   2. In terminal 2:
+    with MoveGroupInterface and BehaviorTree.CPP:
      ```bash
      ros2 launch manymove_planner panda_fake_cpp_trees.launch.py
      ```
+
+    with MoveGroupInterface and py_trees (minimal):
+     ```bash
+     ros2 launch manymove_planner panda_fake_py_trees.launch.py
+     ```
+- 
 
 These launch files spin up the appropriate environment (fake or real) plus the nodes that handle planning, object management, signals, and optional HMI components. You can then interact with these action servers and send them requests using the provided C++ or Python-based behavior tree clients.
 
