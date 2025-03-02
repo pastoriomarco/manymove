@@ -172,17 +172,17 @@ int main(int argc, char **argv)
      * Notice that on any string representing an XML snippet it's better to use _xml at the end of the name to give better
      * sense of what's in that variable.
      */
-    std::string to_rest_xml = buildParallelPlanExecuteXML(
-        robot_prefix, robot_prefix + "toRest", rest_position, blackboard, true);
+    std::string to_rest_xml = buildSequentialPlanExecuteXML(
+        robot_prefix, robot_prefix + "toRest", rest_position, blackboard);
 
-    std::string pick_object_xml = buildParallelPlanExecuteXML(
-        robot_prefix, robot_prefix + "pick", pick_sequence, blackboard, true);
+    std::string pick_object_xml = buildSequentialPlanExecuteXML(
+        robot_prefix, robot_prefix + "pick", pick_sequence, blackboard);
 
-    std::string drop_object_xml = buildParallelPlanExecuteXML(
-        robot_prefix, robot_prefix + "drop", drop_sequence, blackboard, true);
+    std::string drop_object_xml = buildSequentialPlanExecuteXML(
+        robot_prefix, robot_prefix + "drop", drop_sequence, blackboard);
 
-    std::string to_home_xml = buildParallelPlanExecuteXML(
-        robot_prefix, robot_prefix + "home", home_position, blackboard, true);
+    std::string to_home_xml = buildSequentialPlanExecuteXML(
+        robot_prefix, robot_prefix + "home", home_position, blackboard);
 
     /*
      * Combine the parallel move sequence blocks in logic sequences for the entire logic.

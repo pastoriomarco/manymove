@@ -14,8 +14,7 @@ namespace manymove_cpp_trees
     std::string buildParallelPlanExecuteXML(const std::string &robot_prefix,
                                             const std::string &node_prefix,
                                             const std::vector<Move> &moves,
-                                            BT::Blackboard::Ptr blackboard,
-                                            bool reset_trajs)
+                                            BT::Blackboard::Ptr blackboard)
     {
         std::ostringstream xml;
 
@@ -33,6 +32,8 @@ namespace manymove_cpp_trees
         // Execution Sequence
         std::ostringstream execution_seq;
         execution_seq << "    <Sequence name=\"ExecutionSequence_" << node_prefix << "_" << blockStartID << "\">\n";
+
+        bool first_move = true;
 
         for (const auto &move : moves)
         {
@@ -63,6 +64,7 @@ namespace manymove_cpp_trees
                                  << " robot_prefix=\"" << robot_prefix << "\""
                                  << " planned_move_id=\"{planned_move_id_" << this_move_id << "}\""
                                  << " trajectory=\"{trajectory_" << this_move_id << "}\""
+                                 << " sequential_from_previous=\"" << (first_move ? "false" : "true") << "\""
                                  << " planning_validity=\"{validity_" << this_move_id << "}\""
                                  << " pose_key=\"" << move.pose_key << "\""
                                  << "/>\n";
@@ -82,17 +84,28 @@ namespace manymove_cpp_trees
                           << " planned_move_id=\"{planned_move_id_" << this_move_id << "}\""
                           << " trajectory=\"{trajectory_" << this_move_id << "}\""
                           << " planning_validity=\"{validity_" << this_move_id << "}\""
+                          << " invalidate_traj_on_exec=\"true\" "
                           << " collision_detected=\"{" << robot_prefix << "collision_detected}\""
                           << " execution_resumed=\"{" << robot_prefix << "execution_resumed}\""
                           << "/>\n"
                           << "      <ForceFailure>"
-                          << partial_planning_seq.str()
+                          << "      <PlanningAction"
+                          << " name=\"PlanMove_" << this_move_id << "\""
+                          << " move_id=\"" << this_move_id << "\""
+                          << " robot_prefix=\"" << robot_prefix << "\""
+                          << " planned_move_id=\"{planned_move_id_" << this_move_id << "}\""
+                          << " trajectory=\"{trajectory_" << this_move_id << "}\""
+                          << " sequential_from_previous=\"false\""
+                          << " planning_validity=\"{validity_" << this_move_id << "}\""
+                          << " pose_key=\"" << move.pose_key << "\""
+                          << "/>\n"
                           << "      </ForceFailure>\n"
                           << "     </Fallback>"
                           << "    </RetryPauseAbortNode>\n";
 
             // increment the global ID for the next move
             g_global_move_id++;
+            first_move = false;
         }
 
         planning_seq << "    </Sequence>\n";
@@ -107,26 +120,103 @@ namespace manymove_cpp_trees
             << execution_seq.str()
             << "  </Parallel>\n";
 
-        if (reset_trajs)
-        { // ResetTrajectories node
-            std::ostringstream reset_node;
-            reset_node << "  <ResetTrajectories move_ids=\"";
-            for (size_t i = 0; i < move_ids.size(); i++)
-            {
-                reset_node << move_ids[i];
-                if (i != move_ids.size() - 1)
-                    reset_node << ",";
-            }
-            reset_node << "\"/>\n";
-
-            // Insert ResetTrajectories first
-            xml << reset_node.str();
+        // ResetTrajectories node
+        std::ostringstream reset_node;
+        reset_node << "  <ResetTrajectories move_ids=\"";
+        for (size_t i = 0; i < move_ids.size(); i++)
+        {
+            reset_node << move_ids[i];
+            if (i != move_ids.size() - 1)
+                reset_node << ",";
         }
+        reset_node << "\"/>\n";
+
+        // Insert ResetTrajectories first
+        xml << reset_node.str();
 
         // Insert Parallel nodes
         xml << parallel_node.str();
 
         return xml.str();
+    }
+
+    std::string buildSequentialPlanExecuteXML(const std::string &robot_prefix,
+                                              const std::string &node_prefix,
+                                              const std::vector<Move> &moves,
+                                              BT::Blackboard::Ptr blackboard,
+                                              bool reset_trajs)
+    {
+        std::ostringstream xml;
+
+        // The first ID used in this block
+        int blockStartID = g_global_move_id;
+
+        // Collect move_ids
+        std::vector<int> move_ids;
+        move_ids.reserve(moves.size());
+
+        // Execution Sequence with planning fallback
+        std::ostringstream execution_seq;
+        execution_seq << "    <Sequence name=\"ExecutionSequence_" << node_prefix << "_" << blockStartID << "\">\n";
+
+        for (const auto &move : moves)
+        {
+            int this_move_id = g_global_move_id; // unique ID for this move
+            move_ids.push_back(this_move_id);
+
+            // If it's non-empty but doesn't match, log or throw
+            if (move.robot_prefix != robot_prefix)
+            {
+                RCLCPP_ERROR(rclcpp::get_logger("bt_client_node"),
+                             "buildSequentialPlanExecuteXML: Move has prefix=%s, but user gave robot_prefix=%s: INVALID MOVE.",
+                             move.robot_prefix.c_str(), robot_prefix.c_str());
+                return "<INVALID TREE: YOU TRIED TO ASSIGN A MOVE TO CREATED WITH ANOTHER ROBOT PREFIX>";
+            }
+
+            // Populate the blackboard with the move
+            std::string key = "move_" + std::to_string(this_move_id);
+            blackboard->set(key, std::make_shared<Move>(move));
+            RCLCPP_INFO(rclcpp::get_logger("bt_client_node"),
+                        "BB set: %s", key.c_str());
+
+            // create the execution action, with a stop-safe retry mechanism and with the planning action as fallback
+            execution_seq << "    <RetryPauseAbortNode name=\"StopSafe_Retry_" << this_move_id << "\""
+                          << " collision_detected=\"{" << robot_prefix << "collision_detected}\""
+                          << " stop_execution=\"{" << robot_prefix << "stop_execution}\""
+                          << " abort_mission=\"{" << robot_prefix << "abort_mission}\">\n"
+                          << "     <Fallback>\n"
+                          << "      <ExecuteTrajectory"
+                          << " name=\"ExecMove_" << this_move_id << "\""
+                          << " robot_prefix=\"" << robot_prefix << "\""
+                          << " planned_move_id=\"{planned_move_id_" << this_move_id << "}\""
+                          << " trajectory=\"{trajectory_" << this_move_id << "}\""
+                          << " planning_validity=\"{validity_" << this_move_id << "}\""
+                          << " invalidate_traj_on_exec=\"" << (reset_trajs ? "true" : "false") << "\" "
+                          << " collision_detected=\"{" << robot_prefix << "collision_detected}\""
+                          << " execution_resumed=\"{" << robot_prefix << "execution_resumed}\""
+                          << "/>\n"
+                          << "      <ForceFailure>"
+                          << "      <PlanningAction"
+                          << " name=\"PlanMove_" << this_move_id << "\""
+                          << " move_id=\"" << this_move_id << "\""
+                          << " robot_prefix=\"" << robot_prefix << "\""
+                          << " planned_move_id=\"{planned_move_id_" << this_move_id << "}\""
+                          << " trajectory=\"{trajectory_" << this_move_id << "}\""
+                          << " sequential_from_previous=\"false\""
+                          << " planning_validity=\"{validity_" << this_move_id << "}\""
+                          << " pose_key=\"" << move.pose_key << "\""
+                          << "/>\n"
+                          << "      </ForceFailure>\n"
+                          << "     </Fallback>"
+                          << "    </RetryPauseAbortNode>\n";
+
+            // increment the global ID for the next move
+            g_global_move_id++;
+        }
+
+        execution_seq << "    </Sequence>\n";
+
+        return execution_seq.str();
     }
 
     std::string buildObjectActionXML(const std::string &node_prefix, const ObjectAction &action)
@@ -186,7 +276,7 @@ namespace manymove_cpp_trees
             // Link name and attach flag
             xml << "link_name=\"" << action.link_name << "\" ";
             xml << "attach=\"" << (action.attach ? "true" : "false") << "\" ";
-            
+
             // If touch_links is not empty, serialize it as a comma-separated list.
             if (!action.touch_links.empty())
             {

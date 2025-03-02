@@ -292,6 +292,39 @@ private:
                             return;
                         }
 
+                        std::vector<double> current_joint_state;
+                        {
+                            // Lock joint_states_mutex_ to safely read current_joint_positions_
+                            std::lock_guard<std::mutex> lock(joint_states_mutex_);
+                            // Extract joint values in the order of the trajectory's joint_names
+                            for (const auto &joint_name : traj.joint_trajectory.joint_names)
+                            {
+                                auto it = current_joint_positions_.find(joint_name);
+                                if (it != current_joint_positions_.end())
+                                {
+                                    current_joint_state.push_back(it->second);
+                                }
+                                else
+                                {
+                                    RCLCPP_ERROR(node_->get_logger(), "Current joint state for %s not found", joint_name.c_str());
+                                    result->success = false;
+                                    result->message = "Incomplete current joint state";
+                                    goal_handle->abort(result);
+                                    return;
+                                }
+                            }
+                        }
+
+                        double tolerance = 0.0035; // tolerance in radians
+                        if (!planner_->isTrajectoryStartValid(traj, current_joint_state, tolerance))
+                        {
+                            RCLCPP_ERROR(node_->get_logger(), "Trajectory start is not within tolerance of current joint state");
+                            result->success = false;
+                            result->message = "Trajectory start mismatch";
+                            goal_handle->abort(result);
+                            return;
+                        }
+
                         // Full trajectory state validity check BEFORE execution.
                         for (size_t i = 0; i < points.size(); ++i)
                         {
@@ -330,7 +363,7 @@ private:
                                 // publish feedback so the client knows we are aborting
                                 auto exec_feedback = std::make_shared<manymove_msgs::action::ExecuteTrajectory::Feedback>();
                                 exec_feedback->progress = -1.0f;
-                                exec_feedback->in_collision = true; 
+                                exec_feedback->in_collision = true;
                                 goal_handle->publish_feedback(exec_feedback);
 
                                 // Then simply return. Your result_callback will see "collision_detected=true" and abort.

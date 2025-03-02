@@ -105,7 +105,7 @@ int main(int argc, char **argv)
     approach_pick_target.position.z += 0.02;
 
     // Test poses to place the object, these are not overwritten later (for now)
-    Pose drop_target = createPose(0.2, 0.0, 0.15, 1.0, 0.0, 0.0, 0.0);
+    Pose drop_target = createPose(0.2, 0.0, 0.2, 1.0, 0.0, 0.0, 0.0);
     Pose approach_drop_target = drop_target;
     approach_drop_target.position.z += 0.02;
 
@@ -157,7 +157,7 @@ int main(int argc, char **argv)
     };
 
     /*
-     * Build parallel move sequence blocks
+     * Build move sequence blocks
      * The buildParallelPlanExecuteXML creates the xml tree branch that parallelizes completely the planning and
      * the execution of the sequence of moves. The moves will be planned in sequence until the last move is successfully
      * planned, and the trajectories will be stored in the blackboard and set as valid. The execution starts in parallel,
@@ -170,20 +170,23 @@ int main(int argc, char **argv)
      * Notice that on any string representing an XML snippet it's better to use _xml at the end of the name to give better
      * sense of what's in that variable.
      */
-    std::string to_rest_xml = buildParallelPlanExecuteXML(
+    std::string to_rest_xml = buildSequentialPlanExecuteXML(
+        robot_prefix, robot_prefix + "toRest", rest_position, blackboard);
+
+    std::string to_rest_reset_xml = buildSequentialPlanExecuteXML(
         robot_prefix, robot_prefix + "toRest", rest_position, blackboard, true);
 
-    std::string scan_around_xml = buildParallelPlanExecuteXML(
-        robot_prefix, robot_prefix + "scanAround", scan_surroundings, blackboard, true);
+    std::string scan_around_xml = buildSequentialPlanExecuteXML(
+        robot_prefix, robot_prefix + "scanAround", scan_surroundings, blackboard);
 
-    std::string pick_object_xml = buildParallelPlanExecuteXML(
-        robot_prefix, robot_prefix + "pick", pick_sequence, blackboard, true);
+    std::string pick_object_xml = buildSequentialPlanExecuteXML(
+        robot_prefix, robot_prefix + "pick", pick_sequence, blackboard);
 
-    std::string drop_object_xml = buildParallelPlanExecuteXML(
-        robot_prefix, robot_prefix + "drop", drop_sequence, blackboard, true);
+    std::string drop_object_xml = buildSequentialPlanExecuteXML(
+        robot_prefix, robot_prefix + "drop", drop_sequence, blackboard);
 
-    std::string to_home_xml = buildParallelPlanExecuteXML(
-        robot_prefix, robot_prefix + "home", home_position, blackboard, true);
+    std::string to_home_xml = buildSequentialPlanExecuteXML(
+        robot_prefix, robot_prefix + "home", home_position, blackboard);
 
     /*
      * Combine the parallel move sequence blocks in logic sequences for the entire logic.
@@ -201,7 +204,7 @@ int main(int argc, char **argv)
 
     // Translate it to xml tree leaf or branch
     std::string prep_sequence_xml = sequenceWrapperXML(
-        robot_prefix + "ComposedPrepSequence", {to_rest_xml, scan_around_xml});
+        robot_prefix + "ComposedPrepSequence", {to_rest_reset_xml, scan_around_xml});
     std::string pick_sequence_xml = sequenceWrapperXML(
         robot_prefix + "ComposedPickSequence", {pick_object_xml});
     std::string drop_sequence_xml = sequenceWrapperXML(

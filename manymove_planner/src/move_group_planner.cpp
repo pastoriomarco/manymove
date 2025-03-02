@@ -711,3 +711,34 @@ bool MoveGroupPlanner::isJointStateValid(const std::vector<double> &joint_positi
     // 4) Reuse your existing isStateValid
     return isStateValid(&temp_state, jmg);
 }
+
+bool MoveGroupPlanner::isTrajectoryStartValid(const moveit_msgs::msg::RobotTrajectory &traj,
+                                              const std::vector<double> &current_joint_state,
+                                              double tolerance) const
+{
+    if (traj.joint_trajectory.points.empty())
+    {
+        RCLCPP_ERROR(logger_, "Trajectory is empty. Cannot validate start.");
+        return false;
+    }
+
+    const auto &first_point = traj.joint_trajectory.points.front();
+    if (first_point.positions.size() != current_joint_state.size())
+    {
+        RCLCPP_ERROR(logger_, "Mismatch between trajectory joint positions (%zu) and current joint state (%zu).",
+                     first_point.positions.size(), current_joint_state.size());
+        return false;
+    }
+
+    // Check each joint's difference
+    for (size_t i = 0; i < first_point.positions.size(); ++i)
+    {
+        if (std::fabs(first_point.positions[i] - current_joint_state[i]) > tolerance)
+        {
+            RCLCPP_INFO(logger_, "Joint %zu difference (%.6f) exceeds tolerance (%.6f).",
+                         i, std::fabs(first_point.positions[i] - current_joint_state[i]), tolerance);
+            return false;
+        }
+    }
+    return true;
+}

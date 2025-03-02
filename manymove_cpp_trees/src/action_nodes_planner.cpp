@@ -97,8 +97,18 @@ namespace manymove_cpp_trees
         // **Begin: Set start_joint_values based on previous move**
         try
         {
+            bool sequential_from_previous;
+            if (!getInput<bool>("sequential_from_previous", sequential_from_previous))
+            {
+
+                RCLCPP_ERROR(node_->get_logger(),
+                             "PlanningAction [%s]: Key sequential_from_previous not found", name().c_str());
+
+                return BT::NodeStatus::FAILURE;
+            }
+
             int current_move_id_int = std::stoi(move_id_);
-            if (current_move_id_int > 0)
+            if (sequential_from_previous)
             {
                 int previous_move_id_int = current_move_id_int - 1;
 
@@ -426,8 +436,8 @@ namespace manymove_cpp_trees
     BT::NodeStatus ExecuteTrajectory::onRunning()
     {
 
-        // Check if execution_resumed is true getting the blackboard key value.
-        bool execution_resumed = false;
+        // Retrieve execution_resumed
+        bool execution_resumed;
         if (!getInput<bool>("execution_resumed", execution_resumed))
         {
             RCLCPP_ERROR(node_->get_logger(),
@@ -436,6 +446,27 @@ namespace manymove_cpp_trees
             return BT::NodeStatus::FAILURE;
         }
 
+        // Retrieve invalidate_traj_on_exec
+        bool invalidate_traj_on_exec;
+        if (!getInput<bool>("invalidate_traj_on_exec", invalidate_traj_on_exec))
+        {
+            RCLCPP_ERROR(node_->get_logger(),
+                         "StopMotionAction [%s]: missing InputPort [invalidate_traj_on_exec].",
+                         name().c_str());
+            return BT::NodeStatus::FAILURE;
+        }
+
+        // Retrieve robot_prefix
+        std::string robot_prefix_;
+        if (!getInput<std::string>("robot_prefix", robot_prefix_))
+        {
+            RCLCPP_ERROR(node_->get_logger(),
+                         "StopMotionAction [%s]: missing InputPort [robot_prefix].",
+                         name().c_str());
+            return BT::NodeStatus::FAILURE;
+        }
+
+        // Check if execution_resumed is true getting the blackboard key value.
         if (execution_resumed)
         {
             RCLCPP_DEBUG(node_->get_logger(),
@@ -449,26 +480,9 @@ namespace manymove_cpp_trees
                 action_client_->async_cancel_all_goals();
             }
 
-            // Optional: wait a fixed time (if desired, to check if needed)
-            // std::this_thread::sleep_for(std::chrono::milliseconds(500));
-
             // Invalidate the trajectory: set the planning validity key to false and clear the trajectory.
-            std::string validity_key = "validity_" + move_id_;
-            config().blackboard->set(validity_key, false);
-
-            std::string trajectory_key = "trajectory_" + move_id_;
-            moveit_msgs::msg::RobotTrajectory empty_traj;
-            config().blackboard->set(trajectory_key, empty_traj);
-
-            // Retrieve robot_prefix
-            std::string robot_prefix_;
-            if (!getInput<std::string>("robot_prefix", robot_prefix_))
-            {
-                RCLCPP_ERROR(node_->get_logger(),
-                             "StopMotionAction [%s]: missing InputPort [robot_prefix].",
-                             name().c_str());
-                return BT::NodeStatus::FAILURE;
-            }
+            setOutput("trajectory", moveit_msgs::msg::RobotTrajectory());
+            setOutput("planning_validity", false);
 
             // Clear the execution_resumed key so that it does not keep triggering.
             config().blackboard->set(robot_prefix_ + "execution_resumed", false);
@@ -484,6 +498,13 @@ namespace manymove_cpp_trees
         {
             if (!dataReady())
             {
+                if (!invalidate_traj_on_exec)
+                {
+                    // If we don't invalidate traj on exex, the data should always be ready but on the first move!
+                    // IF it's not, we need to plan a new traj, so we fail to pass the ball to the fallback planning node.
+                    return BT::NodeStatus::FAILURE;
+                }
+
                 auto elapsed = std::chrono::steady_clock::now() - wait_start_time_;
                 /// TODO: the planning should fail before this timeout, must check what actually happens if it doesn't
                 int max_time = 64;
@@ -512,9 +533,12 @@ namespace manymove_cpp_trees
 
         if (result_received_)
         {
-            // Invalidate the trajectory after execution, regardless of the result.
-            setOutput("trajectory", moveit_msgs::msg::RobotTrajectory());
-            setOutput("planning_validity", false);
+            if (invalidate_traj_on_exec)
+            {
+                // Invalidate the trajectory: set the planning validity key to false and clear the trajectory.
+                setOutput("trajectory", moveit_msgs::msg::RobotTrajectory());
+                setOutput("planning_validity", false);
+            }
 
             if (action_result_.success)
             {
@@ -528,6 +552,11 @@ namespace manymove_cpp_trees
                 RCLCPP_ERROR(node_->get_logger(),
                              "ExecuteTrajectory [%s]: Execution FAILED => FAILURE.",
                              name().c_str());
+
+                // Invalidate the trajectory after execution if it failed, regardless of the value of invalidate_traj_on_exec.
+                setOutput("trajectory", moveit_msgs::msg::RobotTrajectory());
+                setOutput("planning_validity", false);
+
                 return BT::NodeStatus::FAILURE;
             }
         }
@@ -553,14 +582,6 @@ namespace manymove_cpp_trees
         // Invalidate trajectory on halt
         setOutput("trajectory", moveit_msgs::msg::RobotTrajectory());
         setOutput("planning_validity", false);
-
-        // Reset blackboard on halt
-        std::string validity_key = "validity_" + move_id_;
-        config().blackboard->set(validity_key, false);
-
-        std::string trajectory_key = "trajectory_" + move_id_;
-        moveit_msgs::msg::RobotTrajectory empty_traj;
-        config().blackboard->set(trajectory_key, empty_traj);
 
         // *** Call STOP_MOTION server ***
         if (!stop_client_)
@@ -695,14 +716,14 @@ namespace manymove_cpp_trees
 
     void ExecuteTrajectory::resultCallback(const GoalHandleExecuteTrajectory::WrappedResult &wrapped_result)
     {
-        // **Begin: Update blackboard before returning**
-        std::string validity_key = "validity_" + move_id_;
-        config().blackboard->set(validity_key, false);
-
-        std::string trajectory_key = "trajectory_" + move_id_;
-        moveit_msgs::msg::RobotTrajectory empty_traj;
-        config().blackboard->set(trajectory_key, empty_traj);
-        // **End: Update blackboard before returning**
+        bool invalidate_traj_on_exec;
+        getInput<bool>("invalidate_traj_on_exec", invalidate_traj_on_exec);
+        if (invalidate_traj_on_exec)
+        {
+            // Invalidate the trajectory: set the planning validity key to false and clear the trajectory.
+            setOutput("trajectory", moveit_msgs::msg::RobotTrajectory());
+            setOutput("planning_validity", false);
+        }
 
         if (wrapped_result.code == rclcpp_action::ResultCode::SUCCEEDED)
         {
@@ -722,6 +743,10 @@ namespace manymove_cpp_trees
             fail.message = "Execution failed.";
             action_result_ = fail;
             result_received_ = true;
+
+            // Execution failed, invalidate the trajectory
+            setOutput("trajectory", moveit_msgs::msg::RobotTrajectory());
+            setOutput("planning_validity", false);
         }
     }
 

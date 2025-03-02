@@ -55,10 +55,7 @@ namespace manymove_cpp_trees
 
     /**
      * @brief Build a single parallel "plan + execute" block with unique naming
-     *        using a static global counter for each move.
-     *
-     * The signature is:
-     *  buildParallelPlanExecuteXML(node_prefix, moves, blackboard, [optional] reset_trajs)
+     *        using a static global counter for each move. Parallel version with traj reset
      *
      * Example output:
      *
@@ -74,6 +71,12 @@ namespace manymove_cpp_trees
      *    </Sequence>
      *    <Sequence name="ExecutionSequence_{node_prefix}_{blockStartID}">
      *      <ExecuteTrajectory name="ExecMove_{globalID}"
+     *         planned_move_id="{planned_move_id_{globalID}}"
+     *         trajectory="{trajectory_{globalID}}"
+     *         planning_validity="{validity_{globalID}}"/>
+     *      ...
+     *      <PlanningAction name="PlanMove_{globalID}" ...
+     *         move_id="{globalID}"
      *         planned_move_id="{planned_move_id_{globalID}}"
      *         trajectory="{trajectory_{globalID}}"
      *         planning_validity="{validity_{globalID}}"/>
@@ -96,14 +99,58 @@ namespace manymove_cpp_trees
      * @param moves       The vector of Move that we plan/execute in this parallel block
      * @param blackboard  The blackboard to populate with move IDs
      * @param robot_prefix A prefix for the robot's action servers
-     * @param reset_trajs This condition generates the ResetTrajectories leaf node to reset all the sequence's trajs before planning and executing
      * @return A string with the generated XML snippet
      */
     std::string buildParallelPlanExecuteXML(const std::string &robot_prefix,
                                             const std::string &node_prefix,
                                             const std::vector<Move> &moves,
-                                            BT::Blackboard::Ptr blackboard,
-                                            bool reset_trajs = true);
+                                            BT::Blackboard::Ptr blackboard);
+
+    /**
+     * @brief Build a single parallel "plan + execute" block with unique naming
+     *        using a static global counter for each move. Sequential version with memory
+     *
+     * Example output:
+     *
+     *  <Sequence name="SequentialPlanExecute_{node_prefix}_{blockStartID}">
+     *    <Fallback name="ExecutionSequence_{node_prefix}_{blockStartID}">
+     *      <ExecuteTrajectory name="ExecMove_{globalID}"
+     *         planned_move_id="{planned_move_id_{globalID}}"
+     *         trajectory="{trajectory_{globalID}}"
+     *         planning_validity="{validity_{globalID}}"/>
+     *      ...
+     *     <PlanningAction name="PlanMove_{globalID}" ...
+     *         move_id="{globalID}"
+     *         planned_move_id="{planned_move_id_{globalID}}"
+     *         trajectory="{trajectory_{globalID}}"
+     *         planning_validity="{validity_{globalID}}"/>
+     *      ...
+     *    </Fallback>
+     *  </Sequence>
+     *
+     * Each move in @p moves increments a global counter, thus guaranteeing each
+     * move_id, planned_move_id, validity_, trajectory_ are unique across the entire tree.
+     *
+     * This function also populates the blackboard with move IDs.
+     *
+     * WARNING:This function will require the output XML to be wrapped in a Control leaf node,
+     *  since ResetTrajectories is detached from its own ParallelPlanExecute leaf node. This is done inside this
+     *  function to allow grouping several ParallelPlanExecute in a single sequence to reduce tree's complexity. Moreover,
+     *  you can set @p reset_trajs to false to avoid generating ResetTrajectories if your control logic don't require it,
+     *  further simplifying the tree's structure.
+     *
+     * @param node_prefix A label for the parallel block (e.g., "preparatory" or "pickAndHoming")
+     * @param moves       The vector of Move that we plan/execute in this parallel block
+     * @param blackboard  The blackboard to populate with move IDs
+     * @param robot_prefix A prefix for the robot's action servers
+     * @param reset_trajs This condition generates the ResetTrajectories leaf node to reset all the sequence's trajs before planning and executing
+     * @return A string with the generated XML snippet
+     */
+    std::string buildSequentialPlanExecuteXML(const std::string &robot_prefix,
+                                              const std::string &node_prefix,
+                                              const std::vector<Move> &moves,
+                                              BT::Blackboard::Ptr blackboard,
+                                              bool reset_trajs = false);
 
     /**
      * @brief Builds an XML snippet for a single object action node based on the provided ObjectAction.

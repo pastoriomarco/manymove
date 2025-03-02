@@ -189,16 +189,16 @@ int main(int argc, char **argv)
     // build the xml snippets for the single moves of robot 1
     // or translate them directly if they are only used once
     std::string to_rest_1_xml = buildParallelPlanExecuteXML(
-        robot_prefix_1, robot_prefix_1 + "toRest", rest_position_1, blackboard, true);
+        robot_prefix_1, robot_prefix_1 + "toRest", rest_position_1, blackboard);
 
     std::string pick_object_1_xml = buildParallelPlanExecuteXML(
-        robot_prefix_1, robot_prefix_1 + "pick", pick_sequence_1, blackboard, true);
+        robot_prefix_1, robot_prefix_1 + "pick", pick_sequence_1, blackboard);
 
     std::string drop_object_1_xml = buildParallelPlanExecuteXML(
-        robot_prefix_1, robot_prefix_1 + "drop", drop_sequence_1, blackboard, true);
+        robot_prefix_1, robot_prefix_1 + "drop", drop_sequence_1, blackboard);
 
     std::string to_home_1_xml = buildParallelPlanExecuteXML(
-        robot_prefix_1, robot_prefix_1 + "home", home_position_1, blackboard, true);
+        robot_prefix_1, robot_prefix_1 + "home", home_position_1, blackboard);
 
     // Translate it to xml tree leaf or branch
     std::string prep_sequence_1_xml = sequenceWrapperXML(
@@ -212,16 +212,16 @@ int main(int argc, char **argv)
 
     // build the xml snippets for the single moves of robot 1
     std::string to_rest_2_xml = buildParallelPlanExecuteXML(
-        robot_prefix_2, robot_prefix_2 + "toRest", rest_position_2, blackboard, true);
+        robot_prefix_2, robot_prefix_2 + "toRest", rest_position_2, blackboard);
 
     std::string pick_object_2_xml = buildParallelPlanExecuteXML(
-        robot_prefix_2, robot_prefix_2 + "pick", pick_sequence_2, blackboard, true);
+        robot_prefix_2, robot_prefix_2 + "pick", pick_sequence_2, blackboard);
 
     std::string drop_object_2_xml = buildParallelPlanExecuteXML(
-        robot_prefix_2, robot_prefix_2 + "drop", drop_sequence_2, blackboard, true);
+        robot_prefix_2, robot_prefix_2 + "drop", drop_sequence_2, blackboard);
 
     std::string to_home_2_xml = buildParallelPlanExecuteXML(
-        robot_prefix_2, robot_prefix_2 + "home", home_position_2, blackboard, true);
+        robot_prefix_2, robot_prefix_2 + "home", home_position_2, blackboard);
 
     // Translate it to xml tree leaf or branch
     std::string prep_sequence_2_xml = sequenceWrapperXML(

@@ -94,6 +94,18 @@ public:
      */
     virtual bool isJointStateValid(const std::vector<double> &joint_positions) const = 0;
 
+    /**
+     * @brief Checks if the start of the trajectory (the first waypoint)
+     *        is within a specified tolerance of the given current joint state.
+     * @param traj The planned trajectory.
+     * @param current_joint_state A vector of doubles representing the current joint positions.
+     * @param tolerance The maximum allowed difference (in radians) for each joint.
+     * @return true if each joint position in the first waypoint is within tolerance, false otherwise.
+     */
+    virtual bool isTrajectoryStartValid(const moveit_msgs::msg::RobotTrajectory &traj,
+                                        const std::vector<double> &current_joint_state,
+                                        double tolerance) const = 0;
+
 protected:
     /**
      * @brief Protected constructor to prevent direct instantiation of the interface.

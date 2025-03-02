@@ -62,6 +62,7 @@ namespace manymove_cpp_trees
                 BT::InputPort<std::string>("move_id", "Unique identifier for the move"),
                 BT::InputPort<std::string>("pose_key", "Blackboard key to store the retrieved pose"),
                 BT::InputPort<std::string>("robot_prefix", "Optional robot namespace prefix, e.g. 'R_' or 'L_'."),
+                BT::InputPort<bool>("sequential_from_previous", "Flag to indicate if the move is sequential from the previous one"),
                 BT::OutputPort<moveit_msgs::msg::RobotTrajectory>("trajectory", "Planned trajectory"),
                 BT::OutputPort<std::string>("planned_move_id", "Echoes move_id for validation"),
                 BT::OutputPort<bool>("planning_validity", "Indicates if planning was successful"),
@@ -127,6 +128,7 @@ namespace manymove_cpp_trees
                 BT::InputPort<std::string>("planned_move_id", "Echoes move_id for validation"),
                 BT::InputPort<std::string>("robot_prefix", "Optional robot namespace prefix, e.g. 'R_' or 'L_'."),
                 BT::InputPort<bool>("planning_validity", "Indicates if planning was successful"),
+                BT::InputPort<bool>("invalidate_traj_on_exec", "Flag to indicate if the trajectory should be invalidated on exec even if successful"),
                 BT::InputPort<bool>("collision_detected", "If a collision is detected, the execution fails"),
                 BT::InputPort<bool>("execution_resumed", "Signals if the execution have been resumed"),
             };
