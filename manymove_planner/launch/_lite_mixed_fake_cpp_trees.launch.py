@@ -1,9 +1,6 @@
 # Other files to modify:
-# moveit_cpp.yaml: comment <publish_planning_scene_topic: "/planning_scene">
-# ^ To create a moveit_cpp_movegroup.yaml that has the publish_planning_scene_topic parameter removed/commented
 # moveit_cpp_planner.cpp: comment <moveit_cpp_ptr_->getPlanningSceneMonitor()->providePlanningSceneService();> 
 # ^ To add a launch parameter to moveit_cpp_planner.cpp to select if it has to provide planning scene service or not.
-
 
 import os
 # import yaml
