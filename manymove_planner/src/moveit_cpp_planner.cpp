@@ -895,17 +895,14 @@ bool MoveItCppPlanner::sendControlledStop(double deceleration_time)
     std::vector<double> positions;
     current_state->copyJointGroupPositions(joint_model_group, positions);
 
-    // If we can’t read actual velocities, just assume 0
-    std::vector<double> velocities(positions.size(), 0.0);
-
     // 3) Build a SINGLE-point trajectory
     control_msgs::action::FollowJointTrajectory::Goal stop_goal;
     stop_goal.trajectory.joint_names = joint_names;
 
-    // Only Point: current position, zero velocity
-    // time_from_start can be 0.0 if your controller is okay with that,
-    // or something small like 0.1. Right now it is left to the user to
-    // decide, but the default is 0.25
+    // We set velocities to zero
+    std::vector<double> velocities(positions.size(), 0.0);
+
+    // Only Point: current position, zero velocity: it will "spring-back" to the position it was when the command is issued.
     trajectory_msgs::msg::JointTrajectoryPoint p0;
     p0.positions = positions;
     p0.velocities = velocities;

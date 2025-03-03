@@ -530,16 +530,14 @@ bool MoveGroupPlanner::sendControlledStop(double deceleration_time)
         return false;
     }
 
-    // (Optional) Current joint velocities are not directly accessible.
-    // We'll assume zero velocities for safety.
-    std::vector<double> velocities(positions.size(), 0.0);
-
-    // 3) Build a single-point trajectory
-    //    We'll place the time_from_start at `deceleration_time` so the controller
-    //    sees a short time window in which to decelerate.
+    // Only Point: current position, zero velocity: it will "spring-back" to the position it was when the command is issued.
     control_msgs::action::FollowJointTrajectory::Goal stop_goal;
     stop_goal.trajectory.joint_names = move_group_interface_->getJointNames();
 
+    // We set velocities to zero
+    std::vector<double> velocities(positions.size(), 0.0);
+
+    // 3) Build a SINGLE-point trajectory
     trajectory_msgs::msg::JointTrajectoryPoint stop_point;
     stop_point.positions = positions;
     stop_point.velocities = velocities; // Assume 0 if not available
