@@ -383,50 +383,48 @@ std::pair<bool, moveit_msgs::msg::RobotTrajectory> MoveGroupPlanner::plan(const 
 
 bool MoveGroupPlanner::executeTrajectory(const moveit_msgs::msg::RobotTrajectory &trajectory)
 {
-    // 1) Basic checks
+    // (1) Basic checks
     if (trajectory.joint_trajectory.points.empty())
     {
         RCLCPP_ERROR(logger_, "Received an empty trajectory. Execution aborted.");
         return false;
     }
-
     if (!follow_joint_traj_client_)
     {
         RCLCPP_ERROR(logger_, "FollowJointTrajectory action client not initialized!");
         return false;
     }
 
-    // 2) Wait for the action server (optional if you've done it earlier)
+    // (2) Wait for the action server
     if (!follow_joint_traj_client_->wait_for_action_server(std::chrono::seconds(5)))
     {
         RCLCPP_ERROR(logger_, "FollowJointTrajectory action server not available after waiting.");
         return false;
     }
 
-    // 3) Construct the FollowJointTrajectory goal
+    // (3) Create the goal
     control_msgs::action::FollowJointTrajectory::Goal goal_msg;
     goal_msg.trajectory = trajectory.joint_trajectory;
 
     RCLCPP_INFO(logger_, "Sending FollowJointTrajectory goal (MoveGroupPlanner) ...");
 
-    // 4) Make a shared promise to communicate success/failure
+    // (4) Prepare the promise/future to track success or failure
     auto result_promise = std::make_shared<std::promise<bool>>();
     std::future<bool> result_future = result_promise->get_future();
 
-    // 5) Setup send_goal_options with result callback (and optional feedback)
+    // (5) Define SendGoalOptions with optional feedback and result callbacks
     rclcpp_action::Client<control_msgs::action::FollowJointTrajectory>::SendGoalOptions options;
 
-    // (a) Optional feedback callback
+    // (a) feedback callback
     options.feedback_callback =
         [this](auto /*unused_goal_handle*/,
                const std::shared_ptr<const control_msgs::action::FollowJointTrajectory::Feedback> feedback)
     {
-        // You can log partial progress or time
         RCLCPP_DEBUG(logger_, "Partial execution, time_from_start: %.2f",
                      rclcpp::Duration(feedback->actual.time_from_start).seconds());
     };
 
-    // (b) Result callback: set the promise
+    // (b) Result callback
     options.result_callback =
         [this, result_promise](const auto &wrapped_result)
     {
@@ -450,19 +448,19 @@ bool MoveGroupPlanner::executeTrajectory(const moveit_msgs::msg::RobotTrajectory
             success = false;
             break;
         }
-        // fulfill the promise with success/failure
         result_promise->set_value(success);
     };
 
-    // 6) Send the goal asynchronously
+    // (6) Send the goal asynchronously
     auto goal_handle_future = follow_joint_traj_client_->async_send_goal(goal_msg, options);
 
-    // 7) Wait for the goal handle
+    // (7) Wait for the goal handle
     if (goal_handle_future.wait_for(std::chrono::seconds(5)) != std::future_status::ready)
     {
         RCLCPP_ERROR(logger_, "Failed to get goal handle from FollowJointTrajectory within 5 seconds.");
         return false;
     }
+
     auto goal_handle = goal_handle_future.get();
     if (!goal_handle)
     {
@@ -470,10 +468,8 @@ bool MoveGroupPlanner::executeTrajectory(const moveit_msgs::msg::RobotTrajectory
         return false;
     }
 
-    // 8) Wait for the result asynchronously with the promise (non-spinning)
+    // (8) Wait for the result
     RCLCPP_INFO(logger_, "Waiting for FollowJointTrajectory result (MoveGroupPlanner) ...");
-
-    // We'll allow up to 300s for the motion to complete. Adjust to your needs.
     auto status = result_future.wait_for(std::chrono::seconds(300));
     if (status != std::future_status::ready)
     {
@@ -734,7 +730,7 @@ bool MoveGroupPlanner::isTrajectoryStartValid(const moveit_msgs::msg::RobotTraje
         if (std::fabs(first_point.positions[i] - current_joint_state[i]) > tolerance)
         {
             RCLCPP_INFO(logger_, "Joint %zu difference (%.6f) exceeds tolerance (%.6f).",
-                         i, std::fabs(first_point.positions[i] - current_joint_state[i]), tolerance);
+                        i, std::fabs(first_point.positions[i] - current_joint_state[i]), tolerance);
             return false;
         }
     }

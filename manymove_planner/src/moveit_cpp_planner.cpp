@@ -701,7 +701,7 @@ std::pair<bool, moveit_msgs::msg::RobotTrajectory> MoveItCppPlanner::applyTimePa
 
 bool MoveItCppPlanner::executeTrajectory(const moveit_msgs::msg::RobotTrajectory &trajectory)
 {
-    // 1) Basic checks
+    // (1) Basic checks
     if (trajectory.joint_trajectory.points.empty())
     {
         RCLCPP_ERROR(logger_, "Empty trajectory, aborting (MoveItCppPlanner).");
@@ -714,29 +714,30 @@ bool MoveItCppPlanner::executeTrajectory(const moveit_msgs::msg::RobotTrajectory
         return false;
     }
 
-    // 2) Optionally wait for server
+    // (2) Wait for the action server
     if (!follow_joint_traj_client_->wait_for_action_server(std::chrono::seconds(5)))
     {
         RCLCPP_ERROR(logger_, "FollowJointTrajectory server not available (MoveItCppPlanner).");
         return false;
     }
 
-    // 3) Create goal
+    // (3) Create the goal
     control_msgs::action::FollowJointTrajectory::Goal goal_msg;
     goal_msg.trajectory = trajectory.joint_trajectory;
 
     RCLCPP_INFO(logger_, "Sending FollowJointTrajectory goal (MoveItCppPlanner) ...");
 
-    // 4) Prepare promise/future
+    // (4) Prepare the promise/future to track success or failure
     auto result_promise = std::make_shared<std::promise<bool>>();
     std::future<bool> result_future = result_promise->get_future();
 
-    // 5) SendGoalOptions
+    // (5) Define SendGoalOptions with optional feedback and result callbacks
     rclcpp_action::Client<control_msgs::action::FollowJointTrajectory>::SendGoalOptions options;
 
-    // (a) Optional feedback
+    // (a) feedback callback
     options.feedback_callback =
-        [this](auto, auto feedback)
+        [this](auto /*unused_goal_handle*/,
+               const std::shared_ptr<const control_msgs::action::FollowJointTrajectory::Feedback> feedback)
     {
         RCLCPP_DEBUG(logger_, "Partial execution (MoveItCppPlanner): time_from_start %.2f",
                      rclcpp::Duration(feedback->actual.time_from_start).seconds());
@@ -769,10 +770,10 @@ bool MoveItCppPlanner::executeTrajectory(const moveit_msgs::msg::RobotTrajectory
         result_promise->set_value(success);
     };
 
-    // 6) Send the goal
+    // (6) Send the goal asynchronously
     auto goal_handle_future = follow_joint_traj_client_->async_send_goal(goal_msg, options);
 
-    // 7) Wait for the goal handle
+    // (7) Wait for the goal handle
     if (goal_handle_future.wait_for(std::chrono::seconds(5)) != std::future_status::ready)
     {
         RCLCPP_ERROR(logger_, "Goal handle not received in time (MoveItCppPlanner).");
@@ -786,7 +787,7 @@ bool MoveItCppPlanner::executeTrajectory(const moveit_msgs::msg::RobotTrajectory
         return false;
     }
 
-    // 8) Wait for result via future
+    // (8) Wait for the result
     RCLCPP_INFO(logger_, "Waiting for FollowJointTrajectory result (MoveItCppPlanner) ...");
     auto status = result_future.wait_for(std::chrono::seconds(300));
     if (status != std::future_status::ready)
@@ -931,7 +932,7 @@ bool MoveItCppPlanner::sendControlledStop(double deceleration_time)
         return false;
     }
 
-    // Wait for the result (optional)
+    // Wait for the result
     auto result_future = follow_joint_traj_client_->async_get_result(goal_handle);
     if (result_future.wait_for(std::chrono::seconds(10)) != std::future_status::ready)
     {
@@ -1031,7 +1032,7 @@ bool MoveItCppPlanner::isTrajectoryStartValid(const moveit_msgs::msg::RobotTraje
         if (std::fabs(first_point.positions[i] - current_joint_state[i]) > tolerance)
         {
             RCLCPP_INFO(logger_, "Joint %zu difference (%.6f) exceeds tolerance (%.6f).",
-                         i, std::fabs(first_point.positions[i] - current_joint_state[i]), tolerance);
+                        i, std::fabs(first_point.positions[i] - current_joint_state[i]), tolerance);
             return false;
         }
     }
