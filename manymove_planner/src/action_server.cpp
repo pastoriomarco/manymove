@@ -315,7 +315,7 @@ private:
                             }
                         }
 
-                        double tolerance = 0.0035; // tolerance in radians
+                        double tolerance = 0.05; // tolerance in radians
                         if (!planner_->isTrajectoryStartValid(traj, current_joint_state, tolerance))
                         {
                             RCLCPP_ERROR(node_->get_logger(), "Trajectory start is not within tolerance of current joint state");

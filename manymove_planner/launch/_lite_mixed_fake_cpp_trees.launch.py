@@ -1,6 +1,6 @@
 # Other files to modify:
 # moveit_cpp_planner.cpp: comment <moveit_cpp_ptr_->getPlanningSceneMonitor()->providePlanningSceneService();> 
-# ^ To add a launch parameter to moveit_cpp_planner.cpp to select if it has to provide planning scene service or not.
+# ^ TODO: add a launch parameter to moveit_cpp_planner.cpp to select if it has to provide planning scene service or not.
 
 import os
 # import yaml

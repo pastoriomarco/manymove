@@ -50,7 +50,7 @@ namespace manymove_cpp_trees
 
         MovementConfig max_move_config;
         max_move_config.velocity_scaling_factor = 1.0;
-        max_move_config.acceleration_scaling_factor = 1.0;
+        max_move_config.acceleration_scaling_factor = 0.75;
         max_move_config.step_size = 0.005;
         max_move_config.jump_threshold = 0.0;
         max_move_config.max_cartesian_speed = 0.5;
@@ -71,14 +71,21 @@ namespace manymove_cpp_trees
         slow_move_config.max_cartesian_speed = 0.05;
 
         // Cartesian path shouldn't need more than one plan to reach optimal traj, since it's a straight line.
+        MovementConfig cartesian_max_move_config = max_move_config;
+        cartesian_max_move_config.plan_number_target = 1;
+
+        MovementConfig cartesian_mid_move_config = mid_move_config;
+        cartesian_mid_move_config.plan_number_target = 1;
+
         MovementConfig cartesian_slow_move_config = slow_move_config;
-        cartesian_slow_move_config.step_size = 0.001;
-        cartesian_slow_move_config.plan_number_target = 4;
+        cartesian_slow_move_config.plan_number_target = 1;
 
         return {
             {"max_move", max_move_config},
             {"mid_move", mid_move_config},
             {"slow_move", slow_move_config},
+            {"cartesian_max_move", cartesian_max_move_config},
+            {"cartesian_mid_move", cartesian_mid_move_config},
             {"cartesian_slow_move", cartesian_slow_move_config}};
     }
 

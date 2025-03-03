@@ -142,17 +142,17 @@ int main(int argc, char **argv)
     // Sequences for Pick/Drop/Homing
     std::vector<Move> pick_sequence = {
         {robot_prefix, "pose", "approach_pick_target", {}, "", move_configs["mid_move"]},
-        {robot_prefix, "cartesian", "pick_target", {}, "", move_configs["slow_move"]},
+        {robot_prefix, "cartesian", "pick_target", {}, "", move_configs["cartesian_slow_move"]},
     };
 
     std::vector<Move> drop_sequence = {
-        {robot_prefix, "pose", "approach_pick_target", {}, "", move_configs["mid_move"]},
+        {robot_prefix, "cartesian", "approach_pick_target", {}, "", move_configs["cartesian_mid_move"]},
         {robot_prefix, "pose", "approach_drop_target", {}, "", move_configs["max_move"]},
-        {robot_prefix, "cartesian", "drop_target", {}, "", move_configs["slow_move"]},
+        {robot_prefix, "cartesian", "drop_target", {}, "", move_configs["cartesian_slow_move"]},
     };
 
     std::vector<Move> home_position = {
-        {robot_prefix, "cartesian", "approach_drop_target", {}, "", move_configs["max_move"]},
+        {robot_prefix, "cartesian", "approach_drop_target", {}, "", move_configs["cartesian_mid_move"]},
         {robot_prefix, "named", "", {}, named_home, move_configs["max_move"]},
     };
 
@@ -170,11 +170,11 @@ int main(int argc, char **argv)
      * Notice that on any string representing an XML snippet it's better to use _xml at the end of the name to give better
      * sense of what's in that variable.
      */
+    std::string to_rest_reset_xml = buildSequentialPlanExecuteXML(
+        robot_prefix, robot_prefix + "toRest", rest_position, blackboard, true); // this will run only on prep sequence, so we reset it afterwards
+
     std::string to_rest_xml = buildSequentialPlanExecuteXML(
         robot_prefix, robot_prefix + "toRest", rest_position, blackboard);
-
-    std::string to_rest_reset_xml = buildSequentialPlanExecuteXML(
-        robot_prefix, robot_prefix + "toRest", rest_position, blackboard, true);
 
     std::string scan_around_xml = buildSequentialPlanExecuteXML(
         robot_prefix, robot_prefix + "scanAround", scan_surroundings, blackboard);
