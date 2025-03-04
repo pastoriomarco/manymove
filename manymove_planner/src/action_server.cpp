@@ -407,8 +407,10 @@ private:
                             last_idx = closest_idx;
 
                             // 3) Decide how far forward you want to collision-check.
-                            //    For instance, we can check only the next 10 points to reduce CPU usage:
-                            size_t check_limit = std::min(closest_idx + 10, points.size() - 1);
+                            // Checking to the end of the traj:
+                            size_t check_limit = points.size() - 1;
+                            // As an alternative, we can check only the next 10 points to reduce CPU usage:
+                            // size_t check_limit = std::min(closest_idx + 10, points.size() - 1);
 
                             // 4) Check collisions in the next few waypoints
                             for (size_t i = closest_idx + 1; i <= check_limit; ++i)
@@ -422,7 +424,7 @@ private:
                                 }
                             }
 
-                            // 5) Publish *your* action feedback
+                            // 5) Publish action feedback
                             auto exec_feedback =
                                 std::make_shared<manymove_msgs::action::ExecuteTrajectory::Feedback>();
                             // We no longer rely on controller time, so we can store e.g. the index or distance

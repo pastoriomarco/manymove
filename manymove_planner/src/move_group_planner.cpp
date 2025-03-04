@@ -562,7 +562,7 @@ bool MoveGroupPlanner::sendControlledStop(double deceleration_time)
         return false;
     }
 
-    // 5) Optionally wait for result to confirm execution
+    // 5) Wait for result to confirm execution
     auto result_future = follow_joint_traj_client_->async_get_result(goal_handle);
     if (result_future.wait_for(std::chrono::seconds(10)) != std::future_status::ready)
     {
@@ -593,15 +593,15 @@ bool MoveGroupPlanner::isStateValid(const moveit::core::RobotState *state,
 {
     if (!planning_scene_monitor_)
     {
-        RCLCPP_ERROR(logger_, "PlanningSceneMonitor is null in isStateValid()");
-        return true; // fallback: allow
+        RCLCPP_ERROR(logger_, "PlanningSceneMonitor is null. Cannot perform collision checking.");
+        return false;
     }
 
     planning_scene_monitor::LockedPlanningSceneRO locked_scene(planning_scene_monitor_);
     if (!locked_scene)
     {
-        RCLCPP_ERROR(logger_, "Failed to lock the PlanningScene. isStateValid returns true.");
-        return true; // fallback
+        RCLCPP_ERROR(logger_, "LockedPlanningSceneRO is null. Cannot perform collision checking.");
+        return false;
     }
 
     moveit::core::RobotState temp_state(*state);
