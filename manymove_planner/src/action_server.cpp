@@ -231,7 +231,7 @@ private:
             return;
         }
 
-        // 2) Call the new applyTimeParameterization
+        // 2) Call the applyTimeParameterization
         auto [param_ok, timed_trajectory] =
             planner_->applyTimeParameterization(trajectory, goal_msg->goal.config);
         if (!param_ok)

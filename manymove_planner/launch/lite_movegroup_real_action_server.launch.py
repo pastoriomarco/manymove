@@ -1,27 +1,22 @@
-# Other files to modify:
-# moveit_cpp_planner.cpp: comment/remove <moveit_cpp_ptr_->getPlanningSceneMonitor()->providePlanningSceneService();> 
-# ^ TODO: add a launch parameter to moveit_cpp_planner.cpp to select if it has to provide planning scene service or not.
-
 import os
 import yaml
 from ament_index_python import get_package_share_directory
 from launch import LaunchDescription
-from launch.actions import OpaqueFunction, DeclareLaunchArgument #, IncludeLaunchDescription
-# from launch.launch_description_sources import PythonLaunchDescriptionSource
-from launch.substitutions import LaunchConfiguration #, PathJoinSubstitution
-from launch.launch_description_sources import load_python_launch_file_as_module
-# from launch_ros.substitutions import FindPackageShare
+from launch.actions import OpaqueFunction, IncludeLaunchDescription, DeclareLaunchArgument
+from launch.launch_description_sources import PythonLaunchDescriptionSource
+from launch.substitutions import LaunchConfiguration, PathJoinSubstitution
+from launch_ros.substitutions import FindPackageShare
 from launch_ros.actions import Node
 from uf_ros_lib.moveit_configs_builder import MoveItConfigsBuilder
 from uf_ros_lib.uf_robot_utils import generate_ros2_control_params_temp_file
 
-def load_yaml(package_name, file_path):
-    full_path = os.path.join(get_package_share_directory(package_name), file_path)
-    with open(full_path, 'r') as f:
-        return yaml.safe_load(f)
-
 
 def launch_setup(context, *args, **kwargs):
+    robot_ip = LaunchConfiguration('robot_ip', default='192.168.1.30')
+    report_type = LaunchConfiguration('report_type', default='rich')
+    baud_checkset = LaunchConfiguration('baud_checkset', default=True)
+    default_gripper_baud = LaunchConfiguration('default_gripper_baud', default=2000000)
+    
     dof = LaunchConfiguration('dof', default=6)
     robot_type = LaunchConfiguration('robot_type', default='lite')
     prefix = LaunchConfiguration('prefix', default='')
@@ -57,6 +52,7 @@ def launch_setup(context, *args, **kwargs):
 
     # no_gui_ctrl = LaunchConfiguration('no_gui_ctrl', default=False)
     ros_namespace = LaunchConfiguration('ros_namespace', default='').perform(context)
+    use_sim_time = LaunchConfiguration('use_sim_time', default=False)
 
     velocity_scaling_factor = LaunchConfiguration('velocity_scaling_factor')
     acceleration_scaling_factor = LaunchConfiguration('acceleration_scaling_factor')
@@ -71,8 +67,14 @@ def launch_setup(context, *args, **kwargs):
     base_frame = LaunchConfiguration('base_frame')
     tcp_frame = LaunchConfiguration('tcp_frame')
 
-    xarm_type = '{}{}'.format(robot_type.perform(context), dof.perform(context) if robot_type.perform(context) in ('xarm', 'lite') else '')
+    # ========================================================================
+    # Contents from xarm_moveit_config/launch/_robot_moveit_realmove.launch.py
+    # ========================================================================
 
+    ros2_control_plugin = 'uf_robot_hardware/UFRobotSystemHardware'
+    controllers_name = 'controllers'
+    xarm_type = '{}{}'.format(robot_type.perform(context), dof.perform(context) if robot_type.perform(context) in ('xarm', 'lite') else '')
+    
     ros2_control_params = generate_ros2_control_params_temp_file(
         os.path.join(get_package_share_directory('xarm_controller'), 'config', '{}_controllers.yaml'.format(xarm_type)),
         prefix=prefix.perform(context), 
@@ -82,21 +84,26 @@ def launch_setup(context, *args, **kwargs):
         robot_type=robot_type.perform(context)
     )
 
-    # from xarm_controller _ros2_control.launch.py
-    mod = load_python_launch_file_as_module(os.path.join(get_package_share_directory('xarm_api'), 'launch', 'lib', 'robot_api_lib.py'))
-    generate_robot_api_params = getattr(mod, 'generate_robot_api_params')
-    robot_params = generate_robot_api_params(
-        os.path.join(get_package_share_directory('xarm_api'), 'config', 'xarm_params.yaml'),
-        os.path.join(get_package_share_directory('xarm_api'), 'config', 'xarm_user_params.yaml'),
-        LaunchConfiguration('ros_namespace', default='').perform(context), node_name='ufactory_driver'
-    )
+    # ========================================================================
+    # WARNING: MODIFIED!!!
 
+    # Grouped MoveItConfigsBuilder to apply the following to enable moveitcpp parameters:
+
+    # .planning_scene_monitor(publish_robot_description=True, publish_robot_description_semantic=True)
+    # .planning_pipelines(pipelines=["ompl"])
+    # .moveit_cpp(file_path=get_package_share_directory("manymove_planner") + "/config/moveit_cpp_real_ufactory.yaml")
+
+    # ========================================================================
 
     # Initialize MoveIt Configurations
     moveit_configs = (
         MoveItConfigsBuilder(
             context=context,
-            controllers_name = 'fake_controllers',
+            controllers_name=controllers_name,
+            robot_ip=robot_ip,
+            report_type=report_type,
+            baud_checkset=baud_checkset,
+            default_gripper_baud=default_gripper_baud,
             dof=dof,
             robot_type=robot_type,
             prefix=prefix,
@@ -111,7 +118,7 @@ def launch_setup(context, *args, **kwargs):
             attach_rpy=attach_rpy,
             mesh_suffix=mesh_suffix,
             kinematics_suffix=kinematics_suffix,
-            ros2_control_plugin = 'uf_robot_hardware/UFRobotFakeSystemHardware',
+            ros2_control_plugin=ros2_control_plugin,
             ros2_control_params=ros2_control_params,
             add_gripper=add_gripper,
             add_vacuum_gripper=add_vacuum_gripper,
@@ -133,7 +140,7 @@ def launch_setup(context, *args, **kwargs):
         ).robot_description()
         .planning_scene_monitor(publish_robot_description=True, publish_robot_description_semantic=True)
         .planning_pipelines(pipelines=["ompl"])
-        # .moveit_cpp(file_path=get_package_share_directory("manymove_planner") + "/config/moveit_cpp.yaml") # we load it later with the helper function
+        # .moveit_cpp(file_path=get_package_share_directory("manymove_planner") + "/config/moveit_cpp.yaml")
     ).to_moveit_configs()
 
     # ================================================================
@@ -157,8 +164,6 @@ def launch_setup(context, *args, **kwargs):
     # from: xarm_moveit_config/launch/_robot_moveit_common2.launch.py
     # ================================================================
 
-    use_sim_time = LaunchConfiguration('use_sim_time', default=False)
-
     # Start the actual move_group node/action server
     move_group_node = Node(
         package='moveit_ros_move_group',
@@ -170,13 +175,6 @@ def launch_setup(context, *args, **kwargs):
         ],
     )
 
-    # Load moveitcpp params in a separate dict so it can be loaded in action_server_node only:
-    moveit_cpp_dict = load_yaml("manymove_planner", "config/moveit_cpp.yaml")
-
-    # The real robots may need two different sets of params, whe can load them separately:
-    moveit_cpp_left = load_yaml("manymove_planner", "config/moveit_cpp_real_L_ufactory.yaml")
-    moveit_cpp_right = load_yaml("manymove_planner", "config/moveit_cpp_real_R_ufactory.yaml")
-
     # Define the action_server_node with new parameters
     action_server_node = Node(
         package='manymove_planner',
@@ -185,10 +183,9 @@ def launch_setup(context, *args, **kwargs):
         output='screen',
         parameters=[
             moveit_configs.to_dict(),
-            moveit_cpp_dict,
             {
                 'node_prefix': prefix.perform(context),
-                'planner_type': 'moveitcpp',
+                'planner_type': 'movegroup',
                 'velocity_scaling_factor': velocity_scaling_factor,
                 'acceleration_scaling_factor': acceleration_scaling_factor,
                 'max_exec_retries': max_exec_retries,
@@ -241,51 +238,48 @@ def launch_setup(context, *args, **kwargs):
         parameters=[{'use_sim_time': use_sim_time}],
     )
 
-    ros2_control_node = Node(
-        package='controller_manager',
-        executable='ros2_control_node',
-        parameters=[
-            moveit_configs.robot_description,
-            ros2_control_params,
-            robot_params,
-        ],
+     # ========================================================================
+    # Contents from xarm_moveit_config/launch/_robot_moveit_realmove.launch.py
+    # ========================================================================
+
+    # joint state publisher node
+    joint_state_publisher_node = Node(
+        package='joint_state_publisher',
+        executable='joint_state_publisher',
+        name='joint_state_publisher',
         output='screen',
+        parameters=[{'source_list': ['{}{}/joint_states'.format(prefix.perform(context), hw_ns.perform(context))]}],
+        remappings=[
+            ('follow_joint_trajectory', '{}{}_traj_controller/follow_joint_trajectory'.format(prefix.perform(context), xarm_type)),
+        ],
     )
 
-    controllers = ['{}{}_traj_controller'.format(prefix.perform(context), xarm_type)]
-    if add_gripper.perform(context) in ('True', 'true') and robot_type.perform(context) != 'lite':
-        controllers.append('{}{}_gripper_traj_controller'.format(prefix.perform(context), robot_type.perform(context)))
-    elif add_bio_gripper.perform(context) in ('True', 'true') and robot_type.perform(context) != 'lite':
-        controllers.append('{}bio_gripper_traj_controller'.format(prefix.perform(context)))
-    
-    joint_state_broadcaster = Node(
+    # ros2 control launch
+    # xarm_controller/launch/_ros2_control.launch.py
+    ros2_control_launch = IncludeLaunchDescription(
+        PythonLaunchDescriptionSource(PathJoinSubstitution([FindPackageShare('xarm_controller'), 'launch', '_ros2_control.launch.py'])),
+        launch_arguments={
+            'robot_description': yaml.dump(moveit_configs.robot_description),
+            'ros2_control_params': ros2_control_params,
+        }.items(),
+    )
+
+    control_node = Node(
         package='controller_manager',
         executable='spawner',
         output='screen',
         arguments=[
-            'joint_state_broadcaster',
-            '--controller-manager', '/controller_manager'
+            '{}{}_traj_controller'.format(prefix.perform(context), xarm_type),
+            '--controller-manager', '{}/controller_manager'.format(ros_namespace)
         ],
     )
-
-    controller_nodes = []
-    for controller in controllers:
-        controller_nodes.append(Node(
-            package='controller_manager',
-            executable='spawner',
-            output='screen',
-            arguments=[
-                controller,
-                '--controller-manager', '/controller_manager'
-            ],
-        ))
 
     # ================================================================
     # launch manymove_object_manager
     # ================================================================
 
     # Object Manager node
-    object_manager_node = Node(
+    manymove_object_manager_node = Node(
         package='manymove_object_manager',
         executable='object_manager_node',
         name='object_manager_node',
@@ -328,16 +322,17 @@ def launch_setup(context, *args, **kwargs):
 
     return [
         robot_state_publisher_node,
-        joint_state_broadcaster,
+        joint_state_publisher_node,
         move_group_node,
         action_server_node,
         rviz_node,
         static_tf,
-        ros2_control_node,
-        object_manager_node,
+        ros2_control_launch,
+        manymove_object_manager_node,
         manymove_hmi_node,
-        manymove_cpp_trees_node,
-    ] + controller_nodes
+        control_node,
+        # manymove_cpp_trees_node,
+    ]
 
 def generate_launch_description():
     return LaunchDescription([

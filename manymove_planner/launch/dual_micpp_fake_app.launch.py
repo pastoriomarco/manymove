@@ -272,7 +272,7 @@ def launch_setup(context, *args, **kwargs):
         parameters=[
             moveit_config.to_dict(),
             {
-                'node_prefix_1': prefix_1.perform(context),
+                'node_prefix': prefix_1.perform(context),
                 'planner_type': 'moveitcpp',
                 'velocity_scaling_factor': velocity_scaling_factor,
                 'acceleration_scaling_factor': acceleration_scaling_factor,
@@ -300,7 +300,7 @@ def launch_setup(context, *args, **kwargs):
         parameters=[
             moveit_config.to_dict(),
             {
-                'node_prefix_2': prefix_2.perform(context),
+                'node_prefix': prefix_2.perform(context),
                 'planner_type': 'moveitcpp',
                 'velocity_scaling_factor': velocity_scaling_factor,
                 'acceleration_scaling_factor': acceleration_scaling_factor,

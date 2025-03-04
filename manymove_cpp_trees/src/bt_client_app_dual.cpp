@@ -414,7 +414,7 @@ int main(int argc, char **argv)
     std::vector<double> load_pre_transform_xyz_rpy_2 = {0.0, 0.0, 0.0, 0.0, 0.0, 0.0};
     std::vector<double> approach_load_pre_transform_xyz_rpy_2 = {0.0, 0.0, -0.025, 0.0, 0.0, 0.0};
     std::vector<double> load_post_transform_xyz_rpy_2 = {0.0, 0.0, -tube_length, 0.0, 0.0, 0.0};
-    // std::vector<double> load_post_transform_xyz_rpy_2 = {0.0, 0.0, -tube_length/2, 0.0, 0.0, 0.0}; // to check for collision
+    // std::vector<double> load_post_transform_xyz_rpy_2 = {0.0, 0.0, -tube_length/3, 0.0, 0.0, 0.0}; // to check for collision
 
     // Translate get_pose_action to xml tree leaf
     std::string get_load_pose_2_xml = buildObjectActionXML(
@@ -542,15 +542,12 @@ int main(int argc, char **argv)
     };
 
     std::vector<Move> wait_position_1 = {
-        {robot_prefix_1, "pose", approach_pick_target_1_key_name, {}, "", move_configs["mid_move"]},
+        {robot_prefix_1, "cartesian", approach_pick_target_1_key_name, {}, "", move_configs["cartesian_mid_move"]},
         {robot_prefix_1, "pose", approach_drop_target_1_key_name, {}, "", move_configs["max_move"]},
-        // {robot_prefix_1, "joint", "", joint_rest_1, "", move_configs["max_move"]},
     };
 
     std::vector<Move> drop_sequence_1 = {
-        // {robot_prefix_1, "pose", approach_pick_target_1_key_name, {}, "", move_configs["mid_move"]},
-        // {robot_prefix_1, "cartesian", drop_target_1_key_name, {}, "", move_configs["slow_move"]},
-        {robot_prefix_1, "pose", drop_target_1_key_name, {}, "", move_configs["mid_move"]},
+        {robot_prefix_1, "cartesian", drop_target_1_key_name, {}, "", move_configs["cartesian_max_move"]},
     };
 
     std::vector<Move> exit_position_1 = {
@@ -573,14 +570,12 @@ int main(int argc, char **argv)
     };
 
     std::vector<Move> load_sequence_2 = {
-        // {robot_prefix_2, "pose", approach_pick_target_2, {}, "", move_configs["mid_move"]},
-        {robot_prefix_2, "cartesian", approach_load_target_2_key_name, {}, "", move_configs["mid_move"]},
+        {robot_prefix_2, "cartesian", approach_load_target_2_key_name, {}, "", move_configs["cartesian_mid_move"]},
         {robot_prefix_2, "cartesian", load_target_2_key_name, {}, "", move_configs["cartesian_slow_move"]},
     };
 
     std::vector<Move> exit_sequence_2 = {
-        {robot_prefix_2, "cartesian", approach_insert_target_2_key_name, {}, "", move_configs["max_move"]},
-        // {robot_prefix_2, "joint", "", joint_ready_2, "", move_configs["max_move"]},
+        {robot_prefix_2, "cartesian", approach_insert_target_2_key_name, {}, "", move_configs["cartesian_max_move"]},
     };
 
     std::vector<Move> ready_position_2 = {
