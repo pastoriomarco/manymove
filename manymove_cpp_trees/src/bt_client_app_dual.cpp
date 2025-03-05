@@ -413,8 +413,8 @@ int main(int argc, char **argv)
     // Define the transformation and reference orientation
     std::vector<double> load_pre_transform_xyz_rpy_2 = {0.0, 0.0, 0.0, 0.0, 0.0, 0.0};
     std::vector<double> approach_load_pre_transform_xyz_rpy_2 = {0.0, 0.0, -0.025, 0.0, 0.0, 0.0};
-    // std::vector<double> load_post_transform_xyz_rpy_2 = {0.0, 0.0, -tube_length, 0.0, 0.0, 0.0};
-    std::vector<double> load_post_transform_xyz_rpy_2 = {0.0, 0.0, -tube_length/3, 0.0, 0.0, 0.0}; // to check for collision
+    std::vector<double> load_post_transform_xyz_rpy_2 = {0.0, 0.0, -tube_length, 0.0, 0.0, 0.0};
+    // std::vector<double> load_post_transform_xyz_rpy_2 = {0.0, 0.0, -tube_length/3, 0.0, 0.0, 0.0}; // to check for collision
 
     // Translate get_pose_action to xml tree leaf
     std::string get_load_pose_2_xml = buildObjectActionXML(
