@@ -104,16 +104,6 @@ def launch_setup(context, *args, **kwargs):
     # from: src/manymove_planner/launch/lite_micpp_fake_action_server.launch.py
     # ================================================================
 
-    velocity_scaling_factor = LaunchConfiguration('velocity_scaling_factor')
-    acceleration_scaling_factor = LaunchConfiguration('acceleration_scaling_factor')
-    max_exec_retries = LaunchConfiguration('max_exec_retries')
-    smoothing_type = LaunchConfiguration('smoothing_type')
-    step_size = LaunchConfiguration('step_size')
-    jump_threshold = LaunchConfiguration('jump_threshold')
-    max_cartesian_speed = LaunchConfiguration('max_cartesian_speed')
-    plan_number_target = LaunchConfiguration('plan_number_target')
-    plan_number_limit = LaunchConfiguration('plan_number_limit')
-
     base_frame_1 = LaunchConfiguration('base_frame_1')
     tcp_frame_1 = LaunchConfiguration('tcp_frame_1')
     base_frame_2 = LaunchConfiguration('base_frame_2')
@@ -248,58 +238,20 @@ def launch_setup(context, *args, **kwargs):
     # action_server_node_name_2 = "{}action_server_node".format(prefix_2.perform(context))
 
     # Start the actual action_server node
-    action_server_node_1 = Node(
+    moveitcpp_action_servers_node = Node(
         package='manymove_planner',
-        executable='action_server_node',
+        executable='moveitcpp_action_server_node',
         # Don't use the "name" parameter, the name will be automatically set with {node_prefix_*}action_server_node to avoid duplicate nodes
         output='screen',
         parameters=[
             moveit_config.to_dict(),
             {
-                'node_prefix': prefix_1.perform(context),
-                'planner_type': 'moveitcpp',
-                'velocity_scaling_factor': velocity_scaling_factor,
-                'acceleration_scaling_factor': acceleration_scaling_factor,
-                'max_exec_retries': max_exec_retries,
-                'smoothing_type': smoothing_type,
-                'step_size': step_size,
-                'jump_threshold': jump_threshold,
-                'max_cartesian_speed': max_cartesian_speed,
-                'plan_number_target': plan_number_target,
-                'plan_number_limit': plan_number_limit,
-                'planner_prefix': prefix_1.perform(context),
-                'planning_group': xarm_type_1, 
-                'base_frame_1': base_frame_1.perform(context), 
-                'tcp_frame_1': tcp_frame_1.perform(context), 
-                'traj_controller': "{}_traj_controller".format(xarm_type_1),
-            }
-        ],
-    )
-
-    action_server_node_2 = Node(
-        package='manymove_planner',
-        executable='action_server_node',
-        # Don't use the "name" parameter, the name will be automatically set with {node_prefix}action_server_node to avoid duplicate nodes
-        output='screen',
-        parameters=[
-            moveit_config.to_dict(),
-            {
-                'node_prefix': prefix_2.perform(context),
-                'planner_type': 'moveitcpp',
-                'velocity_scaling_factor': velocity_scaling_factor,
-                'acceleration_scaling_factor': acceleration_scaling_factor,
-                'max_exec_retries': max_exec_retries,
-                'smoothing_type': smoothing_type,
-                'step_size': step_size,
-                'jump_threshold': jump_threshold,
-                'max_cartesian_speed': max_cartesian_speed,
-                'plan_number_target': plan_number_target,
-                'plan_number_limit': plan_number_limit,
-                'planner_prefix': prefix_2.perform(context),
-                'planning_group': xarm_type_2, 
-                'base_frame_2': base_frame_2.perform(context), 
-                'tcp_frame_2': tcp_frame_2.perform(context), 
-                'traj_controller': "{}_traj_controller".format(xarm_type_2),
+                'node_prefixes': [prefix_1.perform(context), prefix_2.perform(context)],
+                'planner_prefixes': [prefix_1.perform(context), prefix_2.perform(context)],
+                'planning_groups': [xarm_type_1, xarm_type_2], 
+                'base_frames': [base_frame_1.perform(context), base_frame_2.perform(context)], 
+                'tcp_frames': [tcp_frame_1.perform(context), tcp_frame_2.perform(context)], 
+                'traj_controllers': ["{}_traj_controller".format(xarm_type_1), "{}_traj_controller".format(xarm_type_2)],
             }
         ],
     )
@@ -468,8 +420,7 @@ def launch_setup(context, *args, **kwargs):
 
     return [
         robot_state_publisher_node,
-        action_server_node_1,
-        action_server_node_2,
+        moveitcpp_action_servers_node,
         rviz_node,
         static_tf_1,
         static_tf_2,
@@ -483,17 +434,6 @@ def launch_setup(context, *args, **kwargs):
 
 def generate_launch_description():
     return LaunchDescription([
-        # DeclareLaunchArgument('planner_type', default_value='moveitcpp', description='Type of planner to use: moveitcpp or movegroup'), #hardcoded
-        DeclareLaunchArgument('velocity_scaling_factor', default_value='0.5', description='Velocity scaling factor'),
-        DeclareLaunchArgument('acceleration_scaling_factor', default_value='0.5', description='Acceleration scaling factor'),
-        DeclareLaunchArgument('max_exec_retries', default_value='5', description='Maximum number of retries'),
-        DeclareLaunchArgument('smoothing_type', default_value='time_optimal', description='Smoothing type'),
-        DeclareLaunchArgument('step_size', default_value='0.05', description='Step size'),
-        DeclareLaunchArgument('jump_threshold', default_value='0.0', description='Jump threshold'),
-        DeclareLaunchArgument('max_cartesian_speed', default_value='0.5', description='Max cartesian speed'),
-        DeclareLaunchArgument('plan_number_target', default_value='8', description='Plan number target'),
-        DeclareLaunchArgument('plan_number_limit', default_value='16', description='Plan number limit'),
-
         DeclareLaunchArgument('base_frame_1', default_value='link_base', description='Base frame of the robot 1'),
         DeclareLaunchArgument('tcp_frame_1', default_value='link_tcp', description='TCP (end effector) frame of the robot 1' ),
         DeclareLaunchArgument('base_frame_2', default_value='link_base', description='Base frame of the robot 2'),

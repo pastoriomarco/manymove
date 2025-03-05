@@ -68,7 +68,7 @@ int main(int argc, char **argv)
         return 1;
     }
 
-    auto server = std::make_shared<MoveManipulatorActionServer>(node, planner, planner_prefix);
+    auto server = std::make_shared<ManipulatorActionServer>(node, planner, planner_prefix);
 
     loader_node.reset();
     rclcpp::executors::MultiThreadedExecutor executor;

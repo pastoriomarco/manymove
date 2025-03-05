@@ -56,7 +56,8 @@ public:
         const std::string &planning_group,
         const std::string &base_frame,
         const std::string &tcp_frame,
-        const std::string &traj_controller);
+        const std::string &traj_controller,
+        const std::shared_ptr<moveit_cpp::MoveItCpp> &moveit_cpp_ptr = nullptr);
 
     /**
      * @brief Default destructor.
@@ -141,8 +142,8 @@ public:
      * @return true if each joint position in the first waypoint is within tolerance, false otherwise.
      */
     bool isTrajectoryStartValid(const moveit_msgs::msg::RobotTrajectory &traj,
-                                        const std::vector<double> &current_joint_state,
-                                        double tolerance) const;
+                                const std::vector<double> &current_joint_state,
+                                double tolerance) const;
 
 private:
     /**

@@ -15,7 +15,7 @@
 #include <controller_manager_msgs/srv/switch_controller.hpp>
 #include <controller_manager_msgs/srv/configure_controller.hpp>
 
-class MoveManipulatorActionServer
+class ManipulatorActionServer
 {
 public:
     using PlanManipulator = manymove_msgs::action::PlanManipulator;
@@ -30,7 +30,7 @@ public:
     using LoadTrajController = manymove_msgs::action::LoadTrajController;
     using GoalHandleLoadTrajController = rclcpp_action::ServerGoalHandle<LoadTrajController>;
 
-    MoveManipulatorActionServer(const rclcpp::Node::SharedPtr &node,
+    ManipulatorActionServer(const rclcpp::Node::SharedPtr &node,
                                 const std::shared_ptr<PlannerInterface> &planner,
                                 const std::string &planner_prefix = "")
         : node_(node), planner_(planner), planner_prefix_(planner_prefix)
@@ -115,45 +115,45 @@ public:
         plan_action_server_ = rclcpp_action::create_server<PlanManipulator>(
             node_,
             planner_prefix_ + "plan_manipulator",
-            std::bind(&MoveManipulatorActionServer::handle_plan_goal, this, std::placeholders::_1, std::placeholders::_2),
-            std::bind(&MoveManipulatorActionServer::handle_plan_cancel, this, std::placeholders::_1),
-            std::bind(&MoveManipulatorActionServer::handle_plan_accepted, this, std::placeholders::_1),
+            std::bind(&ManipulatorActionServer::handle_plan_goal, this, std::placeholders::_1, std::placeholders::_2),
+            std::bind(&ManipulatorActionServer::handle_plan_cancel, this, std::placeholders::_1),
+            std::bind(&ManipulatorActionServer::handle_plan_accepted, this, std::placeholders::_1),
             rcl_action_server_get_default_options(),
             action_callback_group_);
 
         execute_action_server_ = rclcpp_action::create_server<ExecuteTrajectory>(
             node_,
             planner_prefix_ + "execute_manipulator_traj",
-            std::bind(&MoveManipulatorActionServer::handle_execute_goal, this, std::placeholders::_1, std::placeholders::_2),
-            std::bind(&MoveManipulatorActionServer::handle_execute_cancel, this, std::placeholders::_1),
-            std::bind(&MoveManipulatorActionServer::handle_execute_accepted, this, std::placeholders::_1),
+            std::bind(&ManipulatorActionServer::handle_execute_goal, this, std::placeholders::_1, std::placeholders::_2),
+            std::bind(&ManipulatorActionServer::handle_execute_cancel, this, std::placeholders::_1),
+            std::bind(&ManipulatorActionServer::handle_execute_accepted, this, std::placeholders::_1),
             rcl_action_server_get_default_options(),
             action_callback_group_);
 
         stop_motion_server_ = rclcpp_action::create_server<ExecuteTrajectory>(
             node_,
             planner_prefix_ + "stop_motion",
-            std::bind(&MoveManipulatorActionServer::handle_stop_goal, this, std::placeholders::_1, std::placeholders::_2),
-            std::bind(&MoveManipulatorActionServer::handle_stop_cancel, this, std::placeholders::_1),
-            std::bind(&MoveManipulatorActionServer::handle_stop_accept, this, std::placeholders::_1),
+            std::bind(&ManipulatorActionServer::handle_stop_goal, this, std::placeholders::_1, std::placeholders::_2),
+            std::bind(&ManipulatorActionServer::handle_stop_cancel, this, std::placeholders::_1),
+            std::bind(&ManipulatorActionServer::handle_stop_accept, this, std::placeholders::_1),
             rcl_action_server_get_default_options(),
             action_callback_group_);
 
         unload_traj_controller_server_ = rclcpp_action::create_server<UnloadTrajController>(
             node_,
             planner_prefix_ + "unload_trajectory_controller",
-            std::bind(&MoveManipulatorActionServer::handle_unload_traj_goal, this, std::placeholders::_1, std::placeholders::_2),
-            std::bind(&MoveManipulatorActionServer::handle_unload_traj_cancel, this, std::placeholders::_1),
-            std::bind(&MoveManipulatorActionServer::handle_unload_traj_accepted, this, std::placeholders::_1),
+            std::bind(&ManipulatorActionServer::handle_unload_traj_goal, this, std::placeholders::_1, std::placeholders::_2),
+            std::bind(&ManipulatorActionServer::handle_unload_traj_cancel, this, std::placeholders::_1),
+            std::bind(&ManipulatorActionServer::handle_unload_traj_accepted, this, std::placeholders::_1),
             rcl_action_server_get_default_options(),
             action_callback_group_);
 
         load_traj_controller_server_ = rclcpp_action::create_server<LoadTrajController>(
             node_,
             planner_prefix_ + "load_trajectory_controller",
-            std::bind(&MoveManipulatorActionServer::handle_load_traj_goal, this, std::placeholders::_1, std::placeholders::_2),
-            std::bind(&MoveManipulatorActionServer::handle_load_traj_cancel, this, std::placeholders::_1),
-            std::bind(&MoveManipulatorActionServer::handle_load_traj_accepted, this, std::placeholders::_1),
+            std::bind(&ManipulatorActionServer::handle_load_traj_goal, this, std::placeholders::_1, std::placeholders::_2),
+            std::bind(&ManipulatorActionServer::handle_load_traj_cancel, this, std::placeholders::_1),
+            std::bind(&ManipulatorActionServer::handle_load_traj_accepted, this, std::placeholders::_1),
             rcl_action_server_get_default_options(),
             action_callback_group_);
     }
@@ -210,7 +210,7 @@ private:
         const std::shared_ptr<GoalHandlePlanManipulator> goal_handle)
     {
         // Spin off a new thread to do planning so we don't block the executor
-        std::thread{std::bind(&MoveManipulatorActionServer::execute_plan_goal, this, goal_handle)}.detach();
+        std::thread{std::bind(&ManipulatorActionServer::execute_plan_goal, this, goal_handle)}.detach();
     }
 
     void execute_plan_goal(const std::shared_ptr<GoalHandlePlanManipulator> goal_handle)
@@ -558,7 +558,7 @@ private:
     void handle_stop_accept(const std::shared_ptr<GoalHandleExecuteTrajectory> goal_handle)
     {
         // Execute in a separate thread so as not to block the executor
-        std::thread{std::bind(&MoveManipulatorActionServer::execute_stop, this, goal_handle)}.detach();
+        std::thread{std::bind(&ManipulatorActionServer::execute_stop, this, goal_handle)}.detach();
     }
 
     void execute_stop(const std::shared_ptr<GoalHandleExecuteTrajectory> goal_handle)
@@ -639,7 +639,7 @@ private:
     void handle_unload_traj_accepted(
         const std::shared_ptr<GoalHandleUnloadTrajController> goal_handle)
     {
-        std::thread{std::bind(&MoveManipulatorActionServer::execute_unload_traj_controller, this, goal_handle)}.detach();
+        std::thread{std::bind(&ManipulatorActionServer::execute_unload_traj_controller, this, goal_handle)}.detach();
     }
 
     void execute_unload_traj_controller(
@@ -709,7 +709,7 @@ private:
     void handle_load_traj_accepted(
         const std::shared_ptr<GoalHandleLoadTrajController> goal_handle)
     {
-        std::thread{std::bind(&MoveManipulatorActionServer::execute_load_traj_controller, this, goal_handle)}.detach();
+        std::thread{std::bind(&ManipulatorActionServer::execute_load_traj_controller, this, goal_handle)}.detach();
     }
 
     void execute_load_traj_controller(

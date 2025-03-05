@@ -113,16 +113,6 @@ def launch_setup(context, *args, **kwargs):
     # from: src/manymove_planner/launch/lite_micpp_fake_action_server.launch.py
     # ================================================================
 
-    velocity_scaling_factor = LaunchConfiguration('velocity_scaling_factor')
-    acceleration_scaling_factor = LaunchConfiguration('acceleration_scaling_factor')
-    max_exec_retries = LaunchConfiguration('max_exec_retries')
-    smoothing_type = LaunchConfiguration('smoothing_type')
-    step_size = LaunchConfiguration('step_size')
-    jump_threshold = LaunchConfiguration('jump_threshold')
-    max_cartesian_speed = LaunchConfiguration('max_cartesian_speed')
-    plan_number_target = LaunchConfiguration('plan_number_target')
-    plan_number_limit = LaunchConfiguration('plan_number_limit')
-
     base_frame_1 = LaunchConfiguration('base_frame_1')
     tcp_frame_1 = LaunchConfiguration('tcp_frame_1')
     base_frame_2 = LaunchConfiguration('base_frame_2')
@@ -285,15 +275,6 @@ def launch_setup(context, *args, **kwargs):
             {
                 'node_prefix': prefix_1.perform(context),
                 'planner_type': 'movegroup',
-                'velocity_scaling_factor': velocity_scaling_factor,
-                'acceleration_scaling_factor': acceleration_scaling_factor,
-                'max_exec_retries': max_exec_retries,
-                'smoothing_type': smoothing_type,
-                'step_size': step_size,
-                'jump_threshold': jump_threshold,
-                'max_cartesian_speed': max_cartesian_speed,
-                'plan_number_target': plan_number_target,
-                'plan_number_limit': plan_number_limit,
                 'planner_prefix': prefix_1.perform(context),
                 'planning_group': xarm_type_1, 
                 'base_frame_1': base_frame_1.perform(context), 
@@ -313,15 +294,6 @@ def launch_setup(context, *args, **kwargs):
             {
                 'node_prefix': prefix_2.perform(context),
                 'planner_type': 'movegroup',
-                'velocity_scaling_factor': velocity_scaling_factor,
-                'acceleration_scaling_factor': acceleration_scaling_factor,
-                'max_exec_retries': max_exec_retries,
-                'smoothing_type': smoothing_type,
-                'step_size': step_size,
-                'jump_threshold': jump_threshold,
-                'max_cartesian_speed': max_cartesian_speed,
-                'plan_number_target': plan_number_target,
-                'plan_number_limit': plan_number_limit,
                 'planner_prefix': prefix_2.perform(context),
                 'planning_group': xarm_type_2, 
                 'base_frame_2': base_frame_2.perform(context), 
@@ -533,17 +505,6 @@ def launch_setup(context, *args, **kwargs):
 
 def generate_launch_description():
     return LaunchDescription([
-        # DeclareLaunchArgument('planner_type', default_value='moveitcpp', description='Type of planner to use: moveitcpp or movegroup'), #hardcoded
-        DeclareLaunchArgument('velocity_scaling_factor', default_value='0.5', description='Velocity scaling factor'),
-        DeclareLaunchArgument('acceleration_scaling_factor', default_value='0.5', description='Acceleration scaling factor'),
-        DeclareLaunchArgument('max_exec_retries', default_value='5', description='Maximum number of retries'),
-        DeclareLaunchArgument('smoothing_type', default_value='time_optimal', description='Smoothing type'),
-        DeclareLaunchArgument('step_size', default_value='0.05', description='Step size'),
-        DeclareLaunchArgument('jump_threshold', default_value='0.0', description='Jump threshold'),
-        DeclareLaunchArgument('max_cartesian_speed', default_value='0.5', description='Max cartesian speed'),
-        DeclareLaunchArgument('plan_number_target', default_value='8', description='Plan number target'),
-        DeclareLaunchArgument('plan_number_limit', default_value='16', description='Plan number limit'),
-
         DeclareLaunchArgument('base_frame_1', default_value='link_base', description='Base frame of the robot 1'),
         DeclareLaunchArgument('tcp_frame_1', default_value='link_tcp', description='TCP (end effector) frame of the robot 1' ),
         DeclareLaunchArgument('base_frame_2', default_value='link_base', description='Base frame of the robot 2'),

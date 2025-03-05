@@ -8,15 +8,20 @@ MoveItCppPlanner::MoveItCppPlanner(
     const std::string &planning_group,
     const std::string &base_frame,
     const std::string &tcp_frame,
-    const std::string &traj_controller)
+    const std::string &traj_controller,
+    const std::shared_ptr<moveit_cpp::MoveItCpp> &moveit_cpp_ptr)
     : node_(node), logger_(node->get_logger()),
       planning_group_(planning_group),
       base_frame_(base_frame), tcp_frame_(tcp_frame),
-      traj_controller_(traj_controller)
+      traj_controller_(traj_controller),
+      moveit_cpp_ptr_(moveit_cpp_ptr)
 {
-    moveit_cpp_ptr_ = std::make_shared<moveit_cpp::MoveItCpp>(node_);
-    moveit_cpp_ptr_->getPlanningSceneMonitor()->providePlanningSceneService();
-
+    if (!moveit_cpp_ptr_)
+    {
+        moveit_cpp_ptr_ = std::make_shared<moveit_cpp::MoveItCpp>(node_);
+        moveit_cpp_ptr_->getPlanningSceneMonitor()->providePlanningSceneService();
+    }
+    
     /**
      * The following functions were used to publish the standard topics and services needed by the manymove_object_manager package.
      * Correctly configuring /config/moveit_cpp.yaml and the package launchers seems to offer the same results, while adding

@@ -78,6 +78,26 @@ ament_target_dependencies(action_server_node
   manymove_msgs
 )
 
+add_executable(moveitcpp_action_server_node
+  src/moveitcpp_action_server_node.cpp
+  src/action_server.cpp
+)
+target_link_libraries(moveitcpp_action_server_node
+  move_group_planner_lib
+  moveit_cpp_planner_lib
+)
+ament_target_dependencies(moveitcpp_action_server_node
+  rclcpp
+  rclcpp_action
+  moveit_core
+  moveit_ros_planning_interface
+  tf2_geometry_msgs
+  geometry_msgs
+  action_msgs
+  controller_manager_msgs
+  manymove_msgs
+)
+
 add_executable(standalone_micpp_demo
   src/standalone_micpp_demo.cpp
 )
@@ -107,6 +127,7 @@ install(TARGETS
 # Install the executables without exporting them.
 install(TARGETS 
   action_server_node 
+  moveitcpp_action_server_node
   standalone_micpp_demo
   RUNTIME DESTINATION lib/${PROJECT_NAME}
 )
