@@ -142,6 +142,8 @@ This repository is composed of several sub-packages, each handling different res
   Standalone launchers for MoveItCPP or MoveGroup with Panda robot and BehaviorTree.CPP (you need the moveit2_tutorials package sourced):
      ```bash
      ros2 launch manymove_planner panda_moveitcpp_fake_cpp_trees.launch.py
+     ```
+     ```bash
      ros2 launch manymove_planner panda_movegroup_fake_cpp_trees.launch.py
      ```
   Alternative with standard panda demo launch and manymove started from a separate launcher:
