@@ -147,6 +147,7 @@ This repository is composed of several sub-packages, each handling different res
      ros2 launch manymove_planner panda_movegroup_fake_cpp_trees.launch.py
      ```
   Alternative with standard panda demo launch and manymove started from a separate launcher:
+  
   In **terminal 1** (with `moveit2_tutorials` installed and sourced):
      ```bash
      ros2 launch moveit2_tutorials demo.launch.py
