@@ -835,9 +835,11 @@ bool MoveItCppPlanner::isStateValid(const moveit::core::RobotState *state,
         return false;
     }
 
-    // IMPORTANT: DO NOT overwrite positions! Just update transforms.
+    // Clone planned state
     moveit::core::RobotState temp_state(*state);
-    temp_state.update(); // ONLY THIS
+
+    // Update state
+    temp_state.update(true); 
 
     locked_scene->checkCollision(collision_request, collision_result, temp_state);
 
@@ -848,6 +850,7 @@ bool MoveItCppPlanner::isStateValid(const moveit::core::RobotState *state,
 
     return !collision_result.collision;
 }
+
 
 bool MoveItCppPlanner::sendControlledStop(double deceleration_time)
 {
