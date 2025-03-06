@@ -137,8 +137,8 @@ This repository is composed of several sub-packages, each handling different res
     git clone https://github.com/pastoriomarco/xarm_ros2.git --recursive -b $ROS_DISTRO
     ```
 
-
 - **Panda Manipulator** (requires the installation of [moveit2_tutorials](https://moveit.picknik.ai/humble/doc/tutorials/getting_started/getting_started.html) )
+
   Standalone launchers for MoveItCPP or MoveGroup with Panda robot and BehaviorTree.CPP (you need the moveit2_tutorials package sourced):
      ```bash
      ros2 launch manymove_planner panda_moveitcpp_fake_cpp_trees.launch.py
