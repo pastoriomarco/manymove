@@ -604,78 +604,44 @@ bool MoveGroupPlanner::isStateValid(const moveit::core::RobotState *state,
         return false;
     }
 
+    // Clone the input state
     moveit::core::RobotState temp_state(*state);
-    // adding this part to update all joints positions as update() alone didn't update the mimic joints
+
+    // Retrieve the list of joint names that belong to the group (jmg)
+    const std::vector<std::string> &group_joint_names = group->getVariableNames();
+
     {
         std::lock_guard<std::mutex> lock(js_mutex_);
         for (const auto &entry : current_positions_)
         {
             const std::string &joint_name = entry.first;
             double joint_value = entry.second;
-
-            temp_state.setVariablePosition(joint_name, joint_value);
+            // Only update joints not in the planning group
+            if (std::find(group_joint_names.begin(), group_joint_names.end(), joint_name) == group_joint_names.end())
+            {
+                temp_state.setVariablePosition(joint_name, joint_value);
+            }
         }
     }
-    temp_state.update();
+    temp_state.update(true); // update transforms
 
     collision_detection::CollisionRequest collision_request;
     collision_detection::CollisionResult collision_result;
     collision_request.contacts = true;  // Enable contact reporting
     collision_request.max_contacts = 1; // Adjust as needed
-    // collision_request.group_name = group->getName();
 
     locked_scene->checkCollision(collision_request, collision_result, temp_state);
 
     if (collision_result.collision)
     {
         RCLCPP_WARN(logger_, "[MoveGroupPlanner] Collision detected in isStateValid() (group='%s').", group->getName().c_str());
-
-        // Print contact pairs
         for (const auto &contact : collision_result.contacts)
         {
             RCLCPP_WARN(logger_, "Collision between: '%s' and '%s'", contact.first.first.c_str(), contact.first.second.c_str());
         }
-
-        // // Old code to debug panda fingers positions // //
-        // // Print gripper finger positions
-        // Eigen::Isometry3d left_finger_transform = temp_state.getGlobalLinkTransform("panda_leftfinger");
-        // Eigen::Isometry3d right_finger_transform = temp_state.getGlobalLinkTransform("panda_rightfinger");
-
-        // RCLCPP_WARN(logger_, "Left Finger Position: x=%.4f, y=%.4f, z=%.4f",
-        //             left_finger_transform.translation().x(),
-        //             left_finger_transform.translation().y(),
-        //             left_finger_transform.translation().z());
-
-        // RCLCPP_WARN(logger_, "Right Finger Position: x=%.4f, y=%.4f, z=%.4f",
-        //             right_finger_transform.translation().x(),
-        //             right_finger_transform.translation().y(),
-        //             right_finger_transform.translation().z());
     }
 
     return !collision_result.collision;
-}
-
-void MoveGroupPlanner::jointStateCallback(const sensor_msgs::msg::JointState::SharedPtr msg)
-{
-    // Lock mutex for thread-safe access
-    std::lock_guard<std::mutex> lock(js_mutex_);
-
-    // Update position/velocity for each joint in the message
-    for (size_t i = 0; i < msg->name.size(); ++i)
-    {
-        const std::string &joint_name = msg->name[i];
-
-        // Safety checks (avoid out of range)
-        double pos = 0.0;
-        double vel = 0.0;
-        if (i < msg->position.size())
-            pos = msg->position[i];
-        if (i < msg->velocity.size())
-            vel = msg->velocity[i];
-
-        current_positions_[joint_name] = pos;
-        current_velocities_[joint_name] = vel;
-    }
 }
 
 bool MoveGroupPlanner::isJointStateValid(const std::vector<double> &joint_positions) const
@@ -735,4 +701,27 @@ bool MoveGroupPlanner::isTrajectoryStartValid(const moveit_msgs::msg::RobotTraje
         }
     }
     return true;
+}
+
+void MoveGroupPlanner::jointStateCallback(const sensor_msgs::msg::JointState::SharedPtr msg)
+{
+    // Lock mutex for thread-safe access
+    std::lock_guard<std::mutex> lock(js_mutex_);
+
+    // Update position/velocity for each joint in the message
+    for (size_t i = 0; i < msg->name.size(); ++i)
+    {
+        const std::string &joint_name = msg->name[i];
+
+        // Safety checks (avoid out of range)
+        double pos = 0.0;
+        double vel = 0.0;
+        if (i < msg->position.size())
+            pos = msg->position[i];
+        if (i < msg->velocity.size())
+            vel = msg->velocity[i];
+
+        current_positions_[joint_name] = pos;
+        current_velocities_[joint_name] = vel;
+    }
 }

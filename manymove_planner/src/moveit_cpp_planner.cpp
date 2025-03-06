@@ -812,46 +812,6 @@ bool MoveItCppPlanner::executeTrajectory(const moveit_msgs::msg::RobotTrajectory
     return true;
 }
 
-bool MoveItCppPlanner::isStateValid(const moveit::core::RobotState *state,
-                                    const moveit::core::JointModelGroup *group) const
-{
-    collision_detection::CollisionRequest collision_request;
-    collision_detection::CollisionResult collision_result;
-
-    collision_request.group_name = group->getName();
-    collision_request.max_contacts = 1;
-
-    auto psm = moveit_cpp_ptr_->getPlanningSceneMonitor();
-    if (!psm)
-    {
-        RCLCPP_ERROR(logger_, "PlanningSceneMonitor is null.");
-        return false;
-    }
-
-    planning_scene_monitor::LockedPlanningSceneRO locked_scene(psm);
-    if (!locked_scene)
-    {
-        RCLCPP_ERROR(logger_, "LockedPlanningSceneRO is null.");
-        return false;
-    }
-
-    // Clone planned state
-    moveit::core::RobotState temp_state(*state);
-
-    // Update state
-    temp_state.update(true); 
-
-    locked_scene->checkCollision(collision_request, collision_result, temp_state);
-
-    if (collision_result.collision)
-    {
-        RCLCPP_WARN(logger_, "Collision detected for group '%s'.", group->getName().c_str());
-    }
-
-    return !collision_result.collision;
-}
-
-
 bool MoveItCppPlanner::sendControlledStop(double deceleration_time)
 {
     RCLCPP_INFO(logger_, "Constructing a short 'controlled stop' trajectory (%.2fs) [SINGLE-POINT].",
@@ -945,27 +905,61 @@ bool MoveItCppPlanner::sendControlledStop(double deceleration_time)
     }
 }
 
-void MoveItCppPlanner::jointStateCallback(const sensor_msgs::msg::JointState::SharedPtr msg)
+bool MoveItCppPlanner::isStateValid(const moveit::core::RobotState *state,
+                                    const moveit::core::JointModelGroup *group) const
 {
-    // Lock mutex for thread-safe access
-    std::lock_guard<std::mutex> lock(js_mutex_);
-
-    // Update position/velocity for each joint in the message
-    for (size_t i = 0; i < msg->name.size(); ++i)
+    auto psm = moveit_cpp_ptr_->getPlanningSceneMonitor();
+    if (!psm)
     {
-        const std::string &joint_name = msg->name[i];
-
-        // Safety checks (avoid out of range)
-        double pos = 0.0;
-        double vel = 0.0;
-        if (i < msg->position.size())
-            pos = msg->position[i];
-        if (i < msg->velocity.size())
-            vel = msg->velocity[i];
-
-        current_positions_[joint_name] = pos;
-        current_velocities_[joint_name] = vel;
+        RCLCPP_ERROR(logger_, "PlanningSceneMonitor is null. Cannot perform collision checking.");
+        return false;
     }
+
+    planning_scene_monitor::LockedPlanningSceneRO locked_scene(psm);
+    if (!locked_scene)
+    {
+        RCLCPP_ERROR(logger_, "LockedPlanningSceneRO is null. Cannot perform collision checking.");
+        return false;
+    }
+
+    // Clone the input state
+    moveit::core::RobotState temp_state(*state);
+
+    // Retrieve the list of joint names that belong to the group (jmg)
+    const std::vector<std::string> &group_joint_names = group->getVariableNames();
+
+    {
+        std::lock_guard<std::mutex> lock(js_mutex_);
+        for (const auto &entry : current_positions_)
+        {
+            const std::string &joint_name = entry.first;
+            double joint_value = entry.second;
+            // Only update joints not in the planning group
+            if (std::find(group_joint_names.begin(), group_joint_names.end(), joint_name) == group_joint_names.end())
+            {
+                temp_state.setVariablePosition(joint_name, joint_value);
+            }
+        }
+    }
+    temp_state.update(true); // update transforms
+
+    collision_detection::CollisionRequest collision_request;
+    collision_detection::CollisionResult collision_result;
+    collision_request.contacts = true;  // Enable contact reporting
+    collision_request.max_contacts = 1; // Adjust as needed
+
+    locked_scene->checkCollision(collision_request, collision_result, temp_state);
+
+    if (collision_result.collision)
+    {
+        RCLCPP_WARN(logger_, "[MoveGroupPlanner] Collision detected in isStateValid() (group='%s').", group->getName().c_str());
+        for (const auto &contact : collision_result.contacts)
+        {
+            RCLCPP_WARN(logger_, "Collision between: '%s' and '%s'", contact.first.first.c_str(), contact.first.second.c_str());
+        }
+    }
+
+    return !collision_result.collision;
 }
 
 bool MoveItCppPlanner::isJointStateValid(const std::vector<double> &joint_positions) const
@@ -1024,4 +1018,27 @@ bool MoveItCppPlanner::isTrajectoryStartValid(const moveit_msgs::msg::RobotTraje
         }
     }
     return true;
+}
+
+void MoveItCppPlanner::jointStateCallback(const sensor_msgs::msg::JointState::SharedPtr msg)
+{
+    // Lock mutex for thread-safe access
+    std::lock_guard<std::mutex> lock(js_mutex_);
+
+    // Update position/velocity for each joint in the message
+    for (size_t i = 0; i < msg->name.size(); ++i)
+    {
+        const std::string &joint_name = msg->name[i];
+
+        // Safety checks (avoid out of range)
+        double pos = 0.0;
+        double vel = 0.0;
+        if (i < msg->position.size())
+            pos = msg->position[i];
+        if (i < msg->velocity.size())
+            vel = msg->velocity[i];
+
+        current_positions_[joint_name] = pos;
+        current_velocities_[joint_name] = vel;
+    }
 }
