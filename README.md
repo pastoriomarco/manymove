@@ -115,7 +115,7 @@ This repository is composed of several sub-packages, each handling different res
 - **Lite 6 manipulator** 
   with MoveItCPP and BehaviorTree.CPP:
   ```bash
-  ros2 launch manymove_planner lite_micpp_fake_cpp_trees.launch.py
+  ros2 launch manymove_planner lite_moveitcpp_fake_cpp_trees.launch.py
   ```
   
   with MoveGroupInterface and BehaviorTree.CPP:
@@ -130,7 +130,7 @@ This repository is composed of several sub-packages, each handling different res
 
 - **Dual robot (Lite 6 + UF850)**  
   ```bash
-  ros2 launch manymove_planner dual_micpp_fake_cpp_trees.launch.py
+  ros2 launch manymove_planner dual_moveitcpp_fake_cpp_trees.launch.py
   ```
   - Note: to run the app example with the robots in custom positions you'll have to use the fork of xarm_ros2 modified to handle this kind of scenario. Follow the instructions in the above link from the original repository, but change the instruction on point 4.2 with:
     ```bash
@@ -139,7 +139,13 @@ This repository is composed of several sub-packages, each handling different res
 
 
 - **Panda Manipulator** (requires the installation of [moveit2_tutorials](https://moveit.picknik.ai/humble/doc/tutorials/getting_started/getting_started.html) )
-  In **terminal 1** (with `moveit2_tutorials` installed):
+  Standalone launchers for MoveItCPP or MoveGroup with Panda robot and BehaviorTree.CPP (you need the moveit2_tutorials package sourced):
+     ```bash
+     ros2 launch manymove_planner panda_moveitcpp_fake_cpp_trees.launch.py
+     ros2 launch manymove_planner panda_movegroup_fake_cpp_trees.launch.py
+     ```
+  Alternative with standard panda demo launch and manymove started from a separate launcher:
+  In **terminal 1** (with `moveit2_tutorials` installed and sourced):
      ```bash
      ros2 launch moveit2_tutorials demo.launch.py
      ```
@@ -148,7 +154,7 @@ This repository is composed of several sub-packages, each handling different res
      ros2 launch manymove_planner panda_fake_cpp_trees.launch.py
      ```
 
-   **Alternative**: **in terminal 2**, with MoveGroupInterface and py_trees (minimal):
+   **Alternative**: **in terminal 2**, with MoveGroupInterface and **py_trees** (minimal):
      ```bash
      ros2 launch manymove_planner panda_fake_py_trees.launch.py
      ```
