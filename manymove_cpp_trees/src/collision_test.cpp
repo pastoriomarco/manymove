@@ -535,10 +535,20 @@ int main(int argc, char **argv)
     std::vector<double> joint_rest_2 = {0.0, 0.785, -0.785, 0.0, -1.57, 0.0};
     std::vector<double> joint_ready_2 = {0.314, -0.3837, -1.5874, 1.6747, 1.8665, 0.3663};
 
+    // ----------------------------------------------------------------------------
+    // ----------------------------------------------------------------------------
+    // ----------------------------------------------------------------------------
+    // joint_ready_2 = {-0.785, -0.785, -1.5874, 1.6747, 1.8665, 0.3663}; // collision test
+    // ----------------------------------------------------------------------------
+    // std::vector<double> joint_ready_3 = {-0.785, -0.785, -1.5874, 1.6747, 1.8665, 0.3663}; // joint collision test (uncomment later move too)
+    // ----------------------------------------------------------------------------
+    // ----------------------------------------------------------------------------
+    // ----------------------------------------------------------------------------
+
     std::string named_home_1 = "home";
     std::string named_home_2 = "home";
 
-    // Compose the sequences of moves. Each of the following sequences represent a logic
+    // Compose the sequences of moves. Each of the following sequences represent a logic sequence
     // ROBOT 1
     std::vector<Move> rest_position_1 = {
         {robot_prefix_1, "joint", "", joint_rest_1, "", move_configs["max_move"]},
@@ -579,6 +589,7 @@ int main(int argc, char **argv)
     };
 
     std::vector<Move> load_sequence_2 = {
+        // {robot_prefix_2, "joint", "", joint_ready_3, "", move_configs["max_move"]}, // joint collision test
         {robot_prefix_2, "cartesian", approach_load_target_2_key_name, {}, "", move_configs["cartesian_mid_move"]},
         {robot_prefix_2, "cartesian", load_target_2_key_name, {}, "", move_configs["cartesian_slow_move"]},
     };

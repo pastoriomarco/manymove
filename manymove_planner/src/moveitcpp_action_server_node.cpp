@@ -8,21 +8,21 @@ class MoveItCppActionServerNode : public rclcpp::Node
 {
 public:
   static std::shared_ptr<MoveItCppActionServerNode> create(
-    const std::shared_ptr<moveit_cpp::MoveItCpp>& moveit_cpp,
-    const rclcpp::NodeOptions& options = rclcpp::NodeOptions())
+      const std::shared_ptr<moveit_cpp::MoveItCpp> &moveit_cpp,
+      const rclcpp::NodeOptions &options = rclcpp::NodeOptions())
   {
     auto node = std::shared_ptr<MoveItCppActionServerNode>(
-      new MoveItCppActionServerNode(moveit_cpp, options));
+        new MoveItCppActionServerNode(moveit_cpp, options));
     node->initialize();
     return node;
   }
 
 private:
   MoveItCppActionServerNode(
-    const std::shared_ptr<moveit_cpp::MoveItCpp>& moveit_cpp,
-    const rclcpp::NodeOptions &options)
-    : Node("moveitcpp_action_server_node", options),
-      moveit_cpp_(moveit_cpp)
+      const std::shared_ptr<moveit_cpp::MoveItCpp> &moveit_cpp,
+      const rclcpp::NodeOptions &options)
+      : Node("moveitcpp_action_server_node", options),
+        moveit_cpp_(moveit_cpp)
   {
     RCLCPP_INFO(get_logger(), "MoveItCppActionServerNode constructed.");
   }
@@ -81,25 +81,26 @@ int main(int argc, char **argv)
   rclcpp::NodeOptions node_opts;
   node_opts.automatically_declare_parameters_from_overrides(true);
 
-  // Dedicated node for MoveItCpp and PlanningScene monitoring
+  // MoveItCpp Node (Dedicated for PlanningScene)
   auto moveitcpp_node = std::make_shared<rclcpp::Node>("moveitcpp_node", node_opts);
   auto moveit_cpp = std::make_shared<moveit_cpp::MoveItCpp>(moveitcpp_node);
   moveit_cpp->getPlanningSceneMonitor()->providePlanningSceneService();
 
-  // Spin MoveItCpp node separately
   rclcpp::executors::SingleThreadedExecutor moveitcpp_executor;
   moveitcpp_executor.add_node(moveitcpp_node);
-  std::thread moveitcpp_thread([&moveitcpp_executor]() { moveitcpp_executor.spin(); });
 
-  // Create separate node for planners/action servers, explicitly passing the MoveItCpp pointer
+  // Thread dedicated to the MoveItCpp node's execution.
+  std::thread moveitcpp_thread([&moveitcpp_executor = moveitcpp_executor]()
+                               { moveitcpp_executor.spin(); });
+
+  // Node and executor for Planners/Action Servers
   auto planners_node = MoveItCppActionServerNode::create(moveit_cpp, node_opts);
-
-  // Spin planners and action servers separately
   rclcpp::executors::MultiThreadedExecutor planners_executor;
   planners_executor.add_node(planners_node);
   planners_executor.spin();
 
+  // Cleanup
   rclcpp::shutdown();
-  moveitcpp_thread.join(); // Ensure thread finishes cleanly
+  moveitcpp_thread.join();
   return 0;
 }

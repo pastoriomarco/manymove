@@ -21,7 +21,7 @@ MoveItCppPlanner::MoveItCppPlanner(
         moveit_cpp_ptr_ = std::make_shared<moveit_cpp::MoveItCpp>(node_);
         moveit_cpp_ptr_->getPlanningSceneMonitor()->providePlanningSceneService();
     }
-    
+
     /**
      * The following functions were used to publish the standard topics and services needed by the manymove_object_manager package.
      * Correctly configuring /config/moveit_cpp.yaml and the package launchers seems to offer the same results, while adding
@@ -815,58 +815,37 @@ bool MoveItCppPlanner::executeTrajectory(const moveit_msgs::msg::RobotTrajectory
 bool MoveItCppPlanner::isStateValid(const moveit::core::RobotState *state,
                                     const moveit::core::JointModelGroup *group) const
 {
-    // 1. Set up collision request & result
     collision_detection::CollisionRequest collision_request;
     collision_detection::CollisionResult collision_result;
 
-    // Enable contact checks (if you need detailed contact info)
-    // collision_request.contacts = true;
+    collision_request.group_name = group->getName();
     collision_request.max_contacts = 1;
 
-    // **Key Line**: Limit collision checks to the JointModelGroup
-    collision_request.group_name = group->getName();
-
-    // 2. Access the planning scene via the PlanningSceneMonitor
     auto psm = moveit_cpp_ptr_->getPlanningSceneMonitor();
     if (!psm)
     {
-        RCLCPP_ERROR(logger_, "PlanningSceneMonitor is null. Cannot perform collision checking.");
+        RCLCPP_ERROR(logger_, "PlanningSceneMonitor is null.");
         return false;
     }
 
     planning_scene_monitor::LockedPlanningSceneRO locked_scene(psm);
     if (!locked_scene)
     {
-        RCLCPP_ERROR(logger_, "LockedPlanningSceneRO is null. Cannot perform collision checking.");
+        RCLCPP_ERROR(logger_, "LockedPlanningSceneRO is null.");
         return false;
     }
 
-    // 3. Clone the given RobotState to update transforms if needed
+    // IMPORTANT: DO NOT overwrite positions! Just update transforms.
     moveit::core::RobotState temp_state(*state);
-    // adding this part to update all joints positions as update() alone didn't update the mimic joints
-    {
-        std::lock_guard<std::mutex> lock(js_mutex_);
-        for (const auto &entry : current_positions_)
-        {
-            const std::string &joint_name = entry.first;
-            double joint_value = entry.second;
+    temp_state.update(); // ONLY THIS
 
-            temp_state.setVariablePosition(joint_name, joint_value);
-        }
-    }
-    temp_state.update();
-
-    // 4. Perform the collision check
     locked_scene->checkCollision(collision_request, collision_result, temp_state);
 
-    // 5. Log if a collision is detected
     if (collision_result.collision)
     {
-        RCLCPP_WARN(logger_, "Collision detected in custom validity callback for group '%s'.",
-                    group->getName().c_str());
+        RCLCPP_WARN(logger_, "Collision detected for group '%s'.", group->getName().c_str());
     }
 
-    // Return true if no collision, false otherwise
     return !collision_result.collision;
 }
 
