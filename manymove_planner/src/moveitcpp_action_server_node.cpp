@@ -2,7 +2,7 @@
 #include <moveit/moveit_cpp/moveit_cpp.h>
 #include "manymove_planner/moveit_cpp_planner.hpp"
 #include "manymove_planner/planner_interface.hpp"
-#include "action_server.cpp"
+#include "manymove_planner/action_server.hpp"
 
 class MoveItCppActionServerNode : public rclcpp::Node
 {

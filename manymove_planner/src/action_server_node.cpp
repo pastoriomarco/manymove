@@ -1,7 +1,7 @@
 #include <rclcpp/rclcpp.hpp>
 #include "manymove_planner/move_group_planner.hpp"
 #include "manymove_planner/moveit_cpp_planner.hpp"
-#include "action_server.cpp"
+#include "manymove_planner/action_server.hpp"
 
 int main(int argc, char **argv)
 {
