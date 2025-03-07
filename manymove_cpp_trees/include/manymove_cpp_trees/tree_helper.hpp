@@ -35,15 +35,18 @@ namespace manymove_cpp_trees
         factory.registerNodeType<AttachDetachObjectAction>("AttachDetachObjectAction");
         factory.registerNodeType<CheckObjectExistsAction>("CheckObjectExistsAction");
         factory.registerNodeType<GetObjectPoseAction>("GetObjectPoseAction");
+        factory.registerNodeType<WaitForObjectAction>("WaitForObjectAction");
 
         factory.registerNodeType<SetOutputAction>("SetOutputAction");
         factory.registerNodeType<GetInputAction>("GetInputAction");
+        factory.registerNodeType<WaitForInputAction>("WaitForInputAction");
         factory.registerNodeType<CheckRobotStateAction>("CheckRobotStateAction");
         factory.registerNodeType<ResetRobotStateAction>("ResetRobotStateAction");
         factory.registerNodeType<StopMotionAction>("StopMotionAction");
 
         factory.registerNodeType<CheckBlackboardKeyValue>("CheckBlackboardKeyValue");
         factory.registerNodeType<SetBlackboardKeyValue>("SetBlackboardKeyValue");
+        factory.registerNodeType<WaitForKeyAction>("WaitForKeyAction");
         factory.registerNodeType<BT::RetryNode>("RetryNode");
         factory.registerNodeType<RetryPauseAbortNode>("RetryPauseAbortNode");
         factory.registerNodeType<GripperCommandAction>("GripperCommandAction");
@@ -204,39 +207,77 @@ namespace manymove_cpp_trees
                                    const std::string &node_prefix,
                                    const std::string &io_type,
                                    int ionum,
-                                   int value,
-                                   bool wait = true,
-                                   int timeout_ms = 0);
+                                   int value);
 
     /**
-     * @brief Build an XML snippet for to compare the result of the check if an object exist on the scene.
-     * @param node_prefix  Used to construct a unique name attribute.
-     * @param robot_prefix A prefix for the robot's action servers.
-     * @param object_id    The ID of the object to wait for.
-     * @param exists       If true the function waits for the object to exist, if false for the object not to exist.
-     * @param timeout_ms   Milliseconds for timeout, if 0 then no timeout.
-     * @return A string of the XML snippet.
+     * @brief Build an XML snippet for a single <WaitForInputAction> node.
+     * @param robot_prefix  e.g. "R_"
+     * @param node_prefix   used in the 'name' attribute
+     * @param io_type       "tool" or "controller"
+     * @param ionum         channel index
+     * @param desired_value integer: 0 or 1
+     * @param timeout_ms    0 => infinite
+     * @param poll_rate_ms  how often to check
+     * @return XML snippet
+     */
+    std::string buildWaitForInput(const std::string &robot_prefix,
+                                  const std::string &node_prefix,
+                                  const std::string &io_type,
+                                  int ionum,
+                                  int desired_value = 1,
+                                  int timeout_ms = 0,
+                                  int poll_rate_ms = 250);
+
+    /**
+     * @brief Build an XML snippet for a single <WaitForObjectAction> node.
+     *
+     * The node will:
+     *   - Wait until the object is found if "exists" = true,
+     *   - or wait until the object is NOT found if "exists" = false.
+     *   - "timeout_ms" in milliseconds => 0 => infinite wait
+     *   - Hard-coded poll rate (or we can make it param).
+     *
+     * Example output:
+     *
+     *   <WaitForObjectAction
+     *       name="R_myNodePrefix_WaitForObject"
+     *       object_id="my_object"
+     *       exists="true"
+     *       timeout="10.0"
+     *       poll_rate="0.25"
+     *       />
+     *
+     * @param robot_prefix Typically "R_" or "L_"; used in the node's "name" attribute
+     * @param node_prefix  A user label for uniqueness in the node name
+     * @param object_id    The object to check
+     * @param exists       If true => succeed once the object is found
+     *                     If false => succeed once the object is not found
+     * @param timeout_ms   How long to wait (ms). If 0 => infinite wait
+     * @return The generated XML snippet
      */
     std::string buildWaitForObject(const std::string &robot_prefix,
                                    const std::string &node_prefix,
                                    const std::string &object_id,
                                    bool exists = true,
-                                   int timeout_ms = 0);
+                                   int timeout_ms = 0,
+                                   int poll_rate_ms = 250);
 
     /**
-     * @brief Build an XML snippet for to check if an input value corresponds to the one requested.
-     * @param node_prefix       Used to construct a unique name attribute.
-     * @param robot_prefix      A prefix for the robot's action servers
-     * @param key_id            The ID of the key to wait for.
-     * @param expected_value    Expected value of the key to compare to.
-     * @param timeout_ms        Milliseconds for timeout, if 0 then no timeout.
-     * @return A string of the XML snippet.
+     * @brief Build an XML snippet for a single <WaitForKeyAction> node.
+     * @param robot_prefix    e.g. "R_"
+     * @param node_prefix     used in the 'name' attribute
+     * @param key_id          blackboard key
+     * @param expected_value  desired string
+     * @param timeout_ms      0 => infinite
+     * @param poll_rate_ms    how often to check
+     * @return XML snippet
      */
     std::string buildWaitForKey(const std::string &robot_prefix,
                                 const std::string &node_prefix,
                                 const std::string &key_id,
                                 const std::string &expected_value,
-                                int timeout_ms = 0);
+                                int timeout_ms = 0,
+                                int poll_rate_ms = 250);
 
     /**
      * @brief Build an XML snippet for SetBlackboardKeyValue.

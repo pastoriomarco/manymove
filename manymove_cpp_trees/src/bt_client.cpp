@@ -294,8 +294,8 @@ int main(int argc, char **argv)
     // Let's send and receive signals only if the robot is real, and let's fake a delay on inputs otherwise
     std::string signal_gripper_close_xml = (is_robot_real ? buildSetOutputXML(robot_prefix, "GripperClose", "controller", 0, 1) : "");
     std::string signal_gripper_open_xml = (is_robot_real ? buildSetOutputXML(robot_prefix, "GripperOpen", "controller", 0, 0) : "");
-    std::string check_gripper_close_xml = (is_robot_real ? buildCheckInputXML(robot_prefix, "WaitForSensor", "controller", 0, 1, true, 0) : "<Delay delay_msec=\"250\">\n<AlwaysSuccess />\n</Delay>\n");
-    std::string check_gripper_open_xml = (is_robot_real ? buildCheckInputXML(robot_prefix, "WaitForSensor", "controller", 0, 0, true, 0) : "<Delay delay_msec=\"250\">\n  <AlwaysSuccess />\n</Delay>\n");
+    std::string check_gripper_close_xml = (is_robot_real ? buildWaitForInput(robot_prefix, "WaitForSensor", "controller", 0, 1) : "<Delay delay_msec=\"250\">\n<AlwaysSuccess />\n</Delay>\n");
+    std::string check_gripper_open_xml = (is_robot_real ? buildWaitForInput(robot_prefix, "WaitForSensor", "controller", 0, 0) : "<Delay delay_msec=\"250\">\n  <AlwaysSuccess />\n</Delay>\n");
     std::string check_robot_state_xml = buildCheckRobotStateXML(robot_prefix, "CheckRobot", "robot_ready", "error_code", "robot_mode", "robot_state", "robot_msg");
     std::string reset_robot_state_xml = buildResetRobotStateXML(robot_prefix, "ResetRobot", robot_model);
 

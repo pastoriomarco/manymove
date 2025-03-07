@@ -395,7 +395,7 @@ namespace manymove_cpp_trees
         goal_msg.object_id = object_id_;
         goal_msg.link_name = link_name_;
         goal_msg.attach = attach_;
-        goal_msg.touch_links = touch_links; 
+        goal_msg.touch_links = touch_links;
 
         std::string action = attach_ ? "attaching" : "detaching";
         RCLCPP_INFO(node_->get_logger(), "AttachDetachObjectAction: Sending goal for %s object '%s' to link '%s'. Touch links size: '%li'",
@@ -412,7 +412,6 @@ namespace manymove_cpp_trees
 
         return BT::NodeStatus::RUNNING;
     }
-
 
     BT::NodeStatus AttachDetachObjectAction::onRunning()
     {
@@ -836,6 +835,223 @@ namespace manymove_cpp_trees
             break;
         }
 
+        result_received_ = true;
+    }
+
+    WaitForObjectAction::WaitForObjectAction(const std::string &name,
+                                             const BT::NodeConfiguration &config)
+        : BT::StatefulActionNode(name, config),
+          goal_sent_(false),
+          result_received_(false),
+          last_exists_(false),
+          last_is_attached_(false)
+    {
+        // Obtain the ROS node from the blackboard
+        if (!config.blackboard)
+        {
+            throw BT::RuntimeError("WaitForObjectAction: no blackboard provided.");
+        }
+        if (!config.blackboard->get("node", node_))
+        {
+            throw BT::RuntimeError("WaitForObjectAction: 'node' not found in blackboard.");
+        }
+
+        // Initialize the action client
+        action_client_ = rclcpp_action::create_client<CheckObjectExists>(node_, "check_object_exists");
+
+        RCLCPP_INFO(node_->get_logger(), "WaitForObjectAction: Waiting for 'check_object_exists' server...");
+        if (!action_client_->wait_for_action_server(std::chrono::seconds(10)))
+        {
+            throw BT::RuntimeError("WaitForObjectAction: 'check_object_exists' server not available after waiting.");
+        }
+        RCLCPP_INFO(node_->get_logger(), "WaitForObjectAction: Connected to 'check_object_exists' server.");
+    }
+
+    BT::NodeStatus WaitForObjectAction::onStart()
+    {
+        RCLCPP_DEBUG(node_->get_logger(), "WaitForObjectAction: onStart() called.");
+
+        // Reset internal state
+        goal_sent_ = false;
+        result_received_ = false;
+        last_exists_ = false;
+        last_is_attached_ = false;
+        last_link_name_.clear();
+
+        // Read input ports
+        if (!getInput<std::string>("object_id", object_id_))
+        {
+            RCLCPP_ERROR(node_->get_logger(), "WaitForObjectAction: Missing required input [object_id].");
+            return BT::NodeStatus::FAILURE;
+        }
+        if (!getInput<bool>("exists", desired_exists_))
+        {
+            RCLCPP_WARN(node_->get_logger(), "WaitForObjectAction: Missing 'exists' => defaulting to 'true'");
+            desired_exists_ = true;
+        }
+        getInput<double>("timeout", timeout_);     // default=10.0
+        getInput<double>("poll_rate", poll_rate_); // default=0.25
+
+        // Record the start time
+        start_time_ = node_->now();
+        next_check_time_ = start_time_; // first check immediately
+
+        RCLCPP_INFO(node_->get_logger(),
+                    "WaitForObjectAction: Checking object [%s], desired_exists=%s, timeout=%.2f, poll_rate=%.2f",
+                    object_id_.c_str(), (desired_exists_ ? "true" : "false"), timeout_, poll_rate_);
+
+        // Return RUNNING so the BT engine will call onRunning()
+        return BT::NodeStatus::RUNNING;
+    }
+
+    BT::NodeStatus WaitForObjectAction::onRunning()
+    {
+        auto now = node_->now();
+
+        // If we got a result from the last check
+        if (result_received_)
+        {
+            // If the server says the object "exists" or "not exists"
+            // matches what we want, we succeed
+            bool condition_met = (last_exists_ == desired_exists_);
+            if (condition_met)
+            {
+                // Fill output ports
+                setOutput("exists", last_exists_);
+                setOutput("is_attached", last_is_attached_);
+                setOutput("link_name", last_link_name_);
+
+                RCLCPP_INFO(node_->get_logger(),
+                            "WaitForObjectAction: Condition met: object '%s' => exists=%s -> SUCCESS.",
+                            object_id_.c_str(), (last_exists_ ? "true" : "false"));
+                return BT::NodeStatus::SUCCESS;
+            }
+
+            // Otherwise, check if we've timed out
+            if (timeout_ > 0.0)
+            {
+                double elapsed = (now - start_time_).seconds();
+                if (elapsed >= timeout_)
+                {
+                    RCLCPP_WARN(node_->get_logger(),
+                                "WaitForObjectAction: Timeout (%.1f s) reached for object '%s' -> FAILURE.",
+                                timeout_, object_id_.c_str());
+                    return BT::NodeStatus::FAILURE;
+                }
+            }
+
+            // Not timed out => schedule next check in poll_rate_ seconds
+            goal_sent_ = false;
+            result_received_ = false;
+            last_exists_ = false;
+            last_is_attached_ = false;
+            last_link_name_.clear();
+
+            next_check_time_ = now + rclcpp::Duration::from_seconds(poll_rate_);
+        }
+
+        // If it is not yet time to check again, just return RUNNING
+        if (now < next_check_time_)
+        {
+            return BT::NodeStatus::RUNNING;
+        }
+
+        // If we haven't sent a goal yet, do it now
+        if (!goal_sent_)
+        {
+            sendCheckRequest();
+        }
+
+        return BT::NodeStatus::RUNNING;
+    }
+
+    void WaitForObjectAction::onHalted()
+    {
+        RCLCPP_WARN(node_->get_logger(),
+                    "WaitForObjectAction: onHalted() called. Canceling any outstanding goals...");
+
+        if (goal_sent_ && !result_received_)
+        {
+            action_client_->async_cancel_all_goals();
+            RCLCPP_INFO(node_->get_logger(), "WaitForObjectAction: Goal canceled.");
+        }
+
+        goal_sent_ = false;
+        result_received_ = false;
+    }
+
+    // ---------------------------------------------------
+    // Private Helpers
+    // ---------------------------------------------------
+    void WaitForObjectAction::sendCheckRequest()
+    {
+        RCLCPP_DEBUG(node_->get_logger(), "WaitForObjectAction: Sending check_object_exists goal.");
+
+        CheckObjectExists::Goal goal_msg;
+        goal_msg.object_id = object_id_;
+
+        auto send_goal_options = rclcpp_action::Client<CheckObjectExists>::SendGoalOptions();
+        send_goal_options.goal_response_callback =
+            std::bind(&WaitForObjectAction::goalResponseCallback, this, std::placeholders::_1);
+        send_goal_options.result_callback =
+            std::bind(&WaitForObjectAction::resultCallback, this, std::placeholders::_1);
+
+        action_client_->async_send_goal(goal_msg, send_goal_options);
+
+        goal_sent_ = true;
+        result_received_ = false;
+    }
+
+    void WaitForObjectAction::goalResponseCallback(std::shared_ptr<GoalHandleCheckObjectExists> goal_handle)
+    {
+        if (!goal_handle)
+        {
+            RCLCPP_ERROR(node_->get_logger(),
+                         "WaitForObjectAction: Goal was rejected by the server => We'll keep retrying.");
+            // Mark as "object not found" so that we do another attempt
+            result_received_ = true;
+            last_exists_ = false;
+        }
+        else
+        {
+            RCLCPP_DEBUG(node_->get_logger(), "WaitForObjectAction: Goal accepted by the server, waiting for result...");
+        }
+    }
+
+    void WaitForObjectAction::resultCallback(const GoalHandleCheckObjectExists::WrappedResult &wrapped_result)
+    {
+        switch (wrapped_result.code)
+        {
+        case rclcpp_action::ResultCode::SUCCEEDED:
+        {
+            RCLCPP_DEBUG(node_->get_logger(), "WaitForObjectAction: Goal succeeded.");
+            auto result = wrapped_result.result;
+            last_exists_ = result->exists;
+            last_is_attached_ = result->is_attached;
+            last_link_name_ = result->link_name;
+            break;
+        }
+        case rclcpp_action::ResultCode::ABORTED:
+        {
+            RCLCPP_ERROR(node_->get_logger(), "WaitForObjectAction: Goal was aborted by server.");
+            last_exists_ = false;
+            break;
+        }
+        case rclcpp_action::ResultCode::CANCELED:
+        {
+            RCLCPP_WARN(node_->get_logger(), "WaitForObjectAction: Goal canceled by server.");
+            last_exists_ = false;
+            break;
+        }
+        default:
+        {
+            RCLCPP_ERROR(node_->get_logger(), "WaitForObjectAction: Unknown result code => treat as 'not found'.");
+            last_exists_ = false;
+            break;
+        }
+        }
+
+        // We set result_received_ so onRunning() knows we can evaluate the outcome
         result_received_ = true;
     }
 

@@ -162,4 +162,125 @@ namespace manymove_cpp_trees
         return BT::NodeStatus::SUCCESS;
     }
 
+    // ---------------------------------------------------------
+    // WaitForKeyAction
+    // ---------------------------------------------------------
+    WaitForKeyAction::WaitForKeyAction(const std::string &name,
+                                       const BT::NodeConfiguration &config)
+        : BT::StatefulActionNode(name, config),
+          condition_met_(false)
+    {
+        // If you need access to the node for time, etc.
+        if (!config.blackboard)
+        {
+            throw BT::RuntimeError("WaitForKeyAction: no blackboard provided.");
+        }
+        config.blackboard->get("node", node_); // can be null if not found
+    }
+
+    BT::NodeStatus WaitForKeyAction::onStart()
+    {
+        condition_met_ = false;
+
+        // Read ports
+        if (!getInput<std::string>("key", key_))
+        {
+            RCLCPP_ERROR(node_ ? node_->get_logger() : rclcpp::get_logger("WaitForKeyAction"),
+                         "[%s] missing 'key' input", name().c_str());
+            return BT::NodeStatus::FAILURE;
+        }
+        if (!getInput<std::string>("expected_value", expected_value_))
+        {
+            RCLCPP_ERROR(node_ ? node_->get_logger() : rclcpp::get_logger("WaitForKeyAction"),
+                         "[%s] missing 'expected_value' input", name().c_str());
+            return BT::NodeStatus::FAILURE;
+        }
+        getInput<double>("timeout", timeout_);     // default=10
+        getInput<double>("poll_rate", poll_rate_); // default=0.25
+
+        // Mark timestamps
+        if (!node_)
+        {
+            // fallback if no node in blackboard => we cannot do fancy timing
+            RCLCPP_WARN(rclcpp::get_logger("WaitForKeyAction"),
+                        "[%s] No rclcpp::Node found. We'll set times to 0 => single pass only.",
+                        name().c_str());
+            start_time_ = rclcpp::Time(0, 0, RCL_ROS_TIME);
+            next_check_time_ = rclcpp::Time(0, 0, RCL_ROS_TIME);
+        }
+        else
+        {
+            start_time_ = node_->now();
+            next_check_time_ = start_time_;
+        }
+
+        RCLCPP_INFO(node_ ? node_->get_logger() : rclcpp::get_logger("WaitForKeyAction"),
+                    "[%s] WaitForKeyAction: key='%s', expected='%s', timeout=%.2f, poll_rate=%.2f",
+                    name().c_str(), key_.c_str(), expected_value_.c_str(), timeout_, poll_rate_);
+
+        return BT::NodeStatus::RUNNING;
+    }
+
+    BT::NodeStatus WaitForKeyAction::onRunning()
+    {
+        if (condition_met_)
+        {
+            // already found => success
+            return BT::NodeStatus::SUCCESS;
+        }
+
+        // If we have a node_, do time-based checks
+        rclcpp::Time now(0, 0, RCL_ROS_TIME);
+        if (node_)
+        {
+            now = node_->now();
+        }
+
+        // Check if it's time to re-check
+        if (now < next_check_time_)
+        {
+            return BT::NodeStatus::RUNNING;
+        }
+
+        // do the actual check: read from blackboard
+        std::string actual_value;
+        bool found = config().blackboard->get(key_, actual_value);
+        if (!found)
+        {
+            // key not found => no match
+            actual_value = "";
+        }
+
+        if (actual_value == expected_value_)
+        {
+            condition_met_ = true;
+            return BT::NodeStatus::SUCCESS;
+        }
+
+        // Not matched => check if we timed out
+        if (timeout_ > 0.0 && node_)
+        {
+            double elapsed = (now - start_time_).seconds();
+            if (elapsed >= timeout_)
+            {
+                RCLCPP_WARN(node_->get_logger(),
+                            "[%s] Timeout after %.2f s => FAILURE. last_value='%s'",
+                            name().c_str(), elapsed, actual_value.c_str());
+                return BT::NodeStatus::FAILURE;
+            }
+        }
+
+        // Otherwise schedule the next check in poll_rate_ s
+        next_check_time_ = now + rclcpp::Duration::from_seconds(poll_rate_);
+        return BT::NodeStatus::RUNNING;
+    }
+
+    void WaitForKeyAction::onHalted()
+    {
+        RCLCPP_WARN(node_ ? node_->get_logger() : rclcpp::get_logger("WaitForKeyAction"),
+                    "[%s] Halted => reset state",
+                    name().c_str());
+        condition_met_ = false;
+    }
+
 } // namespace manymove_cpp_trees

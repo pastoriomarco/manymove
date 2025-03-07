@@ -1,6 +1,7 @@
 #ifndef MANYMOVE_CPP_TREES_ACTION_NODES_LOGIC_HPP
 #define MANYMOVE_CPP_TREES_ACTION_NODES_LOGIC_HPP
 
+#include <rclcpp/rclcpp.hpp>
 #include <behaviortree_cpp_v3/decorator_node.h>
 #include <behaviortree_cpp_v3/condition_node.h>
 #include <behaviortree_cpp_v3/action_node.h>
@@ -92,6 +93,53 @@ namespace manymove_cpp_trees
 
         // The main tick function; sets the blackboard key to the specified string
         BT::NodeStatus tick() override;
+    };
+
+    /**
+     * @class WaitForKeyAction
+     * @brief Periodically checks a blackboard key for a string value = expected_value.
+     *        If it matches => SUCCESS, if timeout is reached => FAILURE.
+     *        Timeout=0 => infinite wait. Poll_rate => how often to re-check.
+     *
+     * Ports:
+     *   - "key" (string) : blackboard key name
+     *   - "expected_value" (string) : the value we want
+     *   - "timeout" (double) : seconds, 0 => infinite
+     *   - "poll_rate" (double) : frequency in s
+     */
+    class WaitForKeyAction : public BT::StatefulActionNode
+    {
+    public:
+        WaitForKeyAction(const std::string &name,
+                         const BT::NodeConfiguration &config);
+
+        static BT::PortsList providedPorts()
+        {
+            return {
+                BT::InputPort<std::string>("key", "Blackboard key to read"),
+                BT::InputPort<std::string>("expected_value", "Desired string value"),
+                BT::InputPort<double>("timeout", 10.0, "Seconds before giving up (0 => infinite)"),
+                BT::InputPort<double>("poll_rate", 0.25, "Check frequency (seconds)")};
+        }
+
+    protected:
+        BT::NodeStatus onStart() override;
+        BT::NodeStatus onRunning() override;
+        void onHalted() override;
+
+    private:
+        // read from ports:
+        std::string key_;
+        std::string expected_value_;
+        double timeout_;
+        double poll_rate_;
+
+        // time management
+        rclcpp::Node::SharedPtr node_;
+        rclcpp::Time start_time_;
+        rclcpp::Time next_check_time_;
+
+        bool condition_met_;
     };
 
 } // namespace manymove_cpp_trees

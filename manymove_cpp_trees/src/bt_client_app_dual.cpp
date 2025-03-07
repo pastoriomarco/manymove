@@ -645,8 +645,8 @@ int main(int argc, char **argv)
     // Robot 1
     std::string signal_gripper_close_1_xml = (is_robot_real ? buildSetOutputXML(robot_prefix_1, "GripperClose", "controller", 0, 1) : "");
     std::string signal_gripper_open_1_xml = (is_robot_real ? buildSetOutputXML(robot_prefix_1, "GripperOpen", "controller", 0, 0) : "");
-    std::string check_gripper_close_1_xml = (is_robot_real ? buildCheckInputXML(robot_prefix_1, "WaitForSensor", "controller", 0, 1, true, 0) : "<Delay delay_msec=\"250\">\n<AlwaysSuccess />\n</Delay>\n");
-    std::string check_gripper_open_1_xml = (is_robot_real ? buildCheckInputXML(robot_prefix_1, "WaitForSensor", "controller", 0, 0, true, 0) : "<Delay delay_msec=\"250\">\n  <AlwaysSuccess />\n</Delay>\n");
+    std::string check_gripper_close_1_xml = (is_robot_real ? buildWaitForInput(robot_prefix_1, "WaitForSensor", "controller", 0, 1) : "<Delay delay_msec=\"250\">\n<AlwaysSuccess />\n</Delay>\n");
+    std::string check_gripper_open_1_xml = (is_robot_real ? buildWaitForInput(robot_prefix_1, "WaitForSensor", "controller", 0, 0) : "<Delay delay_msec=\"250\">\n  <AlwaysSuccess />\n</Delay>\n");
     std::string check_robot_state_1_xml = buildCheckRobotStateXML(robot_prefix_1, "CheckRobot", "robot_ready", "error_code", "robot_mode", "robot_state", "robot_msg");
     std::string reset_robot_state_1_xml = buildResetRobotStateXML(robot_prefix_1, "ResetRobot", robot_model_1);
 

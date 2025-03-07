@@ -190,7 +190,7 @@ namespace manymove_cpp_trees
                 BT::InputPort<std::string>("link_name", "Name of the link to attach/detach the object"),
                 BT::InputPort<bool>("attach", true, "True to attach, False to detach"),
                 BT::InputPort<std::vector<std::string>>("touch_links", std::vector<std::string>{},
-                                                        "List of robot links to exclude from collision checking") };
+                                                        "List of robot links to exclude from collision checking")};
         }
 
     protected:
@@ -363,6 +363,81 @@ namespace manymove_cpp_trees
         std::vector<double> pre_transform_xyz_rpy_;  ///< Transformation offset and rotation
         std::vector<double> post_transform_xyz_rpy_; ///< Reference orientation
         std::string pose_key_;                       ///< Blackboard key to store the pose
+    };
+
+    /**
+     * @brief A custom BT node that checks (in a loop) whether an object exists or not,
+     *        until the desired condition is met or the timeout expires.
+     *
+     *  - "object_id" (string) : Name/ID of the object to check.
+     *  - "exists"    (bool)   : If true => succeed when the object is found.
+     *                           If false => succeed when the object is NOT found.
+     *  - "timeout"   (double) : Seconds before giving up (0 => infinite wait).
+     *  - "poll_rate" (double) : How often to re-check (seconds).
+     *
+     *  - "exists" (bool, output)       : Whether the object was found on the final check.
+     *  - "is_attached" (bool, output)  : Whether the object was attached.
+     *  - "link_name" (string, output)  : If attached, which link.
+     */
+    class WaitForObjectAction : public BT::StatefulActionNode
+    {
+    public:
+        using CheckObjectExists = manymove_msgs::action::CheckObjectExists;
+        using GoalHandleCheckObjectExists = rclcpp_action::ClientGoalHandle<CheckObjectExists>;
+
+        WaitForObjectAction(const std::string &name, const BT::NodeConfiguration &config);
+
+        static BT::PortsList providedPorts()
+        {
+            return {
+                BT::InputPort<std::string>("object_id", "ID of the object to check"),
+                BT::InputPort<bool>("exists", true, "Wait for object to exist (true) or not exist (false)"),
+                BT::InputPort<double>("timeout", 10.0, "Time (seconds) before giving up (0 => infinite)"),
+                BT::InputPort<double>("poll_rate", 0.25, "Check frequency (seconds)"),
+                BT::OutputPort<bool>("exists", "Final check: was the object found?"),
+                BT::OutputPort<bool>("is_attached", "Is the object attached?"),
+                BT::OutputPort<std::string>("link_name", "Link name if attached")};
+        }
+
+    protected:
+        // Called once when transitioning from IDLE to RUNNING
+        BT::NodeStatus onStart() override;
+
+        // Called every tick while in RUNNING
+        BT::NodeStatus onRunning() override;
+
+        // Called if this node is halted by force
+        void onHalted() override;
+
+    private:
+        // Helper: send the action goal
+        void sendCheckRequest();
+
+        // Action client callbacks
+        void goalResponseCallback(std::shared_ptr<GoalHandleCheckObjectExists> goal_handle);
+        void resultCallback(const GoalHandleCheckObjectExists::WrappedResult &result);
+
+    private:
+        rclcpp::Node::SharedPtr node_;
+        rclcpp_action::Client<CheckObjectExists>::SharedPtr action_client_;
+
+        std::string object_id_; ///< The object ID to check
+        bool desired_exists_;   ///< If true => succeed when object found, false => succeed when object not found
+        double timeout_;        ///< Seconds to wait before giving up (0 => infinite)
+        double poll_rate_;      ///< How often to re-check (seconds)
+
+        // Internal timestamps
+        rclcpp::Time start_time_;
+        rclcpp::Time next_check_time_;
+
+        // Internal flags
+        bool goal_sent_;
+        bool result_received_;
+
+        // Last result from the action server
+        bool last_exists_;
+        bool last_is_attached_;
+        std::string last_link_name_;
     };
 
 } // namespace manymove_cpp_trees

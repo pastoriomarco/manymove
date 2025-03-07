@@ -227,7 +227,65 @@ namespace manymove_cpp_trees
         ResetRobotState::Result action_result_;
     };
 
-    
+    /**
+     * @class WaitForInputAction
+     * @brief Repeatedly calls the "get_input" action server to read a digital input
+     *        and checks if the read value == desired_value. ...
+     */
+    class WaitForInputAction : public BT::StatefulActionNode
+    {
+    public:
+        WaitForInputAction(const std::string &name,
+                           const BT::NodeConfiguration &config);
+
+        // ...
+        static BT::PortsList providedPorts()
+        {
+            return {
+                BT::InputPort<std::string>("io_type", "IO type: 'tool' or 'controller'"),
+                BT::InputPort<int>("ionum", "Which IO channel to read"),
+                BT::InputPort<int>("desired_value", 1, "Desired input value (0 or 1)"),
+                BT::InputPort<double>("timeout", 10.0, "Seconds before giving up (0 => infinite)"),
+                BT::InputPort<double>("poll_rate", 0.25, "Check frequency (s)"),
+                BT::InputPort<std::string>("robot_prefix", "", "Optional namespace prefix"),
+                BT::OutputPort<int>("value", "Final read value (0 or 1)")};
+        }
+
+    protected:
+        BT::NodeStatus onStart() override;
+        BT::NodeStatus onRunning() override;
+        void onHalted() override;
+
+    private:
+        // Helper to send the "get_input" request
+        void sendCheckRequest();
+
+        // Action callbacks
+        void goalResponseCallback(std::shared_ptr<rclcpp_action::ClientGoalHandle<manymove_msgs::action::GetInput>> goal_handle);
+        void resultCallback(const rclcpp_action::ClientGoalHandle<manymove_msgs::action::GetInput>::WrappedResult &result);
+
+        using GetInput = manymove_msgs::action::GetInput;
+
+        rclcpp::Node::SharedPtr node_;
+        rclcpp_action::Client<GetInput>::SharedPtr action_client_;
+
+        // from Ports:
+        std::string io_type_;
+        int ionum_;
+        int desired_value_;
+        double timeout_;
+        double poll_rate_;
+
+        // internal state
+        bool goal_sent_;
+        bool result_received_;
+        rclcpp::Time start_time_;
+        rclcpp::Time next_check_time_;
+
+        // last read from the server
+        bool last_success_;
+        int last_value_;
+    };
 
 } // namespace manymove_cpp_trees
 

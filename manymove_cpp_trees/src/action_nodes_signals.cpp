@@ -52,8 +52,8 @@ namespace manymove_cpp_trees
     BT::NodeStatus SetOutputAction::onStart()
     {
         RCLCPP_DEBUG(node_->get_logger(),
-                    "SetOutputAction [%s]: onStart() called.",
-                    name().c_str());
+                     "SetOutputAction [%s]: onStart() called.",
+                     name().c_str());
 
         goal_sent_ = false;
         result_received_ = false;
@@ -215,8 +215,8 @@ namespace manymove_cpp_trees
     BT::NodeStatus GetInputAction::onStart()
     {
         RCLCPP_DEBUG(node_->get_logger(),
-                    "GetInputAction [%s]: onStart()",
-                    name().c_str());
+                     "GetInputAction [%s]: onStart()",
+                     name().c_str());
 
         goal_sent_ = false;
         result_received_ = false;
@@ -371,8 +371,8 @@ namespace manymove_cpp_trees
     BT::NodeStatus CheckRobotStateAction::onStart()
     {
         RCLCPP_DEBUG(node_->get_logger(),
-                    "CheckRobotStateAction [%s]: onStart()",
-                    name().c_str());
+                     "CheckRobotStateAction [%s]: onStart()",
+                     name().c_str());
 
         // Reset flags and result
         goal_sent_ = false;
@@ -513,7 +513,7 @@ namespace manymove_cpp_trees
         std::string model;
         if (!getInput<std::string>("robot_model", model))
         {
-            model = ""; 
+            model = "";
         }
 
         computed_controller_name_ = prefix + model + "_traj_controller";
@@ -549,8 +549,8 @@ namespace manymove_cpp_trees
     BT::NodeStatus ResetRobotStateAction::onStart()
     {
         RCLCPP_DEBUG(node_->get_logger(),
-                    "ResetRobotStateAction [%s]: onStart()",
-                    name().c_str());
+                     "ResetRobotStateAction [%s]: onStart()",
+                     name().c_str());
 
         // Reset all flags
         goal_sent_ = false;
@@ -753,6 +753,202 @@ namespace manymove_cpp_trees
         }
     }
 
-    
+    WaitForInputAction::WaitForInputAction(const std::string &name,
+                                           const BT::NodeConfiguration &config)
+        : BT::StatefulActionNode(name, config),
+          goal_sent_(false),
+          result_received_(false),
+          last_success_(false),
+          last_value_(0)
+    {
+        // Obtain the ROS2 node from the blackboard
+        if (!config.blackboard)
+        {
+            throw BT::RuntimeError("WaitForInputAction: no blackboard provided.");
+        }
+        if (!config.blackboard->get("node", node_))
+        {
+            throw BT::RuntimeError("WaitForInputAction: 'node' not found in blackboard.");
+        }
+    }
+
+    BT::NodeStatus WaitForInputAction::onStart()
+    {
+        // Reset internal flags
+        goal_sent_ = false;
+        result_received_ = false;
+        last_success_ = false;
+        last_value_ = 0;
+
+        // Read ports
+        if (!getInput<std::string>("io_type", io_type_))
+        {
+            RCLCPP_ERROR(node_->get_logger(), "[%s] Missing 'io_type'", name().c_str());
+            return BT::NodeStatus::FAILURE;
+        }
+        if (!getInput<int>("ionum", ionum_))
+        {
+            RCLCPP_ERROR(node_->get_logger(), "[%s] Missing 'ionum'", name().c_str());
+            return BT::NodeStatus::FAILURE;
+        }
+        if (!getInput<int>("desired_value", desired_value_))
+        {
+            RCLCPP_ERROR(node_->get_logger(), "[%s] Missing 'desired_value'", name().c_str());
+            return BT::NodeStatus::FAILURE;
+        }
+        getInput<double>("timeout", timeout_);     // default=10
+        getInput<double>("poll_rate", poll_rate_); // default=0.25
+
+        // Build the action server name
+        std::string prefix;
+        getInput<std::string>("robot_prefix", prefix);
+        std::string server_name = prefix + "get_input";
+
+        // If we never created the client or want to ensure it's valid:
+        if (!action_client_)
+        {
+            action_client_ = rclcpp_action::create_client<GetInput>(node_, server_name);
+
+            RCLCPP_INFO(node_->get_logger(),
+                        "[%s] WaitForInputAction: connecting to server '%s' (5s)...",
+                        name().c_str(), server_name.c_str());
+            if (!action_client_->wait_for_action_server(std::chrono::seconds(5)))
+            {
+                RCLCPP_ERROR(node_->get_logger(),
+                             "[%s] server '%s' not available.",
+                             name().c_str(), server_name.c_str());
+                return BT::NodeStatus::FAILURE;
+            }
+        }
+
+        // Mark the start time
+        start_time_ = node_->now();
+        next_check_time_ = start_time_; // immediate first check
+
+        RCLCPP_INFO(node_->get_logger(),
+                    "[%s] WaitForInput: checking IO '%s' (ch=%d) for value=%d, poll=%.2fs, timeout=%.2fs",
+                    name().c_str(), io_type_.c_str(), ionum_, desired_value_, poll_rate_, timeout_);
+
+        return BT::NodeStatus::RUNNING;
+    }
+
+    BT::NodeStatus WaitForInputAction::onRunning()
+    {
+        rclcpp::Time now = node_->now();
+
+        // If we got a result from the last check
+        if (result_received_)
+        {
+            if (last_success_ && (last_value_ == desired_value_))
+            {
+                // Condition satisfied => SUCCESS
+                setOutput("value", last_value_);
+                RCLCPP_INFO(node_->get_logger(),
+                            "[%s] read=%d => DESIRED => SUCCESS",
+                            name().c_str(), last_value_);
+                return BT::NodeStatus::SUCCESS;
+            }
+
+            // Not matched => check if we timed out
+            if (timeout_ > 0.0)
+            {
+                double elapsed = (now - start_time_).seconds();
+                if (elapsed >= timeout_)
+                {
+                    RCLCPP_WARN(node_->get_logger(),
+                                "[%s] Timeout => FAILURE (read=%d)",
+                                name().c_str(), last_value_);
+                    return BT::NodeStatus::FAILURE;
+                }
+            }
+
+            // Otherwise, reset flags and schedule the next attempt
+            goal_sent_ = false;
+            result_received_ = false;
+            next_check_time_ = now + rclcpp::Duration::from_seconds(poll_rate_);
+        }
+
+        // If it is not time yet, keep waiting
+        if (now < next_check_time_)
+        {
+            return BT::NodeStatus::RUNNING;
+        }
+
+        // If we haven't sent a goal, do so now
+        if (!goal_sent_)
+        {
+            sendCheckRequest();
+        }
+
+        return BT::NodeStatus::RUNNING;
+    }
+
+    void WaitForInputAction::onHalted()
+    {
+        RCLCPP_WARN(node_->get_logger(),
+                    "[%s] onHalted() => cancel goal if needed",
+                    name().c_str());
+        if (goal_sent_ && !result_received_)
+        {
+            action_client_->async_cancel_all_goals();
+        }
+        goal_sent_ = false;
+        result_received_ = false;
+    }
+
+    void WaitForInputAction::sendCheckRequest()
+    {
+        // Build the get_input goal
+        GetInput::Goal goal_msg;
+        goal_msg.io_type = io_type_;
+        goal_msg.ionum = ionum_;
+
+        // Prepare callback struct
+        rclcpp_action::Client<GetInput>::SendGoalOptions opts;
+        opts.goal_response_callback =
+            std::bind(&WaitForInputAction::goalResponseCallback, this, std::placeholders::_1);
+        opts.result_callback =
+            std::bind(&WaitForInputAction::resultCallback, this, std::placeholders::_1);
+
+        action_client_->async_send_goal(goal_msg, opts);
+
+        goal_sent_ = true;
+        result_received_ = false;
+    }
+
+    void WaitForInputAction::goalResponseCallback(std::shared_ptr<rclcpp_action::ClientGoalHandle<GetInput>> goal_handle)
+    {
+        if (!goal_handle)
+        {
+            RCLCPP_ERROR(node_->get_logger(),
+                         "[%s] Goal REJECTED by server",
+                         name().c_str());
+            last_success_ = false;
+            last_value_ = -1;
+            result_received_ = true;
+        }
+        else
+        {
+            RCLCPP_DEBUG(node_->get_logger(),
+                         "[%s] Goal ACCEPTED by server",
+                         name().c_str());
+        }
+    }
+
+    void WaitForInputAction::resultCallback(const rclcpp_action::ClientGoalHandle<GetInput>::WrappedResult &wrapped_result)
+    {
+        if (wrapped_result.code == rclcpp_action::ResultCode::SUCCEEDED)
+        {
+            // Fill last_xxx with the server's result
+            last_success_ = wrapped_result.result->success;
+            last_value_ = static_cast<int>(wrapped_result.result->value);
+        }
+        else
+        {
+            last_success_ = false;
+            last_value_ = -1;
+        }
+        result_received_ = true;
+    }
 
 } // namespace manymove_cpp_trees
