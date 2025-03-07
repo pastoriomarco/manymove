@@ -219,6 +219,85 @@ namespace manymove_cpp_trees
         return execution_seq.str();
     }
 
+    std::string buildMoveXML(const std::string &robot_prefix,
+                                       const std::string &node_prefix,
+                                       const std::vector<Move> &moves,
+                                       BT::Blackboard::Ptr blackboard,
+                                       bool reset_trajs)
+    {
+        std::ostringstream xml;
+
+        // Use the current global move ID as the block start
+        int blockStartID = g_global_move_id;
+
+        // Collect the move IDs for later reset
+        std::vector<int> move_ids;
+        move_ids.reserve(moves.size());
+
+        // Build a Sequence node that will run each move in order
+        std::ostringstream execution_seq;
+        execution_seq << "    <Sequence name=\"ExecutionSequence_" << node_prefix << "_" << blockStartID << "\">\n";
+
+        for (const auto &move : moves)
+        {
+            int this_move_id = g_global_move_id; // unique ID for this move
+            move_ids.push_back(this_move_id);
+
+            // Check that the move's robot prefix is compatible
+            if (!move.robot_prefix.empty() && (move.robot_prefix != robot_prefix))
+            {
+                RCLCPP_ERROR(rclcpp::get_logger("bt_client_node"),
+                             "buildMoveXML: Move has prefix=%s, but user gave robot_prefix=%s: INVALID MOVE.",
+                             move.robot_prefix.c_str(), robot_prefix.c_str());
+                return "<INVALID TREE: MISMATCHING ROBOT PREFIX>";
+            }
+
+            // Populate the blackboard with the Move struct under key "move_<id>"
+            std::string key = "move_" + std::to_string(this_move_id);
+            blackboard->set(key, std::make_shared<Move>(move));
+            blackboard->set("trajectory_" + std::to_string(this_move_id), moveit_msgs::msg::RobotTrajectory());
+            
+            RCLCPP_INFO(rclcpp::get_logger("bt_client_node"), "BB set: %s", key.c_str());
+
+            // Build a RetryPauseAbort node that wraps a single MoveManipulatorAction.
+            // This node is expected to either execute an existing trajectory or trigger a re–plan.
+            execution_seq << "    <RetryPauseAbortNode name=\"StopSafe_Retry_" << this_move_id << "\""
+                          << " collision_detected=\"{" << robot_prefix << "collision_detected}\""
+                          << " stop_execution=\"{" << robot_prefix << "stop_execution}\""
+                          << " abort_mission=\"{" << robot_prefix << "abort_mission}\">\n"
+                          << "      <MoveManipulatorAction"
+                          << " name=\"MoveManip_" << this_move_id << "\""
+                          << " robot_prefix=\"" << robot_prefix << "\""
+                          << " move_id=\"" << this_move_id << "\""
+                          << " trajectory=\"{trajectory_" << this_move_id << "}\""
+                          << " pose_key=\"" << move.pose_key << "\""
+                          << " collision_detected=\"{" << robot_prefix << "collision_detected}\""
+                          << " invalidate_traj_on_exec=\"" << (reset_trajs ? "true" : "false") << "\" "
+                          << "/>\n"
+                          << "    </RetryPauseAbortNode>\n";
+
+            // Increment the global ID for the next move.
+            g_global_move_id++;
+        }
+
+        execution_seq << "    </Sequence>\n";
+
+        // Append a ResetTrajectories node if reset_trajs is true.
+        if (reset_trajs)
+        {
+            execution_seq << "    <ResetTrajectories name=\"ResetTrajectories_" << node_prefix << "_" << blockStartID << "\" move_ids=\"";
+            for (size_t i = 0; i < move_ids.size(); i++)
+            {
+                execution_seq << move_ids[i];
+                if (i < move_ids.size() - 1)
+                    execution_seq << ",";
+            }
+            execution_seq << "\"/>\n";
+        }
+
+        return execution_seq.str();
+    }
+
     std::string buildObjectActionXML(const std::string &node_prefix, const ObjectAction &action)
     {
         // Generate a unique node name using the node_prefix and object_id

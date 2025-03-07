@@ -11,6 +11,7 @@
 #include <controller_manager_msgs/srv/configure_controller.hpp>
 #include "manymove_msgs/action/plan_manipulator.hpp"
 #include "manymove_msgs/action/execute_trajectory.hpp"
+#include "manymove_msgs/action/move_manipulator.hpp"
 #include "manymove_msgs/action/unload_traj_controller.hpp"
 #include "manymove_msgs/action/load_traj_controller.hpp"
 #include "planner_interface.hpp"
@@ -31,6 +32,9 @@ private:
     using ExecuteTrajectory = manymove_msgs::action::ExecuteTrajectory;
     using GoalHandleExecuteTrajectory = rclcpp_action::ServerGoalHandle<ExecuteTrajectory>;
 
+    using MoveManipulator = manymove_msgs::action::MoveManipulator;
+    using GoalHandleMoveManipulator = rclcpp_action::ServerGoalHandle<MoveManipulator>;
+
     using UnloadTrajController = manymove_msgs::action::UnloadTrajController;
     using GoalHandleUnloadTrajController = rclcpp_action::ServerGoalHandle<UnloadTrajController>;
 
@@ -50,6 +54,7 @@ private:
     rclcpp_action::Server<PlanManipulator>::SharedPtr plan_action_server_;
     rclcpp_action::Server<ExecuteTrajectory>::SharedPtr execute_action_server_;
     rclcpp_action::Server<ExecuteTrajectory>::SharedPtr stop_motion_server_;
+    rclcpp_action::Server<MoveManipulator>::SharedPtr move_manipulator_server_;
     rclcpp_action::Server<UnloadTrajController>::SharedPtr unload_traj_controller_server_;
     rclcpp_action::Server<LoadTrajController>::SharedPtr load_traj_controller_server_;
 
@@ -81,6 +86,12 @@ private:
     void handle_stop_accept(const std::shared_ptr<GoalHandleExecuteTrajectory>);
     void execute_stop(const std::shared_ptr<GoalHandleExecuteTrajectory>);
 
+    // MoveManipulator Callbacks
+    rclcpp_action::GoalResponse handle_move_goal(const rclcpp_action::GoalUUID &, std::shared_ptr<const MoveManipulator::Goal>);
+    rclcpp_action::CancelResponse handle_move_cancel(const std::shared_ptr<GoalHandleMoveManipulator>);
+    void handle_move_accepted(const std::shared_ptr<GoalHandleMoveManipulator> goal_handle);
+    void execute_move(const std::shared_ptr<GoalHandleMoveManipulator> goal_handle);
+
     // UnloadTrajController Callbacks
     rclcpp_action::GoalResponse handle_unload_traj_goal(const rclcpp_action::GoalUUID &, std::shared_ptr<const UnloadTrajController::Goal>);
     rclcpp_action::CancelResponse handle_unload_traj_cancel(const std::shared_ptr<GoalHandleUnloadTrajController>);
@@ -99,6 +110,13 @@ private:
     void activateControllerAsync(const std::string &, std::function<void()>, std::function<void(const std::string &)>);
     void deactivateControllerAsync(const std::string &, std::function<void()>, std::function<void(const std::string &)>);
     void configureControllerAsync(const std::string &, std::function<void()>, std::function<void(const std::string &)>);
+
+    // Helper functions
+    template <typename GoalHandleT, typename FeedbackT>
+    bool executeTrajectoryWithCollisionChecks(
+        const std::shared_ptr<GoalHandleT> &goal_handle,
+        const moveit_msgs::msg::RobotTrajectory &traj,
+        std::string &abort_reason);
 };
 
 #endif // MANYMOVE_PLANNER_ACTION_SERVER_HPP

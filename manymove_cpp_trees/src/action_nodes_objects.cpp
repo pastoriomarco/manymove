@@ -889,8 +889,8 @@ namespace manymove_cpp_trees
             RCLCPP_WARN(node_->get_logger(), "WaitForObjectAction: Missing 'exists' => defaulting to 'true'");
             desired_exists_ = true;
         }
-        getInput<double>("timeout", timeout_);     // default=10.0
-        getInput<double>("poll_rate", poll_rate_); // default=0.25
+        getInput<double>("timeout", timeout_);     
+        getInput<double>("poll_rate", poll_rate_); 
 
         // Record the start time
         start_time_ = node_->now();

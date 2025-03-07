@@ -9,6 +9,7 @@
 #include <behaviortree_cpp_v3/condition_node.h>
 
 #include <manymove_msgs/action/plan_manipulator.hpp>
+#include <manymove_msgs/action/move_manipulator.hpp>
 #include <manymove_msgs/action/execute_trajectory.hpp>
 
 #include <manymove_msgs/action/add_collision_object.hpp>
@@ -270,6 +271,51 @@ namespace manymove_cpp_trees
         // Parameters
         std::string robot_prefix_;
         double deceleration_time_;
+    };
+
+    class MoveManipulatorAction : public BT::StatefulActionNode
+    {
+    public:
+        using MoveManipulator = manymove_msgs::action::MoveManipulator;
+        using GoalHandleMoveManipulator = rclcpp_action::ClientGoalHandle<MoveManipulator>;
+
+        using ExecuteTrajectoryAction = manymove_msgs::action::ExecuteTrajectory;
+        using GoalHandleExecuteTrajectory = rclcpp_action::ClientGoalHandle<ExecuteTrajectoryAction>;
+
+        MoveManipulatorAction(const std::string &name, const BT::NodeConfiguration &config);
+
+        static BT::PortsList providedPorts()
+        {
+            return {
+                BT::InputPort<std::string>("move_id"),
+                BT::InputPort<std::string>("robot_prefix"),
+                BT::InputPort<moveit_msgs::msg::RobotTrajectory>("trajectory"),
+                BT::InputPort<std::string>("pose_key", "Optional key to retrieve the dynamic target pose"),
+                BT::InputPort<bool>("collision_detected", "If a collision is detected, the execution fails"),
+                BT::InputPort<bool>("invalidate_traj_on_exec", "Flag to indicate if the trajectory should be invalidated on exec even if successful"),
+            };
+        }
+
+    protected:
+        BT::NodeStatus onStart() override;
+        BT::NodeStatus onRunning() override;
+        void onHalted() override;
+
+    private:
+        void goalResponseCallback(std::shared_ptr<GoalHandleMoveManipulator> goal_handle);
+        void feedbackCallback(std::shared_ptr<GoalHandleMoveManipulator>,
+                        const std::shared_ptr<const MoveManipulator::Feedback> feedback);
+        void resultCallback(const GoalHandleMoveManipulator::WrappedResult &result);
+
+        rclcpp::Node::SharedPtr node_;
+        rclcpp_action::Client<MoveManipulator>::SharedPtr action_client_;
+        rclcpp_action::Client<ExecuteTrajectoryAction>::SharedPtr stop_client_;
+
+        bool goal_sent_;
+        bool result_received_;
+        bool stop_goal_sent_;
+
+        MoveManipulator::Result action_result_;
     };
 
 } // namespace manymove_cpp_trees

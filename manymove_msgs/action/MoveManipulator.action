@@ -1,0 +1,15 @@
+# Goal
+manymove_msgs/MoveManipulatorGoal plan_request
+moveit_msgs/RobotTrajectory existing_trajectory
+
+---
+# Result
+bool success
+string message
+int32 error_code    # 0 = success, 1 = aborted, 2 = canceled, 3 = collision
+moveit_msgs/RobotTrajectory final_trajectory
+
+---
+# Feedback
+float32 progress 
+bool in_collision

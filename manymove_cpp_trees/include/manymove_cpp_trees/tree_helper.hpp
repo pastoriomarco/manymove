@@ -27,6 +27,7 @@ namespace manymove_cpp_trees
     {
 
         factory.registerNodeType<PlanningAction>("PlanningAction");
+        factory.registerNodeType<MoveManipulatorAction>("MoveManipulatorAction");
         factory.registerNodeType<ExecuteTrajectory>("ExecuteTrajectory");
         factory.registerNodeType<ResetTrajectories>("ResetTrajectories");
 
@@ -155,6 +156,12 @@ namespace manymove_cpp_trees
                                               BT::Blackboard::Ptr blackboard,
                                               bool reset_trajs = false);
 
+    std::string buildMoveXML(const std::string &robot_prefix,
+                                       const std::string &node_prefix,
+                                       const std::vector<Move> &moves,
+                                       BT::Blackboard::Ptr blackboard,
+                                       bool reset_trajs = false);
+
     /**
      * @brief Builds an XML snippet for a single object action node based on the provided ObjectAction.
      * @param node_prefix A node_prefix to ensure unique node names within the tree.
@@ -226,7 +233,7 @@ namespace manymove_cpp_trees
                                   int ionum,
                                   int desired_value = 1,
                                   int timeout_ms = 0,
-                                  int poll_rate_ms = 250);
+                                  int poll_rate_ms = 100);
 
     /**
      * @brief Build an XML snippet for a single <WaitForObjectAction> node.
@@ -260,7 +267,7 @@ namespace manymove_cpp_trees
                                    const std::string &object_id,
                                    bool exists = true,
                                    int timeout_ms = 0,
-                                   int poll_rate_ms = 250);
+                                   int poll_rate_ms = 100);
 
     /**
      * @brief Build an XML snippet for a single <WaitForKeyAction> node.
@@ -277,7 +284,7 @@ namespace manymove_cpp_trees
                                 const std::string &key_id,
                                 const std::string &expected_value,
                                 int timeout_ms = 0,
-                                int poll_rate_ms = 250);
+                                int poll_rate_ms = 100);
 
     /**
      * @brief Build an XML snippet for SetBlackboardKeyValue.

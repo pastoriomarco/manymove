@@ -195,8 +195,8 @@ namespace manymove_cpp_trees
                          "[%s] missing 'expected_value' input", name().c_str());
             return BT::NodeStatus::FAILURE;
         }
-        getInput<double>("timeout", timeout_);     // default=10
-        getInput<double>("poll_rate", poll_rate_); // default=0.25
+        getInput<double>("timeout", timeout_);     
+        getInput<double>("poll_rate", poll_rate_); 
 
         // Mark timestamps
         if (!node_)

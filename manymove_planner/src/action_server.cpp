@@ -94,6 +94,15 @@ ManipulatorActionServer::ManipulatorActionServer(
         rcl_action_server_get_default_options(),
         action_callback_group_);
 
+    move_manipulator_server_ = rclcpp_action::create_server<MoveManipulator>(
+        node_,
+        planner_prefix_ + "move_manipulator", // e.g. "/move_manipulator" if prefix is empty
+        std::bind(&ManipulatorActionServer::handle_move_goal, this, std::placeholders::_1, std::placeholders::_2),
+        std::bind(&ManipulatorActionServer::handle_move_cancel, this, std::placeholders::_1),
+        std::bind(&ManipulatorActionServer::handle_move_accepted, this, std::placeholders::_1),
+        rcl_action_server_get_default_options(),
+        action_callback_group_);
+
     unload_traj_controller_server_ = rclcpp_action::create_server<UnloadTrajController>(
         node_,
         planner_prefix_ + "unload_trajectory_controller",
@@ -197,262 +206,46 @@ rclcpp_action::CancelResponse ManipulatorActionServer::handle_execute_cancel(
     return rclcpp_action::CancelResponse::ACCEPT;
 }
 
-void ManipulatorActionServer::handle_execute_accepted(const std::shared_ptr<GoalHandleExecuteTrajectory> goal_handle)
+// ExecuteTrajectory callbacks
+void ManipulatorActionServer::handle_execute_accepted(
+    const std::shared_ptr<GoalHandleExecuteTrajectory> goal_handle)
 {
-    // Run in a separate thread.
+    // Run in a separate thread so we don't block the executor.
     std::thread{[this, goal_handle]()
                 {
-                    RCLCPP_INFO(node_->get_logger(), "Executing trajectory");
+                    RCLCPP_INFO(node_->get_logger(), "Executing trajectory (ExecuteTrajectory action)");
+
                     auto result = std::make_shared<manymove_msgs::action::ExecuteTrajectory::Result>();
                     const auto &goal_msg = goal_handle->get_goal();
                     moveit_msgs::msg::RobotTrajectory traj = goal_msg->trajectory;
-                    const auto &points = traj.joint_trajectory.points;
 
-                    if (points.empty())
+                    if (traj.joint_trajectory.points.empty())
                     {
-                        RCLCPP_ERROR(node_->get_logger(), "Empty trajectory received");
+                        RCLCPP_ERROR(node_->get_logger(), "Empty trajectory received => aborting");
                         result->success = false;
                         result->message = "Empty trajectory";
                         goal_handle->abort(result);
                         return;
                     }
 
-                    std::vector<double> current_joint_state;
+                    // Use the helper function to send the trajectory with collision checks.
+                    std::string abort_reason;
+                    bool ok = executeTrajectoryWithCollisionChecks<GoalHandleExecuteTrajectory,
+                                                                   manymove_msgs::action::ExecuteTrajectory::Feedback>(
+                        goal_handle, traj, abort_reason);
+
+                    if (ok)
                     {
-                        // Lock joint_states_mutex_ to safely read current_joint_positions_
-                        std::lock_guard<std::mutex> lock(joint_states_mutex_);
-                        // Extract joint values in the order of the trajectory's joint_names
-                        for (const auto &joint_name : traj.joint_trajectory.joint_names)
-                        {
-                            auto it = current_joint_positions_.find(joint_name);
-                            if (it != current_joint_positions_.end())
-                            {
-                                current_joint_state.push_back(it->second);
-                            }
-                            else
-                            {
-                                RCLCPP_ERROR(node_->get_logger(), "Current joint state for %s not found", joint_name.c_str());
-                                result->success = false;
-                                result->message = "Incomplete current joint state";
-                                goal_handle->abort(result);
-                                return;
-                            }
-                        }
-                    }
-
-                    double tolerance = 0.05; // tolerance in radians
-                    if (!planner_->isTrajectoryStartValid(traj, current_joint_state, tolerance))
-                    {
-                        RCLCPP_ERROR(node_->get_logger(), "Trajectory start is not within tolerance of current joint state");
-                        result->success = false;
-                        result->message = "Trajectory start mismatch";
-                        goal_handle->abort(result);
-                        return;
-                    }
-
-                    // Full trajectory state validity check BEFORE execution.
-                    for (size_t i = 0; i < points.size(); ++i)
-                    {
-                        if (!planner_->isJointStateValid(points[i].positions))
-                        {
-                            RCLCPP_ERROR(node_->get_logger(), "Trajectory point %zu is invalid", i);
-                            result->success = false;
-                            result->message = "Trajectory execution aborted: invalid state at point " + std::to_string(i);
-                            goal_handle->abort(result);
-                            return;
-                        }
-                    }
-
-                    // Prepare a promise and a flag to track any collision during execution.
-                    auto result_promise = std::make_shared<std::promise<bool>>();
-                    std::future<bool> result_future = result_promise->get_future();
-                    std::atomic<bool> collision_detected(false);
-
-                    // Set up FollowJointTrajectory send goal options.
-                    rclcpp_action::Client<control_msgs::action::FollowJointTrajectory>::SendGoalOptions options;
-
-                    // Feedback callback: check upcoming waypoints.
-                    options.feedback_callback =
-                        [this, points, goal_handle, &collision_detected, last_idx = size_t(0)](auto /*unused_goal_handle*/,
-                                                                                               const std::shared_ptr<const control_msgs::action::FollowJointTrajectory::Feedback> &feedback) mutable
-                    {
-                        // 1) Get the robot's current actual joint positions from the feedback
-                        const auto &actual_positions = feedback->actual.positions;
-
-                        if (actual_positions.empty())
-                        {
-                            RCLCPP_ERROR(node_->get_logger(),
-                                         "[ActionServer] Feedback has no positions. Aborting execution.");
-
-                            collision_detected = true; // or some other flag
-                            // publish feedback so the client knows we are aborting
-                            auto exec_feedback = std::make_shared<manymove_msgs::action::ExecuteTrajectory::Feedback>();
-                            exec_feedback->progress = -1.0f;
-                            exec_feedback->in_collision = true;
-                            goal_handle->publish_feedback(exec_feedback);
-
-                            // Then simply return. Your result_callback will see "collision_detected=true" and abort.
-                            return;
-                        }
-
-                        // 2) Find the new closest index by scanning from 'last_idx' forward
-                        //    until the distance starts to increase again.
-                        size_t start_idx = last_idx;
-                        double last_dist = std::numeric_limits<double>::infinity();
-                        size_t closest_idx = start_idx;
-
-                        for (size_t i = start_idx; i < points.size(); ++i)
-                        {
-                            // Compute distance between feedback->actual.positions and points[i].positions
-                            double sum_sq = 0.0;
-                            for (size_t j = 0;
-                                 j < actual_positions.size() && j < points[i].positions.size();
-                                 ++j)
-                            {
-                                double diff = actual_positions[j] - points[i].positions[j];
-                                sum_sq += diff * diff;
-                            }
-                            double dist = std::sqrt(sum_sq);
-
-                            if (dist <= last_dist)
-                            {
-                                // We are still getting “closer”
-                                last_dist = dist;
-                                closest_idx = i;
-                            }
-                            else
-                            {
-                                // The distance is now larger than the previous iteration,
-                                // so the previous i was the best match. Stop searching.
-                                break;
-                            }
-                        }
-
-                        // Update the last_idx for next time
-                        last_idx = closest_idx;
-
-                        // 3) Decide how far forward you want to collision-check.
-                        // Checking to the end of the traj:
-                        size_t check_limit = points.size() - 1;
-                        // As an alternative, we can check only the next 10 points to reduce CPU usage:
-                        // size_t check_limit = std::min(closest_idx + 10, points.size() - 1);
-
-                        // 4) Check collisions in the next few waypoints
-                        for (size_t i = closest_idx + 1; i <= check_limit; ++i)
-                        {
-                            if (!planner_->isJointStateValid(points[i].positions))
-                            {
-                                RCLCPP_WARN(node_->get_logger(),
-                                            "[ActionServer] Future waypoint %zu is in collision", i);
-                                collision_detected = true;
-                                break;
-                            }
-                        }
-
-                        // 5) Publish action feedback
-                        auto exec_feedback =
-                            std::make_shared<manymove_msgs::action::ExecuteTrajectory::Feedback>();
-                        // We no longer rely on controller time, so we can store e.g. the index or distance
-                        exec_feedback->progress = static_cast<float>(closest_idx);
-                        exec_feedback->in_collision = collision_detected.load();
-                        goal_handle->publish_feedback(exec_feedback);
-                    };
-
-                    // Result callback.
-                    options.result_callback =
-                        [this, result_promise, &collision_detected](const auto &wrapped_result)
-                    {
-                        bool success = false;
-                        if (collision_detected)
-                        {
-                            RCLCPP_ERROR(node_->get_logger(), "[ActionServer] Aborting execution due to collision");
-                            success = false;
-                        }
-                        else
-                        {
-                            switch (wrapped_result.code)
-                            {
-                            case rclcpp_action::ResultCode::SUCCEEDED:
-                                RCLCPP_INFO(node_->get_logger(), "[ActionServer] FollowJointTrajectory succeeded");
-                                success = true;
-                                break;
-                            case rclcpp_action::ResultCode::ABORTED:
-                                RCLCPP_ERROR(node_->get_logger(), "[ActionServer] FollowJointTrajectory aborted");
-                                success = false;
-                                break;
-                            case rclcpp_action::ResultCode::CANCELED:
-                                RCLCPP_WARN(node_->get_logger(), "[ActionServer] FollowJointTrajectory canceled");
-                                success = false;
-                                break;
-                            default:
-                                RCLCPP_ERROR(node_->get_logger(), "[ActionServer] Unknown result code");
-                                success = false;
-                                break;
-                            }
-                        }
-                        result_promise->set_value(success);
-                    };
-
-                    // Prepare the FollowJointTrajectory goal.
-                    control_msgs::action::FollowJointTrajectory::Goal exec_goal;
-                    exec_goal.trajectory = traj.joint_trajectory;
-
-                    // Get the action client from the planner.
-                    auto client = planner_->getFollowJointTrajClient();
-                    if (!client)
-                    {
-                        RCLCPP_ERROR(node_->get_logger(), "[ActionServer] FollowJointTrajectory client is null");
-                        result->success = false;
-                        result->message = "Internal error: No action client";
-                        goal_handle->abort(result);
-                        return;
-                    }
-
-                    // Send the goal.
-                    auto goal_handle_future = client->async_send_goal(exec_goal, options);
-                    if (goal_handle_future.wait_for(std::chrono::seconds(5)) != std::future_status::ready)
-                    {
-                        RCLCPP_ERROR(node_->get_logger(), "[ActionServer] Timed out while sending the goal");
-                        result->success = false;
-                        result->message = "Timeout obtaining goal handle";
-                        goal_handle->abort(result);
-                        return;
-                    }
-                    auto client_goal_handle = goal_handle_future.get();
-                    if (!client_goal_handle)
-                    {
-                        RCLCPP_ERROR(node_->get_logger(), "[ActionServer] Goal was rejected by the controller");
-                        result->success = false;
-                        result->message = "Goal rejected";
-                        goal_handle->abort(result);
-                        return;
-                    }
-
-                    RCLCPP_INFO(node_->get_logger(), "[ActionServer] Waiting for FollowJointTrajectory result...");
-                    auto res_future = client->async_get_result(client_goal_handle);
-                    if (res_future.wait_for(std::chrono::seconds(300)) != std::future_status::ready)
-                    {
-                        RCLCPP_ERROR(node_->get_logger(), "[ActionServer] Trajectory execution timed out");
-                        result->success = false;
-                        result->message = "Execution timeout";
-                        goal_handle->abort(result);
-                        return;
-                    }
-
-                    // Retrieve the final status from the result callback.
-                    bool final_status = result_future.get();
-                    if (final_status)
-                    {
-                        RCLCPP_INFO(node_->get_logger(), "[ActionServer] Trajectory execution succeeded");
+                        RCLCPP_INFO(node_->get_logger(), "[ExecuteTrajectory] Trajectory execution succeeded");
                         result->success = true;
                         result->message = "Trajectory executed successfully";
                         goal_handle->succeed(result);
                     }
                     else
                     {
-                        RCLCPP_ERROR(node_->get_logger(), "[ActionServer] Trajectory execution failed (collision or controller error)");
+                        RCLCPP_ERROR(node_->get_logger(), "[ExecuteTrajectory] Execution failed: %s", abort_reason.c_str());
                         result->success = false;
-                        result->message = "Execution failed (collision or controller error)";
+                        result->message = abort_reason;
                         goal_handle->abort(result);
                     }
                 }}
@@ -530,6 +323,134 @@ void ManipulatorActionServer::execute_stop(const std::shared_ptr<GoalHandleExecu
         result->message = "Stop motion failed";
         goal_handle->abort(result);
     }
+}
+
+// -------------------------------------
+// MoveManipulator callbacks
+// -------------------------------------
+
+rclcpp_action::GoalResponse ManipulatorActionServer::handle_move_goal(
+    [[maybe_unused]] const rclcpp_action::GoalUUID &uuid,
+    [[maybe_unused]] std::shared_ptr<const MoveManipulator::Goal> goal_msg)
+{
+    RCLCPP_INFO(node_->get_logger(), "[MoveManipulator] Received new goal");
+    return rclcpp_action::GoalResponse::ACCEPT_AND_EXECUTE;
+}
+
+rclcpp_action::CancelResponse ManipulatorActionServer::handle_move_cancel(
+    [[maybe_unused]] const std::shared_ptr<GoalHandleMoveManipulator> goal_handle)
+{
+    RCLCPP_INFO(node_->get_logger(), "[MoveManipulator] Received cancel request");
+    return rclcpp_action::CancelResponse::ACCEPT;
+}
+
+void ManipulatorActionServer::handle_move_accepted(
+    const std::shared_ptr<GoalHandleMoveManipulator> goal_handle)
+{
+    // Spin off a thread to do the actual logic
+    std::thread{std::bind(&ManipulatorActionServer::execute_move, this, goal_handle)}.detach();
+}
+
+void ManipulatorActionServer::execute_move(
+    const std::shared_ptr<GoalHandleMoveManipulator> goal_handle)
+{
+    RCLCPP_INFO(node_->get_logger(), "[MoveManipulator] Executing plan-or-reuse logic ...");
+
+    auto result = std::make_shared<manymove_msgs::action::MoveManipulator::Result>();
+    const auto &goal = goal_handle->get_goal();
+    moveit_msgs::msg::RobotTrajectory final_traj;
+    bool have_valid_traj = false;
+
+    // 1) Check if the user provided an existing trajectory
+    if (!goal->existing_trajectory.joint_trajectory.points.empty())
+    {
+        std::vector<double> current_joints;
+        {
+            std::lock_guard<std::mutex> lock(joint_states_mutex_);
+            for (const auto &jn : goal->existing_trajectory.joint_trajectory.joint_names)
+            {
+                current_joints.push_back(current_joint_positions_[jn]);
+            }
+        }
+        double tolerance = 0.05;
+        bool starts_ok = planner_->isTrajectoryStartValid(goal->existing_trajectory, current_joints, tolerance);
+
+        bool all_ok = true;
+        const auto &pts = goal->existing_trajectory.joint_trajectory.points;
+        for (size_t i = 0; i < pts.size(); ++i)
+        {
+            if (!planner_->isJointStateValid(pts[i].positions))
+            {
+                RCLCPP_WARN(node_->get_logger(), "[MoveManipulator] existing_trajectory fails at waypoint %zu", i);
+                all_ok = false;
+                break;
+            }
+        }
+        if (starts_ok && all_ok)
+        {
+            have_valid_traj = true;
+            final_traj = goal->existing_trajectory;
+            RCLCPP_INFO(node_->get_logger(), "[MoveManipulator] existing_trajectory is valid => will try to execute it");
+        }
+        else
+        {
+            RCLCPP_INFO(node_->get_logger(), "[MoveManipulator] existing_trajectory is not valid => planning anew");
+        }
+    }
+    else {
+        RCLCPP_INFO(node_->get_logger(), "[MoveManipulator] existing_trajectory EMPTY");
+    }
+
+    // 2) If not, plan a new trajectory
+    if (!have_valid_traj)
+    {
+        manymove_msgs::action::PlanManipulator::Goal plan_goal;
+        // Copy the plan request from the move goal.
+        plan_goal.goal = goal->plan_request;
+
+        auto [plan_ok, planned_traj] = planner_->plan(plan_goal);
+        if (!plan_ok)
+        {
+            RCLCPP_ERROR(node_->get_logger(), "[MoveManipulator] plan() failed => ABORT");
+            result->success = false;
+            result->message = "Planning failed";
+            goal_handle->abort(result);
+            return;
+        }
+
+        auto [param_ok, timed] = planner_->applyTimeParameterization(planned_traj, goal->plan_request.config);
+        if (!param_ok)
+        {
+            RCLCPP_ERROR(node_->get_logger(), "[MoveManipulator] time param failed => ABORT");
+            result->success = false;
+            result->message = "Time parameterization failed";
+            goal_handle->abort(result);
+            return;
+        }
+        final_traj = timed;
+    }
+
+    // 3) Execute the trajectory with real-time collision checking and partial feedback.
+    std::string abort_reason;
+    bool exec_ok = executeTrajectoryWithCollisionChecks<GoalHandleMoveManipulator,
+                                                        manymove_msgs::action::MoveManipulator::Feedback>(
+        goal_handle, final_traj, abort_reason);
+
+    if (!exec_ok)
+    {
+        RCLCPP_ERROR(node_->get_logger(), "[MoveManipulator] Execution failed => %s", abort_reason.c_str());
+        result->success = false;
+        result->message = abort_reason;
+        goal_handle->abort(result);
+        return;
+    }
+
+    // 4) Succeed
+    RCLCPP_INFO(node_->get_logger(), "[MoveManipulator] Done. Execution success!");
+    result->success = true;
+    result->message = "Execution success";
+    result->final_trajectory = final_traj;
+    goal_handle->succeed(result);
 }
 
 // -------------------------------------
@@ -946,4 +867,175 @@ void ManipulatorActionServer::configureControllerAsync(
                 on_error(msg);
             }
         });
+}
+
+template <typename GoalHandleT, typename FeedbackT>
+bool ManipulatorActionServer::executeTrajectoryWithCollisionChecks(
+    const std::shared_ptr<GoalHandleT> &goal_handle,
+    const moveit_msgs::msg::RobotTrajectory &traj,
+    std::string &abort_reason)
+{
+    // 1) Preliminary checks: is the traj empty? is the start valid? are all points collision-free?
+    const auto &points = traj.joint_trajectory.points;
+    if (points.empty())
+    {
+        abort_reason = "Empty trajectory";
+        return false;
+    }
+
+    // Gather current joint state
+    std::vector<double> current_joint_state;
+    {
+        std::lock_guard<std::mutex> lock(joint_states_mutex_);
+        for (const auto &joint_name : traj.joint_trajectory.joint_names)
+        {
+            auto it = current_joint_positions_.find(joint_name);
+            if (it == current_joint_positions_.end())
+            {
+                abort_reason = "Incomplete joint state for " + joint_name;
+                return false;
+            }
+            current_joint_state.push_back(it->second);
+        }
+    }
+
+    double tolerance = 0.05;
+    if (!planner_->isTrajectoryStartValid(traj, current_joint_state, tolerance))
+    {
+        abort_reason = "Trajectory start mismatch with current state";
+        return false;
+    }
+
+    for (size_t i = 0; i < points.size(); i++)
+    {
+        if (!planner_->isJointStateValid(points[i].positions))
+        {
+            abort_reason = "Invalid state or collision at waypoint " + std::to_string(i);
+            return false;
+        }
+    }
+
+    // 2) We'll set up a promise/future so we know if the final action result was success or fail
+    auto result_promise = std::make_shared<std::promise<bool>>();
+    std::future<bool> result_future = result_promise->get_future();
+    std::atomic<bool> collision_detected(false);
+
+    // 3) Build the FollowJointTrajectory goal
+    control_msgs::action::FollowJointTrajectory::Goal fjt_goal;
+    fjt_goal.trajectory = traj.joint_trajectory;
+
+    // 4) Prepare the SendGoalOptions with feedback + result callbacks
+    auto client = planner_->getFollowJointTrajClient();
+    if (!client)
+    {
+        abort_reason = "No FollowJointTrajectory action client available";
+        return false;
+    }
+
+    rclcpp_action::Client<control_msgs::action::FollowJointTrajectory>::SendGoalOptions opts;
+
+    // Feedback callback => partial collision checks
+    opts.feedback_callback =
+        [this, &collision_detected, goal_handle, points, last_idx = size_t(0)](
+            auto /*unused_handle*/,
+            const std::shared_ptr<const control_msgs::action::FollowJointTrajectory::Feedback> &feedback) mutable
+    {
+        if (!feedback || feedback->actual.positions.empty())
+        {
+            RCLCPP_ERROR(node_->get_logger(),
+                         "[executeTrajectoryWithCollisionChecks] feedback->actual is empty => ABORT");
+            collision_detected.store(true);
+
+            // Publish immediate feedback that we are in collision
+            auto fb = std::make_shared<FeedbackT>();
+            fb->progress = -1.0f;
+            fb->in_collision = true;
+            goal_handle->publish_feedback(fb);
+            return;
+        }
+
+        // find the closest index
+        size_t best_idx = last_idx;
+        double best_dist = std::numeric_limits<double>::infinity();
+        for (size_t i = last_idx; i < points.size(); i++)
+        {
+            double sum_sq = 0.0;
+            for (size_t j = 0; j < feedback->actual.positions.size() && j < points[i].positions.size(); j++)
+            {
+                double diff = feedback->actual.positions[j] - points[i].positions[j];
+                sum_sq += diff * diff;
+            }
+            double dist = std::sqrt(sum_sq);
+            if (dist <= best_dist)
+            {
+                best_dist = dist;
+                best_idx = i;
+            }
+            else
+            {
+                break;
+            }
+        }
+        last_idx = best_idx;
+
+        // Check future points for collisions
+        for (size_t i = best_idx + 1; i < points.size(); i++)
+        {
+            if (!planner_->isJointStateValid(points[i].positions))
+            {
+                RCLCPP_WARN(node_->get_logger(),
+                            "[executeTrajectoryWithCollisionChecks] future waypoint %zu in collision => stopping", i);
+                collision_detected.store(true);
+                break;
+            }
+        }
+
+        // publish partial feedback
+        auto fb = std::make_shared<FeedbackT>();
+        fb->progress = static_cast<float>(best_idx);
+        fb->in_collision = collision_detected.load();
+        goal_handle->publish_feedback(fb);
+    };
+
+    // Result callback => set promise
+    opts.result_callback =
+        [this, result_promise, &collision_detected](const auto &wrapped_result)
+    {
+        bool success =
+            (!collision_detected.load()) &&
+            (wrapped_result.code == rclcpp_action::ResultCode::SUCCEEDED);
+        result_promise->set_value(success);
+    };
+
+    // 5) Actually send the goal
+    auto goal_handle_future = client->async_send_goal(fjt_goal, opts); // <== rename variable properly
+    if (goal_handle_future.wait_for(std::chrono::seconds(5)) != std::future_status::ready)
+    {
+        abort_reason = "Timeout sending FollowJointTrajectory goal";
+        return false;
+    }
+    auto fjt_goal_handle = goal_handle_future.get();
+    if (!fjt_goal_handle)
+    {
+        abort_reason = "FollowJointTrajectory goal rejected by server";
+        return false;
+    }
+
+    // 6) Wait for final result
+    auto res_future = client->async_get_result(fjt_goal_handle);
+    if (res_future.wait_for(std::chrono::seconds(300)) != std::future_status::ready)
+    {
+        abort_reason = "Timeout waiting for FollowJointTrajectory result";
+        return false;
+    }
+
+    bool final_status = result_future.get();
+    if (!final_status)
+    {
+        abort_reason = "Trajectory execution failed or collision mid-run";
+        return false;
+    }
+
+    // success
+    return true;
 }
