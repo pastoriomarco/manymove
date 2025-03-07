@@ -265,6 +265,7 @@ namespace manymove_cpp_trees
                           << " collision_detected=\"{" << robot_prefix << "collision_detected}\""
                           << " stop_execution=\"{" << robot_prefix << "stop_execution}\""
                           << " abort_mission=\"{" << robot_prefix << "abort_mission}\">\n"
+                          << "    <Sequence>\n"
                           << "      <MoveManipulatorAction"
                           << " name=\"MoveManip_" << this_move_id << "\""
                           << " robot_prefix=\"" << robot_prefix << "\""
@@ -273,7 +274,9 @@ namespace manymove_cpp_trees
                           << " pose_key=\"" << move.pose_key << "\""
                           << " collision_detected=\"{" << robot_prefix << "collision_detected}\""
                           << " invalidate_traj_on_exec=\"" << (reset_trajs ? "true" : "false") << "\" "
+                          << " stop_execution=\"{" << robot_prefix << "stop_execution}\""
                           << "/>\n"
+                          << "    </Sequence>\n"
                           << "    </RetryPauseAbortNode>\n";
 
             // Increment the global ID for the next move.

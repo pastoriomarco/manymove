@@ -397,7 +397,8 @@ void ManipulatorActionServer::execute_move(
             RCLCPP_INFO(node_->get_logger(), "[MoveManipulator] existing_trajectory is not valid => planning anew");
         }
     }
-    else {
+    else
+    {
         RCLCPP_INFO(node_->get_logger(), "[MoveManipulator] existing_trajectory EMPTY");
     }
 
@@ -925,8 +926,8 @@ bool ManipulatorActionServer::executeTrajectoryWithCollisionChecks(
     fjt_goal.trajectory = traj.joint_trajectory;
 
     // 4) Prepare the SendGoalOptions with feedback + result callbacks
-    auto client = planner_->getFollowJointTrajClient();
-    if (!client)
+    auto follow_joint_traj_client = planner_->getFollowJointTrajClient();
+    if (!follow_joint_traj_client)
     {
         abort_reason = "No FollowJointTrajectory action client available";
         return false;
@@ -1008,7 +1009,7 @@ bool ManipulatorActionServer::executeTrajectoryWithCollisionChecks(
     };
 
     // 5) Actually send the goal
-    auto goal_handle_future = client->async_send_goal(fjt_goal, opts); // <== rename variable properly
+    auto goal_handle_future = follow_joint_traj_client->async_send_goal(fjt_goal, opts); 
     if (goal_handle_future.wait_for(std::chrono::seconds(5)) != std::future_status::ready)
     {
         abort_reason = "Timeout sending FollowJointTrajectory goal";
@@ -1022,7 +1023,7 @@ bool ManipulatorActionServer::executeTrajectoryWithCollisionChecks(
     }
 
     // 6) Wait for final result
-    auto res_future = client->async_get_result(fjt_goal_handle);
+    auto res_future = follow_joint_traj_client->async_get_result(fjt_goal_handle);
     if (res_future.wait_for(std::chrono::seconds(300)) != std::future_status::ready)
     {
         abort_reason = "Timeout waiting for FollowJointTrajectory result";

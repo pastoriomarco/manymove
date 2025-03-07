@@ -459,8 +459,8 @@ namespace manymove_cpp_trees
         }
 
         // Retrieve robot_prefix
-        std::string robot_prefix_;
-        if (!getInput<std::string>("robot_prefix", robot_prefix_))
+        std::string robot_prefix;
+        if (!getInput<std::string>("robot_prefix", robot_prefix))
         {
             RCLCPP_ERROR(node_->get_logger(),
                          "StopMotionAction [%s]: missing InputPort [robot_prefix].",
@@ -487,7 +487,7 @@ namespace manymove_cpp_trees
             setOutput("planning_validity", false);
 
             // Clear the execution_resumed key so that it does not keep triggering.
-            config().blackboard->set(robot_prefix_ + "execution_resumed", false);
+            config().blackboard->set(robot_prefix + "execution_resumed", false);
 
             RCLCPP_DEBUG(node_->get_logger(),
                          "ExecuteTrajectory [%s]: Forcing failure due to execution_resumed; key cleared.",
@@ -1040,8 +1040,7 @@ namespace manymove_cpp_trees
     MoveManipulatorAction::MoveManipulatorAction(const std::string &name, const BT::NodeConfiguration &config)
         : BT::StatefulActionNode(name, config),
           goal_sent_(false),
-          result_received_(false),
-          stop_goal_sent_(false)
+          result_received_(false)
     {
         // Get the ROS node from the blackboard.
         if (!config.blackboard)
@@ -1053,15 +1052,14 @@ namespace manymove_cpp_trees
             throw BT::RuntimeError("MoveManipulatorAction: 'node' not found in blackboard.");
         }
 
-        // Read the robot_prefix (default to empty if not provided).
-        std::string prefix;
-        if (!getInput<std::string>("robot_prefix", prefix))
+        // Read the robot_prefix
+        if (!getInput<std::string>("robot_prefix", robot_prefix_))
         {
-            prefix = "";
+            throw BT::RuntimeError("MoveManipulatorAction: 'robot_prefix' not found in blackboard.");
         }
 
         // Create the client for the MoveManipulator action server
-        std::string move_server = prefix + "move_manipulator";
+        std::string move_server = robot_prefix_ + "move_manipulator";
         action_client_ = rclcpp_action::create_client<MoveManipulator>(node_, move_server);
 
         RCLCPP_INFO(node_->get_logger(), "[MoveManipulatorAction] Waiting for move_manipulator server: %s", move_server.c_str());
@@ -1072,7 +1070,7 @@ namespace manymove_cpp_trees
 
         // Create the client for the move_getInput<std::string>("pose_key", input_pose_key)
         // --- Create the stop client for the stop_motion action.
-        std::string stop_server = prefix + "stop_motion";
+        std::string stop_server = robot_prefix_ + "stop_motion";
         stop_client_ = rclcpp_action::create_client<ExecuteTrajectoryAction>(node_, stop_server);
         RCLCPP_INFO(node_->get_logger(), "[MoveManipulatorAction] Waiting for stop_motion server: %s", stop_server.c_str());
         if (!stop_client_->wait_for_action_server(std::chrono::seconds(5)))
@@ -1089,7 +1087,6 @@ namespace manymove_cpp_trees
 
         goal_sent_ = false;
         result_received_ = false;
-        stop_goal_sent_ = false;
         action_result_ = MoveManipulator::Result();
 
         // this should never be true on start, but let's leave it here for safety
@@ -1109,31 +1106,30 @@ namespace manymove_cpp_trees
             return BT::NodeStatus::FAILURE;
         }
 
-        return BT::NodeStatus::RUNNING;
-    }
-
-    BT::NodeStatus MoveManipulatorAction::onRunning()
-    {
-        // Retrieve robot_prefix
-        std::string robot_prefix_;
-        if (!getInput<std::string>("robot_prefix", robot_prefix_))
-        {
-            RCLCPP_ERROR(node_->get_logger(),
-                         "StopMotionAction [%s]: missing InputPort [robot_prefix].",
-                         name().c_str());
-            return BT::NodeStatus::FAILURE;
-        }
-
         // Read move_id.
-        std::string move_id;
-        if (!getInput<std::string>("move_id", move_id))
+        if (!getInput<std::string>("move_id", move_id_))
         {
             RCLCPP_ERROR(node_->get_logger(), "[MoveManipulatorAction] No move_id inputPort");
             return BT::NodeStatus::FAILURE;
         }
 
+        bool stop_execution;
+        if (!getInput<bool>(robot_prefix_ + "stop_execution", stop_execution))
+        {
+            throw BT::RuntimeError("MoveManipulatorAction: 'stop_execution' not found in blackboard.");
+        }
+        if (stop_execution)
+        {
+            return BT::NodeStatus::FAILURE;
+        }
+
+        return BT::NodeStatus::RUNNING;
+    }
+
+    BT::NodeStatus MoveManipulatorAction::onRunning()
+    {
         // Retrieve the stored Move from the blackboard.
-        std::string move_key = "move_" + move_id;
+        std::string move_key = "move_" + move_id_;
         std::shared_ptr<Move> move_ptr;
         if (!config().blackboard->get(move_key, move_ptr))
         {
@@ -1210,18 +1206,18 @@ namespace manymove_cpp_trees
             {
                 if (invalidate_traj_on_exec)
                 {
-                    config().blackboard->set("trajectory_" + move_id, moveit_msgs::msg::RobotTrajectory());
+                    config().blackboard->set("trajectory_" + move_id_, moveit_msgs::msg::RobotTrajectory());
                 }
                 else
                 {
-                    config().blackboard->set("trajectory_" + move_id, action_result_.final_trajectory);
+                    config().blackboard->set("trajectory_" + move_id_, action_result_.final_trajectory);
                 }
                 RCLCPP_INFO(node_->get_logger(), "[MoveManipulatorAction] success => returning SUCCESS");
                 return BT::NodeStatus::SUCCESS;
             }
             else
             {
-                config().blackboard->set("trajectory_" + move_id, moveit_msgs::msg::RobotTrajectory());
+                config().blackboard->set("trajectory_" + move_id_, moveit_msgs::msg::RobotTrajectory());
                 RCLCPP_ERROR(node_->get_logger(), "[MoveManipulatorAction] failed => returning FAILURE");
                 return BT::NodeStatus::FAILURE;
             }
@@ -1239,15 +1235,11 @@ namespace manymove_cpp_trees
         goal_sent_ = false;
         result_received_ = false;
 
-        // Read move_id.
-        std::string move_id;
-        getInput<std::string>("move_id", move_id);
-
         // Invalidate trajectory on halt
-        config().blackboard->set("trajectory_" + move_id, moveit_msgs::msg::RobotTrajectory());
+        config().blackboard->set("trajectory_" + move_id_, moveit_msgs::msg::RobotTrajectory());
 
         // --- Send a graceful stop, but only once ---
-        if (stop_client_ && !stop_goal_sent_)
+        if (stop_client_)
         {
             RCLCPP_INFO(node_->get_logger(), "[MoveManipulatorAction] onHalted => sending STOP goal to stop_motion server.");
             manymove_msgs::action::ExecuteTrajectory::Goal stop_goal; // empty goal
@@ -1267,14 +1259,6 @@ namespace manymove_cpp_trees
                     RCLCPP_WARN(rclcpp::get_logger("MoveManipulatorAction"), "STOP command failed.");
             };
             stop_client_->async_send_goal(stop_goal, send_opts);
-            stop_goal_sent_ = true;
-
-            // --- Set the stop_execution flag on the blackboard so RetryPauseAbortNode stops polling.
-            std::string robot_prefix;
-            if (getInput<std::string>("robot_prefix", robot_prefix))
-            {
-                config().blackboard->set(robot_prefix + "stop_execution", true);
-            }
         }
     }
 
@@ -1295,23 +1279,19 @@ namespace manymove_cpp_trees
 
     void MoveManipulatorAction::resultCallback(const GoalHandleMoveManipulator::WrappedResult &wrapped_result)
     {
-        // Read move_id.
-        std::string move_id;
-        getInput<std::string>("move_id", move_id);
-
         bool invalidate_traj_on_exec;
         getInput<bool>("invalidate_traj_on_exec", invalidate_traj_on_exec);
         if (invalidate_traj_on_exec)
         {
             // Invalidate the trajectory: set the planning validity key to false and clear the trajectory.
-            config().blackboard->set("trajectory_" + move_id, moveit_msgs::msg::RobotTrajectory());
+            config().blackboard->set("trajectory_" + move_id_, moveit_msgs::msg::RobotTrajectory());
         }
 
         result_received_ = true;
         if (wrapped_result.code == rclcpp_action::ResultCode::SUCCEEDED)
         {
             action_result_ = *(wrapped_result.result);
-            config().blackboard->set("trajectory_" + move_id, action_result_.final_trajectory);
+            config().blackboard->set("trajectory_" + move_id_, action_result_.final_trajectory);
         }
         else
         {
@@ -1319,7 +1299,7 @@ namespace manymove_cpp_trees
             action_result_.message = "Failure: result code=" + std::to_string(static_cast<int>(wrapped_result.code));
 
             // Execution failed, invalidate the trajectory
-            config().blackboard->set("trajectory_" + move_id, moveit_msgs::msg::RobotTrajectory());
+            config().blackboard->set("trajectory_" + move_id_, moveit_msgs::msg::RobotTrajectory());
         }
     }
 

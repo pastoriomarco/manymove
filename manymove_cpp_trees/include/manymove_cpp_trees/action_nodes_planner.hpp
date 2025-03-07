@@ -293,6 +293,7 @@ namespace manymove_cpp_trees
                 BT::InputPort<std::string>("pose_key", "Optional key to retrieve the dynamic target pose"),
                 BT::InputPort<bool>("collision_detected", "If a collision is detected, the execution fails"),
                 BT::InputPort<bool>("invalidate_traj_on_exec", "Flag to indicate if the trajectory should be invalidated on exec even if successful"),
+                BT::InputPort<bool>("stop_execution", "Flag to indicate that the execution is stopped"),
             };
         }
 
@@ -313,8 +314,9 @@ namespace manymove_cpp_trees
 
         bool goal_sent_;
         bool result_received_;
-        bool stop_goal_sent_;
 
+        std::string move_id_;
+        std::string robot_prefix_;
         MoveManipulator::Result action_result_;
     };
 
