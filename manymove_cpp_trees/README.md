@@ -39,7 +39,7 @@ This **manymove_cpp_trees** package is part of the [**`manymove`**](../README.md
 
 3. **HMI Service Node**  
    - [`HMIServiceNode`](./include/manymove_cpp_trees/hmi_service_node.hpp) provides services to start/stop/reset execution.  
-   - Publishes execution status (e.g., `stop_execution`, `abort_mission`, etc.) at a fixed interval.
+   - Publishes execution status (e.g., `stop_execution`, `reset`, etc.) at a fixed interval.
 
 ---
 

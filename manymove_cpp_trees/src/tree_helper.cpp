@@ -73,10 +73,10 @@ namespace manymove_cpp_trees
             planning_seq << partial_planning_seq.str();
 
             // create the execution action, with a stop-safe retry mechanism and with the planning action as fallback
-            execution_seq << "    <RetryPauseAbortNode name=\"StopSafe_Retry_" << this_move_id << "\""
+            execution_seq << "    <RetryPauseResetNode name=\"StopSafe_Retry_" << this_move_id << "\""
                           << " collision_detected=\"{" << robot_prefix << "collision_detected}\""
                           << " stop_execution=\"{" << robot_prefix << "stop_execution}\""
-                          << " abort_mission=\"{" << robot_prefix << "abort_mission}\">\n"
+                          << " reset=\"{" << robot_prefix << "reset}\">\n"
                           << "     <Fallback>\n"
                           << "      <ExecuteTrajectory"
                           << " name=\"ExecMove_" << this_move_id << "\""
@@ -101,7 +101,7 @@ namespace manymove_cpp_trees
                           << "/>\n"
                           << "      </ForceFailure>\n"
                           << "     </Fallback>"
-                          << "    </RetryPauseAbortNode>\n";
+                          << "    </RetryPauseResetNode>\n";
 
             // increment the global ID for the next move
             g_global_move_id++;
@@ -180,10 +180,10 @@ namespace manymove_cpp_trees
                         "BB set: %s", key.c_str());
 
             // create the execution action, with a stop-safe retry mechanism and with the planning action as fallback
-            execution_seq << "    <RetryPauseAbortNode name=\"StopSafe_Retry_" << this_move_id << "\""
+            execution_seq << "    <RetryPauseResetNode name=\"StopSafe_Retry_" << this_move_id << "\""
                           << " collision_detected=\"{" << robot_prefix << "collision_detected}\""
                           << " stop_execution=\"{" << robot_prefix << "stop_execution}\""
-                          << " abort_mission=\"{" << robot_prefix << "abort_mission}\">\n"
+                          << " reset=\"{" << robot_prefix << "reset}\">\n"
                           << "     <Fallback>\n"
                           << "      <ExecuteTrajectory"
                           << " name=\"ExecMove_" << this_move_id << "\""
@@ -208,7 +208,7 @@ namespace manymove_cpp_trees
                           << "/>\n"
                           << "      </ForceFailure>\n"
                           << "     </Fallback>"
-                          << "    </RetryPauseAbortNode>\n";
+                          << "    </RetryPauseResetNode>\n";
 
             // increment the global ID for the next move
             g_global_move_id++;
@@ -261,10 +261,10 @@ namespace manymove_cpp_trees
 
             // Build a RetryPauseAbort node that wraps a single MoveManipulatorAction.
             // This node is expected to either execute an existing trajectory or trigger a re–plan.
-            execution_seq << "    <RetryPauseAbortNode name=\"StopSafe_Retry_" << this_move_id << "\""
+            execution_seq << "    <RetryPauseResetNode name=\"StopSafe_Retry_" << this_move_id << "\""
                           << " collision_detected=\"{" << robot_prefix << "collision_detected}\""
                           << " stop_execution=\"{" << robot_prefix << "stop_execution}\""
-                          << " abort_mission=\"{" << robot_prefix << "abort_mission}\">\n"
+                          << " reset=\"{" << robot_prefix << "reset}\">\n"
                           << "    <Sequence>\n"
                           << "      <MoveManipulatorAction"
                           << " name=\"MoveManip_" << this_move_id << "\""
@@ -277,7 +277,7 @@ namespace manymove_cpp_trees
                           << " stop_execution=\"{" << robot_prefix << "stop_execution}\""
                           << "/>\n"
                           << "    </Sequence>\n"
-                          << "    </RetryPauseAbortNode>\n";
+                          << "    </RetryPauseResetNode>\n";
 
             // Increment the global ID for the next move.
             g_global_move_id++;

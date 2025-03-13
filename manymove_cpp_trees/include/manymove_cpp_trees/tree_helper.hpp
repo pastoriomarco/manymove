@@ -49,7 +49,7 @@ namespace manymove_cpp_trees
         factory.registerNodeType<SetBlackboardKeyValue>("SetBlackboardKeyValue");
         factory.registerNodeType<WaitForKeyAction>("WaitForKeyAction");
         factory.registerNodeType<BT::RetryNode>("RetryNode");
-        factory.registerNodeType<RetryPauseAbortNode>("RetryPauseAbortNode");
+        factory.registerNodeType<RetryPauseResetNode>("RetryPauseResetNode");
         factory.registerNodeType<GripperCommandAction>("GripperCommandAction");
     }
 

@@ -61,13 +61,13 @@ namespace manymove_cpp_trees
         const std::shared_ptr<std_srvs::srv::Empty::Request> /*request*/,
         std::shared_ptr<std_srvs::srv::Empty::Response> /*response*/)
     {
-        // Set stop_execution and abort_mission to true and execution_resumed to false.
+        // Set stop_execution and reset to true and execution_resumed to false.
         blackboard_->set(robot_prefix_ + "stop_execution", true);
-        blackboard_->set(robot_prefix_ + "abort_mission", true);
+        blackboard_->set(robot_prefix_ + "reset", true);
         blackboard_->set(robot_prefix_ + "execution_resumed", false);
         RCLCPP_INFO_STREAM(this->get_logger(), "reset_program: "
                                                    << robot_prefix_ << "stop_execution=true, "
-                                                   << robot_prefix_ << "abort_mission=true, "
+                                                   << robot_prefix_ << "reset=true, "
                                                    << robot_prefix_ << "execution_resumed=false.");
     }
 
@@ -76,11 +76,11 @@ namespace manymove_cpp_trees
         // Retrieve the three keys from the blackboard.
         bool execution_resumed = false;
         bool stop_execution = false;
-        bool abort_mission = false;
+        bool reset = false;
         bool collision_detected = false;
         blackboard_->get(robot_prefix_ + "execution_resumed", execution_resumed);
         blackboard_->get(robot_prefix_ + "stop_execution", stop_execution);
-        blackboard_->get(robot_prefix_ + "abort_mission", abort_mission);
+        blackboard_->get(robot_prefix_ + "reset", reset);
         blackboard_->get(robot_prefix_ + "collision_detected", collision_detected);
 
         // Create a JSON string with the status.
@@ -88,7 +88,7 @@ namespace manymove_cpp_trees
         std::ostringstream ss;
         ss << "{\"" << robot_prefix_ << "execution_resumed\": " << (execution_resumed ? "true" : "false")
            << ", \"" << robot_prefix_ << "stop_execution\": " << (stop_execution ? "true" : "false")
-           << ", \"" << robot_prefix_ << "abort_mission\": " << (abort_mission ? "true" : "false")
+           << ", \"" << robot_prefix_ << "reset\": " << (reset ? "true" : "false")
            << ", \"" << robot_prefix_ << "collision_detected\": " << (collision_detected ? "true" : "false") << "}";
         msg.data = ss.str();
 

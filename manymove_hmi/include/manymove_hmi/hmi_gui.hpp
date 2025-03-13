@@ -23,7 +23,7 @@ public slots:
     void updateStatus(const QString &robotPrefix,
                       bool execution_resumed,
                       bool stop_execution,
-                      bool abort_mission,
+                      bool reset,
                       bool collision_detected);
 
     // TCP server slots (unchanged)

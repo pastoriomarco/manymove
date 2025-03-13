@@ -10,21 +10,21 @@ namespace manymove_cpp_trees
 {
     /**
      * @brief A custom retry node that keeps retrying indefinitely but
-     *        if the "abort_mission" blackboard key is true, it halts the child and returns FAILURE;
+     *        if the "reset" blackboard key is true, it halts the child and returns FAILURE;
      *        if the "stop_execution" key is true, it halts the child and returns RUNNING (i.e. it pauses execution).
      *        Otherwise, it ticks its child.
      */
-    class RetryPauseAbortNode : public BT::DecoratorNode
+    class RetryPauseResetNode : public BT::DecoratorNode
     {
     public:
-        RetryPauseAbortNode(const std::string &name, const BT::NodeConfiguration &config);
+        RetryPauseResetNode(const std::string &name, const BT::NodeConfiguration &config);
 
         static BT::PortsList providedPorts()
         {
             return {
                 BT::InputPort<bool>("stop_execution", false, "Pause execution when true"),
                 BT::InputPort<bool>("collision_detected", false, "Stops current move when true, then retries planning"),
-                BT::InputPort<bool>("abort_mission", false, "Abort mission when true")};
+                BT::InputPort<bool>("reset", false, "Reset branch when true")};
         }
 
         BT::NodeStatus tick() override;

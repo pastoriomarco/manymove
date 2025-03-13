@@ -4,29 +4,29 @@
 namespace manymove_cpp_trees
 {
 
-    RetryPauseAbortNode::RetryPauseAbortNode(const std::string &name, const BT::NodeConfiguration &config)
+    RetryPauseResetNode::RetryPauseResetNode(const std::string &name, const BT::NodeConfiguration &config)
         : BT::DecoratorNode(name, config)
     {
     }
 
-    BT::NodeStatus RetryPauseAbortNode::tick()
+    BT::NodeStatus RetryPauseResetNode::tick()
     {
         // Read the two controlling blackboard keys:
         bool collision_detected = false;
-        bool abort_mission = false;
+        bool reset = false;
         bool stop_execution = false;
 
         if (!child_node_)
-            throw BT::RuntimeError("RetryPauseAbortNode: missing child");
+            throw BT::RuntimeError("RetryPauseResetNode: missing child");
 
-        if ((!getInput("abort_mission", abort_mission)) || (!getInput("stop_execution", stop_execution)) || (!getInput("collision_detected", collision_detected)))
+        if ((!getInput("reset", reset)) || (!getInput("stop_execution", stop_execution)) || (!getInput("collision_detected", collision_detected)))
         {
-            throw BT::RuntimeError("RetryPauseAbortNode: Missing required input [key]");
+            throw BT::RuntimeError("RetryPauseResetNode: Missing required input [key]");
             return BT::NodeStatus::FAILURE;
         }
 
-        // Priority 1: abort_mission is true: halt child and return FAILURE.
-        if (abort_mission)
+        // Priority 1: reset is true: halt child and return FAILURE.
+        if (reset)
         {
             if (child_node_ && child_node_->status() == BT::NodeStatus::RUNNING)
                 child_node_->halt();
@@ -77,7 +77,7 @@ namespace manymove_cpp_trees
             return BT::NodeStatus::RUNNING;
     }
 
-    void RetryPauseAbortNode::halt()
+    void RetryPauseResetNode::halt()
     {
         if (child_node_ && child_node_->status() == BT::NodeStatus::RUNNING)
             child_node_->halt();

@@ -28,14 +28,14 @@ void Ros2Worker::statusCallback(const std_msgs::msg::String::SharedPtr msg)
     std::string data = msg->data;
     bool execution_resumed = (data.find("\"" + robot_prefix_ + "execution_resumed\": true") != std::string::npos);
     bool stop_execution = (data.find("\"" + robot_prefix_ + "stop_execution\": true") != std::string::npos);
-    bool abort_mission = (data.find("\"" + robot_prefix_ + "abort_mission\": true") != std::string::npos);
+    bool reset = (data.find("\"" + robot_prefix_ + "reset\": true") != std::string::npos);
     bool collision_detected = (data.find("\"" + robot_prefix_ + "collision_detected\": true") != std::string::npos);
 
     QMetaObject::invokeMethod(gui_, "updateStatus", Qt::QueuedConnection,
                               Q_ARG(QString, QString::fromStdString(robot_prefix_)),
                               Q_ARG(bool, execution_resumed),
                               Q_ARG(bool, stop_execution),
-                              Q_ARG(bool, abort_mission),
+                              Q_ARG(bool, reset),
                               Q_ARG(bool, collision_detected));
 }
 

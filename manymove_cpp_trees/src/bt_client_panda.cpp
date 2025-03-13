@@ -73,7 +73,7 @@ int main(int argc, char **argv)
     blackboard->set(robot_prefix + "collision_detected", false);
     blackboard->set(robot_prefix + "stop_execution", true);
     blackboard->set(robot_prefix + "execution_resumed", false);
-    blackboard->set(robot_prefix + "abort_mission", false);
+    blackboard->set(robot_prefix + "reset", false);
     RCLCPP_INFO(node->get_logger(), "Blackboard: created execution control keys");
 
     // Create the HMI Service Node and pass the same blackboard

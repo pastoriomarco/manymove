@@ -65,7 +65,7 @@ int main(int argc, char **argv)
     blackboard->set(robot_prefix + "collision_detected", false);
     blackboard->set(robot_prefix + "stop_execution", true);
     blackboard->set(robot_prefix + "execution_resumed", false);
-    blackboard->set(robot_prefix + "abort_mission", false);
+    blackboard->set(robot_prefix + "reset", false);
     RCLCPP_INFO(node->get_logger(), "Blackboard: created execution control keys");
 
     // Create the HMI Service Node and pass the same blackboard ***
@@ -170,22 +170,22 @@ int main(int argc, char **argv)
      * Notice that on any string representing an XML snippet it's better to use _xml at the end of the name to give better
      * sense of what's in that variable.
      */
-    std::string to_rest_reset_xml = buildSequentialPlanExecuteXML(
+    std::string to_rest_reset_xml = buildMoveXML(
         robot_prefix, robot_prefix + "toRest", rest_position, blackboard, true); // this will run only on prep sequence, so we reset it afterwards
 
-    std::string to_rest_xml = buildSequentialPlanExecuteXML(
+    std::string to_rest_xml = buildMoveXML(
         robot_prefix, robot_prefix + "toRest", rest_position, blackboard);
 
-    std::string scan_around_xml = buildSequentialPlanExecuteXML(
+    std::string scan_around_xml = buildMoveXML(
         robot_prefix, robot_prefix + "scanAround", scan_surroundings, blackboard);
 
-    std::string pick_object_xml = buildSequentialPlanExecuteXML(
+    std::string pick_object_xml = buildMoveXML(
         robot_prefix, robot_prefix + "pick", pick_sequence, blackboard);
 
-    std::string drop_object_xml = buildSequentialPlanExecuteXML(
+    std::string drop_object_xml = buildMoveXML(
         robot_prefix, robot_prefix + "drop", drop_sequence, blackboard);
 
-    std::string to_home_xml = buildSequentialPlanExecuteXML(
+    std::string to_home_xml = buildMoveXML(
         robot_prefix, robot_prefix + "home", home_position, blackboard);
 
     /*

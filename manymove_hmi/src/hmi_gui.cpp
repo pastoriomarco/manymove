@@ -99,7 +99,7 @@ HmiGui::~HmiGui()
 void HmiGui::updateStatus(const QString &robotPrefix,
                           bool execution_resumed,
                           bool stop_execution,
-                          bool abort_mission,
+                          bool reset,
                           bool collision_detected)
 {
     // Find the row for this robotPrefix
@@ -135,7 +135,7 @@ void HmiGui::updateStatus(const QString &robotPrefix,
             std::ostringstream ss;
             ss << "{\"" << ri.prefix << "execution_resumed\": " << (execution_resumed ? "true" : "false")
                << ", \"" << ri.prefix << "stop_execution\": " << (stop_execution ? "true" : "false")
-               << ", \"" << ri.prefix << "abort_mission\": " << (abort_mission ? "true" : "false")
+               << ", \"" << ri.prefix << "reset\": " << (reset ? "true" : "false")
                << ", \"" << ri.prefix << "collision_detected\": " << (collision_detected ? "true" : "false")
                << "}";
 

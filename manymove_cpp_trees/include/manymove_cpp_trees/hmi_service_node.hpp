@@ -12,7 +12,7 @@ namespace manymove_cpp_trees
      * @brief A node that provides HMI services and publishes the status of key blackboard values.
      *
      * It provides three services (start_execution, stop_execution, reset_program) and publishes every 250ms
-     * the status of "execution_resumed", "stop_execution", and "abort_mission".
+     * the status of "execution_resumed", "stop_execution", and "reset".
      */
     class HMIServiceNode : public rclcpp::Node
     {
