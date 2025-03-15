@@ -26,9 +26,7 @@ namespace manymove_cpp_trees
     inline void registerAllNodeTypes(BT::BehaviorTreeFactory &factory)
     {
 
-        factory.registerNodeType<PlanningAction>("PlanningAction");
         factory.registerNodeType<MoveManipulatorAction>("MoveManipulatorAction");
-        factory.registerNodeType<ExecuteTrajectory>("ExecuteTrajectory");
         factory.registerNodeType<ResetTrajectories>("ResetTrajectories");
 
         factory.registerNodeType<AddCollisionObjectAction>("AddCollisionObjectAction");
@@ -43,7 +41,6 @@ namespace manymove_cpp_trees
         factory.registerNodeType<WaitForInputAction>("WaitForInputAction");
         factory.registerNodeType<CheckRobotStateAction>("CheckRobotStateAction");
         factory.registerNodeType<ResetRobotStateAction>("ResetRobotStateAction");
-        factory.registerNodeType<StopMotionAction>("StopMotionAction");
 
         factory.registerNodeType<CheckBlackboardKeyValue>("CheckBlackboardKeyValue");
         factory.registerNodeType<SetBlackboardKeyValue>("SetBlackboardKeyValue");
@@ -58,35 +55,15 @@ namespace manymove_cpp_trees
     // ----------------------------------------------------------------------------
 
     /**
-     * @brief Build a single parallel "plan + execute" block with unique naming
-     *        using a static global counter for each move. Parallel version with traj reset
+     * @brief Registers all BehaviorTree node types for the manymove_cpp_trees package.
+     * @param factory The BT factory where these nodes will be registered.
      *
-     * Example output:
-     *
-     *  <ResetTrajectories move_ids="id1,id2,..."/>
-     *  <Parallel name="ParallelPlanExecute_{node_prefix}_{blockStartID}" success_threshold="2" failure_threshold="1">
-     *    <Sequence name="PlanningSequence_{node_prefix}_{blockStartID}">
-     *      <PlanningAction name="PlanMove_{globalID}" ...
-     *         move_id="{globalID}"
-     *         planned_move_id="{planned_move_id_{globalID}}"
-     *         trajectory="{trajectory_{globalID}}"
-     *         planning_validity="{validity_{globalID}}"/>
-     *      ...
-     *    </Sequence>
-     *    <Sequence name="ExecutionSequence_{node_prefix}_{blockStartID}">
-     *      <ExecuteTrajectory name="ExecMove_{globalID}"
-     *         planned_move_id="{planned_move_id_{globalID}}"
-     *         trajectory="{trajectory_{globalID}}"
-     *         planning_validity="{validity_{globalID}}"/>
-     *      ...
-     *      <PlanningAction name="PlanMove_{globalID}" ...
-     *         move_id="{globalID}"
-     *         planned_move_id="{planned_move_id_{globalID}}"
-     *         trajectory="{trajectory_{globalID}}"
-     *         planning_validity="{validity_{globalID}}"/>
-     *      ...
-     *    </Sequence>
-     *  </Parallel>
+     * This function includes:
+     *   - MoveManipulatorAction, ResetTrajectories, etc.
+     *   - Collision object actions (Add/Remove/Attach/Detach).
+     *   - Gripper commands.
+     *   - IO signals for reading/writing inputs and outputs.
+     *   - Logic nodes for blackboard checks and set-values.
      *
      * Each move in @p moves increments a global counter, thus guaranteeing each
      * move_id, planned_move_id, validity_, trajectory_ are unique across the entire tree.
@@ -94,73 +71,23 @@ namespace manymove_cpp_trees
      * This function also populates the blackboard with move IDs.
      *
      * WARNING:This function will require the output XML to be wrapped in a Control leaf node,
-     *  since ResetTrajectories is detached from its own ParallelPlanExecute leaf node. This is done inside this
-     *  function to allow grouping several ParallelPlanExecute in a single sequence to reduce tree's complexity. Moreover,
+     *  since ResetTrajectories is detached from its own buildMoveXML leaf node. This is done inside this
+     *  function to allow grouping several buildMoveXML in a single sequence to reduce tree's complexity. Moreover,
      *  you can set @p reset_trajs to false to avoid generating ResetTrajectories if your control logic don't require it,
-     *  further simplifying the tree's structure.
+     *  further simplifying the tree's structure and to be able to reuse the already successful trajectories in the previous cycle.
      *
+     * @param robot_prefix A prefix for the robot's action servers
      * @param node_prefix A label for the parallel block (e.g., "preparatory" or "pickAndHoming")
      * @param moves       The vector of Move that we plan/execute in this parallel block
      * @param blackboard  The blackboard to populate with move IDs
-     * @param robot_prefix A prefix for the robot's action servers
-     * @return A string with the generated XML snippet
-     */
-    std::string buildParallelPlanExecuteXML(const std::string &robot_prefix,
-                                            const std::string &node_prefix,
-                                            const std::vector<Move> &moves,
-                                            BT::Blackboard::Ptr blackboard);
-
-    /**
-     * @brief Build a single parallel "plan + execute" block with unique naming
-     *        using a static global counter for each move. Sequential version with memory
-     *
-     * Example output:
-     *
-     *  <Sequence name="SequentialPlanExecute_{node_prefix}_{blockStartID}">
-     *    <Fallback name="ExecutionSequence_{node_prefix}_{blockStartID}">
-     *      <ExecuteTrajectory name="ExecMove_{globalID}"
-     *         planned_move_id="{planned_move_id_{globalID}}"
-     *         trajectory="{trajectory_{globalID}}"
-     *         planning_validity="{validity_{globalID}}"/>
-     *      ...
-     *     <PlanningAction name="PlanMove_{globalID}" ...
-     *         move_id="{globalID}"
-     *         planned_move_id="{planned_move_id_{globalID}}"
-     *         trajectory="{trajectory_{globalID}}"
-     *         planning_validity="{validity_{globalID}}"/>
-     *      ...
-     *    </Fallback>
-     *  </Sequence>
-     *
-     * Each move in @p moves increments a global counter, thus guaranteeing each
-     * move_id, planned_move_id, validity_, trajectory_ are unique across the entire tree.
-     *
-     * This function also populates the blackboard with move IDs.
-     *
-     * WARNING:This function will require the output XML to be wrapped in a Control leaf node,
-     *  since ResetTrajectories is detached from its own ParallelPlanExecute leaf node. This is done inside this
-     *  function to allow grouping several ParallelPlanExecute in a single sequence to reduce tree's complexity. Moreover,
-     *  you can set @p reset_trajs to false to avoid generating ResetTrajectories if your control logic don't require it,
-     *  further simplifying the tree's structure.
-     *
-     * @param node_prefix A label for the parallel block (e.g., "preparatory" or "pickAndHoming")
-     * @param moves       The vector of Move that we plan/execute in this parallel block
-     * @param blackboard  The blackboard to populate with move IDs
-     * @param robot_prefix A prefix for the robot's action servers
      * @param reset_trajs This condition generates the ResetTrajectories leaf node to reset all the sequence's trajs before planning and executing
      * @return A string with the generated XML snippet
      */
-    std::string buildSequentialPlanExecuteXML(const std::string &robot_prefix,
-                                              const std::string &node_prefix,
-                                              const std::vector<Move> &moves,
-                                              BT::Blackboard::Ptr blackboard,
-                                              bool reset_trajs = false);
-
     std::string buildMoveXML(const std::string &robot_prefix,
-                                       const std::string &node_prefix,
-                                       const std::vector<Move> &moves,
-                                       BT::Blackboard::Ptr blackboard,
-                                       bool reset_trajs = false);
+                             const std::string &node_prefix,
+                             const std::vector<Move> &moves,
+                             BT::Blackboard::Ptr blackboard,
+                             bool reset_trajs = false);
 
     /**
      * @brief Builds an XML snippet for a single object action node based on the provided ObjectAction.

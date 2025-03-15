@@ -158,7 +158,7 @@ int main(int argc, char **argv)
 
     /*
      * Build move sequence blocks
-     * The buildParallelPlanExecuteXML creates the xml tree branch that parallelizes completely the planning and
+     * The buildMoveXML creates the xml tree branch that parallelizes completely the planning and
      * the execution of the sequence of moves. The moves will be planned in sequence until the last move is successfully
      * planned, and the trajectories will be stored in the blackboard and set as valid. The execution starts in parallel,
      * with the first move polling the blackboard until its trajectory is flagged as valid, then the execution begins.

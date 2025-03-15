@@ -609,22 +609,22 @@ int main(int argc, char **argv)
     // ROBOT 1
     // build the xml snippets for the single moves of robot 1
     // or translate them directly if they are only used once
-    std::string rest_move_parallel_1_xml = buildSequentialPlanExecuteXML(
+    std::string rest_move_parallel_1_xml = buildMoveXML(
         robot_prefix_1, robot_prefix_1 + "toRest", rest_position_1, blackboard);
 
-    std::string pick_move_parallel_1_xml = buildSequentialPlanExecuteXML(
+    std::string pick_move_parallel_1_xml = buildMoveXML(
         robot_prefix_1, robot_prefix_1 + "pick", pick_sequence_1, blackboard);
 
-    std::string drop_move_parallel_1_xml = buildSequentialPlanExecuteXML(
+    std::string drop_move_parallel_1_xml = buildMoveXML(
         robot_prefix_1, robot_prefix_1 + "drop", drop_sequence_1, blackboard);
 
-    std::string wait_move_parallel_1_xml = buildSequentialPlanExecuteXML(
+    std::string wait_move_parallel_1_xml = buildMoveXML(
         robot_prefix_1, robot_prefix_1 + "wait", wait_position_1, blackboard);
 
-    std::string exit_move_parallel_1_xml = buildSequentialPlanExecuteXML(
+    std::string exit_move_parallel_1_xml = buildMoveXML(
         robot_prefix_1, robot_prefix_1 + "exit", exit_position_1, blackboard);
 
-    std::string home_move_parallel_1_xml = buildSequentialPlanExecuteXML(
+    std::string home_move_parallel_1_xml = buildMoveXML(
         robot_prefix_1, robot_prefix_1 + "home", home_position_1, blackboard);
 
     // We can compose sequences together into a xml tree leaf or branch
@@ -633,22 +633,22 @@ int main(int argc, char **argv)
 
     // ROBOT 2
     // build the xml snippets for the single moves of robot 2
-    std::string rest_move_parallel_2_xml = buildSequentialPlanExecuteXML(
+    std::string rest_move_parallel_2_xml = buildMoveXML(
         robot_prefix_2, robot_prefix_2 + "toRest", rest_position_2, blackboard);
 
-    std::string insert_move_parallel_2_xml = buildSequentialPlanExecuteXML(
+    std::string insert_move_parallel_2_xml = buildMoveXML(
         robot_prefix_2, robot_prefix_2 + "pick", insert_sequence_2, blackboard);
 
-    std::string load_move_parallel_2_xml = buildSequentialPlanExecuteXML(
+    std::string load_move_parallel_2_xml = buildMoveXML(
         robot_prefix_2, robot_prefix_2 + "drop", load_sequence_2, blackboard);
 
-    std::string exit_move_parallel_2_xml = buildSequentialPlanExecuteXML(
+    std::string exit_move_parallel_2_xml = buildMoveXML(
         robot_prefix_2, robot_prefix_2 + "exit", exit_sequence_2, blackboard);
 
-    std::string ready_move_parallel_2_xml = buildSequentialPlanExecuteXML(
+    std::string ready_move_parallel_2_xml = buildMoveXML(
         robot_prefix_2, robot_prefix_2 + "toReady", ready_position_2, blackboard);
 
-    std::string home_move_parallel_2_xml = buildSequentialPlanExecuteXML(
+    std::string home_move_parallel_2_xml = buildMoveXML(
         robot_prefix_2, robot_prefix_2 + "home", home_position_2, blackboard);
 
     // We can compose sequences together into a xml tree leaf or branch

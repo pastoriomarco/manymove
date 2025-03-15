@@ -295,14 +295,14 @@ def launch_setup(context, *args, **kwargs):
     # launch manymove_cpp_trees
     # ================================================================
 
-    # behaviortree.cpp node
+    # py_trees node
     manymove_py_trees_node = Node(
         package='manymove_py_trees',
         executable='bt_client_fake',
         output='screen',
         parameters=[{
             'robot_model': xarm_type,
-            'robot_prefix': prefix,
+            'robot_prefix': prefix.perform(context),
             'tcp_frame': tcp_frame,
             'is_robot_real': False,
         }]

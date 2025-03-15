@@ -16,6 +16,15 @@
 #include "manymove_msgs/action/load_traj_controller.hpp"
 #include "planner_interface.hpp"
 
+enum class MoveExecutionState
+{
+    IDLE,
+    PLANNING,
+    EXECUTING,
+    COMPLETED,
+    CANCELLED
+};
+
 class ManipulatorActionServer
 {
 public:
@@ -26,12 +35,6 @@ public:
 
 private:
     // Internal types
-    using PlanManipulator = manymove_msgs::action::PlanManipulator;
-    using GoalHandlePlanManipulator = rclcpp_action::ServerGoalHandle<PlanManipulator>;
-
-    using ExecuteTrajectory = manymove_msgs::action::ExecuteTrajectory;
-    using GoalHandleExecuteTrajectory = rclcpp_action::ServerGoalHandle<ExecuteTrajectory>;
-
     using MoveManipulator = manymove_msgs::action::MoveManipulator;
     using GoalHandleMoveManipulator = rclcpp_action::ServerGoalHandle<MoveManipulator>;
 
@@ -51,9 +54,6 @@ private:
     rclcpp::CallbackGroup::SharedPtr param_callback_group_;
 
     // Action Servers
-    rclcpp_action::Server<PlanManipulator>::SharedPtr plan_action_server_;
-    rclcpp_action::Server<ExecuteTrajectory>::SharedPtr execute_action_server_;
-    rclcpp_action::Server<ExecuteTrajectory>::SharedPtr stop_motion_server_;
     rclcpp_action::Server<MoveManipulator>::SharedPtr move_manipulator_server_;
     rclcpp_action::Server<UnloadTrajController>::SharedPtr unload_traj_controller_server_;
     rclcpp_action::Server<LoadTrajController>::SharedPtr load_traj_controller_server_;
@@ -69,22 +69,8 @@ private:
     std::mutex joint_states_mutex_;
     std::unordered_map<std::string, double> current_joint_positions_;
 
-    // PlanManipulator Callbacks
-    rclcpp_action::GoalResponse handle_plan_goal(const rclcpp_action::GoalUUID &, std::shared_ptr<const PlanManipulator::Goal>);
-    rclcpp_action::CancelResponse handle_plan_cancel(const std::shared_ptr<GoalHandlePlanManipulator>);
-    void handle_plan_accepted(const std::shared_ptr<GoalHandlePlanManipulator>);
-    void execute_plan_goal(const std::shared_ptr<GoalHandlePlanManipulator>);
-
-    // ExecuteTrajectory Callbacks
-    rclcpp_action::GoalResponse handle_execute_goal(const rclcpp_action::GoalUUID &, std::shared_ptr<const ExecuteTrajectory::Goal>);
-    rclcpp_action::CancelResponse handle_execute_cancel(const std::shared_ptr<GoalHandleExecuteTrajectory>);
-    void handle_execute_accepted(const std::shared_ptr<GoalHandleExecuteTrajectory>);
-
-    // StopMotion Callbacks
-    rclcpp_action::GoalResponse handle_stop_goal(const rclcpp_action::GoalUUID &, std::shared_ptr<const ExecuteTrajectory::Goal>);
-    rclcpp_action::CancelResponse handle_stop_cancel(const std::shared_ptr<GoalHandleExecuteTrajectory>);
-    void handle_stop_accept(const std::shared_ptr<GoalHandleExecuteTrajectory>);
-    void execute_stop(const std::shared_ptr<GoalHandleExecuteTrajectory>);
+    std::mutex move_state_mutex_;
+    MoveExecutionState move_state_{MoveExecutionState::IDLE};
 
     // MoveManipulator Callbacks
     rclcpp_action::GoalResponse handle_move_goal(const rclcpp_action::GoalUUID &, std::shared_ptr<const MoveManipulator::Goal>);

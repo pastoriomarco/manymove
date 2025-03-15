@@ -160,7 +160,7 @@ int main(int argc, char **argv)
 
     /*
      * Build parallel move sequence blocks
-     * The buildParallelPlanExecuteXML creates the xml tree branch that parallelizes completely the planning and
+     * The buildMoveXML creates the xml tree branch that parallelizes completely the planning and
      * the execution of the sequence of moves. The moves will be planned in sequence until the last move is successfully
      * planned, and the trajectories will be stored in the blackboard and set as valid. The execution starts in parallel,
      * with the first move polling the blackboard until its trajectory is flagged as valid, then the execution begins.
@@ -172,16 +172,16 @@ int main(int argc, char **argv)
      * Notice that on any string representing an XML snippet it's better to use _xml at the end of the name to give better
      * sense of what's in that variable.
      */
-    std::string to_rest_xml = buildSequentialPlanExecuteXML(
+    std::string to_rest_xml = buildMoveXML(
         robot_prefix, robot_prefix + "toRest", rest_position, blackboard);
 
-    std::string pick_object_xml = buildSequentialPlanExecuteXML(
+    std::string pick_object_xml = buildMoveXML(
         robot_prefix, robot_prefix + "pick", pick_sequence, blackboard);
 
-    std::string drop_object_xml = buildSequentialPlanExecuteXML(
+    std::string drop_object_xml = buildMoveXML(
         robot_prefix, robot_prefix + "drop", drop_sequence, blackboard);
 
-    std::string to_home_xml = buildSequentialPlanExecuteXML(
+    std::string to_home_xml = buildMoveXML(
         robot_prefix, robot_prefix + "home", home_position, blackboard);
 
     /*

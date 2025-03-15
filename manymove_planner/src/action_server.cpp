@@ -67,33 +67,6 @@ ManipulatorActionServer::ManipulatorActionServer(
             }
         });
 
-    plan_action_server_ = rclcpp_action::create_server<PlanManipulator>(
-        node_,
-        planner_prefix_ + "plan_manipulator",
-        std::bind(&ManipulatorActionServer::handle_plan_goal, this, std::placeholders::_1, std::placeholders::_2),
-        std::bind(&ManipulatorActionServer::handle_plan_cancel, this, std::placeholders::_1),
-        std::bind(&ManipulatorActionServer::handle_plan_accepted, this, std::placeholders::_1),
-        rcl_action_server_get_default_options(),
-        action_callback_group_);
-
-    execute_action_server_ = rclcpp_action::create_server<ExecuteTrajectory>(
-        node_,
-        planner_prefix_ + "execute_manipulator_traj",
-        std::bind(&ManipulatorActionServer::handle_execute_goal, this, std::placeholders::_1, std::placeholders::_2),
-        std::bind(&ManipulatorActionServer::handle_execute_cancel, this, std::placeholders::_1),
-        std::bind(&ManipulatorActionServer::handle_execute_accepted, this, std::placeholders::_1),
-        rcl_action_server_get_default_options(),
-        action_callback_group_);
-
-    stop_motion_server_ = rclcpp_action::create_server<ExecuteTrajectory>(
-        node_,
-        planner_prefix_ + "stop_motion",
-        std::bind(&ManipulatorActionServer::handle_stop_goal, this, std::placeholders::_1, std::placeholders::_2),
-        std::bind(&ManipulatorActionServer::handle_stop_cancel, this, std::placeholders::_1),
-        std::bind(&ManipulatorActionServer::handle_stop_accept, this, std::placeholders::_1),
-        rcl_action_server_get_default_options(),
-        action_callback_group_);
-
     move_manipulator_server_ = rclcpp_action::create_server<MoveManipulator>(
         node_,
         planner_prefix_ + "move_manipulator", // e.g. "/move_manipulator" if prefix is empty
@@ -123,209 +96,6 @@ ManipulatorActionServer::ManipulatorActionServer(
 }
 
 // -------------------------------------
-// PlanManipulator callbacks
-// -------------------------------------
-
-rclcpp_action::GoalResponse ManipulatorActionServer::handle_plan_goal(
-    [[maybe_unused]] const rclcpp_action::GoalUUID &uuid,
-    [[maybe_unused]] std::shared_ptr<const PlanManipulator::Goal> goal_msg)
-{
-    RCLCPP_INFO(node_->get_logger(), "Received PlanManipulator action goal request");
-    return rclcpp_action::GoalResponse::ACCEPT_AND_EXECUTE;
-}
-
-rclcpp_action::CancelResponse ManipulatorActionServer::handle_plan_cancel(
-    [[maybe_unused]] const std::shared_ptr<GoalHandlePlanManipulator> goal_handle)
-{
-    RCLCPP_INFO(node_->get_logger(), "Received request to cancel PlanManipulator goal");
-    return rclcpp_action::CancelResponse::ACCEPT;
-}
-
-void ManipulatorActionServer::handle_plan_accepted(
-    const std::shared_ptr<GoalHandlePlanManipulator> goal_handle)
-{
-    std::thread{std::bind(&ManipulatorActionServer::execute_plan_goal, this, goal_handle)}.detach();
-}
-
-void ManipulatorActionServer::execute_plan_goal(const std::shared_ptr<GoalHandlePlanManipulator> goal_handle)
-{
-    auto result = std::make_shared<PlanManipulator::Result>();
-    const auto &goal_msg = goal_handle->get_goal();
-
-    // 1) Plan the trajectory
-    manymove_msgs::action::PlanManipulator::Goal internal_goal;
-    internal_goal.goal = goal_msg->goal;
-
-    auto [success, trajectory] = planner_->plan(internal_goal);
-    if (!success)
-    {
-        RCLCPP_ERROR(node_->get_logger(), "Planning failed");
-        result->success = false;
-        goal_handle->abort(result);
-        return;
-    }
-
-    // 2) Call the applyTimeParameterization
-    auto [param_ok, timed_trajectory] =
-        planner_->applyTimeParameterization(trajectory, goal_msg->goal.config);
-    if (!param_ok)
-    {
-        RCLCPP_ERROR(node_->get_logger(), "Time param failed");
-        result->success = false;
-        goal_handle->abort(result);
-        return;
-    }
-
-    // 3) Set the final result
-    result->success = true;
-    result->trajectory = timed_trajectory;
-    goal_handle->succeed(result);
-}
-
-// -------------------------------------
-// ExecuteTrajectory callbacks
-// -------------------------------------
-
-rclcpp_action::GoalResponse ManipulatorActionServer::handle_execute_goal(
-    const rclcpp_action::GoalUUID & /*uuid*/,
-    std::shared_ptr<const manymove_msgs::action::ExecuteTrajectory::Goal> goal)
-{
-    if (goal->trajectory.joint_trajectory.points.empty())
-    {
-        RCLCPP_WARN(node_->get_logger(), "Received an empty trajectory");
-        return rclcpp_action::GoalResponse::REJECT;
-    }
-    RCLCPP_INFO(node_->get_logger(), "Received ExecuteTrajectory goal");
-    return rclcpp_action::GoalResponse::ACCEPT_AND_EXECUTE;
-}
-
-rclcpp_action::CancelResponse ManipulatorActionServer::handle_execute_cancel(
-    const std::shared_ptr<GoalHandleExecuteTrajectory> /*goal_handle*/)
-{
-    RCLCPP_INFO(node_->get_logger(), "Received request to cancel trajectory execution");
-    return rclcpp_action::CancelResponse::ACCEPT;
-}
-
-// ExecuteTrajectory callbacks
-void ManipulatorActionServer::handle_execute_accepted(
-    const std::shared_ptr<GoalHandleExecuteTrajectory> goal_handle)
-{
-    // Run in a separate thread so we don't block the executor.
-    std::thread{[this, goal_handle]()
-                {
-                    RCLCPP_INFO(node_->get_logger(), "Executing trajectory (ExecuteTrajectory action)");
-
-                    auto result = std::make_shared<manymove_msgs::action::ExecuteTrajectory::Result>();
-                    const auto &goal_msg = goal_handle->get_goal();
-                    moveit_msgs::msg::RobotTrajectory traj = goal_msg->trajectory;
-
-                    if (traj.joint_trajectory.points.empty())
-                    {
-                        RCLCPP_ERROR(node_->get_logger(), "Empty trajectory received => aborting");
-                        result->success = false;
-                        result->message = "Empty trajectory";
-                        goal_handle->abort(result);
-                        return;
-                    }
-
-                    // Use the helper function to send the trajectory with collision checks.
-                    std::string abort_reason;
-                    bool ok = executeTrajectoryWithCollisionChecks<GoalHandleExecuteTrajectory,
-                                                                   manymove_msgs::action::ExecuteTrajectory::Feedback>(
-                        goal_handle, traj, abort_reason);
-
-                    if (ok)
-                    {
-                        RCLCPP_INFO(node_->get_logger(), "[ExecuteTrajectory] Trajectory execution succeeded");
-                        result->success = true;
-                        result->message = "Trajectory executed successfully";
-                        goal_handle->succeed(result);
-                    }
-                    else
-                    {
-                        RCLCPP_ERROR(node_->get_logger(), "[ExecuteTrajectory] Execution failed: %s", abort_reason.c_str());
-                        result->success = false;
-                        result->message = abort_reason;
-                        goal_handle->abort(result);
-                    }
-                }}
-        .detach();
-}
-
-// -------------------------------------
-// StopMotion callbacks
-// -------------------------------------
-
-rclcpp_action::GoalResponse ManipulatorActionServer::handle_stop_goal(
-    [[maybe_unused]] const rclcpp_action::GoalUUID &uuid,
-    [[maybe_unused]] std::shared_ptr<const ExecuteTrajectory::Goal> goal)
-{
-    RCLCPP_INFO(node_->get_logger(), "[ExecuteTrajectory] Received request to STOP");
-    // Always accept the request:
-    return rclcpp_action::GoalResponse::ACCEPT_AND_EXECUTE;
-}
-
-rclcpp_action::CancelResponse ManipulatorActionServer::handle_stop_cancel(
-    [[maybe_unused]] const std::shared_ptr<GoalHandleExecuteTrajectory> goal_handle)
-{
-    RCLCPP_INFO(node_->get_logger(), "[ExecuteTrajectory] Received request to cancel STOP motion");
-    // Typically we just accept the cancel, though there's not much sense in "canceling a stop."
-    return rclcpp_action::CancelResponse::ACCEPT;
-}
-
-void ManipulatorActionServer::handle_stop_accept(const std::shared_ptr<GoalHandleExecuteTrajectory> goal_handle)
-{
-    // Execute in a separate thread so as not to block the executor
-    std::thread{std::bind(&ManipulatorActionServer::execute_stop, this, goal_handle)}.detach();
-}
-
-void ManipulatorActionServer::execute_stop(const std::shared_ptr<GoalHandleExecuteTrajectory> goal_handle)
-{
-    RCLCPP_INFO(node_->get_logger(), "[ExecuteTrajectory] Executing STOP motion...");
-    auto result = std::make_shared<ExecuteTrajectory::Result>();
-
-    // 1) Check if canceled before we start
-    if (goal_handle->is_canceling())
-    {
-        RCLCPP_WARN(node_->get_logger(), "[ExecuteTrajectory] STOP goal canceled before execution.");
-        result->success = false;
-        result->message = "Canceled before execution";
-        goal_handle->canceled(result);
-        return;
-    }
-
-    // 2) Actually send the short stop trajectory
-    double dec_time = 1.0;
-    bool ok = planner_->sendControlledStop(dec_time);
-
-    // 3) If canceled mid-stop
-    if (goal_handle->is_canceling())
-    {
-        RCLCPP_WARN(node_->get_logger(), "[ExecuteTrajectory] STOP goal canceled mid‐execution.");
-        result->success = false;
-        result->message = "Canceled mid‐execution";
-        goal_handle->canceled(result);
-        return;
-    }
-
-    // 4) Finalize
-    if (ok)
-    {
-        RCLCPP_INFO(node_->get_logger(), "[ExecuteTrajectory] STOP completed successfully.");
-        result->success = true;
-        result->message = "Stop complete";
-        goal_handle->succeed(result);
-    }
-    else
-    {
-        RCLCPP_ERROR(node_->get_logger(), "[ExecuteTrajectory] STOP motion failed or was aborted by the controller.");
-        result->success = false;
-        result->message = "Stop motion failed";
-        goal_handle->abort(result);
-    }
-}
-
-// -------------------------------------
 // MoveManipulator callbacks
 // -------------------------------------
 
@@ -334,6 +104,12 @@ rclcpp_action::GoalResponse ManipulatorActionServer::handle_move_goal(
     [[maybe_unused]] std::shared_ptr<const MoveManipulator::Goal> goal_msg)
 {
     RCLCPP_INFO(node_->get_logger(), "[MoveManipulator] Received new goal");
+
+    {
+        std::lock_guard<std::mutex> lock(move_state_mutex_);
+        move_state_ = MoveExecutionState::PLANNING;
+    }
+
     return rclcpp_action::GoalResponse::ACCEPT_AND_EXECUTE;
 }
 
@@ -341,6 +117,24 @@ rclcpp_action::CancelResponse ManipulatorActionServer::handle_move_cancel(
     [[maybe_unused]] const std::shared_ptr<GoalHandleMoveManipulator> goal_handle)
 {
     RCLCPP_INFO(node_->get_logger(), "[MoveManipulator] Received cancel request");
+
+    {
+        std::lock_guard<std::mutex> lock(move_state_mutex_);
+        if (move_state_ == MoveExecutionState::EXECUTING)
+        {
+            // Robot is in motion – so we need to send a soft stop command
+            RCLCPP_INFO(node_->get_logger(), "[MoveManipulator] Cancel while EXECUTING => stopping robot");
+
+            // direct call to your planner's "sendControlledStop"
+            planner_->sendControlledStop(1.0);
+        }
+        else
+        {
+            // Cancel while PLANNING or IDLE => do nothing to the controller
+            RCLCPP_INFO(node_->get_logger(), "[MoveManipulator] Cancel while PLANNING/IDLE => no stop needed");
+        }
+    }
+
     return rclcpp_action::CancelResponse::ACCEPT;
 }
 
@@ -357,6 +151,12 @@ void ManipulatorActionServer::execute_move(
     RCLCPP_INFO(node_->get_logger(), "[MoveManipulator] Executing plan-or-reuse logic ...");
 
     auto result = std::make_shared<manymove_msgs::action::MoveManipulator::Result>();
+
+    {
+        std::lock_guard<std::mutex> lock(move_state_mutex_);
+        move_state_ = MoveExecutionState::PLANNING;
+    }
+
     const auto &goal = goal_handle->get_goal();
     moveit_msgs::msg::RobotTrajectory final_traj;
     bool have_valid_traj = false;
@@ -431,6 +231,26 @@ void ManipulatorActionServer::execute_move(
         final_traj = timed;
     }
 
+    if (goal_handle->is_canceling())
+    {
+        RCLCPP_WARN(node_->get_logger(),
+                    "[MoveManipulator] Canceled while still planning => no motion was sent");
+        result->success = false;
+        result->message = "Canceled during planning";
+        goal_handle->canceled(result);
+
+        {
+            std::lock_guard<std::mutex> lock(move_state_mutex_);
+            move_state_ = MoveExecutionState::CANCELLED;
+        }
+        return;
+    }
+
+    {
+        std::lock_guard<std::mutex> lock(move_state_mutex_);
+        move_state_ = MoveExecutionState::EXECUTING;
+    }
+
     // 3) Execute the trajectory with real-time collision checking and partial feedback.
     std::string abort_reason;
     bool exec_ok = executeTrajectoryWithCollisionChecks<GoalHandleMoveManipulator,
@@ -442,6 +262,12 @@ void ManipulatorActionServer::execute_move(
         RCLCPP_ERROR(node_->get_logger(), "[MoveManipulator] Execution failed => %s", abort_reason.c_str());
         result->success = false;
         result->message = abort_reason;
+
+        {
+            std::lock_guard<std::mutex> lock(move_state_mutex_);
+            move_state_ = MoveExecutionState::CANCELLED;
+        }
+
         goal_handle->abort(result);
         return;
     }
@@ -451,6 +277,12 @@ void ManipulatorActionServer::execute_move(
     result->success = true;
     result->message = "Execution success";
     result->final_trajectory = final_traj;
+
+    {
+        std::lock_guard<std::mutex> lock(move_state_mutex_);
+        move_state_ = MoveExecutionState::COMPLETED;
+    }
+
     goal_handle->succeed(result);
 }
 
@@ -1009,7 +841,7 @@ bool ManipulatorActionServer::executeTrajectoryWithCollisionChecks(
     };
 
     // 5) Actually send the goal
-    auto goal_handle_future = follow_joint_traj_client->async_send_goal(fjt_goal, opts); 
+    auto goal_handle_future = follow_joint_traj_client->async_send_goal(fjt_goal, opts);
     if (goal_handle_future.wait_for(std::chrono::seconds(5)) != std::future_status::ready)
     {
         abort_reason = "Timeout sending FollowJointTrajectory goal";
