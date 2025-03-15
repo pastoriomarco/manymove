@@ -55,24 +55,21 @@ HmiGui::HmiGui(const std::vector<std::string> &robotPrefixes, QWidget *parent)
 
         // Store references in the RobotInterface struct
         RobotInterface ri;
-        ri.prefix       = prefix;
-        ri.prefixLabel  = prefixLabel;
-        ri.startButton  = startButton;
-        ri.stopButton   = stopButton;
-        ri.resetButton  = resetButton;
+        ri.prefix = prefix;
+        ri.prefixLabel = prefixLabel;
+        ri.startButton = startButton;
+        ri.stopButton = stopButton;
+        ri.resetButton = resetButton;
         ri.ledIndicator = ledIndicator;
         robotInterfaces_.push_back(ri);
 
         // Wire each button's click to a signal with the robot prefix
-        connect(startButton, &QPushButton::clicked, this, [this, prefix]() {
-            emit startExecutionRequested(prefix);
-        });
-        connect(stopButton, &QPushButton::clicked, this, [this, prefix]() {
-            emit stopExecutionRequested(prefix);
-        });
-        connect(resetButton, &QPushButton::clicked, this, [this, prefix]() {
-            emit resetProgramRequested(prefix);
-        });
+        connect(startButton, &QPushButton::clicked, this, [this, prefix]()
+                { emit startExecutionRequested(prefix); });
+        connect(stopButton, &QPushButton::clicked, this, [this, prefix]()
+                { emit stopExecutionRequested(prefix); });
+        connect(resetButton, &QPushButton::clicked, this, [this, prefix]()
+                { emit resetProgramRequested(prefix); });
     }
 
     // Set up a TCP server listening on port 5000
@@ -97,7 +94,6 @@ HmiGui::~HmiGui()
 }
 
 void HmiGui::updateStatus(const QString &robotPrefix,
-                          bool execution_resumed,
                           bool stop_execution,
                           bool reset,
                           bool collision_detected)
@@ -133,8 +129,7 @@ void HmiGui::updateStatus(const QString &robotPrefix,
 
             // Build a JSON string for status (if you want to send it via TCP)
             std::ostringstream ss;
-            ss << "{\"" << ri.prefix << "execution_resumed\": " << (execution_resumed ? "true" : "false")
-               << ", \"" << ri.prefix << "stop_execution\": " << (stop_execution ? "true" : "false")
+            ss << "{\"" << ri.prefix << "stop_execution\": " << (stop_execution ? "true" : "false")
                << ", \"" << ri.prefix << "reset\": " << (reset ? "true" : "false")
                << ", \"" << ri.prefix << "collision_detected\": " << (collision_detected ? "true" : "false")
                << "}";

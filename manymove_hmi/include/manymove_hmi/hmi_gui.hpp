@@ -21,7 +21,6 @@ public:
 public slots:
     /// Update the GUI for a given robot (by prefix).
     void updateStatus(const QString &robotPrefix,
-                      bool execution_resumed,
                       bool stop_execution,
                       bool reset,
                       bool collision_detected);
