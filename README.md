@@ -139,12 +139,18 @@ This repository is composed of several sub-packages, each handling different res
 
 - **Panda Manipulator** (requires the installation of [moveit2_tutorials](https://moveit.picknik.ai/humble/doc/tutorials/getting_started/getting_started.html) )
 
-  Standalone launchers for MoveItCPP or MoveGroup with Panda robot and BehaviorTree.CPP (you need the moveit2_tutorials package sourced):
+  Standalone launchers for MoveItCPP or MoveGroup with Panda robot (you need the moveit2_tutorials package sourced):
+
+    with BehaviorTree.CPP:
      ```bash
      ros2 launch manymove_planner panda_moveitcpp_fake_cpp_trees.launch.py
      ```
      ```bash
      ros2 launch manymove_planner panda_movegroup_fake_cpp_trees.launch.py
+     ```
+    with py_trees:
+     ```bash
+     ros2 launch manymove_planner panda_movegroup_fake_py_trees.launch.py
      ```
   Alternative with standard panda demo launch and manymove started from a separate launcher:
   
