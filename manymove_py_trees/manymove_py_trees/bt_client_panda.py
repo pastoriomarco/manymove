@@ -9,18 +9,27 @@ import py_trees_ros
 import time
 from geometry_msgs.msg import Pose, Point, Quaternion
 
+from py_trees.blackboard import Blackboard
+from moveit_msgs.msg import RobotTrajectory
+
 from manymove_py_trees.move_definitions import (
     define_movement_configs,
     create_move,
 )
 from manymove_py_trees.tree_helper import create_tree_from_sequences
-# Removed non-existent imports:
-# from manymove_py_trees.tree_helper import create_tree_from_sequence, create_tree_from_sequence_v2
 
 def main():
     rclpy.init()
     node = rclpy.create_node("bt_client_node")
     node.get_logger().info("BT Client Node started")
+
+    bb = Blackboard()
+    # Set defaults for keys used by MoveManipulatorBehavior:
+    bb.set("reset", False)
+    bb.set("stop_execution", False)
+    bb.set("collision_detected", False)
+    bb.set("invalidate_traj_on_exec", False)
+    bb.set("existing_trajectory", RobotTrajectory())
 
     # 1) Define configs
     movement_configs = define_movement_configs()
@@ -52,7 +61,7 @@ def main():
         create_move("named", named_target=named_home, config=movement_configs["max_move"]),
     ]
 
-    # For demonstration, we'll chain these sequences in order
+    # We'll chain these sequences in order
     list_of_sequences = [rest_position, pick_sequence, home_position]
 
     # 3) Build the Behavior Tree from these sequences
@@ -65,7 +74,7 @@ def main():
     main_seq = py_trees.composites.Sequence("Main_Sequence", memory=True)
     main_seq.add_child(chained_branch.root)
 
-    # Optionally, decorate with a "Repeat forever" for test loops
+    # Decorate with a "Repeat forever" for keeping it alive
     repeated_root = py_trees.decorators.Repeat(
         child=main_seq,
         num_success=-1,  # infinite repeat

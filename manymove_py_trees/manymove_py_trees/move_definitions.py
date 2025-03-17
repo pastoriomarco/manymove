@@ -70,7 +70,7 @@ def define_movement_configs() -> Dict[str, MovementConfig]:
     max_move_config.acceleration_scaling_factor = 1.0
     max_move_config.step_size = 0.01
     max_move_config.jump_threshold = 0.0
-    max_move_config.max_cartesian_speed = 0.5
+    max_move_config.max_cartesian_speed = 0.25
     max_move_config.max_exec_tries = 5
     max_move_config.plan_number_target = 8
     max_move_config.plan_number_limit = 32
@@ -81,7 +81,7 @@ def define_movement_configs() -> Dict[str, MovementConfig]:
     mid_move_config.acceleration_scaling_factor = 0.5
     mid_move_config.step_size = 0.01
     mid_move_config.jump_threshold = 0.0
-    mid_move_config.max_cartesian_speed = 0.2
+    mid_move_config.max_cartesian_speed = 0.1
     mid_move_config.max_exec_tries = 5
     mid_move_config.plan_number_target = 8
     mid_move_config.plan_number_limit = 32

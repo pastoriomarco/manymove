@@ -2,26 +2,41 @@
 
 import rclpy
 from rclpy.node import Node
+from rclpy.executors import MultiThreadedExecutor
 
 import py_trees
 import py_trees_ros
-
 import time
-from geometry_msgs.msg import Pose, Point, Quaternion
 
-# (1) Import the updated movement configs + create_move
+from geometry_msgs.msg import Pose, Point, Quaternion
+from moveit_msgs.msg import RobotTrajectory
+from py_trees.blackboard import Blackboard
+
+# (1) Imports for your moves/BT
 from manymove_py_trees.move_definitions import (
     define_movement_configs,
     create_move,
 )
-
-# (2) Import the updated tree helper that uses MoveManipulatorBehavior nodes
 from manymove_py_trees.tree_helper import create_tree_from_sequences
 
-def main():
-    rclpy.init()
-    node = rclpy.create_node("bt_client_node")
+# (2) Import the HMIServiceNode from your hmi_service_node.py file
+from manymove_py_trees.hmi_service_node import HMIServiceNode
+
+
+def build_and_run_bt(node: Node):
+    """
+    Build the same BT logic you had before and run it in a loop,
+    returning after success/failure or keyboard interrupt.
+    """
     node.get_logger().info("BT Client Node started")
+
+    bb = Blackboard()
+    # Set defaults for keys used by MoveManipulatorBehavior:
+    bb.set("reset", False)
+    bb.set("stop_execution", False)
+    bb.set("collision_detected", False)
+    bb.set("invalidate_traj_on_exec", False)
+    bb.set("existing_trajectory", RobotTrajectory())
 
     # 1) Define move configurations
     movement_configs = define_movement_configs()
@@ -60,23 +75,15 @@ def main():
         create_move("named", named_target=named_home, config=movement_configs["max_move"]),
     ]
 
-    # Build a list of sequences (each sequence is a list of Moves)
+    # Build a list of sequences
     list_of_sequences = [rest_position, scan_surroundings, pick_sequence, home_position]
 
-    # 3) Create a Behavior Tree from these sequences
-    #    This new version does NOT do concurrency or separate plan/execute:
-    #    it simply runs each Move in a row by sending one move_manipulator goal.
-    chained_branch = create_tree_from_sequences(
-        node,
-        list_of_sequences,
-        root_name="LogicSequence"
-    )
+    # 3) Create a BT from these sequences
+    chained_branch = create_tree_from_sequences(node, list_of_sequences, root_name="LogicSequence")
 
-    # If desired, you can combine multiple subtrees or do more advanced composition:
     main_seq = py_trees.composites.Sequence("Main_Sequence", memory=True)
     main_seq.add_child(chained_branch.root)
 
-    # Optionally, decorate with a "Repeat forever" for testing
     repeated_root = py_trees.decorators.Repeat(
         child=main_seq,
         num_success=-1,  # negative => infinite repeats
@@ -90,10 +97,9 @@ def main():
         bt_tree.setup(node=node, timeout=10.0)
     except Exception as e:
         node.get_logger().error(f"Failed to setup BT: {e}")
-        rclpy.shutdown()
-        return
+        return  # early return => won't do the main loop
 
-    # 5) Tick until complete or failure
+    # 5) Manual tick loop
     try:
         while rclpy.ok():
             bt_tree.tick()
@@ -105,6 +111,7 @@ def main():
                 node.get_logger().error("Tree failed.")
                 break
 
+            # This ensures we process any pending ROS events (service calls, etc.)
             rclpy.spin_once(node, timeout_sec=0.005)
             time.sleep(0.001)
     except KeyboardInterrupt:
@@ -112,8 +119,45 @@ def main():
 
     # 6) Shutdown
     bt_tree.shutdown()
-    node.destroy_node()
+
+
+def main():
+    # Initialize rclpy
+    rclpy.init()
+
+    # We'll use a MultiThreadedExecutor so that the HMI service node
+    # can handle incoming service calls while we do manual ticking.
+    executor = MultiThreadedExecutor(num_threads=2)
+
+    # Create a Node for the BT logic
+    bt_node = rclpy.create_node("bt_client_node")
+
+    # Create the HMI service node in the same process
+    hmi_node = HMIServiceNode(node_name="hmi_service_node", robot_prefix="")
+    hmi_node.get_logger().info("HMI service node created in the same process")
+
+    # Add both nodes to the executor
+    executor.add_node(bt_node)
+    executor.add_node(hmi_node)
+
+    # We'll run the BT logic in "build_and_run_bt" but we also want
+    # the HMI node to be active. The easiest approach:
+    #  1) Start the executor in a background thread
+    #  2) Then do the BT loop in this main thread
+    import threading
+    executor_thread = threading.Thread(target=executor.spin, daemon=True)
+    executor_thread.start()
+
+    # Now do the manual BT tick in the main thread
+    build_and_run_bt(bt_node)
+
+    # Done => shut down
+    bt_node.destroy_node()
+    hmi_node.destroy_node()
+    executor.shutdown()
     rclpy.shutdown()
+    executor_thread.join()
+
 
 if __name__ == "__main__":
     main()

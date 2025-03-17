@@ -317,7 +317,7 @@ def launch_setup(context, *args, **kwargs):
         static_tf,
         ros2_control_node,
         object_manager_node,
-        # manymove_hmi_node,
+        manymove_hmi_node,
         manymove_py_trees_node,
     ] + controller_nodes
 
