@@ -1,42 +1,40 @@
 #!/usr/bin/env python3
-
 import rclpy
 from rclpy.node import Node
-
+from rclpy.executors import MultiThreadedExecutor
 import py_trees
 import py_trees_ros
-
 import time
+
 from geometry_msgs.msg import Pose, Point, Quaternion
-
-from py_trees.blackboard import Blackboard
 from moveit_msgs.msg import RobotTrajectory
+from py_trees.blackboard import Blackboard
 
-from manymove_py_trees.move_definitions import (
-    define_movement_configs,
-    create_move,
-)
+# (1) Imports for move definitions and tree helper:
+from manymove_py_trees.move_definitions import define_movement_configs, create_move
 from manymove_py_trees.tree_helper import create_tree_from_sequences
 
-def main():
-    rclpy.init()
-    node = rclpy.create_node("bt_client_node")
+# (2) Import the HMI service node (which publishes blackboard status and provides services)
+from manymove_py_trees.hmi_service_node import HMIServiceNode
+
+
+def build_and_run_bt(node: Node):
     node.get_logger().info("BT Client Node started")
 
+    # Create and initialize the Blackboard with the keys used by the behavior
     bb = Blackboard()
-    # Set defaults for keys used by MoveManipulatorBehavior:
     bb.set("reset", False)
     bb.set("stop_execution", False)
     bb.set("collision_detected", False)
     bb.set("invalidate_traj_on_exec", False)
     bb.set("existing_trajectory", RobotTrajectory())
 
-    # 1) Define configs
+    # 1) Define the movement configurations
     movement_configs = define_movement_configs()
 
-    # 2) Define move sets
+    # 2) Define your Panda-specific move sequences.
+    # (These values are examples—adapt joint values, poses, and named targets as needed.)
     joint_rest = [0.0, -0.785, 0.0, -2.355, 0.0, 3.14, 0.785]
-    # (If you want more scanning moves, define them here)
     named_home = "ready"
 
     pick_target = Pose(
@@ -44,11 +42,15 @@ def main():
         orientation=Quaternion(x=1.0, y=0.0, z=0.0, w=0.0)
     )
     approach_target = Pose(
-        position=Point(x=pick_target.position.x, y=pick_target.position.y, z=pick_target.position.z + 0.02),
+        position=Point(
+            x=pick_target.position.x,
+            y=pick_target.position.y,
+            z=pick_target.position.z + 0.02
+        ),
         orientation=Quaternion(x=1.0, y=0.0, z=0.0, w=0.0)
     )
 
-    # Define your sequences of moves
+    # Define three sequences: rest, pick, and home.
     rest_position = [
         create_move("joint", joint_values=joint_rest, config=movement_configs["max_move"]),
     ]
@@ -61,37 +63,26 @@ def main():
         create_move("named", named_target=named_home, config=movement_configs["max_move"]),
     ]
 
-    # We'll chain these sequences in order
+    # Build a list of sequences and the Behavior Tree (BT)
     list_of_sequences = [rest_position, pick_sequence, home_position]
-
-    # 3) Build the Behavior Tree from these sequences
-    chained_branch = create_tree_from_sequences(
-        node,
-        list_of_sequences,
-        root_name="LogicSequence"
-    )
-
+    chained_branch = create_tree_from_sequences(node, list_of_sequences, root_name="LogicSequence")
     main_seq = py_trees.composites.Sequence("Main_Sequence", memory=True)
     main_seq.add_child(chained_branch.root)
-
-    # Decorate with a "Repeat forever" for keeping it alive
     repeated_root = py_trees.decorators.Repeat(
         child=main_seq,
         num_success=-1,  # infinite repeat
         name="RepeatForever"
     )
-
     bt_tree = py_trees_ros.trees.BehaviourTree(repeated_root)
 
-    # 4) Setup
+    # Setup the BT (which will read the rclpy Node from the blackboard)
     try:
         bt_tree.setup(node=node, timeout=10.0)
     except Exception as e:
         node.get_logger().error(f"Failed to setup BT: {e}")
-        rclpy.shutdown()
         return
 
-    # 5) Tick until done
+    # Manual tick loop: tick the BT while processing pending ROS events
     try:
         while rclpy.ok():
             bt_tree.tick()
@@ -102,17 +93,44 @@ def main():
             elif status == py_trees.common.Status.FAILURE:
                 node.get_logger().error("Tree failed.")
                 break
-
             rclpy.spin_once(node, timeout_sec=0.005)
             time.sleep(0.001)
-
     except KeyboardInterrupt:
         node.get_logger().info("Keyboard Interrupt, exiting...")
 
-    # 6) Shutdown
     bt_tree.shutdown()
-    node.destroy_node()
+
+
+def main():
+    rclpy.init()
+    # Use a MultiThreadedExecutor so that the HMI service node and BT node can run concurrently
+    executor = MultiThreadedExecutor(num_threads=2)
+
+    # Create the BT node for the panda client
+    bt_node = rclpy.create_node("bt_client_node")
+    # Create the HMI service node (with empty prefix in this example)
+    hmi_node = HMIServiceNode(node_name="hmi_service_node", robot_prefix="")
+    hmi_node.get_logger().info("HMI service node created in the same process")
+
+    # Add both nodes to the executor
+    executor.add_node(bt_node)
+    executor.add_node(hmi_node)
+
+    # Run the executor in a background thread
+    import threading
+    executor_thread = threading.Thread(target=executor.spin, daemon=True)
+    executor_thread.start()
+
+    # Run the BT tick loop in the main thread
+    build_and_run_bt(bt_node)
+
+    # Cleanup: destroy nodes and shutdown executor
+    bt_node.destroy_node()
+    hmi_node.destroy_node()
+    executor.shutdown()
     rclpy.shutdown()
+    executor_thread.join()
+
 
 if __name__ == "__main__":
     main()

@@ -189,7 +189,7 @@ def launch_setup(context, *args, **kwargs):
         action_server_node,
         ros2_control_node,
         object_manager_node,
-        # manymove_hmi_node,
+        manymove_hmi_node,
         manymove_py_trees_node
     ] + load_controllers
 
