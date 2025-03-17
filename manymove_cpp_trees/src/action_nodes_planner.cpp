@@ -62,6 +62,7 @@ namespace manymove_cpp_trees
         {
             // reset the collision_detected value
             config().blackboard->set("collision_detected", false);
+            config().blackboard->set("stop_execution", true);
 
             return BT::NodeStatus::FAILURE;
         }
