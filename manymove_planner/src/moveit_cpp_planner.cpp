@@ -312,15 +312,39 @@ std::pair<bool, moveit_msgs::msg::RobotTrajectory> MoveItCppPlanner::plan(const 
         planning_components_->setStartStateToCurrentState();
     }
 
-    /** Create PlanRequestParameters and set scaling factors
-     * moveit_cpp::PlanningComponent::PlanRequestParameters params;
-     * params.planning_pipeline = "ompl"; // or the name of your pipeline from your moveit_cpp.yaml
-     * params.max_velocity_scaling_factor = goal_msg.goal.config.velocity_scaling_factor;
-     * params.max_acceleration_scaling_factor = goal_msg.goal.config.acceleration_scaling_factor;
-     * IMPORTANT NOTE: You can set other parameters in `params` as needed, but remember that if you
-     * set even one parameter you will have to set all of them. When I last tried, setting one
-     * parameter had as consequence that none of the default parameters is used anymore.
-     */
+    // Prepare the override parameters from your defaults (plan_parameters_)
+    moveit_cpp::PlanningComponent::PlanRequestParameters params;
+    // defaults from .yaml
+    params.planning_pipeline = plan_parameters_.planning_pipeline; 
+    params.planner_id = plan_parameters_.planner_id;
+    params.planning_time = plan_parameters_.planning_time;
+    params.planning_attempts = plan_parameters_.planning_attempts;
+    params.max_velocity_scaling_factor = plan_parameters_.max_velocity_scaling_factor;
+    params.max_acceleration_scaling_factor = plan_parameters_.max_acceleration_scaling_factor;
+
+    // 2) Override them if user provided something
+    const auto &cfg = goal_msg.goal.config;
+    if (!cfg.planning_pipeline.empty())
+        params.planning_pipeline = cfg.planning_pipeline;
+
+    if (!cfg.planner_id.empty())
+        params.planner_id = cfg.planner_id;
+
+    // If user set planning_time > 0, override
+    if (cfg.planning_time > 0.0)
+        params.planning_time = cfg.planning_time;
+
+    // If user set planning_attempts > 0
+    if (cfg.planning_attempts > 0)
+        params.planning_attempts = cfg.planning_attempts;
+
+    // We already handle velocity_scaling_factor and acceleration_scaling_factor in your code
+    // but if you want them to come from goal_msg, do:
+    if (cfg.velocity_scaling_factor > 0.0)
+        params.max_velocity_scaling_factor = cfg.velocity_scaling_factor;
+
+    if (cfg.acceleration_scaling_factor > 0.0)
+        params.max_acceleration_scaling_factor = cfg.acceleration_scaling_factor;
 
     // Set movement targets
     if ((goal_msg.goal.movement_type == "joint") || (goal_msg.goal.movement_type == "named"))
@@ -364,7 +388,7 @@ std::pair<bool, moveit_msgs::msg::RobotTrajectory> MoveItCppPlanner::plan(const 
                static_cast<int>(trajectories.size()) < goal_msg.goal.config.plan_number_target &&
                goal_valid)
         {
-            auto solution = planning_components_->plan();
+            auto solution = planning_components_->plan(params);
             if (solution)
             {
                 moveit_msgs::msg::RobotTrajectory traj_msg;
@@ -388,12 +412,7 @@ std::pair<bool, moveit_msgs::msg::RobotTrajectory> MoveItCppPlanner::plan(const 
     {
 
         RCLCPP_DEBUG_STREAM(logger_, "Setting pose target for " << tcp_frame_);
-        // geometry_msgs::msg::PoseStamped target_pose;
-        // target_pose.pose = goal_msg.goal.pose_target;
-        // target_pose.header.frame_id = tcp_frame_;
-        // planning_components_->setGoal(target_pose, tcp_frame_);
-
-        // Plan multiple trajectories using the plan(params) method
+        
         int attempts = 0;
         while (attempts < goal_msg.goal.config.plan_number_limit &&
                static_cast<int>(trajectories.size()) < goal_msg.goal.config.plan_number_target)
@@ -403,7 +422,7 @@ std::pair<bool, moveit_msgs::msg::RobotTrajectory> MoveItCppPlanner::plan(const 
             target_state.setFromIK(joint_model_group_ptr, goal_msg.goal.pose_target);
             planning_components_->setGoal(target_state);
 
-            auto solution = planning_components_->plan();
+            auto solution = planning_components_->plan(params);
 
             if (solution && solution.error_code == moveit::core::MoveItErrorCode::SUCCESS)
             {

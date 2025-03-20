@@ -1,9 +1,15 @@
-float64 velocity_scaling_factor
-float64 acceleration_scaling_factor
+# manymove parameters
+float64 max_cartesian_speed             # max cartesian speed for the move, referred to TCP
+int32 plan_number_target                # number of valid plans to find before declaring success
+int32 plan_number_limit                 # max planning tries before fail
+string smoothing_type                   # "time-optimal" / "ruckig"
+# moveit planner parameters
+float64 velocity_scaling_factor         # 0.0 to 1.0
+float64 acceleration_scaling_factor     # 0.0 to 1.0
+string planning_pipeline                # e.g. "ompl", "chomp", "pilz_industrial_motion_planner", ...
+string planner_id                       # e.g. "RRTConnect", "PTP", "LIN", ...
+float64 planning_time                   # overall time budget in seconds
+int32  planning_attempts                # e.g. 1, 5, etc.
+# CartesianInterpolator parameters
 float64 step_size
 float64 jump_threshold
-float64 max_cartesian_speed
-int32 max_exec_tries
-int32 plan_number_target
-int32 plan_number_limit
-string smoothing_type

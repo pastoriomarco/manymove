@@ -297,9 +297,37 @@ std::pair<bool, moveit_msgs::msg::RobotTrajectory> MoveGroupPlanner::plan(const 
         move_group_interface_->setStartStateToCurrentState();
     }
 
-    // Set scaling factors
-    move_group_interface_->setMaxVelocityScalingFactor(goal_msg.goal.config.velocity_scaling_factor);
-    move_group_interface_->setMaxAccelerationScalingFactor(goal_msg.goal.config.acceleration_scaling_factor);
+    const auto &cfg = goal_msg.goal.config;
+
+    // In MoveGroupInterface, pipeline selection is typically done by setting the "planner_id".
+    // e.g. "ompl/AnytimePRM", "chomp/CHOMP", "pilz_industrial_motion_planner/LIN", etc.
+    // Here we split them for coherence with MoveItCPP version:
+    if (!cfg.planning_pipeline.empty() && !cfg.planner_id.empty())
+    {
+        // e.g. "chomp/CHOMP" or "ompl/RRTConnect" or "pilz_industrial_motion_planner/LIN"
+        move_group_interface_->setPlannerId(cfg.planning_pipeline + "/" + cfg.planner_id);
+    }
+    // If the user uses only movegroup version and needs compatibility, he can set the full string in planner_id only:
+    else if (!cfg.planner_id.empty())
+    {
+        // If user only passes "ompl/PRM" in planner_id, just set that:
+        move_group_interface_->setPlannerId(cfg.planner_id);
+    }
+
+    // Planning time
+    if (cfg.planning_time > 0.0)
+        move_group_interface_->setPlanningTime(cfg.planning_time);
+
+    // lanning attempts
+    if (cfg.planning_attempts > 0)
+        move_group_interface_->setNumPlanningAttempts(cfg.planning_attempts);
+
+    // Velocity/acceleration scaling
+    if (cfg.velocity_scaling_factor > 0.0)
+        move_group_interface_->setMaxVelocityScalingFactor(cfg.velocity_scaling_factor);
+
+    if (cfg.acceleration_scaling_factor > 0.0)
+        move_group_interface_->setMaxAccelerationScalingFactor(cfg.acceleration_scaling_factor);
 
     // Set movement targets
     if ((goal_msg.goal.movement_type == "pose") || (goal_msg.goal.movement_type == "joint") || (goal_msg.goal.movement_type == "named"))
