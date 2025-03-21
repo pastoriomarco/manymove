@@ -33,7 +33,7 @@ This series of packages was created around Ufactory Lite6 and UF850 cobots, but 
   - You can use for example ~/dev_ws as in xarm_ros2 repo, or define an appropriate workspace.
   - From here on I'll refer to the installation directory of the workspace as `<workspace_dir>`
 - **Clone `manymove` humble branch**:
-  - From `<workspace_dir>`:
+  - From `<workspace_dir>/src`:
   ```bash
   git clone --branch=humble https://github.com/pastoriomarco/manymove.git
   ```
