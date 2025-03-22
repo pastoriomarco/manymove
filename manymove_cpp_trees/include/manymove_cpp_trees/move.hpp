@@ -78,10 +78,18 @@ namespace manymove_cpp_trees
         MovementConfig cartesian_slow_move_config = slow_move_config;
         cartesian_slow_move_config.plan_number_target = 1;
 
+        MovementConfig cumotion_max_move_config = max_move_config;
+        cumotion_max_move_config.planning_pipeline = "isaac_ros_cumotion";
+        cumotion_max_move_config.planner_id = "cuMotion";
+        cumotion_max_move_config.planning_time = 5;
+        cumotion_max_move_config.planning_attempts = 2;
+        cumotion_max_move_config.plan_number_target = 2;
+
         return {
             {"max_move", max_move_config},
             {"mid_move", mid_move_config},
             {"slow_move", slow_move_config},
+            {"cumotion_max_move", cumotion_max_move_config},
             {"cartesian_max_move", cartesian_max_move_config},
             {"cartesian_mid_move", cartesian_mid_move_config},
             {"cartesian_slow_move", cartesian_slow_move_config}};

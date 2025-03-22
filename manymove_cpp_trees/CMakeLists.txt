@@ -48,6 +48,31 @@ ament_target_dependencies(bt_client
   manymove_msgs
 )
 
+# Add executable for BT client with cumotion planner
+add_executable(bt_client_cumotion
+    src/bt_client_cumotion.cpp
+    src/action_nodes_planner.cpp
+    src/action_nodes_signals.cpp
+    src/action_nodes_objects.cpp
+    src/action_nodes_logic.cpp
+    src/action_nodes_gripper.cpp
+    src/hmi_service_node.cpp
+    src/tree_helper.cpp
+)
+
+ament_target_dependencies(bt_client_cumotion
+  rclcpp
+  rclcpp_action
+  behaviortree_cpp_v3
+  manymove_planner
+  manymove_object_manager
+  manymove_signals
+  moveit_msgs
+  tf2
+  std_srvs
+  manymove_msgs
+)
+
 # Add executable for BT client for dual robot
 add_executable(bt_client_dual
     src/bt_client_dual.cpp
@@ -73,7 +98,7 @@ ament_target_dependencies(bt_client_dual
   manymove_msgs
 )
 
-# Add executable for BT client for dual robot
+# Add executable for BT client application for dual robot
 add_executable(bt_client_app_dual
     src/bt_client_app_dual.cpp
     src/action_nodes_planner.cpp
@@ -98,7 +123,7 @@ ament_target_dependencies(bt_client_app_dual
   manymove_msgs
 )
 
-# Add executable for BT client
+# Add executable for BT client with Panda robot
 add_executable(bt_client_panda
     src/bt_client_panda.cpp
     src/action_nodes_planner.cpp
@@ -123,7 +148,7 @@ ament_target_dependencies(bt_client_panda
   manymove_msgs
 )
 
-# Add executable for BT client for dual robot
+# Add executable for BT client for collision test
 add_executable(collision_test
     src/collision_test.cpp
     src/action_nodes_planner.cpp
@@ -151,6 +176,7 @@ ament_target_dependencies(collision_test
 # Install executable
 install(TARGETS
   bt_client
+  bt_client_cumotion
   bt_client_dual
   bt_client_app_dual
   bt_client_panda

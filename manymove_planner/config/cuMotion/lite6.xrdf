@@ -1,0 +1,132 @@
+format: "xrdf"
+
+format_version: 1.0
+
+default_joint_positions: 
+  joint1: -0.0
+  joint2: 0.0
+  joint3: 1.57
+  joint4: -0.0
+  joint5: 0.0
+  joint6: 0.0
+
+cspace: 
+  joint_names: 
+    - "joint1"
+    - "joint2"
+    - "joint3"
+    - "joint4"
+    - "joint5"
+    - "joint6"
+  acceleration_limits: [10, 10, 10, 10, 10, 10]
+  jerk_limits: [10000, 10000, 10000, 10000, 10000, 10000]
+
+tool_frames: ["uflite_gripper_link"]
+
+collision: 
+  geometry: "auto_generated_collision_sphere_group"
+  buffer_distance:
+    link1: 0.04
+    link2: 0.04
+    link3: 0.04
+    link4: 0.04
+    link5: 0.04
+    link6: 0.04
+
+self_collision: 
+  geometry: "auto_generated_collision_sphere_group"
+  buffer_distance:
+    link1: 0.05
+    link2: 0.05
+  ignore: 
+    world: 
+      - "link_base"
+    link_base: 
+      - "link1"
+      - "link2"
+    link1: 
+      - "link2"
+      - "link3"
+      - "link4"
+    link2: 
+      - "link3"
+      - "link4"
+    link3: 
+      - "link4"
+      - "link6"
+    link4: 
+      - "link5"
+      - "link6"
+      - "link_eef"
+      - "uflite_gripper_link"
+      - "link_tcp"
+    link5: 
+      - "link6"
+      - "link_eef"
+      - "uflite_gripper_link"
+      - "link_tcp"
+    link6: 
+      - "link_eef"
+      - "uflite_gripper_link"
+      - "link_tcp"
+    link_eef: 
+      - "uflite_gripper_link"
+      - "link_tcp"
+    uflite_gripper_link: 
+      - "link_tcp"
+
+geometry: 
+  auto_generated_collision_sphere_group: 
+    spheres: 
+      link1: 
+        - center: [0.0, 0.0, 0.0]
+          radius: 0.0475
+        - center: [0.0, 0.0, -0.05]
+          radius: 0.0475
+        - center: [0.0, 0.05, 0.0]
+          radius: 0.0475
+      link2: 
+        - center: [0.0, 0.001, 0.105]
+          radius: 0.0467
+        - center: [0.2, 0.001, 0.105]
+          radius: 0.0467
+        - center: [0.04, 0.001, 0.105]
+          radius: 0.0467
+        - center: [0.08, 0.001, 0.105]
+          radius: 0.0467
+        - center: [0.12, 0.001, 0.105]
+          radius: 0.0467
+        - center: [0.16, 0.001, 0.105]
+          radius: 0.0467
+        - center: [0.2, 0.0, 0.075]
+          radius: 0.0406
+      link3: 
+        - center: [0.0, 0.0, 0.0]
+          radius: 0.0475
+        - center: [0.0, 0.0, -0.05]
+          radius: 0.0475
+        - center: [0.05, 0.0, 0.0]
+          radius: 0.0475
+        - center: [0.085, 0.0, 0.0]
+          radius: 0.0475
+      link4: 
+        - center: [0.0, 0.0, -0.1]
+          radius: 0.0475
+        - center: [0.0, 0.0, -0.2]
+          radius: 0.0475
+        - center: [0.0, 0.0, -0.15]
+          radius: 0.0475
+        - center: [0.0, -0.05, -0.1]
+          radius: 0.0475
+        - center: [0.0, -0.05, -0.05]
+          radius: 0.0475
+        - center: [0.0, -0.05, 0.0]
+          radius: 0.0475
+      link5: 
+        - center: [0.0, 0.0, 0.0]
+          radius: 0.0451
+        - center: [0.0, 0.025, 0.0]
+          radius: 0.0451
+      link6: 
+        - center: [0.0, 0.0, 0.0]
+          radius: 0.0387
