@@ -11,7 +11,7 @@ planning_pipelines:
   pipeline_names: ["ompl", "isaac_ros_cumotion"]
 
 isaac_ros_cumotion:
-  planning_plugin: isaac_ros_cumotion_moveit/CuMotionPlannerPlugin
+  planning_plugin: isaac_ros_cumotion_moveit/CumotionPlanner
   request_adapters: >
     default_planner_request_adapters/FixWorkspaceBounds
     default_planner_request_adapters/FixStartStateBounds
