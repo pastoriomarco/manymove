@@ -17,6 +17,8 @@ isaac_ros_cumotion:
     default_planner_request_adapters/FixStartStateBounds
     default_planner_request_adapters/FixStartStateCollision
     default_planner_request_adapters/FixStartStatePathConstraints
+  start_state_max_bounds_error: 0.1
+  num_steps: 32
 
 plan_request_params:
   planning_attempts: 1
@@ -24,6 +26,4 @@ plan_request_params:
   planner_id: cuMotion
   max_velocity_scaling_factor: 1.0
   max_acceleration_scaling_factor: 1.0
-  start_state_max_bounds_error: 0.1
-  num_steps: 32
 
