@@ -10,6 +10,14 @@ planning_scene_monitor_options:
 planning_pipelines:
   pipeline_names: ["ompl", "isaac_ros_cumotion"]
 
+isaac_ros_cumotion:
+  planning_plugin: isaac_ros_cumotion_moveit/CuMotionPlannerPlugin
+  request_adapters: >
+    default_planner_request_adapters/FixWorkspaceBounds
+    default_planner_request_adapters/FixStartStateBounds
+    default_planner_request_adapters/FixStartStateCollision
+    default_planner_request_adapters/FixStartStatePathConstraints
+
 plan_request_params:
   planning_attempts: 1
   planning_pipeline: isaac_ros_cumotion
