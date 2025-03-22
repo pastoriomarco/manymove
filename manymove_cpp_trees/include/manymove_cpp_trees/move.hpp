@@ -82,8 +82,8 @@ namespace manymove_cpp_trees
         cumotion_max_move_config.planning_pipeline = "isaac_ros_cumotion";
         cumotion_max_move_config.planner_id = "cuMotion";
         cumotion_max_move_config.planning_time = 5;
-        cumotion_max_move_config.planning_attempts = 2;
-        cumotion_max_move_config.plan_number_target = 2;
+        cumotion_max_move_config.planning_attempts = 1;
+        cumotion_max_move_config.plan_number_target = 1;
 
         return {
             {"max_move", max_move_config},

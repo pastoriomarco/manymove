@@ -105,7 +105,7 @@ int main(int argc, char **argv)
     approach_pick_target.position.z += 0.02;
 
     // Test poses to place the object, these are not overwritten later (for now)
-    Pose drop_target = createPose(0.2, 0.0, 0.2, 1.0, 0.0, 0.0, 0.0);
+    Pose drop_target = createPose(0.25, 0.15, 0.2, 1.0, 0.0, 0.0, 0.0);
     Pose approach_drop_target = drop_target;
     approach_drop_target.position.z += 0.02;
 
@@ -141,19 +141,21 @@ int main(int argc, char **argv)
 
     // Sequences for Pick/Drop/Homing
     std::vector<Move> pick_sequence = {
-        {robot_prefix, "pose", "approach_pick_target", {}, "", move_configs["mid_move"]},
-        {robot_prefix, "cartesian", "pick_target", {}, "", move_configs["cartesian_slow_move"]},
+        // {robot_prefix, "pose", "approach_pick_target", {}, "", move_configs["mid_move"]},
+        // {robot_prefix, "cartesian", "pick_target", {}, "", move_configs["cartesian_slow_move"]},
+        {robot_prefix, "pose", "pick_target", {}, "", move_configs["cumotion_max_move"]},
     };
 
     std::vector<Move> drop_sequence = {
         {robot_prefix, "cartesian", "approach_pick_target", {}, "", move_configs["cartesian_mid_move"]},
-        {robot_prefix, "pose", "approach_drop_target", {}, "", move_configs["max_move"]},
-        {robot_prefix, "cartesian", "drop_target", {}, "", move_configs["cartesian_slow_move"]},
+        // {robot_prefix, "pose", "approach_drop_target", {}, "", move_configs["max_move"]},
+        // {robot_prefix, "cartesian", "drop_target", {}, "", move_configs["cartesian_slow_move"]},
+        {robot_prefix, "pose", "drop_target", {}, "", move_configs["cumotion_max_move"]},
     };
 
     std::vector<Move> home_position = {
         {robot_prefix, "cartesian", "approach_drop_target", {}, "", move_configs["cartesian_mid_move"]},
-        {robot_prefix, "named", "", {}, named_home, move_configs["cumotion_max_move"]},
+        //{robot_prefix, "named", "", {}, named_home, move_configs["cumotion_max_move"]},
     };
 
     /*
