@@ -305,6 +305,7 @@ std::pair<bool, moveit_msgs::msg::RobotTrajectory> MoveGroupPlanner::plan(const 
     if (!cfg.planning_pipeline.empty() && !cfg.planner_id.empty())
     {
         // e.g. "chomp/CHOMP" or "ompl/RRTConnect" or "pilz_industrial_motion_planner/LIN"
+        move_group_interface_->setPlanningPipelineId(cfg.planning_pipeline);
         move_group_interface_->setPlannerId(cfg.planning_pipeline + "/" + cfg.planner_id);
     }
     // If the user uses only movegroup version and needs compatibility, he can set the full string in planner_id only:

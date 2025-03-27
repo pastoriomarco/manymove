@@ -113,7 +113,7 @@ def launch_setup(context, *args, **kwargs):
             geometry_mesh_tcp_rpy=geometry_mesh_tcp_rpy,
         ).robot_description()
         .planning_scene_monitor(publish_robot_description=True, publish_robot_description_semantic=True)
-        .planning_pipelines(pipelines=["ompl", "isaac_ros_cumotion"])
+        .planning_pipelines(pipelines=["isaac_ros_cumotion"])
         .moveit_cpp(file_path=get_package_share_directory("manymove_planner") + "/config/moveit_cpp_cumotion.yaml")
         .to_moveit_configs()
     )

@@ -21,7 +21,7 @@ cspace:
   acceleration_limits: [10, 10, 10, 10, 10, 10]
   jerk_limits: [10000, 10000, 10000, 10000, 10000, 10000]
 
-tool_frames: ["uflite_gripper_link"]
+tool_frames: ["link_tcp"]
 
 collision: 
   geometry: "auto_generated_collision_sphere_group"

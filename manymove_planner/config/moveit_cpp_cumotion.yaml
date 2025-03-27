@@ -8,13 +8,9 @@ planning_scene_monitor_options:
   wait_for_initial_state_timeout: 10.0
 
 planning_pipelines:
-  pipeline_names: ["ompl", "isaac_ros_cumotion"]
+  pipeline_names: ['isaac_ros_cumotion']
 
-isaac_ros_cumotion:
-  planning_plugin: isaac_ros_cumotion_moveit/CumotionPlanner
-  request_adapters: "default_planner_request_adapters/FixWorkspaceBounds, default_planner_request_adapters/FixStartStateBounds, default_planner_request_adapters/FixStartStateCollision, default_planner_request_adapters/FixStartStatePathConstraints"
-  start_state_max_bounds_error: 0.1
-  num_steps: 32
+default_planning_pipeline: 'isaac_ros_cumotion'
 
 plan_request_params:
   planning_attempts: 1

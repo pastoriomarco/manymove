@@ -35,6 +35,12 @@ MoveItCppPlanner::MoveItCppPlanner(
     // // moveit_cpp_ptr_->getPlanningSceneMonitor()->startPublishingPlanningScene(planning_scene_monitor::PlanningSceneMonitor::SceneUpdateType::UPDATE_GEOMETRY);
     // moveit_cpp_ptr_->getPlanningSceneMonitor()->monitorDiffs(true);
 
+    auto planning_pipeline_names = moveit_cpp_ptr_->getPlanningPipelineNames(planning_group_);
+    for (const auto &s : planning_pipeline_names)
+    {
+        RCLCPP_INFO(logger_, "Pipeline registered: %s", s.c_str());
+    }
+
     planning_components_ = std::make_shared<moveit_cpp::PlanningComponent>(planning_group_, moveit_cpp_ptr_);
     RCLCPP_INFO(logger_, "===================================================");
     RCLCPP_INFO(logger_, "MoveItCppPlanner initialized with group: %s", planning_group_.c_str());
@@ -42,12 +48,12 @@ MoveItCppPlanner::MoveItCppPlanner(
     plan_parameters_.load(node_);
 
     RCLCPP_INFO(logger_, "===================================================");
-    RCLCPP_INFO_STREAM(logger_, "plan_parameters_.max_acceleration_scaling_factor: " << plan_parameters_.max_acceleration_scaling_factor);
-    RCLCPP_INFO_STREAM(logger_, "plan_parameters_.max_velocity_scaling_factor: " << plan_parameters_.max_velocity_scaling_factor);
+    RCLCPP_INFO_STREAM(logger_, "plan_parameters_.planning_pipeline: " << plan_parameters_.planning_pipeline);
     RCLCPP_INFO_STREAM(logger_, "plan_parameters_.planner_id: " << plan_parameters_.planner_id);
     RCLCPP_INFO_STREAM(logger_, "plan_parameters_.planning_attempts: " << plan_parameters_.planning_attempts);
-    RCLCPP_INFO_STREAM(logger_, "plan_parameters_.planning_pipeline: " << plan_parameters_.planning_pipeline);
     RCLCPP_INFO_STREAM(logger_, "plan_parameters_.planning_time: " << plan_parameters_.planning_time);
+    RCLCPP_INFO_STREAM(logger_, "plan_parameters_.max_acceleration_scaling_factor: " << plan_parameters_.max_acceleration_scaling_factor);
+    RCLCPP_INFO_STREAM(logger_, "plan_parameters_.max_velocity_scaling_factor: " << plan_parameters_.max_velocity_scaling_factor);
     RCLCPP_INFO(logger_, "===================================================");
 
     // Initialize FollowJointTrajectory action client
@@ -315,7 +321,7 @@ std::pair<bool, moveit_msgs::msg::RobotTrajectory> MoveItCppPlanner::plan(const 
     // Prepare the override parameters from your defaults (plan_parameters_)
     moveit_cpp::PlanningComponent::PlanRequestParameters params;
     // defaults from .yaml
-    params.planning_pipeline = plan_parameters_.planning_pipeline; 
+    params.planning_pipeline = plan_parameters_.planning_pipeline;
     params.planner_id = plan_parameters_.planner_id;
     params.planning_time = plan_parameters_.planning_time;
     params.planning_attempts = plan_parameters_.planning_attempts;
@@ -412,7 +418,7 @@ std::pair<bool, moveit_msgs::msg::RobotTrajectory> MoveItCppPlanner::plan(const 
     {
 
         RCLCPP_DEBUG_STREAM(logger_, "Setting pose target for " << tcp_frame_);
-        
+
         int attempts = 0;
         while (attempts < goal_msg.goal.config.plan_number_limit &&
                static_cast<int>(trajectories.size()) < goal_msg.goal.config.plan_number_target)

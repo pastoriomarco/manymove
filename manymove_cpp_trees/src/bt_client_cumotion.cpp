@@ -340,7 +340,8 @@ int main(int argc, char **argv)
     // ----------------------------------------------------------------------------
     std::string final_tree_xml = mainTreeWrapperXML("MasterTree", master_body);
 
-    RCLCPP_INFO(node->get_logger(), "=== Programmatically Generated Tree XML ===\n%s", final_tree_xml.c_str());
+    // // To print the whole tree:
+    // RCLCPP_INFO(node->get_logger(), "=== Programmatically Generated Tree XML ===\n%s", final_tree_xml.c_str());
 
     // 8) Register node types
     BT::BehaviorTreeFactory factory;
