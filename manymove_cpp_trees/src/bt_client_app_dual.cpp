@@ -87,12 +87,10 @@ int main(int argc, char **argv)
     // Robot 1
     blackboard->set(robot_prefix_1 + "collision_detected", false);
     blackboard->set(robot_prefix_1 + "stop_execution", true);
-    blackboard->set(robot_prefix_1 + "execution_resumed", false);
 
     // Robot 2
     blackboard->set(robot_prefix_2 + "collision_detected", false);
     blackboard->set(robot_prefix_2 + "stop_execution", true);
-    blackboard->set(robot_prefix_2 + "execution_resumed", false);
 
     // General:
     blackboard->set(robot_prefix_1 + "reset", false);
