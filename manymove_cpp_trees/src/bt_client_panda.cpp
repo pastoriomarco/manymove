@@ -8,6 +8,7 @@
 #include "manymove_cpp_trees/action_nodes_planner.hpp"
 #include "manymove_cpp_trees/action_nodes_signals.hpp"
 #include "manymove_cpp_trees/action_nodes_logic.hpp"
+#include "manymove_cpp_trees/robot.hpp"
 #include "manymove_cpp_trees/move.hpp"
 #include "manymove_cpp_trees/object.hpp"
 #include "manymove_cpp_trees/tree_helper.hpp"
@@ -32,32 +33,6 @@ int main(int argc, char **argv)
     auto node = rclcpp::Node::make_shared("bt_client_node");
     RCLCPP_INFO(node->get_logger(), "BT Client Node started (Purely Programmatic XML).");
 
-    std::string robot_model;
-    node->declare_parameter<std::string>("robot_model", "panda_arm");
-    node->get_parameter_or<std::string>("robot_model", robot_model, "");
-
-    // This parameter indicates the prefix to apply to the robot's action servers
-    std::string robot_prefix;
-    node->declare_parameter<std::string>("robot_prefix", "");
-    node->get_parameter_or<std::string>("robot_prefix", robot_prefix, "");
-
-    std::string tcp_frame;
-    node->declare_parameter<std::string>("tcp_frame", "panda_link8");
-    node->get_parameter_or<std::string>("tcp_frame", tcp_frame, "");
-
-    std::string gripper_action_server;
-    node->declare_parameter<std::string>("gripper_action_server", "/panda_hand_controller/gripper_cmd");
-    node->get_parameter_or<std::string>("gripper_action_server", gripper_action_server, "");
-
-    std::vector<std::string> contact_links;
-    node->declare_parameter<std::vector<std::string>>("contact_links", {"panda_leftfinger", "panda_rightfinger", "panda_hand"});
-    node->get_parameter_or<std::vector<std::string>>("contact_links", contact_links, {});
-
-    // This parameter is to be set true if we are connected to a real robot that exposes the necessary services for manymove_signals
-    bool is_robot_real;
-    node->declare_parameter<bool>("is_robot_real", false);
-    node->get_parameter_or<bool>("is_robot_real", is_robot_real, false);
-
     // ----------------------------------------------------------------------------
     // 1) Create a blackboard and set "node"
     // ----------------------------------------------------------------------------
@@ -65,18 +40,11 @@ int main(int argc, char **argv)
     blackboard->set("node", node);
     RCLCPP_INFO(node->get_logger(), "Blackboard: set('node', <rclcpp::Node>)");
 
-    /**
-     * The following keys are important for the execution control logic: they are modified through
-     * the HMI services and let you pause/stop, resume or abort/reset execution.
-     */
-    // Setting blackboard keys to control execution:
-    blackboard->set(robot_prefix + "collision_detected", false);
-    blackboard->set(robot_prefix + "stop_execution", true);
-    blackboard->set(robot_prefix + "reset", false);
-    RCLCPP_INFO(node->get_logger(), "Blackboard: created execution control keys");
+    // Define all params and blackboard keys for the robot:
+    RobotParams rp = defineRobotParams(node, blackboard);
 
     // Create the HMI Service Node and pass the same blackboard
-    auto hmi_node = std::make_shared<manymove_cpp_trees::HMIServiceNode>(robot_prefix + "hmi_service_node", blackboard, robot_prefix);
+    auto hmi_node = std::make_shared<manymove_cpp_trees::HMIServiceNode>(rp.prefix + "hmi_service_node", blackboard, rp.prefix);
     RCLCPP_INFO(node->get_logger(), "HMI Service Node instantiated.");
 
     // ----------------------------------------------------------------------------
@@ -104,11 +72,6 @@ int main(int argc, char **argv)
     std::vector<double> joint_ready = {0.0, -0.785, 0.0, -2.355, 0.0, 1.57, 0.785};
     std::string named_home = "extended";
 
-    // Original pick test poses: they should be overwritten by the blackboard key that will be dynamically updated getting the grasp pose object
-    Pose pick_target = createPose(0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0);
-    Pose approach_pick_target = pick_target;
-    approach_pick_target.position.z += 0.02;
-
     // Test poses to place the object, these are not overwritten later (for now)
     Pose drop_target = createPoseRPY(0.4, 0.0, 0.35, 3.14, 0.0, -0.785);
     Pose approach_drop_target = drop_target;
@@ -116,8 +79,8 @@ int main(int argc, char **argv)
 
     // Populate the blackboard with the poses, one unique key for each pose we want to use.
     // Be careful not to use names that may conflict with the keys automatically created for the moves. (Usually move_{move_id})
-    blackboard->set("pick_target", pick_target);
-    blackboard->set("approach_pick_target", approach_pick_target);
+    blackboard->set("pick_target", Pose());
+    blackboard->set("approach_pick_target", Pose());
     RCLCPP_INFO(node->get_logger(), "Blackboard: set('pick_target', pick_target Pose)");
     RCLCPP_INFO(node->get_logger(), "Blackboard: set('approach_pick_target', approach_pick_target Pose)");
 
@@ -136,25 +99,24 @@ int main(int argc, char **argv)
      * of logically corralated moves.
      */
     std::vector<Move> rest_position = {
-        {robot_prefix, "joint", "", joint_ready, "", move_configs["max_move"]},
+        {rp.prefix, "joint", move_configs["max_move"], "", joint_ready},
     };
 
     // Sequences for Pick/Drop/Homing
     std::vector<Move> pick_sequence = {
-        {robot_prefix, "pose", "approach_pick_target", {}, "", move_configs["mid_move"]},
-        {robot_prefix, "cartesian", "pick_target", {}, "", move_configs["cartesian_slow_move"]},
+        {rp.prefix, "pose", move_configs["mid_move"], "approach_pick_target"},
+        {rp.prefix, "cartesian", move_configs["cartesian_slow_move"], "pick_target"},
     };
 
     std::vector<Move> drop_sequence = {
-        {robot_prefix, "cartesian", "approach_pick_target", {}, "", move_configs["mid_move"]},
-        {robot_prefix, "pose", "approach_drop_target", {}, "", move_configs["max_move"]},
-        {robot_prefix, "cartesian", "drop_target", {}, "", move_configs["cartesian_slow_move"]},
+        {rp.prefix, "cartesian", move_configs["mid_move"], "approach_pick_target"},
+        {rp.prefix, "pose", move_configs["max_move"], "approach_drop_target"},
+        {rp.prefix, "cartesian", move_configs["cartesian_slow_move"], "drop_target"},
     };
 
     std::vector<Move> home_position = {
-        {robot_prefix, "cartesian", "approach_drop_target", {}, "", move_configs["max_move"]},
-        {robot_prefix, "joint", "", joint_ready, "", move_configs["max_move"]},
-        // {robot_prefix, "named", "", {}, named_home, move_configs["max_move"]},
+        {rp.prefix, "cartesian", move_configs["max_move"], "approach_drop_target"},
+        {rp.prefix, "joint", move_configs["max_move"], "", joint_ready},
     };
 
     /*
@@ -172,16 +134,16 @@ int main(int argc, char **argv)
      * sense of what's in that variable.
      */
     std::string to_rest_xml = buildMoveXML(
-        robot_prefix, robot_prefix + "toRest", rest_position, blackboard);
+        rp.prefix, rp.prefix + "toRest", rest_position, blackboard);
 
     std::string pick_object_xml = buildMoveXML(
-        robot_prefix, robot_prefix + "pick", pick_sequence, blackboard);
+        rp.prefix, rp.prefix + "pick", pick_sequence, blackboard);
 
     std::string drop_object_xml = buildMoveXML(
-        robot_prefix, robot_prefix + "drop", drop_sequence, blackboard);
+        rp.prefix, rp.prefix + "drop", drop_sequence, blackboard);
 
     std::string to_home_xml = buildMoveXML(
-        robot_prefix, robot_prefix + "home", home_position, blackboard);
+        rp.prefix, rp.prefix + "home", home_position, blackboard);
 
     /*
      * Combine the parallel move sequence blocks in logic sequences for the entire logic.
@@ -199,13 +161,13 @@ int main(int argc, char **argv)
 
     // Translate it to xml tree leaf or branch
     std::string prep_sequence_xml = sequenceWrapperXML(
-        robot_prefix + "ComposedPrepSequence", {to_rest_xml});
+        rp.prefix + "ComposedPrepSequence", {to_rest_xml});
     std::string pick_sequence_xml = sequenceWrapperXML(
-        robot_prefix + "ComposedPickSequence", {pick_object_xml});
+        rp.prefix + "ComposedPickSequence", {pick_object_xml});
     std::string drop_sequence_xml = sequenceWrapperXML(
-        robot_prefix + "ComposedDropSequence", {drop_object_xml});
+        rp.prefix + "ComposedDropSequence", {drop_object_xml});
     std::string home_sequence_xml = sequenceWrapperXML(
-        robot_prefix + "ComposedHomeSequence", {to_home_xml, to_rest_xml});
+        rp.prefix + "ComposedHomeSequence", {to_home_xml, to_rest_xml});
 
     // ----------------------------------------------------------------------------
     // 3) Build blocks for objects handling
@@ -242,13 +204,13 @@ int main(int argc, char **argv)
     std::string init_mesh_obj_xml = fallbackWrapperXML("init_mesh_obj", {check_mesh_obj_xml, add_mesh_obj_xml});
 
     // the name of the link to attach the object to, and the object to manipulate
-    std::string tcp_frame_name = robot_prefix + tcp_frame;
+    std::string tcp_frame_name = rp.prefix + rp.tcp_frame;
     std::string object_to_manipulate = "graspable_mesh";
 
     std::string attach_obj_xml = buildObjectActionXML("attach_obj_to_manipulate", createAttachObject(
                                                                                       object_to_manipulate,
                                                                                       tcp_frame_name,
-                                                                                      contact_links));
+                                                                                      rp.contact_links));
     std::string detach_obj_xml = buildObjectActionXML("attach_obj_to_manipulate", createDetachObject(object_to_manipulate, tcp_frame_name));
     std::string remove_obj_xml = buildObjectActionXML("remove_obj_to_manipulate", createRemoveObject(object_to_manipulate));
 
@@ -264,12 +226,12 @@ int main(int argc, char **argv)
      * The reference orientation determines how the tranform behaves: if we leave the reference orientation to all zeroes the
      * transform of the object will be referred to the frame we specify, here the "world" frame.
      * Since we want to grasp the object aligning the Z axis of the gripper perpendicularly to the Z axis of the object, we need
-     * to rotate the Y 90 degrees, so 1.57 radians. Also, the center of the jaws is about 0.102 m from the link we defined as TCP, 
+     * to rotate the Y 90 degrees, so 1.57 radians. Also, the center of the jaws is about 0.102 m from the link we defined as TCP,
      * so we move the pick position consequently in the X- direction. The approach position is further away of about 5 cm.
      * Since the Panda's gripper is rotated about 45 degrees, we also need to ad this rotation to align it to the object. Getting
      * this right with just one transform can be not very intuitive, so I also set up the function to enable a second transform.
      * Here the second transform is the same for both poses, and creates a decentered grasping pose sliding in the original Z axis
-     * and then rotating of 45 degrees (0.785 rad) in the original X axis. 
+     * and then rotating of 45 degrees (0.785 rad) in the original X axis.
      */
     std::vector<double> pick_pre_transform_xyz_rpy = {-0.102, 0.0, 0.0, 0.0, 1.57, 0.0};
     std::vector<double> approach_pre_transform_xyz_rpy = {-0.15, 0.0, 0.0, 0.0, 1.57, 0.0};
@@ -297,9 +259,9 @@ int main(int argc, char **argv)
 
     // Setting commands for gripper open/close
     std::string move_gripper_close_xml =
-        "<GripperCommandAction position=\"0.004\" max_effort=\"1.0\" action_server=\"" + gripper_action_server + "\"/>";
+        "<GripperCommandAction position=\"0.004\" max_effort=\"1.0\" action_server=\"" + rp.gripper_action_server + "\"/>";
     std::string move_gripper_open_xml =
-        "<GripperCommandAction position=\"0.025\" max_effort=\"1.0\" action_server=\"" + gripper_action_server + "\"/>";
+        "<GripperCommandAction position=\"0.025\" max_effort=\"1.0\" action_server=\"" + rp.gripper_action_server + "\"/>";
 
     // ----------------------------------------------------------------------------
     // 6) Combine the objects and moves in a sequences that can run a number of times:

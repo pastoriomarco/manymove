@@ -8,6 +8,7 @@
 #include "manymove_cpp_trees/action_nodes_planner.hpp"
 #include "manymove_cpp_trees/action_nodes_signals.hpp"
 #include "manymove_cpp_trees/action_nodes_logic.hpp"
+#include "manymove_cpp_trees/robot.hpp"
 #include "manymove_cpp_trees/move.hpp"
 #include "manymove_cpp_trees/object.hpp"
 #include "manymove_cpp_trees/tree_helper.hpp"
@@ -32,24 +33,6 @@ int main(int argc, char **argv)
     auto node = rclcpp::Node::make_shared("bt_client_node");
     RCLCPP_INFO(node->get_logger(), "BT Client Node started (Purely Programmatic XML).");
 
-    std::string robot_model;
-    node->declare_parameter<std::string>("robot_model", "lite6");
-    node->get_parameter_or<std::string>("robot_model", robot_model, "");
-
-    // This parameter indicates the prefix to apply to the robot's action servers
-    std::string robot_prefix;
-    node->declare_parameter<std::string>("robot_prefix", "");
-    node->get_parameter_or<std::string>("robot_prefix", robot_prefix, "");
-
-    std::string tcp_frame;
-    node->declare_parameter<std::string>("tcp_frame", "");
-    node->get_parameter_or<std::string>("tcp_frame", tcp_frame, "");
-
-    // This parameter is to be set true if we are connected to a real robot that exposes the necessary services for manymove_signals
-    bool is_robot_real;
-    node->declare_parameter<bool>("is_robot_real", false);
-    node->get_parameter_or<bool>("is_robot_real", is_robot_real, false);
-
     // ----------------------------------------------------------------------------
     // 1) Create a blackboard and set "node"
     // ----------------------------------------------------------------------------
@@ -57,22 +40,15 @@ int main(int argc, char **argv)
     blackboard->set("node", node);
     RCLCPP_INFO(node->get_logger(), "Blackboard: set('node', <rclcpp::Node>)");
 
-    /**
-     * The following keys are important for the execution control logic: they are modified through
-     * the HMI services and let you pause/stop, resume or abort/reset execution.
-     */
-    // Setting blackboard keys to control execution:
-    blackboard->set(robot_prefix + "collision_detected", false);
-    blackboard->set(robot_prefix + "stop_execution", true);
-    blackboard->set(robot_prefix + "reset", false);
-    RCLCPP_INFO(node->get_logger(), "Blackboard: created execution control keys");
+    // Define all params and blackboard keys for the robot:
+    RobotParams rp = defineRobotParams(node, blackboard);
 
     // Create the HMI Service Node and pass the same blackboard ***
-    auto hmi_node = std::make_shared<manymove_cpp_trees::HMIServiceNode>(robot_prefix + "hmi_service_node", blackboard, robot_prefix);
+    auto hmi_node = std::make_shared<manymove_cpp_trees::HMIServiceNode>(rp.prefix + "hmi_service_node", blackboard, rp.prefix);
     RCLCPP_INFO(node->get_logger(), "HMI Service Node instantiated.");
 
     // ----------------------------------------------------------------------------
-    // 2) Setup moves
+    // 2) Setup joint targets, poses and moves
     // ----------------------------------------------------------------------------
 
     /*
@@ -98,118 +74,107 @@ int main(int argc, char **argv)
     std::vector<double> joint_look_dx = {0.733, -0.297, 1.378, -0.576, 1.692, 1.291};
     std::string named_home = "home";
 
-    // Original pick test poses: they should be overwritten by the blackboard key that will be dynamically updated getting the grasp pose object
-    Pose pick_target = createPose(0.2, -0.1, 0.15, 1.0, 0.0, 0.0, 0.0);
-    Pose approach_pick_target = pick_target;
-    approach_pick_target.position.z += 0.02;
-
-    // Test poses to place the object, these are not overwritten later (for now)
-    Pose drop_target = createPose(0.2, 0.0, 0.2, 1.0, 0.0, 0.0, 0.0);
-    Pose approach_drop_target = drop_target;
-    approach_drop_target.position.z += 0.02;
-
     // Populate the blackboard with the poses, one unique key for each pose we want to use.
     // Be careful not to use names that may conflict with the keys automatically created for the moves. (Usually move_{move_id})
-    blackboard->set("pick_target", pick_target);
-    blackboard->set("approach_pick_target", approach_pick_target);
-    RCLCPP_INFO(node->get_logger(), "Blackboard: set('pick_target', pick_target Pose)");
-    RCLCPP_INFO(node->get_logger(), "Blackboard: set('approach_pick_target', approach_pick_target Pose)");
 
+    // The pick target is to be obtained from the object later, so we put an empty pose for now.
+    blackboard->set("pick_target", Pose());
+    blackboard->set("approach_pick_target", Pose());
+
+    // Drop poses to place the object, these are not overwritten later, so we hardcode them
+    // Here we create the drop pose first, then we set it in the blackboard key
+    Pose drop_target = createPose(0.2, 0.0, 0.2, 1.0, 0.0, 0.0, 0.0);
     blackboard->set("drop_target", drop_target);
+
+    // The approach move from the drop pose is cartesian, we set an offset in the direction of the move (here, Z) 
+    Pose approach_drop_target = drop_target;
+    approach_drop_target.position.z += 0.02;
     blackboard->set("approach_drop_target", approach_drop_target);
-    RCLCPP_INFO(node->get_logger(), "Blackboard: set('drop_target', drop_target Pose)");
-    RCLCPP_INFO(node->get_logger(), "Blackboard: set('approach_drop_target', approach_drop_target Pose)");
 
     /*
-     * Here we compose the sequences of moves. Each of the following sequences represent a logic
+     * Then we compose the sequences of moves. Each of the following sequences represent a logic
      * sequence of moves that are somehow correlated, and not interrupted by operations on I/Os,
-     * objects and so on. For example the pick_sequence is a short sequence of moves composed by
+     * objects and logic conditions. For example the pick_sequence is a short sequence of moves composed by
      * a "pose" move to get in a position to be ready to approach the object, and the "cartesian"
      * move to get the gripper to the grasp position moving linearly to minimize chances of collisions.
      * As we'll se later, we can then compose these sequences of moves together to build bigger blocks
      * of logically corralated moves.
+     * We could also keep all moves separated, but it'd be harder to obtain an easily understandable
+     * tree later, expecially if we need to reuse a series of moves in a certain logic order.
      */
     std::vector<Move> rest_position = {
-        {robot_prefix, "joint", "", joint_rest, "", move_configs["max_move"]},
+        {rp.prefix, "joint", move_configs["max_move"], "", joint_rest},
     };
 
     std::vector<Move> scan_surroundings = {
-        {robot_prefix, "joint", "", joint_look_sx, "", move_configs["max_move"]},
-        {robot_prefix, "joint", "", joint_look_dx, "", move_configs["max_move"]},
+        {rp.prefix, "joint", move_configs["max_move"], "", joint_look_sx},
+        {rp.prefix, "joint", move_configs["max_move"], "", joint_look_dx},
     };
 
     // Sequences for Pick/Drop/Homing
     std::vector<Move> pick_sequence = {
-        {robot_prefix, "pose", "approach_pick_target", {}, "", move_configs["mid_move"]},
-        {robot_prefix, "cartesian", "pick_target", {}, "", move_configs["cartesian_slow_move"]},
+        {rp.prefix, "pose", move_configs["mid_move"], "approach_pick_target"},
+        {rp.prefix, "cartesian", move_configs["cartesian_slow_move"], "pick_target"},
     };
 
     std::vector<Move> drop_sequence = {
-        {robot_prefix, "cartesian", "approach_pick_target", {}, "", move_configs["cartesian_mid_move"]},
-        {robot_prefix, "pose", "approach_drop_target", {}, "", move_configs["max_move"]},
-        {robot_prefix, "cartesian", "drop_target", {}, "", move_configs["cartesian_slow_move"]},
+        {rp.prefix, "cartesian", move_configs["cartesian_mid_move"], "approach_pick_target"},
+        {rp.prefix, "pose", move_configs["max_move"], "approach_drop_target"},
+        {rp.prefix, "cartesian", move_configs["cartesian_slow_move"], "drop_target"},
     };
 
     std::vector<Move> home_position = {
-        {robot_prefix, "cartesian", "approach_drop_target", {}, "", move_configs["cartesian_mid_move"]},
-        {robot_prefix, "named", "", {}, named_home, move_configs["max_move"]},
+        {rp.prefix, "cartesian", move_configs["cartesian_mid_move"], "approach_drop_target"},
+        {rp.prefix, "named", move_configs["max_move"], "", {}, named_home},
     };
 
     /*
      * Build move sequence blocks
-     * The buildMoveXML creates the xml tree branch that parallelizes completely the planning and
-     * the execution of the sequence of moves. The moves will be planned in sequence until the last move is successfully
-     * planned, and the trajectories will be stored in the blackboard and set as valid. The execution starts in parallel,
-     * with the first move polling the blackboard until its trajectory is flagged as valid, then the execution begins.
-     * This allows for the best performance in related move sequences since the robot needs to wait for just the first
-     * trajectory to be available before starting to move.
-     * Each move execution resets the validity of the respective trajectory in the blackboard but, to avoid the risk of
-     * stale trajectories in scenarios where a branch could be restarted or repeated, you can set the flag reset_trajs to
-     * true to add a leaf node that resets all the trajectories of that move sequence in the blackboard.
-     * Notice that on any string representing an XML snippet it's better to use _xml at the end of the name to give better
-     * sense of what's in that variable.
+     * The buildMoveXML creates the xml tree branch that manages the planning and execution of each move with the given
+     * parameters. Unless the reset_trajs is set to true, each move that will plan and execute successfully will store the
+     * trajectory in the blackboar, thus avoiding recalculating it the next cycle. This allow to save cycle time on all but
+     * the first logic cycle, unless the scene changes. If a previously planned trajectory fails on execution it gets reset, 
+     * and a new one is planned. The manymove_planner checks for collisions before sending the traj, but also during the execution.
+     * 
+     * Notice that on any string representing an XML snippet I use _xml at the end of the name to give better sense of 
+     * what's in that variable: if it ends with _xml, it could potentially be directly inserted as a tree branch or leaf.
      */
     std::string to_rest_reset_xml = buildMoveXML(
-        robot_prefix, robot_prefix + "toRest", rest_position, blackboard, true); // this will run only on prep sequence, so we reset it afterwards
+        rp.prefix, rp.prefix + "toRest", rest_position, blackboard, true); // this will run only on prep sequence, so we reset it afterwards
 
     std::string to_rest_xml = buildMoveXML(
-        robot_prefix, robot_prefix + "toRest", rest_position, blackboard);
+        rp.prefix, rp.prefix + "toRest", rest_position, blackboard);
 
     std::string scan_around_xml = buildMoveXML(
-        robot_prefix, robot_prefix + "scanAround", scan_surroundings, blackboard);
+        rp.prefix, rp.prefix + "scanAround", scan_surroundings, blackboard);
 
     std::string pick_object_xml = buildMoveXML(
-        robot_prefix, robot_prefix + "pick", pick_sequence, blackboard);
+        rp.prefix, rp.prefix + "pick", pick_sequence, blackboard);
 
     std::string drop_object_xml = buildMoveXML(
-        robot_prefix, robot_prefix + "drop", drop_sequence, blackboard);
+        rp.prefix, rp.prefix + "drop", drop_sequence, blackboard);
 
     std::string to_home_xml = buildMoveXML(
-        robot_prefix, robot_prefix + "home", home_position, blackboard);
+        rp.prefix, rp.prefix + "home", home_position, blackboard);
 
-    /*
-     * Combine the parallel move sequence blocks in logic sequences for the entire logic.
-     * Each subsequence will plan and execute in parallel, but the next subsequence will start planning all its moves
-     * only after the last move of the previous sequence executes.
-     * This can be useful for example if you have a camera mounted on the robot's arm and you want the next moves to be
-     * planned only after the scene have been scanned. For example: the first move to_rest will take the robot in an
-     * upright position with the camera pointing down to where the robot base is: I want the octomap to update before
-     * continuing planning, but I don't need to wait for inputs or do any other action before planning.
-     * Once the scan_around sequence is executed I will want to check for some inputs before continuing, so I terminate the
-     * move sequence here: this will let me wrap this serie of sequences with other leaf nodes.
-     * Other sequences like the ones to pick and to drop the objects will need to wait for inputs and/or give outputs, so
-     * we sepearate them from the beginning.
+    /** 
+     * We can further combine the move sequence blocks in logic sequences.
+     * This allows reusing and combining moves or sequences that are used more than once in the scene,
+     * or that are used in different contexts, without risking to reuse the wrong trajectory.
+     * When we call buildMoveXML() we create a new move with its own unique ID. If that move is used in more than one leaf,
+     * we need to decide if always want to try to reuse the previously successfull trajectory or not.
+     * The manymove_planner logic checks for the start point of the traj to be valid and within tolerance, so we shouldn't
+     * worry too much of undefined behavior, but it helps me reason on the moves sequence structure. Keeping the Move vectors at
+     * minimum, using only the moves logically interconnected, makes the sequences easier to understand and debug.
+     * It's also important if we want to combine sequences that retain their previously successful trajectory with sequences that don't:
+     * if we need to repeat the prep sequence at some point we may be in a unkown position, so we don't want the traj to be reused.
      */
 
     // Translate it to xml tree leaf or branch
     std::string prep_sequence_xml = sequenceWrapperXML(
-        robot_prefix + "ComposedPrepSequence", {to_rest_reset_xml, scan_around_xml});
-    std::string pick_sequence_xml = sequenceWrapperXML(
-        robot_prefix + "ComposedPickSequence", {pick_object_xml});
-    std::string drop_sequence_xml = sequenceWrapperXML(
-        robot_prefix + "ComposedDropSequence", {drop_object_xml});
+        rp.prefix + "ComposedPrepSequence", {to_rest_reset_xml, scan_around_xml});
     std::string home_sequence_xml = sequenceWrapperXML(
-        robot_prefix + "ComposedHomeSequence", {to_home_xml, to_rest_xml});
+        rp.prefix + "ComposedHomeSequence", {to_home_xml, to_rest_xml});
 
     // ----------------------------------------------------------------------------
     // 3) Build blocks for objects handling
@@ -220,7 +185,7 @@ int main(int argc, char **argv)
     std::vector<double> wall_dimension = {0.8, 0.02, 0.8};
     auto wall_pose = createPoseRPY(0.0, 0.4, 0.3, 0.0, 0.0, 0.0);
 
-    std::vector<double> cylinderdimension = {0.1, 0.005};
+    std::vector<double> cylinder_dimension = {0.1, 0.005};
     auto cylinderpose = createPoseRPY(0.1, 0.2, 0.005, 0.0, 1.57, 0.0);
 
     std::string mesh_file = "package://manymove_object_manager/meshes/unit_tube.stl";
@@ -236,7 +201,7 @@ int main(int argc, char **argv)
 
     std::string add_ground_obj_xml = buildObjectActionXML("add_ground", createAddPrimitiveObject("obstacle_ground", "box", ground_dimension, ground_pose));
     std::string add_wall_obj_xml = buildObjectActionXML("add_wall", createAddPrimitiveObject("obstacle_wall", "box", wall_dimension, wall_pose));
-    std::string add_cylinder_obj_xml = buildObjectActionXML("add_cylinder", createAddPrimitiveObject("graspable_cylinder", "cylinder", cylinderdimension, cylinderpose));
+    std::string add_cylinder_obj_xml = buildObjectActionXML("add_cylinder", createAddPrimitiveObject("graspable_cylinder", "cylinder", cylinder_dimension, cylinderpose));
     std::string add_mesh_obj_xml = buildObjectActionXML("add_mesh", createAddMeshObject("graspable_mesh", mesh_pose, mesh_file, mesh_scale[0], mesh_scale[1], mesh_scale[2]));
 
     // Compose the check and add sequence for objects
@@ -246,7 +211,7 @@ int main(int argc, char **argv)
     std::string init_mesh_obj_xml = fallbackWrapperXML("init_mesh_obj", {check_mesh_obj_xml, add_mesh_obj_xml});
 
     // the name of the link to attach the object to, and the object to manipulate
-    std::string tcp_frame_name = robot_prefix + tcp_frame;
+    std::string tcp_frame_name = rp.prefix + rp.tcp_frame;
     std::string object_to_manipulate = "graspable_mesh";
 
     std::string attach_obj_xml = buildObjectActionXML("attach_obj_to_manipulate", createAttachObject(object_to_manipulate, tcp_frame_name));
@@ -291,14 +256,14 @@ int main(int argc, char **argv)
     // ----------------------------------------------------------------------------
 
     // Let's send and receive signals only if the robot is real, and let's fake a delay on inputs otherwise
-    std::string signal_gripper_close_xml = (is_robot_real ? buildSetOutputXML(robot_prefix, "GripperClose", "controller", 0, 1) : "");
-    std::string signal_gripper_open_xml = (is_robot_real ? buildSetOutputXML(robot_prefix, "GripperOpen", "controller", 0, 0) : "");
-    std::string check_gripper_close_xml = (is_robot_real ? buildWaitForInput(robot_prefix, "WaitForSensor", "controller", 0, 1) : "<Delay delay_msec=\"250\">\n<AlwaysSuccess />\n</Delay>\n");
-    std::string check_gripper_open_xml = (is_robot_real ? buildWaitForInput(robot_prefix, "WaitForSensor", "controller", 0, 0) : "<Delay delay_msec=\"250\">\n  <AlwaysSuccess />\n</Delay>\n");
-    std::string check_robot_state_xml = buildCheckRobotStateXML(robot_prefix, "CheckRobot", "robot_ready", "error_code", "robot_mode", "robot_state", "robot_msg");
-    std::string reset_robot_state_xml = buildResetRobotStateXML(robot_prefix, "ResetRobot", robot_model);
+    std::string signal_gripper_close_xml = (rp.is_real ? buildSetOutputXML(rp.prefix, "GripperClose", "controller", 0, 1) : "");
+    std::string signal_gripper_open_xml = (rp.is_real ? buildSetOutputXML(rp.prefix, "GripperOpen", "controller", 0, 0) : "");
+    std::string check_gripper_close_xml = (rp.is_real ? buildWaitForInput(rp.prefix, "WaitForSensor", "controller", 0, 1) : "<Delay delay_msec=\"250\">\n<AlwaysSuccess />\n</Delay>\n");
+    std::string check_gripper_open_xml = (rp.is_real ? buildWaitForInput(rp.prefix, "WaitForSensor", "controller", 0, 0) : "<Delay delay_msec=\"250\">\n  <AlwaysSuccess />\n</Delay>\n");
+    std::string check_robot_state_xml = buildCheckRobotStateXML(rp.prefix, "CheckRobot", "robot_ready", "error_code", "robot_mode", "robot_state", "robot_msg");
+    std::string reset_robot_state_xml = buildResetRobotStateXML(rp.prefix, "ResetRobot", rp.model);
 
-    std::string check_reset_robot_xml = (is_robot_real ? fallbackWrapperXML(robot_prefix + "CheckResetFallback", {check_robot_state_xml, reset_robot_state_xml}) : "<Delay delay_msec=\"250\">\n<AlwaysSuccess />\n</Delay>\n");
+    std::string check_reset_robot_xml = (rp.is_real ? fallbackWrapperXML(rp.prefix + "CheckResetFallback", {check_robot_state_xml, reset_robot_state_xml}) : "<Delay delay_msec=\"250\">\n<AlwaysSuccess />\n</Delay>\n");
 
     // ----------------------------------------------------------------------------
     // 6) Combine the objects and moves in a sequences that can run a number of times:
@@ -308,7 +273,7 @@ int main(int argc, char **argv)
     std::string spawn_fixed_objects_xml = sequenceWrapperXML("SpawnFixedObjects", {init_ground_obj_xml, init_wall_obj_xml});
     std::string spawn_graspable_objects_xml = sequenceWrapperXML("SpawnGraspableObjects", {init_cylinder_obj_xml, init_mesh_obj_xml});
     std::string get_grasp_object_poses_xml = sequenceWrapperXML("GetGraspPoses", {get_pick_pose_xml, get_approach_pose_xml});
-    std::string go_to_pick_pose_xml = sequenceWrapperXML("GoToPickPose", {pick_sequence_xml});
+    std::string go_to_pick_pose_xml = sequenceWrapperXML("GoToPickPose", {pick_object_xml});
     std::string close_gripper_xml = sequenceWrapperXML("CloseGripper", {signal_gripper_close_xml, check_gripper_close_xml, attach_obj_xml});
     std::string open_gripper_xml = sequenceWrapperXML("OpenGripper", {signal_gripper_open_xml, detach_obj_xml});
 
@@ -322,7 +287,7 @@ int main(int argc, char **argv)
          get_grasp_object_poses_xml,  //< We get the updated poses relative to the objects
          go_to_pick_pose_xml,         //< Prep sequence and pick sequence
          close_gripper_xml,           //< We attach the object
-         drop_sequence_xml,           //< Drop sequence
+         drop_object_xml,           //< Drop sequence
          open_gripper_xml,            //< We detach the object
          home_sequence_xml,           //< Homing sequence
          remove_obj_xml},             //< We delete the object for it to be added on the next cycle in the original position

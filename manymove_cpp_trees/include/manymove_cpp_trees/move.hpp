@@ -10,22 +10,8 @@
 
 namespace manymove_cpp_trees
 {
-    inline manymove_msgs::msg::MovementConfig defaultMovementConfig()
-    {
-        manymove_msgs::msg::MovementConfig config;
-        config.velocity_scaling_factor = 1.0;
-        config.acceleration_scaling_factor = 1.0;
-        config.step_size = 0.01;
-        config.jump_threshold = 0.0;
-        config.max_cartesian_speed = 0.5;
-        config.plan_number_target = 4;
-        config.plan_number_limit = 16;
-        config.smoothing_type = "time_optimal";
-        return config;
-    }
-
     // ----------------------------------------------------------------------------
-    // Setup functions
+    // Move setup functions
     // ----------------------------------------------------------------------------
 
     /**
@@ -37,6 +23,28 @@ namespace manymove_cpp_trees
         using manymove_msgs::msg::MovementConfig;
 
         /**
+         * REFERENCE MovementConfig STRUCTURE
+         * 
+         * # manymove parameters
+         * float64 max_cartesian_speed             # max cartesian speed for the move, referred to TCP
+         * int32 plan_number_target                # number of valid plans to find before declaring success
+         * int32 plan_number_limit                 # max planning tries before fail
+         * string smoothing_type                   # "time-optimal" / "ruckig"
+         * 
+         * # moveit planner parameters
+         * float64 velocity_scaling_factor         # 0.0 to 1.0
+         * float64 acceleration_scaling_factor     # 0.0 to 1.0
+         * string planning_pipeline                # e.g. "ompl", "chomp", "pilz_industrial_motion_planner", ...
+         * string planner_id                       # e.g. "RRTConnect", "PTP", "LIN", ...
+         * float64 planning_time                   # overall time budget in seconds
+         * int32  planning_attempts                # e.g. 1, 5, etc.
+         * 
+         * # CartesianInterpolator parameters
+         * float64 step_size
+         * float64 jump_threshold
+         */
+
+        /**
          * Note about plan_number_target:
          * Increasing the plan_number_target increase time to plan but produce trajs closer to optimal.
          * With 4 plans I noticed a quite good result, 8 to 12 plans reach almost always a very good result but with planning time increases.
@@ -46,7 +54,6 @@ namespace manymove_cpp_trees
          * it's better to follow a trajectory that is a bit longer and even move a bit slower in the whole traj, than reaching a full stop while
          * going faster in a shorter path. 
          */
-
         MovementConfig max_move_config;
         max_move_config.velocity_scaling_factor = 1.0;
         max_move_config.acceleration_scaling_factor = 0.75;
@@ -86,13 +93,18 @@ namespace manymove_cpp_trees
         cumotion_max_move_config.plan_number_target = 1;
 
         return {
+            // Standard moves for joint and pose
             {"max_move", max_move_config},
             {"mid_move", mid_move_config},
             {"slow_move", slow_move_config},
-            {"cumotion_max_move", cumotion_max_move_config},
+
+            // Params for cartesian moves
             {"cartesian_max_move", cartesian_max_move_config},
             {"cartesian_mid_move", cartesian_mid_move_config},
-            {"cartesian_slow_move", cartesian_slow_move_config}};
+            {"cartesian_slow_move", cartesian_slow_move_config},
+            
+            // Test for moves with cuMotion planning library
+            {"cumotion_max_move", cumotion_max_move_config}};
     }
 
     /**
@@ -115,10 +127,10 @@ namespace manymove_cpp_trees
 
         Move(const std::string &robot_prefix,
              const std::string &type,
+             const manymove_msgs::msg::MovementConfig &config,
              const std::string &pose_key = "",
              const std::vector<double> &joint_values = {},
              const std::string &named_target = "",
-             const manymove_msgs::msg::MovementConfig &config = defaultMovementConfig(),
              const std::vector<double> &start_joint_values = {})
             : type(type),
               pose_key(pose_key),

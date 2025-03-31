@@ -8,6 +8,7 @@
 #include "manymove_cpp_trees/action_nodes_planner.hpp"
 #include "manymove_cpp_trees/action_nodes_signals.hpp"
 #include "manymove_cpp_trees/action_nodes_logic.hpp"
+#include "manymove_cpp_trees/robot.hpp"
 #include "manymove_cpp_trees/move.hpp"
 #include "manymove_cpp_trees/object.hpp"
 #include "manymove_cpp_trees/tree_helper.hpp"
@@ -32,43 +33,18 @@ int main(int argc, char **argv)
     auto node = rclcpp::Node::make_shared("bt_client_node");
     RCLCPP_INFO(node->get_logger(), "BT Client Node started (Purely Programmatic XML).");
 
-    std::string robot_model;
-    node->declare_parameter<std::string>("robot_model", "lite6");
-    node->get_parameter_or<std::string>("robot_model", robot_model, "");
-
-    // This parameter indicates the prefix to apply to the robot's action servers
-    std::string robot_prefix;
-    node->declare_parameter<std::string>("robot_prefix", "");
-    node->get_parameter_or<std::string>("robot_prefix", robot_prefix, "");
-
-    std::string tcp_frame;
-    node->declare_parameter<std::string>("tcp_frame", "");
-    node->get_parameter_or<std::string>("tcp_frame", tcp_frame, "");
-
-    // This parameter is to be set true if we are connected to a real robot that exposes the necessary services for manymove_signals
-    bool is_robot_real;
-    node->declare_parameter<bool>("is_robot_real", false);
-    node->get_parameter_or<bool>("is_robot_real", is_robot_real, false);
-
     // ----------------------------------------------------------------------------
     // 1) Create a blackboard and set "node"
     // ----------------------------------------------------------------------------
     auto blackboard = BT::Blackboard::create();
     blackboard->set("node", node);
     RCLCPP_INFO(node->get_logger(), "Blackboard: set('node', <rclcpp::Node>)");
-
-    /**
-     * The following keys are important for the execution control logic: they are modified through
-     * the HMI services and let you pause/stop, resume or abort/reset execution.
-     */
-    // Setting blackboard keys to control execution:
-    blackboard->set(robot_prefix + "collision_detected", false);
-    blackboard->set(robot_prefix + "stop_execution", true);
-    blackboard->set(robot_prefix + "reset", false);
-    RCLCPP_INFO(node->get_logger(), "Blackboard: created execution control keys");
+    
+    // Define all params and blackboard keys for the robot:
+    RobotParams rp = defineRobotParams(node, blackboard);
 
     // Create the HMI Service Node and pass the same blackboard ***
-    auto hmi_node = std::make_shared<manymove_cpp_trees::HMIServiceNode>(robot_prefix + "hmi_service_node", blackboard, robot_prefix);
+    auto hmi_node = std::make_shared<manymove_cpp_trees::HMIServiceNode>(rp.prefix + "hmi_service_node", blackboard, rp.prefix);
     RCLCPP_INFO(node->get_logger(), "HMI Service Node instantiated.");
 
     // ----------------------------------------------------------------------------
@@ -98,11 +74,6 @@ int main(int argc, char **argv)
     std::vector<double> joint_look_dx = {0.733, -0.297, 1.378, -0.576, 1.692, 1.291};
     std::string named_home = "home";
 
-    // Original pick test poses: they should be overwritten by the blackboard key that will be dynamically updated getting the grasp pose object
-    Pose pick_target = createPose(0.2, -0.1, 0.15, 1.0, 0.0, 0.0, 0.0);
-    Pose approach_pick_target = pick_target;
-    approach_pick_target.position.z += 0.02;
-
     // Test poses to place the object, these are not overwritten later (for now)
     Pose drop_target = createPose(0.25, 0.15, 0.2, 1.0, 0.0, 0.0, 0.0);
     Pose approach_drop_target = drop_target;
@@ -110,8 +81,8 @@ int main(int argc, char **argv)
 
     // Populate the blackboard with the poses, one unique key for each pose we want to use.
     // Be careful not to use names that may conflict with the keys automatically created for the moves. (Usually move_{move_id})
-    blackboard->set("pick_target", pick_target);
-    blackboard->set("approach_pick_target", approach_pick_target);
+    blackboard->set("pick_target", Pose());
+    blackboard->set("approach_pick_target", Pose());
     RCLCPP_INFO(node->get_logger(), "Blackboard: set('pick_target', pick_target Pose)");
     RCLCPP_INFO(node->get_logger(), "Blackboard: set('approach_pick_target', approach_pick_target Pose)");
 
@@ -130,31 +101,31 @@ int main(int argc, char **argv)
      * of logically corralated moves.
      */
     std::vector<Move> rest_position = {
-        {robot_prefix, "joint", "", joint_rest, "", move_configs["cumotion_max_move"]},
+        {rp.prefix, "joint", move_configs["cumotion_max_move"], "", joint_rest},
     };
 
     std::vector<Move> scan_surroundings = {
-        {robot_prefix, "joint", "", joint_look_sx, "", move_configs["cumotion_max_move"]},
-        {robot_prefix, "joint", "", joint_look_dx, "", move_configs["cumotion_max_move"]},
+        {rp.prefix, "joint", move_configs["cumotion_max_move"], "", joint_look_sx},
+        {rp.prefix, "joint", move_configs["cumotion_max_move"], "", joint_look_dx},
     };
 
     // Sequences for Pick/Drop/Homing
     std::vector<Move> pick_sequence = {
-        // {robot_prefix, "pose", "approach_pick_target", {}, "", move_configs["mid_move"]},
-        // {robot_prefix, "cartesian", "pick_target", {}, "", move_configs["cartesian_slow_move"]},
-        {robot_prefix, "pose", "pick_target", {}, "", move_configs["cumotion_max_move"]},
+        // {rp.prefix, move_configs["mid_move"], "pose", "approach_pick_target"},
+        // {rp.prefix, move_configs["cartesian_slow_move"], "cartesian", "pick_target"},
+        {rp.prefix, "pose", move_configs["cumotion_max_move"], "pick_target"},
     };
 
     std::vector<Move> drop_sequence = {
-        {robot_prefix, "cartesian", "approach_pick_target", {}, "", move_configs["cartesian_mid_move"]},
-        // {robot_prefix, "pose", "approach_drop_target", {}, "", move_configs["max_move"]},
-        // {robot_prefix, "cartesian", "drop_target", {}, "", move_configs["cartesian_slow_move"]},
-        {robot_prefix, "pose", "drop_target", {}, "", move_configs["cumotion_max_move"]},
+        {rp.prefix, "cartesian", move_configs["cartesian_mid_move"], "approach_pick_target"},
+        // {rp.prefix, "pose", move_configs["max_move"], "approach_drop_target"},
+        // {rp.prefix, "cartesian", move_configs["cartesian_slow_move"], "drop_target"},
+        {rp.prefix, "pose", move_configs["cumotion_max_move"], "drop_target"},
     };
 
     std::vector<Move> home_position = {
-        {robot_prefix, "cartesian", "approach_drop_target", {}, "", move_configs["cartesian_mid_move"]},
-        //{robot_prefix, "named", "", {}, named_home, move_configs["cumotion_max_move"]},
+        {rp.prefix, "cartesian", move_configs["cartesian_mid_move"], "approach_drop_target"},
+        //{rp.prefix, "named", move_configs["cumotion_max_move"], "", {}, named_home},
     };
 
     /*
@@ -172,22 +143,22 @@ int main(int argc, char **argv)
      * sense of what's in that variable.
      */
     std::string to_rest_reset_xml = buildMoveXML(
-        robot_prefix, robot_prefix + "toRest", rest_position, blackboard, true); // this will run only on prep sequence, so we reset it afterwards
+        rp.prefix, rp.prefix + "toRest", rest_position, blackboard, true); // this will run only on prep sequence, so we reset it afterwards
 
     std::string to_rest_xml = buildMoveXML(
-        robot_prefix, robot_prefix + "toRest", rest_position, blackboard);
+        rp.prefix, rp.prefix + "toRest", rest_position, blackboard);
 
     std::string scan_around_xml = buildMoveXML(
-        robot_prefix, robot_prefix + "scanAround", scan_surroundings, blackboard);
+        rp.prefix, rp.prefix + "scanAround", scan_surroundings, blackboard);
 
     std::string pick_object_xml = buildMoveXML(
-        robot_prefix, robot_prefix + "pick", pick_sequence, blackboard);
+        rp.prefix, rp.prefix + "pick", pick_sequence, blackboard);
 
     std::string drop_object_xml = buildMoveXML(
-        robot_prefix, robot_prefix + "drop", drop_sequence, blackboard);
+        rp.prefix, rp.prefix + "drop", drop_sequence, blackboard);
 
     std::string to_home_xml = buildMoveXML(
-        robot_prefix, robot_prefix + "home", home_position, blackboard);
+        rp.prefix, rp.prefix + "home", home_position, blackboard);
 
     /*
      * Combine the parallel move sequence blocks in logic sequences for the entire logic.
@@ -205,13 +176,13 @@ int main(int argc, char **argv)
 
     // Translate it to xml tree leaf or branch
     std::string prep_sequence_xml = sequenceWrapperXML(
-        robot_prefix + "ComposedPrepSequence", {to_rest_reset_xml, scan_around_xml});
+        rp.prefix + "ComposedPrepSequence", {to_rest_reset_xml, scan_around_xml});
     std::string pick_sequence_xml = sequenceWrapperXML(
-        robot_prefix + "ComposedPickSequence", {pick_object_xml});
+        rp.prefix + "ComposedPickSequence", {pick_object_xml});
     std::string drop_sequence_xml = sequenceWrapperXML(
-        robot_prefix + "ComposedDropSequence", {drop_object_xml});
+        rp.prefix + "ComposedDropSequence", {drop_object_xml});
     std::string home_sequence_xml = sequenceWrapperXML(
-        robot_prefix + "ComposedHomeSequence", {to_home_xml, to_rest_xml});
+        rp.prefix + "ComposedHomeSequence", {to_home_xml, to_rest_xml});
 
     // ----------------------------------------------------------------------------
     // 3) Build blocks for objects handling
@@ -248,7 +219,7 @@ int main(int argc, char **argv)
     std::string init_mesh_obj_xml = fallbackWrapperXML("init_mesh_obj", {check_mesh_obj_xml, add_mesh_obj_xml});
 
     // the name of the link to attach the object to, and the object to manipulate
-    std::string tcp_frame_name = robot_prefix + tcp_frame;
+    std::string tcp_frame_name = rp.prefix + rp.tcp_frame;
     std::string object_to_manipulate = "graspable_mesh";
 
     std::string attach_obj_xml = buildObjectActionXML("attach_obj_to_manipulate", createAttachObject(object_to_manipulate, tcp_frame_name));
@@ -293,14 +264,14 @@ int main(int argc, char **argv)
     // ----------------------------------------------------------------------------
 
     // Let's send and receive signals only if the robot is real, and let's fake a delay on inputs otherwise
-    std::string signal_gripper_close_xml = (is_robot_real ? buildSetOutputXML(robot_prefix, "GripperClose", "controller", 0, 1) : "");
-    std::string signal_gripper_open_xml = (is_robot_real ? buildSetOutputXML(robot_prefix, "GripperOpen", "controller", 0, 0) : "");
-    std::string check_gripper_close_xml = (is_robot_real ? buildWaitForInput(robot_prefix, "WaitForSensor", "controller", 0, 1) : "<Delay delay_msec=\"250\">\n<AlwaysSuccess />\n</Delay>\n");
-    std::string check_gripper_open_xml = (is_robot_real ? buildWaitForInput(robot_prefix, "WaitForSensor", "controller", 0, 0) : "<Delay delay_msec=\"250\">\n  <AlwaysSuccess />\n</Delay>\n");
-    std::string check_robot_state_xml = buildCheckRobotStateXML(robot_prefix, "CheckRobot", "robot_ready", "error_code", "robot_mode", "robot_state", "robot_msg");
-    std::string reset_robot_state_xml = buildResetRobotStateXML(robot_prefix, "ResetRobot", robot_model);
+    std::string signal_gripper_close_xml = (rp.is_real ? buildSetOutputXML(rp.prefix, "GripperClose", "controller", 0, 1) : "");
+    std::string signal_gripper_open_xml = (rp.is_real ? buildSetOutputXML(rp.prefix, "GripperOpen", "controller", 0, 0) : "");
+    std::string check_gripper_close_xml = (rp.is_real ? buildWaitForInput(rp.prefix, "WaitForSensor", "controller", 0, 1) : "<Delay delay_msec=\"250\">\n<AlwaysSuccess />\n</Delay>\n");
+    std::string check_gripper_open_xml = (rp.is_real ? buildWaitForInput(rp.prefix, "WaitForSensor", "controller", 0, 0) : "<Delay delay_msec=\"250\">\n  <AlwaysSuccess />\n</Delay>\n");
+    std::string check_robot_state_xml = buildCheckRobotStateXML(rp.prefix, "CheckRobot", "robot_ready", "error_code", "robot_mode", "robot_state", "robot_msg");
+    std::string reset_robot_state_xml = buildResetRobotStateXML(rp.prefix, "ResetRobot", rp.model);
 
-    std::string check_reset_robot_xml = (is_robot_real ? fallbackWrapperXML(robot_prefix + "CheckResetFallback", {check_robot_state_xml, reset_robot_state_xml}) : "<Delay delay_msec=\"250\">\n<AlwaysSuccess />\n</Delay>\n");
+    std::string check_reset_robot_xml = (rp.is_real ? fallbackWrapperXML(rp.prefix + "CheckResetFallback", {check_robot_state_xml, reset_robot_state_xml}) : "<Delay delay_msec=\"250\">\n<AlwaysSuccess />\n</Delay>\n");
 
     // ----------------------------------------------------------------------------
     // 6) Combine the objects and moves in a sequences that can run a number of times:
