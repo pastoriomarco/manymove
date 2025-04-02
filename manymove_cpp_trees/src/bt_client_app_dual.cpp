@@ -109,7 +109,7 @@ int main(int argc, char **argv)
 
     // Then we create the xml snippets to attach, detach the object to/from a link, and to remove it from the scene.
     std::string attach_obj_1_xml = buildObjectActionXML("attach_obj_to_manipulate_1", createAttachObject(object_to_manipulate_1, tcp_frame_name_1));
-    std::string detach_obj_1_xml = buildObjectActionXML("attach_obj_to_manipulate_1", createDetachObject(object_to_manipulate_1, tcp_frame_name_1));
+    std::string detach_obj_1_xml = buildObjectActionXML("detach_obj_to_manipulate_1", createDetachObject(object_to_manipulate_1, tcp_frame_name_1));
     std::string remove_obj_1_xml = buildObjectActionXML("remove_obj_to_manipulate_1", createRemoveObject(object_to_manipulate_1));
 
     // Now that we have all we need for the first object, we can create the first poses relative to it.
@@ -128,8 +128,9 @@ int main(int argc, char **argv)
      * Since this pose will be overwritten, we use an all zeros pose that would not be reachable anyway.
      */
     std::string pick_target_1_key_name = "pick_target_1";
-    std::string approach_pick_target_1_key_name = "approach_pick_target_1";
     blackboard->set(pick_target_1_key_name, Pose());
+
+    std::string approach_pick_target_1_key_name = "approach_pick_target_1";
     blackboard->set(approach_pick_target_1_key_name, Pose());
 
     /**
@@ -183,6 +184,7 @@ int main(int argc, char **argv)
      * For example, this pose has the Z+ facing downard, 45 degrees in the XZ plane, in between X- and Z-.
      */
     Pose drop_target_1 = createPoseRPY(0.57, -0.25, 0.72, -0.785, -3.14, 1.57);
+
     Pose approach_drop_target_1 = drop_target_1;
     // We need to modify the exit pose accordingly: we move in X+ and Z+ to obtain a 45 degree exit in the XZ plane, in the opposite
     // direction of the Z+ of the TCP in the drop_target_1 pose.
@@ -191,8 +193,9 @@ int main(int argc, char **argv)
 
     // We still create the blackboard key, even if we don't modify the pose later, since the pose is always passed through blackboard keys for consistency
     std::string drop_target_1_key_name = "drop_target_1";
-    std::string approach_drop_target_1_key_name = "approach_drop_target_1";
     blackboard->set(drop_target_1_key_name, drop_target_1);
+
+    std::string approach_drop_target_1_key_name = "approach_drop_target_1";
     blackboard->set(approach_drop_target_1_key_name, approach_drop_target_1);
 
     //
@@ -209,8 +212,11 @@ int main(int argc, char **argv)
      * key for the new pose. Note the
      */
     std::string dropped_target_key_name = "dropped_target";
-    // Then I set a temporary value, it will be overwritten later:
-    blackboard->set(dropped_target_key_name, drop_target_1);
+    // Then I set an empty value, it will be overwritten later:
+    blackboard->set(dropped_target_key_name, Pose());
+    // Why not use drop_target_1? That's because drop_target_1 is a pose referred to another frame. To obtain the correct orientation we'll need
+    // to obtain the object's pose, not the pose of the other robot's TCP, so we can make it easier to transform it to the second robot's TCP
+    // with the helper functions provided.
 
     /**
      * When we switch from a robot to another we remove the object from the scene to free up the name to add it again concurrently

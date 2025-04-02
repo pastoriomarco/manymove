@@ -109,7 +109,7 @@ int main(int argc, char **argv)
 
     // Then we create the xml snippets to attach, detach the object to/from a link, and to remove it from the scene. 
     std::string attach_obj_1_xml = buildObjectActionXML("attach_obj_to_manipulate_1", createAttachObject(object_to_manipulate_1, tcp_frame_name_1));
-    std::string detach_obj_1_xml = buildObjectActionXML("attach_obj_to_manipulate_1", createDetachObject(object_to_manipulate_1, tcp_frame_name_1));
+    std::string detach_obj_1_xml = buildObjectActionXML("detach_obj_to_manipulate_1", createDetachObject(object_to_manipulate_1, tcp_frame_name_1));
     std::string remove_obj_1_xml = buildObjectActionXML("remove_obj_to_manipulate_1", createRemoveObject(object_to_manipulate_1));
 
     // Now that we have all we need for the first object, we can create the first poses relative to it.
