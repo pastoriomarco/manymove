@@ -81,6 +81,7 @@ int main(int argc, char **argv)
 
     // Drop poses to place the object, these are not overwritten later, so we hardcode them
     // Here we create the drop pose first, then we set it in the blackboard key
+    // Notice that, since the object will be created with Z+ pointing up, we need to flip the Z axis by rotating 360 deg in X axis
     Pose drop_target = createPoseRPY(0.2, 0.0, 0.2, 3.14, 0.0, 0.785);
     blackboard->set("drop_target", drop_target);
 

@@ -37,7 +37,6 @@ rosidl_generate_interfaces(${PROJECT_NAME}
   "action/GetObjectPose.action"
 
   "action/PlanManipulator.action"
-  "action/ExecuteTrajectory.action"
   "action/MoveManipulator.action"
   "action/LoadTrajController.action"
   "action/UnloadTrajController.action"

@@ -10,7 +10,6 @@
 #include <controller_manager_msgs/srv/switch_controller.hpp>
 #include <controller_manager_msgs/srv/configure_controller.hpp>
 #include "manymove_msgs/action/plan_manipulator.hpp"
-#include "manymove_msgs/action/execute_trajectory.hpp"
 #include "manymove_msgs/action/move_manipulator.hpp"
 #include "manymove_msgs/action/unload_traj_controller.hpp"
 #include "manymove_msgs/action/load_traj_controller.hpp"

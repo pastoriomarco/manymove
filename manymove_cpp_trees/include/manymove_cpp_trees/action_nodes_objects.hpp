@@ -10,7 +10,6 @@
 #include <behaviortree_cpp_v3/condition_node.h>
 
 #include <manymove_msgs/action/plan_manipulator.hpp>
-#include <manymove_msgs/action/execute_trajectory.hpp>
 
 #include <manymove_msgs/action/add_collision_object.hpp>
 #include <manymove_msgs/action/remove_collision_object.hpp>

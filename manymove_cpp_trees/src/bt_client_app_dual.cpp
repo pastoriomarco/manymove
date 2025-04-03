@@ -81,13 +81,15 @@ int main(int argc, char **argv)
      * in the future we can also make so the dimensions depend on a blackboard key and let the user modify it from the HMI.
      */
     std::vector<double> graspable_mesh_scale = {0.01, 0.01, tube_length};
+    blackboard->set("graspable_mesh_scale_key", graspable_mesh_scale);
 
     /**
      * This is the pose for the object, aligned so the X+ axis corresponds to the exit direction from the distributor's holder.
      * Since the gripper is aligned to the Z axis, we'll have to modify it later to get the grasp pose. Note we could approach from any direction
      * perpendicular to the Z axis of the object, but defining one specific alignment lets us define a specific direction for grasping.
      */
-    auto graspable_mesh_pose = createPoseRPY(((tube_length / 2) + 0.973 + 0.005), -0.6465, 0.8055, 1.57, 2.05, 1.57);
+    Pose graspable_mesh_pose = createPoseRPY(((tube_length / 2) + 0.973 + 0.005), -0.6465, 0.8055, 1.57, 2.05, 1.57);
+    blackboard->set("graspable_mesh_pose_key", graspable_mesh_pose);
 
     //
     std::string check_graspable_mesh_obj_xml = buildObjectActionXML("check_" + object_to_manipulate_1, createCheckObjectExists(object_to_manipulate_1));

@@ -8,7 +8,6 @@
 #include <behaviortree_cpp_v3/action_node.h>
 
 #include "manymove_msgs/action/plan_manipulator.hpp"
-#include "manymove_msgs/action/execute_trajectory.hpp"
 #include "manymove_msgs/action/unload_traj_controller.hpp"
 #include "manymove_msgs/action/load_traj_controller.hpp"
 

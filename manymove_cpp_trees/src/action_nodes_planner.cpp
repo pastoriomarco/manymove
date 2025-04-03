@@ -49,6 +49,12 @@ namespace manymove_cpp_trees
         result_received_ = false;
         action_result_ = MoveManipulator::Result();
 
+        // Read the robot_prefix
+        if (!getInput<std::string>("robot_prefix", robot_prefix_))
+        {
+            throw BT::RuntimeError("MoveManipulatorAction: 'robot_prefix' not found in blackboard.");
+        }
+
         // this should never be true on start, but let's leave it here for safety
         bool collision_detected;
         if (!getInput<bool>("collision_detected", collision_detected))
@@ -61,8 +67,8 @@ namespace manymove_cpp_trees
         if (collision_detected)
         {
             // reset the collision_detected value
-            config().blackboard->set("collision_detected", false);
-            config().blackboard->set("stop_execution", true);
+            config().blackboard->set(robot_prefix_ + "collision_detected", false);
+            config().blackboard->set(robot_prefix_ + "stop_execution", true);
 
             return BT::NodeStatus::FAILURE;
         }
@@ -252,7 +258,7 @@ namespace manymove_cpp_trees
         if (feedback->in_collision)
         {
             // Set collision_detected on the blackboard and cancel the goal.
-            config().blackboard->set("collision_detected", true);
+            config().blackboard->set(robot_prefix_ + "collision_detected", true);
 
             RCLCPP_INFO(node_->get_logger(),
                         "ExecuteTrajectory [%s]: Collision detected. Setting 'collision_detected' to true on blackboard.",
