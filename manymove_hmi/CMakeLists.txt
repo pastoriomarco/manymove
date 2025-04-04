@@ -15,6 +15,7 @@ find_package(ament_cmake REQUIRED)
 find_package(rclcpp REQUIRED)
 find_package(std_msgs REQUIRED)
 find_package(std_srvs REQUIRED)
+find_package(manymove_msgs REQUIRED)
 
 # Find Qt5 packages.
 find_package(Qt5 REQUIRED COMPONENTS Widgets Network)
@@ -41,6 +42,7 @@ ament_target_dependencies(${PROJECT_NAME}_executable
   rclcpp
   std_msgs
   std_srvs
+  manymove_msgs
 )
 
 # Link against the required Qt5 libraries.

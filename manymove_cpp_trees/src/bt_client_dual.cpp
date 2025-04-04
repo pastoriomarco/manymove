@@ -47,8 +47,7 @@ int main(int argc, char **argv)
 
 
     // Create the HMI Service Node and pass the same blackboard ***
-    auto hmi_node_1 = std::make_shared<manymove_cpp_trees::HMIServiceNode>(rp_1.prefix + "hmi_service_node", blackboard, rp_1.prefix);
-    auto hmi_node_2 = std::make_shared<manymove_cpp_trees::HMIServiceNode>(rp_2.prefix + "hmi_service_node", blackboard, rp_2.prefix);
+    auto hmi_node = std::make_shared<manymove_cpp_trees::HMIServiceNode>("hmi_service_node", blackboard, std::vector<std::string>{rp_1.prefix, rp_2.prefix});
     RCLCPP_INFO(node->get_logger(), "HMI Service Nodes instantiated.");
 
     // ----------------------------------------------------------------------------
@@ -406,8 +405,7 @@ int main(int argc, char **argv)
     // Create a MultiThreadedExecutor so that both nodes can be spun concurrently.
     rclcpp::executors::MultiThreadedExecutor executor;
     executor.add_node(node);
-    executor.add_node(hmi_node_1);
-    executor.add_node(hmi_node_2);
+    executor.add_node(hmi_node);
 
     // 11) Tick the tree in a loop.
     rclcpp::Rate rate(100);

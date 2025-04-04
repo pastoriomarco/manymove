@@ -1,0 +1,6 @@
+string[] key
+string[] value_type   # e.g. ["bool", "double", "string", "double_array", "pose", ...]
+string[] value_data
+---
+bool success
+string message

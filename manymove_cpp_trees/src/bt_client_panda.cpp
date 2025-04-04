@@ -44,7 +44,7 @@ int main(int argc, char **argv)
     RobotParams rp = defineRobotParams(node, blackboard);
 
     // Create the HMI Service Node and pass the same blackboard
-    auto hmi_node = std::make_shared<manymove_cpp_trees::HMIServiceNode>(rp.prefix + "hmi_service_node", blackboard, rp.prefix);
+    auto hmi_node = std::make_shared<manymove_cpp_trees::HMIServiceNode>("hmi_service_node", blackboard, std::vector<std::string>{rp.prefix});
     RCLCPP_INFO(node->get_logger(), "HMI Service Node instantiated.");
 
     // ----------------------------------------------------------------------------
