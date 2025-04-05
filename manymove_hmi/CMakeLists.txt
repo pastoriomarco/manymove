@@ -56,4 +56,34 @@ install(TARGETS ${PROJECT_NAME}_executable
   DESTINATION lib/${PROJECT_NAME}
 )
 
+# List new source files for the application-specific module and executable.
+set(APP_SOURCES
+  src/main_app.cpp
+  src/app_module.cpp
+  src/hmi_gui.cpp
+  src/ros2_worker.cpp
+  include/manymove_hmi/hmi_gui.hpp
+  include/manymove_hmi/app_module.hpp
+)
+
+# Create the new executable.
+add_executable(${PROJECT_NAME}_app_executable ${APP_SOURCES})
+
+# Link against ROS2 and Qt5 libraries.
+ament_target_dependencies(${PROJECT_NAME}_app_executable
+  rclcpp
+  std_msgs
+  std_srvs
+  manymove_msgs
+)
+target_link_libraries(${PROJECT_NAME}_app_executable
+  Qt5::Widgets
+  Qt5::Network
+)
+
+# Install the new executable.
+install(TARGETS ${PROJECT_NAME}_app_executable
+  DESTINATION lib/${PROJECT_NAME}
+)
+
 ament_package()

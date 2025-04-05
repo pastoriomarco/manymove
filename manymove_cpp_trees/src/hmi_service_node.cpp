@@ -11,12 +11,12 @@ namespace manymove_cpp_trees
 
     HMIServiceNode::HMIServiceNode(const std::string &node_name,
                                    BT::Blackboard::Ptr blackboard,
-                                   std::vector<std::string> robot_prefix)
+                                   std::vector<BlackboardEntry> keys)
         : Node(node_name),
           blackboard_(blackboard),
-          robot_prefix_(robot_prefix)
+          keys_(keys)
     {
-        // Create a single "update_blackboard" service.
+        // Create the update_blackboard service.
         update_blackboard_srv_ =
             this->create_service<manymove_msgs::srv::SetBlackboardValues>(
                 "update_blackboard",
@@ -27,10 +27,10 @@ namespace manymove_cpp_trees
                     "[%s] HMIServiceNode started: service 'update_blackboard' is ready.",
                     node_name.c_str());
 
-        // Create a publisher for blackboard status
+        // Create the publisher for blackboard status.
         publisher_ = this->create_publisher<std_msgs::msg::String>("blackboard_status", 10);
 
-        // Timer => publish status every 250ms
+        // Timer to publish status every 250ms.
         using namespace std::chrono_literals;
         status_timer_ = this->create_wall_timer(
             250ms, std::bind(&HMIServiceNode::publishBlackboardStatus, this));
@@ -49,12 +49,12 @@ namespace manymove_cpp_trees
             return;
         }
 
-        // We'll try to update each item in a loop
+        // Update each blackboard key.
         for (size_t i = 0; i < n; i++)
         {
             std::string key = request->key[i];
             std::string type = request->value_type[i];
-            std::string data = request->value_data[i]; // supposed to be JSON
+            std::string data = request->value_data[i];
 
             RCLCPP_INFO(this->get_logger(),
                         "Updating BB key='%s' type='%s' data='%s'",
@@ -64,31 +64,25 @@ namespace manymove_cpp_trees
             {
                 if (type == "bool")
                 {
-                    // Expect "true" or "false"
                     bool val = (data.find("true") != std::string::npos);
                     blackboard_->set(key, val);
                 }
                 else if (type == "double")
                 {
-                    // parse numeric from JSON string, e.g. "3.14"
                     double d = std::stod(data);
                     blackboard_->set(key, d);
                 }
                 else if (type == "string")
                 {
-                    // Right now we store data as-is.
-                    // If you want real JSON string parse, remove quotes, etc.
                     blackboard_->set(key, data);
                 }
                 else if (type == "double_array")
                 {
-                    // Expect something like "[1.0,2.0,3.0]"
                     std::vector<double> arr = parseJsonDoubleArray(data);
                     blackboard_->set(key, arr);
                 }
                 else if (type == "pose")
                 {
-                    // Expect something like: {"x":0.1,"y":0.2,"z":0.3,"roll":1.57,"pitch":0.0,"yaw":3.14}
                     geometry_msgs::msg::Pose pose = parseJsonPose(data);
                     blackboard_->set(key, pose);
                 }
@@ -110,82 +104,99 @@ namespace manymove_cpp_trees
 
     void HMIServiceNode::publishBlackboardStatus()
     {
-        // We want JSON that includes info for each robot in robot_prefix_.
-
-        // If no robot_prefix => we assume a single "global" set of keys
-        //   (like "stop_execution", "reset", "collision_detected").
-        // If multiple => we publish a JSON object with an entry for each prefix.
-
         std_msgs::msg::String msg;
-
-        if (robot_prefix_.empty())
+        std::ostringstream ss;
+        ss << "{";
+        bool first_item = true;
+        for (const auto &entry : keys_)
         {
-            // No robot prefixes => use unprefixed Blackboard keys
-            bool stop_execution = false;
-            bool reset = false;
-            bool collision_detected = false;
+            if (!first_item)
+                ss << ", ";
+            first_item = false;
 
-            blackboard_->get("stop_execution", stop_execution);
-            blackboard_->get("reset", reset);
-            blackboard_->get("collision_detected", collision_detected);
-
-            std::ostringstream ss;
-            ss << "{"
-               << "\"stop_execution\": " << (stop_execution ? "true" : "false") << ", "
-               << "\"reset\" :" << (reset ? "true" : "false") << ", "
-               << "\"collision_detected\": " << (collision_detected ? "true" : "false")
-               << "}";
-            msg.data = ss.str();
-        }
-        else
-        {
-            // One or more prefixes => build a single JSON object with multiple fields
-            std::ostringstream ss;
-            ss << "{";
-
-            bool first_item = true;
-            for (size_t i = 0; i < robot_prefix_.size(); i++)
+            // For each key, check its value_type and retrieve accordingly.
+            if (entry.value_type == "bool")
             {
-                const std::string &prefix = robot_prefix_[i];
-
-                bool stop_execution = false;
-                bool reset = false;
-                bool collision_detected = false;
-
-                blackboard_->get(prefix + "stop_execution", stop_execution);
-                blackboard_->get(prefix + "reset", reset);
-                blackboard_->get(prefix + "collision_detected", collision_detected);
-
-                // Insert a comma before all but the first item
-                if (!first_item)
-                {
-                    ss << ", ";
-                }
-                first_item = false;
-
-                // We produce fields named e.g. "robot1stop_execution"
-                // If prefix is empty, that results in e.g. "stop_execution" anyway
-                ss << "\"" << prefix << "stop_execution\": " << (stop_execution ? "true" : "false") << ", "
-                   << "\"" << prefix << "reset\": " << (reset ? "true" : "false") << ", "
-                   << "\"" << prefix << "collision_detected\": " << (collision_detected ? "true" : "false");
+                bool b = false;
+                if (blackboard_->get(entry.key, b))
+                    ss << "\"" << entry.key << "\": " << (b ? "true" : "false");
+                else
+                    ss << "\"" << entry.key << "\": \"\"";
             }
-
-            ss << "}";
-            msg.data = ss.str();
+            else if (entry.value_type == "double")
+            {
+                double d = 0.0;
+                if (blackboard_->get(entry.key, d))
+                    ss << "\"" << entry.key << "\": " << d;
+                else
+                    ss << "\"" << entry.key << "\": \"\"";
+            }
+            else if (entry.value_type == "string")
+            {
+                std::string s;
+                if (blackboard_->get(entry.key, s))
+                    ss << "\"" << entry.key << "\": \"" << s << "\"";
+                else
+                    ss << "\"" << entry.key << "\": \"\"";
+            }
+            else if (entry.value_type == "pose")
+            {
+                geometry_msgs::msg::Pose pose;
+                if (blackboard_->get(entry.key, pose))
+                {
+                    // Format the pose as a JSON object.
+                    ss << "\"" << entry.key << "\": {"
+                       << "\"x\":" << pose.position.x << ", "
+                       << "\"y\":" << pose.position.y << ", "
+                       << "\"z\":" << pose.position.z << ", "
+                       << "\"roll\":" << pose.orientation.x << ", "
+                       << "\"pitch\":" << pose.orientation.y << ", "
+                       << "\"yaw\":" << pose.orientation.z
+                       << "}";
+                }
+                else
+                {
+                    ss << "\"" << entry.key << "\": \"\"";
+                }
+            }
+            else if (entry.value_type == "double_array")
+            {
+                std::vector<double> arr;
+                if (blackboard_->get(entry.key, arr))
+                {
+                    ss << "\"" << entry.key << "\": [";
+                    bool first = true;
+                    for (auto &v : arr)
+                    {
+                        if (!first)
+                            ss << ", ";
+                        first = false;
+                        ss << v;
+                    }
+                    ss << "]";
+                }
+                else
+                {
+                    ss << "\"" << entry.key << "\": \"\"";
+                }
+            }
+            else
+            {
+                // Fallback: try to retrieve as a string.
+                std::string s;
+                if (blackboard_->get(entry.key, s))
+                    ss << "\"" << entry.key << "\": \"" << s << "\"";
+                else
+                    ss << "\"" << entry.key << "\": \"\"";
+            }
         }
-
+        ss << "}";
+        msg.data = ss.str();
         publisher_->publish(msg);
     }
 
-    /**
-     * @brief parseJsonDoubleArray
-     *   Minimal approach: expects a string like "[0.1,2.3,4.5]"
-     *   We'll strip brackets, then split on commas, then std::stod each piece.
-     *   If you need robust JSON, use a library.
-     */
     std::vector<double> HMIServiceNode::parseJsonDoubleArray(const std::string &json_str)
     {
-        // strip leading/trailing whitespace
         auto start = json_str.find_first_not_of(" \t\r\n");
         auto end = json_str.find_last_not_of(" \t\r\n");
         if (start == std::string::npos || end == std::string::npos)
@@ -193,28 +204,21 @@ namespace manymove_cpp_trees
             throw std::runtime_error("Empty array string");
         }
         std::string s = json_str.substr(start, end - start + 1);
-
-        // Expect it starts with '[' and ends with ']'
         if (s.front() != '[' || s.back() != ']')
         {
             throw std::runtime_error("parseJsonDoubleArray: no surrounding brackets");
         }
-        // remove the brackets
         s = s.substr(1, s.size() - 2);
-
-        // now split on commas
         std::vector<double> result;
         std::stringstream ss(s);
         std::string item;
         while (std::getline(ss, item, ','))
         {
-            // trim
             auto st = item.find_first_not_of(" \t\r\n");
             auto en = item.find_last_not_of(" \t\r\n");
             if (st == std::string::npos)
                 continue;
             std::string piece = item.substr(st, en - st + 1);
-
             try
             {
                 result.push_back(std::stod(piece));
@@ -227,31 +231,20 @@ namespace manymove_cpp_trees
         return result;
     }
 
-    /**
-     * @brief parseJsonPose
-     *   Minimal approach: expects e.g.
-     *     {"x":1.0,"y":2.0,"z":3.0,"roll":0.0,"pitch":1.57,"yaw":0.0}
-     *   We'll do simple substring searches. For robust usage => use a JSON library.
-     */
     geometry_msgs::msg::Pose HMIServiceNode::parseJsonPose(const std::string &json_str)
     {
-        // This is just a quick hack: we find e.g. x:..., y:..., z:..., roll:..., etc
-        // For robust code => use a real parser
         auto findValue = [&](const std::string &label) -> double
         {
-            // e.g. label="\"x\":" or "x":
             auto pos = json_str.find(label);
             if (pos == std::string::npos)
             {
                 throw std::runtime_error("Missing field: " + label + " in pose");
             }
-            // find next colon
             auto colon_pos = json_str.find(":", pos + label.size());
             if (colon_pos == std::string::npos)
             {
                 throw std::runtime_error("Missing colon after " + label);
             }
-            // read until comma or end brace
             auto comma_pos = json_str.find(",", colon_pos + 1);
             auto brace_pos = json_str.find("}", colon_pos + 1);
             size_t endpos;
@@ -271,15 +264,12 @@ namespace manymove_cpp_trees
             {
                 endpos = std::min(comma_pos, brace_pos);
             }
-
             std::string val_str = json_str.substr(colon_pos + 1, endpos - (colon_pos + 1));
-            // trim
             auto st = val_str.find_first_not_of(" \t\r\n");
             auto en = val_str.find_last_not_of(" \t\r\n");
             if (st == std::string::npos)
                 throw std::runtime_error("Empty numeric for " + label);
             val_str = val_str.substr(st, en - st + 1);
-
             return std::stod(val_str);
         };
 
@@ -290,7 +280,6 @@ namespace manymove_cpp_trees
         double roll = findValue("\"roll\"");
         double pitch = findValue("\"pitch\"");
         double yaw = findValue("\"yaw\"");
-
         pose = createPoseRPY(x, y, z, roll, pitch, yaw);
         return pose;
     }

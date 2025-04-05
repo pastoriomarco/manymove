@@ -39,12 +39,14 @@ int main(int argc, char **argv)
     auto blackboard = BT::Blackboard::create();
     blackboard->set("node", node);
     RCLCPP_INFO(node->get_logger(), "Blackboard: set('node', <rclcpp::Node>)");
+    
+    std::vector<manymove_cpp_trees::BlackboardEntry> keys;
 
     // Define all params and blackboard keys for the robot:
-    RobotParams rp = defineRobotParams(node, blackboard);
+    RobotParams rp = defineRobotParams(node, blackboard, keys);
 
     // Create the HMI Service Node and pass the same blackboard ***
-    auto hmi_node = std::make_shared<manymove_cpp_trees::HMIServiceNode>("hmi_service_node", blackboard, std::vector<std::string>{rp.prefix});
+    auto hmi_node = std::make_shared<manymove_cpp_trees::HMIServiceNode>("hmi_service_node", blackboard, keys);
     RCLCPP_INFO(node->get_logger(), "HMI Service Node instantiated.");
 
     // ----------------------------------------------------------------------------

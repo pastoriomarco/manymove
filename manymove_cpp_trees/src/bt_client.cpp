@@ -40,11 +40,13 @@ int main(int argc, char **argv)
     blackboard->set("node", node);
     RCLCPP_INFO(node->get_logger(), "Blackboard: set('node', <rclcpp::Node>)");
 
+    std::vector<manymove_cpp_trees::BlackboardEntry> keys;
+
     // Define all params and blackboard keys for the robot:
-    RobotParams rp = defineRobotParams(node, blackboard);
+    RobotParams rp = defineRobotParams(node, blackboard, keys);
 
     // Create the HMI Service Node and pass the same blackboard ***
-    auto hmi_node = std::make_shared<manymove_cpp_trees::HMIServiceNode>("hmi_service_node", blackboard, std::vector<std::string>{rp.prefix});
+    auto hmi_node = std::make_shared<manymove_cpp_trees::HMIServiceNode>("hmi_service_node", blackboard, keys);
     RCLCPP_INFO(node->get_logger(), "HMI Service Node instantiated.");
 
     // ----------------------------------------------------------------------------
@@ -86,7 +88,7 @@ int main(int argc, char **argv)
     Pose drop_target = createPose(0.2, 0.0, 0.2, 1.0, 0.0, 0.0, 0.0);
     blackboard->set("drop_target", drop_target);
 
-    // The approach move from the drop pose is cartesian, we set an offset in the direction of the move (here, Z) 
+    // The approach move from the drop pose is cartesian, we set an offset in the direction of the move (here, Z)
     Pose approach_drop_target = drop_target;
     approach_drop_target.position.z += 0.02;
     blackboard->set("approach_drop_target", approach_drop_target);
@@ -133,10 +135,10 @@ int main(int argc, char **argv)
      * The buildMoveXML creates the xml tree branch that manages the planning and execution of each move with the given
      * parameters. Unless the reset_trajs is set to true, each move that will plan and execute successfully will store the
      * trajectory in the blackboar, thus avoiding recalculating it the next cycle. This allow to save cycle time on all but
-     * the first logic cycle, unless the scene changes. If a previously planned trajectory fails on execution it gets reset, 
+     * the first logic cycle, unless the scene changes. If a previously planned trajectory fails on execution it gets reset,
      * and a new one is planned. The manymove_planner checks for collisions before sending the traj, but also during the execution.
-     * 
-     * Notice that on any string representing an XML snippet I use _xml at the end of the name to give better sense of 
+     *
+     * Notice that on any string representing an XML snippet I use _xml at the end of the name to give better sense of
      * what's in that variable: if it ends with _xml, it could potentially be directly inserted as a tree branch or leaf.
      */
     std::string to_rest_reset_xml = buildMoveXML(
@@ -157,7 +159,7 @@ int main(int argc, char **argv)
     std::string to_home_xml = buildMoveXML(
         rp.prefix, rp.prefix + "home", home_position, blackboard);
 
-    /** 
+    /**
      * We can further combine the move sequence blocks in logic sequences.
      * This allows reusing and combining moves or sequences that are used more than once in the scene,
      * or that are used in different contexts, without risking to reuse the wrong trajectory.
@@ -287,7 +289,7 @@ int main(int argc, char **argv)
          get_grasp_object_poses_xml,  //< We get the updated poses relative to the objects
          go_to_pick_pose_xml,         //< Prep sequence and pick sequence
          close_gripper_xml,           //< We attach the object
-         drop_object_xml,           //< Drop sequence
+         drop_object_xml,             //< Drop sequence
          open_gripper_xml,            //< We detach the object
          home_sequence_xml,           //< Homing sequence
          remove_obj_xml},             //< We delete the object for it to be added on the next cycle in the original position

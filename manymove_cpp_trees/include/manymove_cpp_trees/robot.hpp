@@ -5,6 +5,7 @@
 #include <vector>
 #include <rclcpp/rclcpp.hpp>
 #include <behaviortree_cpp_v3/blackboard.h>
+#include "manymove_cpp_trees/hmi_service_node.hpp"
 
 namespace manymove_cpp_trees
 {
@@ -37,6 +38,7 @@ namespace manymove_cpp_trees
     inline RobotParams defineRobotParams(
         const rclcpp::Node::SharedPtr& node_ptr,
         BT::Blackboard::Ptr blackboard,
+        std::vector<manymove_cpp_trees::BlackboardEntry>& keys,
         const std::string& ID = "",
         const std::string& model = "",
         const std::string& prefix = "",
@@ -76,6 +78,11 @@ namespace manymove_cpp_trees
         blackboard->set(rp.prefix + "collision_detected", false);
         blackboard->set(rp.prefix + "stop_execution", true);
         blackboard->set(rp.prefix + "reset", false);
+
+        // These keys need to be published for the HMI, adding them here:
+        keys.push_back({rp.prefix + "collision_detected", "bool"});
+        keys.push_back({rp.prefix + "stop_execution", "bool"});
+        keys.push_back({rp.prefix + "reset", "bool"});
 
         return rp;
     }
