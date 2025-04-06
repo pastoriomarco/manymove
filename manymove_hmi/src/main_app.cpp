@@ -25,10 +25,13 @@ int main(int argc, char *argv[])
 {
     std::signal(SIGINT, handleSigInt);
     rclcpp::init(argc, argv);
-    
+
     // Give some time for ROS 2 to initialize.
     rclcpp::sleep_for(2000000000ns);
-    
+
+    // Create a node to be used as a service client.
+    auto service_node = rclcpp::Node::make_shared("hmi_service_client");
+
     QApplication app(argc, argv);
     app.setStyle(QStyleFactory::create("Fusion"));
 
@@ -75,18 +78,33 @@ int main(int argc, char *argv[])
     // We assume the HmiGui’s central widget has a QVBoxLayout.
     if (gui.centralWidget())
     {
-        QVBoxLayout *mainLayout = qobject_cast<QVBoxLayout*>(gui.centralWidget()->layout());
+        QVBoxLayout *mainLayout = qobject_cast<QVBoxLayout *>(gui.centralWidget()->layout());
         if (mainLayout)
         {
             AppModule *appModule = new AppModule(&gui);
             mainLayout->addWidget(appModule);
 
-            // Example: connect the AppModule signal to a simple handler.
+            // Connect the AppModule signal to a handler that calls the update_blackboard service.
             QObject::connect(appModule, &AppModule::keyUpdateRequested,
-                             [](const QString &key, const QString &value) {
-                qDebug() << "AppModule key update:" << key << "=" << value;
-                // Here you could invoke a ROS 2 service call to update the key in the blackboard.
-            });
+                             [service_node](const QString &key, const QString &value_type, const QString &value)
+                             {
+                                 qDebug() << "AppModule key update:" << key << "=" << value;
+                                 auto client = service_node->create_client<manymove_msgs::srv::SetBlackboardValues>("update_blackboard");
+                                 if (!client->wait_for_service(std::chrono::seconds(1)))
+                                 {
+                                     RCLCPP_WARN(service_node->get_logger(), "Service update_blackboard not available");
+                                     return;
+                                 }
+                                 auto request = std::make_shared<manymove_msgs::srv::SetBlackboardValues::Request>();
+                                 request->key.push_back(key.toStdString());
+                                 request->value_type.push_back(value_type.toStdString());
+                                 request->value_data.push_back(value.toStdString());
+                                 auto future = client->async_send_request(request);
+                                 if (rclcpp::spin_until_future_complete(service_node, future, std::chrono::seconds(1)) != rclcpp::FutureReturnCode::SUCCESS)
+                                 {
+                                     RCLCPP_WARN(service_node->get_logger(), "Failed to get response for update_blackboard service");
+                                 }
+                             });
         }
         else
         {
@@ -104,25 +122,26 @@ int main(int argc, char *argv[])
     }
     for (auto &worker : workers)
     {
-        QObject::connect(&gui, &HmiGui::startExecutionRequested, [worker](const std::string &p) {
+        QObject::connect(&gui, &HmiGui::startExecutionRequested, [worker](const std::string &p)
+                         {
             if (worker->getRobotPrefix() == p)
-                worker->callStartExecution();
-        });
-        QObject::connect(&gui, &HmiGui::stopExecutionRequested, [worker](const std::string &p) {
+                worker->callStartExecution(); });
+        QObject::connect(&gui, &HmiGui::stopExecutionRequested, [worker](const std::string &p)
+                         {
             if (worker->getRobotPrefix() == p)
-                worker->callStopExecution();
-        });
-        QObject::connect(&gui, &HmiGui::resetProgramRequested, [worker](const std::string &p) {
+                worker->callStopExecution(); });
+        QObject::connect(&gui, &HmiGui::resetProgramRequested, [worker](const std::string &p)
+                         {
             if (worker->getRobotPrefix() == p)
-                worker->callResetProgram();
-        });
+                worker->callResetProgram(); });
     }
 
     // Spin each worker in its own thread.
     std::vector<std::thread> worker_threads;
     for (auto &w : workers)
     {
-        worker_threads.emplace_back([w](){ rclcpp::spin(w); });
+        worker_threads.emplace_back([w]()
+                                    { rclcpp::spin(w); });
     }
 
     int ret = app.exec();

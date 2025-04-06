@@ -1,10 +1,13 @@
 #include "manymove_cpp_trees/hmi_service_node.hpp"
-#include "manymove_cpp_trees/tree_helper.hpp" // for createPoseRPY
+
 #include <geometry_msgs/msg/pose.hpp>
 #include <chrono>
 #include <sstream>
 #include <string>
 #include <vector>
+#include <geometry_msgs/msg/pose.hpp>
+#include <tf2/LinearMath/Quaternion.h>
+#include <tf2/LinearMath/Matrix3x3.h>
 
 namespace manymove_cpp_trees
 {
@@ -88,7 +91,7 @@ namespace manymove_cpp_trees
                 }
                 else
                 {
-                    throw std::runtime_error("Unsupported value_type: " + type);
+                    throw std::runtime_error("Unsupported value_type or wrong nomenclature: " + type);
                 }
             }
             catch (const std::exception &e)
@@ -100,6 +103,28 @@ namespace manymove_cpp_trees
 
         response->success = true;
         response->message = "Updated " + std::to_string(n) + " blackboard keys";
+    }
+
+    std::string HMIServiceNode::serializePoseRPY(const geometry_msgs::msg::Pose &pose)
+    {
+        // Convert quaternion to roll, pitch, yaw.
+        tf2::Quaternion q(
+            pose.orientation.x,
+            pose.orientation.y,
+            pose.orientation.z,
+            pose.orientation.w);
+        double roll, pitch, yaw;
+        tf2::Matrix3x3(q).getRPY(roll, pitch, yaw);
+
+        // Build a JSON-like string for the pose.
+        std::ostringstream oss;
+        oss << "{\"x\":" << pose.position.x
+            << ", \"y\":" << pose.position.y
+            << ", \"z\":" << pose.position.z
+            << ", \"roll\":" << roll
+            << ", \"pitch\":" << pitch
+            << ", \"yaw\":" << yaw << "}";
+        return oss.str();
     }
 
     void HMIServiceNode::publishBlackboardStatus()
@@ -144,15 +169,9 @@ namespace manymove_cpp_trees
                 geometry_msgs::msg::Pose pose;
                 if (blackboard_->get(entry.key, pose))
                 {
-                    // Format the pose as a JSON object.
-                    ss << "\"" << entry.key << "\": {"
-                       << "\"x\":" << pose.position.x << ", "
-                       << "\"y\":" << pose.position.y << ", "
-                       << "\"z\":" << pose.position.z << ", "
-                       << "\"roll\":" << pose.orientation.x << ", "
-                       << "\"pitch\":" << pose.orientation.y << ", "
-                       << "\"yaw\":" << pose.orientation.z
-                       << "}";
+                    // Use the helper function to convert the Pose to a JSON string with RPY.
+                    std::string poseStr = serializePoseRPY(pose);
+                    ss << "\"" << entry.key << "\": " << poseStr;
                 }
                 else
                 {

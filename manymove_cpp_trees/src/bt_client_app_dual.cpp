@@ -37,9 +37,9 @@ int main(int argc, char **argv)
     // Create params for this application
     // ----------------------------------------------------------------------------
 
-    double tube_length;
-    node->declare_parameter<double>("tube_length", 0.1);
-    node->get_parameter_or<double>("tube_length", tube_length, 0.1);
+    // double tube_length;
+    // node->declare_parameter<double>("tube_length", 0.1);
+    // node->get_parameter_or<double>("tube_length", tube_length, 0.1);
 
     // ----------------------------------------------------------------------------
     // Create blackboard, keys and nodes
@@ -54,6 +54,9 @@ int main(int argc, char **argv)
     // Define all params and blackboard keys for the robot:
     RobotParams rp_1 = defineRobotParams(node, blackboard, keys, "_1");
     RobotParams rp_2 = defineRobotParams(node, blackboard, keys,"_2");
+
+    double tube_length;
+    tube_length = defineBlackboardEntry<double>(node, blackboard, keys, "tube_length", "double", tube_length, 0.1);
 
     // Create the HMI Service Node and pass the same blackboard ***
     auto hmi_node = std::make_shared<manymove_cpp_trees::HMIServiceNode>("hmi_service_node", blackboard, keys);

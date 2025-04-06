@@ -5,6 +5,7 @@
 #include <behaviortree_cpp_v3/blackboard.h>
 #include <std_msgs/msg/string.hpp>
 #include <manymove_msgs/srv/set_blackboard_values.hpp>
+#include "manymove_cpp_trees/tree_helper.hpp" // for createPoseRPY
 #include <geometry_msgs/msg/pose.hpp>
 #include <vector>
 #include <string>
@@ -12,9 +13,10 @@
 namespace manymove_cpp_trees
 {
     // Structure representing a blackboard key.
-    struct BlackboardEntry {
+    struct BlackboardEntry
+    {
         std::string key;
-        std::string value_type;  // e.g. "bool", "double", "string", "pose", etc.
+        std::string value_type; // e.g. "bool", "double", "string", "pose", etc.
     };
 
     /**
@@ -46,11 +48,12 @@ namespace manymove_cpp_trees
         // Timer to publish status every 250ms.
         rclcpp::TimerBase::SharedPtr status_timer_;
 
-    private:
         // Service callback.
         void handleUpdateBlackboard(
             const std::shared_ptr<manymove_msgs::srv::SetBlackboardValues::Request> request,
             std::shared_ptr<manymove_msgs::srv::SetBlackboardValues::Response> response);
+
+        std::string serializePoseRPY(const geometry_msgs::msg::Pose &pose);
 
         // Timer callback.
         void publishBlackboardStatus();
@@ -61,6 +64,27 @@ namespace manymove_cpp_trees
         // Minimal JSON parse for pose (e.g. {"x":0.1,"y":0.2,"z":0.3,"roll":1.57,"pitch":0.0,"yaw":0.0}).
         geometry_msgs::msg::Pose parseJsonPose(const std::string &json_str);
     };
+
+    template <class T>
+    T defineBlackboardEntry(const rclcpp::Node::SharedPtr &node_ptr,
+                                            BT::Blackboard::Ptr blackboard,
+                                            std::vector<manymove_cpp_trees::BlackboardEntry> &keys,
+                                            const std::string &key_name,
+                                            const std::string &key_type,
+                                            T &value,
+                                            const T &default_value)
+    {
+
+        node_ptr->declare_parameter<T>(key_name, default_value);
+        node_ptr->get_parameter_or<T>(key_name, value, default_value);
+
+        blackboard->set(key_name, value);
+
+        // These keys need to be published for the HMI, adding them here:
+        keys.push_back({key_name, key_type});
+
+        return value;
+    }
 
 } // namespace manymove_cpp_trees
 
