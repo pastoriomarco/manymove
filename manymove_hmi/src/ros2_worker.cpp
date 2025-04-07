@@ -106,7 +106,7 @@ void Ros2Worker::statusCallback(const std_msgs::msg::String::SharedPtr msg)
             if (valEnd == std::string::npos)
                 valEnd = data.size();
             valueStr = data.substr(valStart, valEnd - valStart);
-            // Trim whitespace from both ends.
+            // Trim whitespace.
             valueStr.erase(valueStr.begin(),
                            std::find_if(valueStr.begin(), valueStr.end(),
                                         [](unsigned char ch)
@@ -119,13 +119,56 @@ void Ros2Worker::statusCallback(const std_msgs::msg::String::SharedPtr msg)
             try
             {
                 double dval = std::stod(valueStr);
-                // Convert back to string (formatting to 3 decimals if desired).
-                // (You could use std::ostringstream for better formatting.)
                 valueStr = std::to_string(dval);
             }
             catch (const std::exception &)
             {
                 valueStr = "";
+            }
+        }
+        else if (bk.type == "int")
+        {
+            // Read until the next comma or closing brace.
+            size_t valEnd = data.find_first_of(",}", valStart);
+            if (valEnd == std::string::npos)
+                valEnd = data.size();
+            valueStr = data.substr(valStart, valEnd - valStart);
+            valueStr.erase(valueStr.begin(),
+                           std::find_if(valueStr.begin(), valueStr.end(),
+                                        [](unsigned char ch)
+                                        { return !std::isspace(ch); }));
+            valueStr.erase(std::find_if(valueStr.rbegin(), valueStr.rend(),
+                                        [](unsigned char ch)
+                                        { return !std::isspace(ch); })
+                               .base(),
+                           valueStr.end());
+            try
+            {
+                int ival = std::stoi(valueStr);
+                valueStr = std::to_string(ival);
+            }
+            catch (const std::exception &)
+            {
+                valueStr = "";
+            }
+        }
+        else if (bk.type == "double_array")
+        {
+            // Expecting a JSON array, e.g.: [1.23, 4.56, ...]
+            if (data[valStart] == '[')
+            {
+                size_t bracketEnd = data.find_first_of("]", valStart);
+                if (bracketEnd == std::string::npos)
+                    bracketEnd = data.size();
+                valueStr = data.substr(valStart, bracketEnd - valStart + 1); // include the closing ']'
+            }
+            else
+            {
+                // Fallback: read until comma or brace.
+                size_t valEnd = data.find_first_of(",}", valStart);
+                if (valEnd == std::string::npos)
+                    valEnd = data.size();
+                valueStr = data.substr(valStart, valEnd - valStart);
             }
         }
         else if (bk.type == "pose")
@@ -149,21 +192,33 @@ void Ros2Worker::statusCallback(const std_msgs::msg::String::SharedPtr msg)
             }
             else
             {
-                // Fallback: read until comma or closing brace.
                 size_t valEnd = data.find_first_of(",}", valStart);
                 if (valEnd == std::string::npos)
                     valEnd = data.size();
                 valueStr = data.substr(valStart, valEnd - valStart);
             }
         }
-        else
+        else if (bk.type == "string")
         {
-            // For bool or string, read until comma or brace.
+            // For a string, assume it is enclosed in quotes.
             size_t valEnd = data.find_first_of(",}", valStart);
             if (valEnd == std::string::npos)
                 valEnd = data.size();
             valueStr = data.substr(valStart, valEnd - valStart);
-            // Remove quotes if present.
+            if (!valueStr.empty() && valueStr.front() == '"')
+            {
+                valueStr.erase(0, 1);
+                if (!valueStr.empty() && valueStr.back() == '"')
+                    valueStr.pop_back();
+            }
+        }
+        else
+        {
+            // For bool or unknown types, read until comma or brace.
+            size_t valEnd = data.find_first_of(",}", valStart);
+            if (valEnd == std::string::npos)
+                valEnd = data.size();
+            valueStr = data.substr(valStart, valEnd - valStart);
             if (!valueStr.empty() && valueStr.front() == '"')
             {
                 valueStr.erase(0, 1);
@@ -172,7 +227,6 @@ void Ros2Worker::statusCallback(const std_msgs::msg::String::SharedPtr msg)
             }
         }
 
-        // Call updateField() for this key.
         QMetaObject::invokeMethod(appModule, "updateField", Qt::QueuedConnection,
                                   Q_ARG(QString, QString::fromStdString(bk.key)),
                                   Q_ARG(QString, QString::fromStdString(valueStr)));

@@ -41,7 +41,7 @@ AppModule::AppModule(QWidget *parent) : QWidget(parent)
     tubeSpawnPose.key = "tube_spawn_pose";
     tubeSpawnPose.value_type = "pose";
     tubeSpawnPose.editable = false;
-    tubeSpawnPose.visible = false;
+    tubeSpawnPose.visible = true;
     tubeSpawnPose.computeFunction = [](const QMap<QString, QString> &values) -> QString
     {
         bool ok1 = false;
