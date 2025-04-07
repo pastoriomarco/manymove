@@ -31,7 +31,9 @@ set(SOURCES
   src/main.cpp
   src/hmi_gui.cpp
   src/ros2_worker.cpp
+  src/app_module.cpp 
   include/manymove_hmi/hmi_gui.hpp
+  include/manymove_hmi/app_module.hpp
 )
 
 # Create the executable.

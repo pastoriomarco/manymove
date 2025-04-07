@@ -7,10 +7,11 @@
 #include <memory>
 #include <string>
 #include <vector>
-
 #include <manymove_msgs/srv/set_blackboard_values.hpp>
 
+// Forward declarations
 class HmiGui;
+class AppModule;
 
 class Ros2Worker : public rclcpp::Node
 {
@@ -21,14 +22,13 @@ public:
     void callStopExecution();
     void callResetProgram();
 
-    const std::string & getRobotPrefix() const { return robot_prefix_; }
+    const std::string &getRobotPrefix() const { return robot_prefix_; }
 
 private:
     void statusCallback(const std_msgs::msg::String::SharedPtr msg);
 
     HmiGui *gui_;
     rclcpp::Subscription<std_msgs::msg::String>::SharedPtr subscription_;
-
     rclcpp::Client<manymove_msgs::srv::SetBlackboardValues>::SharedPtr update_blackboard_client_;
 
     std::string robot_prefix_;

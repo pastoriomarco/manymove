@@ -20,7 +20,8 @@ AppModule::AppModule(QWidget *parent) : QWidget(parent)
     tubeLength.value_type = "double";
     tubeLength.editable = true;
     tubeLength.visible = true;
-    tubeLength.computeFunction = [](const QMap<QString, QString>& values) -> QString {
+    tubeLength.computeFunction = [](const QMap<QString, QString> &values) -> QString
+    {
         return values.value("tube_length", "");
     };
 
@@ -30,7 +31,8 @@ AppModule::AppModule(QWidget *parent) : QWidget(parent)
     tubeDiameter.value_type = "double";
     tubeDiameter.editable = true;
     tubeDiameter.visible = true;
-    tubeDiameter.computeFunction = [](const QMap<QString, QString>& values) -> QString {
+    tubeDiameter.computeFunction = [](const QMap<QString, QString> &values) -> QString
+    {
         return values.value("tube_diameter", "");
     };
 
@@ -40,10 +42,12 @@ AppModule::AppModule(QWidget *parent) : QWidget(parent)
     tubeSpawnPose.value_type = "pose";
     tubeSpawnPose.editable = false;
     tubeSpawnPose.visible = false;
-    tubeSpawnPose.computeFunction = [](const QMap<QString, QString>& values) -> QString {
+    tubeSpawnPose.computeFunction = [](const QMap<QString, QString> &values) -> QString
+    {
         bool ok1 = false;
         double length = values.value("tube_length").toDouble(&ok1);
-        if (!ok1) {
+        if (!ok1)
+        {
             return "";
         }
         double x = (length / 2.0) + 0.973 + 0.005;
@@ -53,18 +57,25 @@ AppModule::AppModule(QWidget *parent) : QWidget(parent)
         double pitch = 2.05;
         double yaw = 1.57;
         QString poseJson = QString("{\"x\":%1,\"y\":%2,\"z\":%3,\"roll\":%4,\"pitch\":%5,\"yaw\":%6}")
-                                .arg(x)
-                                .arg(y)
-                                .arg(z)
-                                .arg(roll)
-                                .arg(pitch)
-                                .arg(yaw);
+                               .arg(x)
+                               .arg(y)
+                               .arg(z)
+                               .arg(roll)
+                               .arg(pitch)
+                               .arg(yaw);
         return poseJson;
     };
 
     keyConfigs_.push_back(tubeLength);
     keyConfigs_.push_back(tubeDiameter);
     keyConfigs_.push_back(tubeSpawnPose);
+
+    // Initialize maps for each key.
+    for (const auto &config : keyConfigs_) {
+        currentValues_[config.key] = "N/A";   // Initially, the current value is "N/A"
+        userOverrides_[config.key] = "";      // No user override yet.
+        editableValues_[config.key] = "";     // Legacy storage remains.
+    }
 
     setupUI();
 }
@@ -76,7 +87,8 @@ AppModule::~AppModule()
 void AppModule::setupUI()
 {
     // Create UI elements based on each key configuration.
-    for (const auto &config : keyConfigs_) {
+    for (const auto &config : keyConfigs_)
+    {
         // Create a container row widget.
         QWidget *rowWidget = new QWidget(this);
         QHBoxLayout *rowLayout = new QHBoxLayout(rowWidget);
@@ -86,11 +98,11 @@ void AppModule::setupUI()
         QLabel *label = new QLabel(config.key, rowWidget);
         rowLayout->addWidget(label);
 
-        if (config.editable) {
+        if (config.editable)
+        {
             // Create an editable QLineEdit.
             QLineEdit *lineEdit = new QLineEdit(rowWidget);
-            // Initialize the stored value as empty and show "N/A" in grey.
-            editableValues_[config.key] = "";
+            // Initialize to show the current value ("N/A") in grey.
             lineEdit->setText("N/A");
             QPalette pal = lineEdit->palette();
             pal.setColor(QPalette::Text, Qt::gray);
@@ -102,7 +114,9 @@ void AppModule::setupUI()
             keyWidgets_[config.key] = lineEdit;
             // Install event filter for focus events.
             lineEdit->installEventFilter(this);
-        } else {
+        }
+        else
+        {
             // For computed fields, use a QLabel.
             QLabel *valueLabel = new QLabel("N/A", rowWidget);
             rowLayout->addWidget(valueLabel);
@@ -125,14 +139,16 @@ void AppModule::setupUI()
 void AppModule::onEditableFieldChanged(const QString &text)
 {
     // Identify which QLineEdit sent the signal.
-    QLineEdit *lineEdit = qobject_cast<QLineEdit*>(sender());
+    QLineEdit *lineEdit = qobject_cast<QLineEdit *>(sender());
     if (!lineEdit)
         return;
 
     // Find the key associated with this QLineEdit.
     QString key;
-    for (auto it = keyWidgets_.cbegin(); it != keyWidgets_.cend(); ++it) {
-        if (it.value() == lineEdit) {
+    for (auto it = keyWidgets_.cbegin(); it != keyWidgets_.cend(); ++it)
+    {
+        if (it.value() == lineEdit)
+        {
             key = it.key();
             break;
         }
@@ -140,24 +156,31 @@ void AppModule::onEditableFieldChanged(const QString &text)
     if (key.isEmpty())
         return;
 
-    // Update the internal stored value.
-    if (text == "N/A")
+    // If the user input equals the current value, treat it as empty.
+    if (text == currentValues_[key])
+    {
+        userOverrides_[key].clear();
         editableValues_[key].clear();
+    }
     else
+    {
+        userOverrides_[key] = text;
         editableValues_[key] = text;
+    }
 
     // Validate immediately and update text color:
-    // If non-empty (and not "N/A") but invalid, change text to red.
     bool valid = isFieldValid(key, text);
     QPalette pal = lineEdit->palette();
-    if (!text.isEmpty() && text != "N/A" && !valid) {
+    if (!text.isEmpty() && text != "N/A" && !valid)
+    {
         pal.setColor(QPalette::Text, Qt::red);
-    } else {
+    }
+    else
+    {
         pal.setColor(QPalette::Text, Qt::white);
     }
     lineEdit->setPalette(pal);
 
-    // Update computed fields and the Send button.
     updateComputedFields();
     updateSendButtonState();
 }
@@ -165,11 +188,14 @@ void AppModule::onEditableFieldChanged(const QString &text)
 void AppModule::updateComputedFields()
 {
     // For computed (non-editable) keys, update the label text.
-    for (const auto &config : keyConfigs_) {
-        if (!config.editable) {
+    for (const auto &config : keyConfigs_)
+    {
+        if (!config.editable)
+        {
             QString computedValue = config.computeFunction(editableValues_);
-            QLabel *label = qobject_cast<QLabel*>(keyWidgets_.value(config.key));
-            if (label) {
+            QLabel *label = qobject_cast<QLabel *>(keyWidgets_.value(config.key));
+            if (label)
+            {
                 label->setText(computedValue.isEmpty() ? "N/A" : computedValue);
             }
         }
@@ -181,17 +207,20 @@ void AppModule::updateSendButtonState()
     bool atLeastOneValid = false;
     bool hasInvalid = false;
 
-    for (const auto &config : keyConfigs_) {
+    for (const auto &config : keyConfigs_)
+    {
         if (!config.editable)
             continue;
-        QString text = editableValues_.value(config.key);
-        if (!text.isEmpty() && text != "N/A") {
-            if (isFieldValid(config.key, text))
-                atLeastOneValid = true;
-            else {
-                hasInvalid = true;
-                break;
-            }
+        // Use userOverrides_; if override is empty or equals current, treat as empty.
+        QString text = userOverrides_.value(config.key);
+        if (text.isEmpty() || text == currentValues_[config.key])
+            continue;
+        if (isFieldValid(config.key, text))
+            atLeastOneValid = true;
+        else
+        {
+            hasInvalid = true;
+            break;
         }
     }
     // Enable Send if at least one field is valid and none are invalid.
@@ -200,19 +229,21 @@ void AppModule::updateSendButtonState()
 
 bool AppModule::isFieldValid(const QString &key, const QString &text) const
 {
-    // If the text is empty or "N/A", treat it as not valid.
-    if (text.isEmpty() || text == "N/A")
+    // Treat empty, "N/A", or a value equal to the current value as not valid (i.e. no change).
+    if (text.isEmpty() || text == "N/A" || text == currentValues_.value(key))
         return false;
 
-    // For a double type, check if the text can be converted.
-    for (const auto &config : keyConfigs_) {
-        if (config.key == key) {
-            if (config.value_type == "double") {
+    for (const auto &config : keyConfigs_)
+    {
+        if (config.key == key)
+        {
+            if (config.value_type == "double")
+            {
                 bool ok = false;
                 text.toDouble(&ok);
                 return ok;
             }
-            // Add other type validations as needed.
+            // Additional type validations can be added here.
         }
     }
     return true;
@@ -221,18 +252,24 @@ bool AppModule::isFieldValid(const QString &key, const QString &text) const
 void AppModule::onSendButtonClicked()
 {
     // For each key, compute and emit the final value if valid.
-    for (const auto &config : keyConfigs_) {
+    for (const auto &config : keyConfigs_)
+    {
         QString finalValue;
-        if (config.editable) {
-            QString rawValue = editableValues_.value(config.key);
-            if (rawValue.isEmpty() || !isFieldValid(config.key, rawValue))
+        if (config.editable)
+        {
+            QString rawValue = userOverrides_.value(config.key);
+            // Only send if override is non-empty and different from current.
+            if (rawValue.isEmpty() || rawValue == currentValues_[config.key] || !isFieldValid(config.key, rawValue))
                 continue;
             finalValue = config.computeFunction(editableValues_);
             if (finalValue.isEmpty())
                 continue;
-        } else {
-            QLabel *label = qobject_cast<QLabel*>(keyWidgets_.value(config.key));
-            if (label) {
+        }
+        else
+        {
+            QLabel *label = qobject_cast<QLabel *>(keyWidgets_.value(config.key));
+            if (label)
+            {
                 finalValue = label->text();
                 if (finalValue == "N/A" || finalValue.isEmpty())
                     continue;
@@ -243,6 +280,24 @@ void AppModule::onSendButtonClicked()
                  << "Type:" << config.value_type
                  << "Value:" << finalValue;
     }
+    // Once Send is pressed, clear all user overrides so that the latest current values are shown.
+    for (const auto &config : keyConfigs_)
+    {
+        if (config.editable)
+        {
+            userOverrides_[config.key].clear();
+            // Reset the field to the current value (displayed in grey).
+            if (QLineEdit *lineEdit = qobject_cast<QLineEdit*>(keyWidgets_[config.key]))
+            {
+                lineEdit->setText(currentValues_[config.key]);
+                QPalette pal = lineEdit->palette();
+                pal.setColor(QPalette::Text, Qt::gray);
+                lineEdit->setPalette(pal);
+            }
+        }
+    }
+    updateComputedFields();
+    updateSendButtonState();
 }
 
 void AppModule::setKeyVisibility(const QString &key, bool visible)
@@ -251,28 +306,33 @@ void AppModule::setKeyVisibility(const QString &key, bool visible)
         keyRowWidgets_[key]->setVisible(visible);
 }
 
+// This function is called externally to update the "current" (blackboard) value.
+// It will update the field only if the user is not currently overriding it.
 void AppModule::updateField(const QString &key, const QString &newValue)
 {
     if (!keyWidgets_.contains(key))
         return;
 
     QWidget *widget = keyWidgets_[key];
-    if (QLineEdit *lineEdit = qobject_cast<QLineEdit*>(widget)) {
-        if (newValue.isEmpty()) {
-            editableValues_[key].clear();
-            lineEdit->setText("N/A");
-            QPalette pal = lineEdit->palette();
-            pal.setColor(QPalette::Text, Qt::gray);
-            lineEdit->setPalette(pal);
-        } else {
-            editableValues_[key] = newValue;
-            lineEdit->setText(newValue);
-            QPalette pal = lineEdit->palette();
-            pal.setColor(QPalette::Text, Qt::gray);
-            lineEdit->setPalette(pal);
+    // Update the stored current value.
+    currentValues_[key] = newValue.isEmpty() ? "N/A" : newValue;
+
+    if (QLineEdit *lineEdit = qobject_cast<QLineEdit*>(widget))
+    {
+        // If the field has focus or a user override exists (non-empty and different from current), do not update.
+        if (lineEdit->hasFocus() || (!userOverrides_[key].isEmpty() && userOverrides_[key] != currentValues_[key]))
+        {
+            return;
         }
-    } else if (QLabel *label = qobject_cast<QLabel*>(widget)) {
-        label->setText(newValue.isEmpty() ? "N/A" : newValue);
+        // Otherwise, update the field with the current value (in grey).
+        lineEdit->setText(currentValues_[key]);
+        QPalette pal = lineEdit->palette();
+        pal.setColor(QPalette::Text, Qt::gray);
+        lineEdit->setPalette(pal);
+    }
+    else if (QLabel *label = qobject_cast<QLabel*>(widget))
+    {
+        label->setText(currentValues_[key]);
     }
     updateComputedFields();
     updateSendButtonState();
@@ -280,37 +340,40 @@ void AppModule::updateField(const QString &key, const QString &newValue)
 
 bool AppModule::eventFilter(QObject *obj, QEvent *event)
 {
-    if (QLineEdit *lineEdit = qobject_cast<QLineEdit*>(obj)) {
-        if (event->type() == QEvent::FocusIn) {
-            // Clear "N/A" on focus in and switch text to white.
-            if (lineEdit->text() == "N/A")
+    if (QLineEdit *lineEdit = qobject_cast<QLineEdit*>(obj))
+    {
+        // Identify the key for this QLineEdit.
+        QString key;
+        for (auto it = keyWidgets_.cbegin(); it != keyWidgets_.cend(); ++it)
+        {
+            if (it.value() == lineEdit)
+            {
+                key = it.key();
+                break;
+            }
+        }
+        if (event->type() == QEvent::FocusIn)
+        {
+            // On focus in, if the field's text equals the current value, clear it.
+            if (lineEdit->text() == currentValues_[key])
                 lineEdit->clear();
             QPalette pal = lineEdit->palette();
             pal.setColor(QPalette::Text, Qt::white);
             lineEdit->setPalette(pal);
-        } else if (event->type() == QEvent::FocusOut) {
-            // If empty on focus out, revert to "N/A" in grey.
-            if (lineEdit->text().isEmpty()) {
-                lineEdit->setText("N/A");
+        }
+        else if (event->type() == QEvent::FocusOut)
+        {
+            // On focus out, if the field is empty, restore the current value.
+            if (lineEdit->text().isEmpty())
+            {
+                lineEdit->setText(currentValues_[key]);
                 QPalette pal = lineEdit->palette();
                 pal.setColor(QPalette::Text, Qt::gray);
                 lineEdit->setPalette(pal);
-            } else {
-                // Validate on focus out and update text color accordingly.
-                QString key;
-                for (auto it = keyWidgets_.cbegin(); it != keyWidgets_.cend(); ++it) {
-                    if (it.value() == lineEdit) {
-                        key = it.key();
-                        break;
-                    }
-                }
-                if (!key.isEmpty()) {
-                    bool valid = isFieldValid(key, lineEdit->text());
-                    QPalette pal = lineEdit->palette();
-                    pal.setColor(QPalette::Text, valid ? Qt::white : Qt::red);
-                    lineEdit->setPalette(pal);
-                }
+                // Also clear the override.
+                userOverrides_[key].clear();
             }
+            // Otherwise, leave the user's input intact.
             updateSendButtonState();
         }
     }
