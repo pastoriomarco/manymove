@@ -8,6 +8,18 @@
 #include <QEvent>
 #include <QPalette>
 
+// Static function returning the known keys.
+// This vector is constructed only once.
+const std::vector<BlackboardKey> &AppModule::getKnownKeys()
+{
+    static std::vector<BlackboardKey> keys = {
+        {"tube_length", "double"},
+        {"tube_diameter", "double"},
+        {"tube_spawn_pose", "pose"},
+    };
+    return keys;
+}
+
 AppModule::AppModule(QWidget *parent) : QWidget(parent)
 {
     layout_ = new QVBoxLayout(this);
@@ -71,10 +83,11 @@ AppModule::AppModule(QWidget *parent) : QWidget(parent)
     keyConfigs_.push_back(tubeSpawnPose);
 
     // Initialize maps for each key.
-    for (const auto &config : keyConfigs_) {
-        currentValues_[config.key] = "N/A";   // Initially, the current value is "N/A"
-        userOverrides_[config.key] = "";      // No user override yet.
-        editableValues_[config.key] = "";     // Legacy storage remains.
+    for (const auto &config : keyConfigs_)
+    {
+        currentValues_[config.key] = "N/A"; // Initially, the current value is "N/A"
+        userOverrides_[config.key] = "";    // No user override yet.
+        editableValues_[config.key] = "";   // Legacy storage remains.
     }
 
     setupUI();
@@ -96,12 +109,15 @@ void AppModule::setupUI()
 
         // Create and add a label.
         QLabel *label = new QLabel(config.key, rowWidget);
+        label->setFixedWidth(200);
         rowLayout->addWidget(label);
 
         if (config.editable)
         {
             // Create an editable QLineEdit.
             QLineEdit *lineEdit = new QLineEdit(rowWidget);
+            lineEdit->setAlignment(Qt::AlignRight);
+            lineEdit->setFixedWidth(600);
             // Initialize to show the current value ("N/A") in grey.
             lineEdit->setText("N/A");
             QPalette pal = lineEdit->palette();
@@ -119,6 +135,8 @@ void AppModule::setupUI()
         {
             // For computed fields, use a QLabel.
             QLabel *valueLabel = new QLabel("N/A", rowWidget);
+            valueLabel->setAlignment(Qt::AlignRight);
+            valueLabel->setFixedWidth(600);
             rowLayout->addWidget(valueLabel);
             keyWidgets_[config.key] = valueLabel;
         }
@@ -287,7 +305,7 @@ void AppModule::onSendButtonClicked()
         {
             userOverrides_[config.key].clear();
             // Reset the field to the current value (displayed in grey).
-            if (QLineEdit *lineEdit = qobject_cast<QLineEdit*>(keyWidgets_[config.key]))
+            if (QLineEdit *lineEdit = qobject_cast<QLineEdit *>(keyWidgets_[config.key]))
             {
                 lineEdit->setText(currentValues_[config.key]);
                 QPalette pal = lineEdit->palette();
@@ -317,7 +335,7 @@ void AppModule::updateField(const QString &key, const QString &newValue)
     // Update the stored current value.
     currentValues_[key] = newValue.isEmpty() ? "N/A" : newValue;
 
-    if (QLineEdit *lineEdit = qobject_cast<QLineEdit*>(widget))
+    if (QLineEdit *lineEdit = qobject_cast<QLineEdit *>(widget))
     {
         // If the field has focus or a user override exists (non-empty and different from current), do not update.
         if (lineEdit->hasFocus() || (!userOverrides_[key].isEmpty() && userOverrides_[key] != currentValues_[key]))
@@ -330,7 +348,7 @@ void AppModule::updateField(const QString &key, const QString &newValue)
         pal.setColor(QPalette::Text, Qt::gray);
         lineEdit->setPalette(pal);
     }
-    else if (QLabel *label = qobject_cast<QLabel*>(widget))
+    else if (QLabel *label = qobject_cast<QLabel *>(widget))
     {
         label->setText(currentValues_[key]);
     }
@@ -340,7 +358,7 @@ void AppModule::updateField(const QString &key, const QString &newValue)
 
 bool AppModule::eventFilter(QObject *obj, QEvent *event)
 {
-    if (QLineEdit *lineEdit = qobject_cast<QLineEdit*>(obj))
+    if (QLineEdit *lineEdit = qobject_cast<QLineEdit *>(obj))
     {
         // Identify the key for this QLineEdit.
         QString key;

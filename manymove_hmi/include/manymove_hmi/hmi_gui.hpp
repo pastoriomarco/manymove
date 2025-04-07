@@ -48,7 +48,6 @@ private:
         QPushButton *startButton;
         QPushButton *stopButton;
         QPushButton *resetButton;
-        QLabel *ledIndicator;
     };
 
     std::vector<RobotInterface> robotInterfaces_;

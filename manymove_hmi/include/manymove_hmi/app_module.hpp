@@ -25,12 +25,22 @@ struct KeyConfig
     std::function<QString(const QMap<QString, QString> &)> computeFunction;
 };
 
+// A structure that represents a key's name and type for blackboard updates.
+struct BlackboardKey
+{
+    QString key;
+    QString type;
+};
+
 class AppModule : public QWidget
 {
     Q_OBJECT
 public:
     explicit AppModule(QWidget *parent = nullptr);
     ~AppModule();
+    
+    // Returns the list of known keys (to be used by other components).
+    static const std::vector<BlackboardKey> &getKnownKeys();
 
 public slots:
     // Toggle the visibility of a given key's row (label + widget).

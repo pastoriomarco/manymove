@@ -8,6 +8,8 @@
 #include <string>
 #include <vector>
 #include <manymove_msgs/srv/set_blackboard_values.hpp>
+#include "manymove_hmi/hmi_gui.hpp"
+#include "manymove_hmi/app_module.hpp"
 
 // Forward declarations
 class HmiGui;

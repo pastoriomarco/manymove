@@ -19,11 +19,13 @@ HmiGui::HmiGui(const std::vector<std::string> &robotPrefixes, QWidget *parent)
     // For each robot prefix, create one row of controls
     for (const auto &prefix : robotPrefixes)
     {
-        QHBoxLayout *rowLayout = new QHBoxLayout();
 
         // A label to display the prefix name
-        QLabel *prefixLabel = new QLabel(QString::fromStdString(prefix), this);
-        rowLayout->addWidget(prefixLabel);
+        QLabel *prefixLabel = new QLabel(QString::fromStdString("Robot prefix: " + prefix), this);
+        // rowLayout->addWidget(prefixLabel);
+        mainLayout->addWidget(prefixLabel);
+
+        QHBoxLayout *rowLayout = new QHBoxLayout();
 
         // START button
         QPushButton *startButton = new QPushButton("START", this);
@@ -43,13 +45,6 @@ HmiGui::HmiGui(const std::vector<std::string> &robotPrefixes, QWidget *parent)
         resetButton->setEnabled(true);
         rowLayout->addWidget(resetButton);
 
-        // Collision label & LED
-        rowLayout->addWidget(new QLabel("Collision:", this));
-        QLabel *ledIndicator = new QLabel(this);
-        ledIndicator->setFixedSize(20, 20);
-        ledIndicator->setStyleSheet("background-color: green; border-radius: 10px; border: 1px solid darkgreen;");
-        rowLayout->addWidget(ledIndicator);
-
         // Add the row to the main layout
         mainLayout->addLayout(rowLayout);
 
@@ -60,7 +55,6 @@ HmiGui::HmiGui(const std::vector<std::string> &robotPrefixes, QWidget *parent)
         ri.startButton = startButton;
         ri.stopButton = stopButton;
         ri.resetButton = resetButton;
-        ri.ledIndicator = ledIndicator;
         robotInterfaces_.push_back(ri);
 
         // Wire each button's click to a signal with the robot prefix
@@ -115,16 +109,6 @@ void HmiGui::updateStatus(const QString &robotPrefix,
                 ri.startButton->setEnabled(false);
                 ri.resetButton->setEnabled(false);
                 ri.stopButton->setEnabled(true);
-            }
-
-            // Collision LED
-            if (collision_detected)
-            {
-                ri.ledIndicator->setStyleSheet("background-color: red; border-radius: 10px; border: 1px solid darkred;");
-            }
-            else
-            {
-                ri.ledIndicator->setStyleSheet("background-color: green; border-radius: 10px; border: 1px solid darkgreen;");
             }
 
             // Build a JSON string for status (if you want to send it via TCP)

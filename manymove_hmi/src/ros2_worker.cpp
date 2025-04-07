@@ -1,6 +1,4 @@
 #include "manymove_hmi/ros2_worker.hpp"
-#include "manymove_hmi/hmi_gui.hpp"
-#include "manymove_hmi/app_module.hpp"
 
 #include <sstream>
 #include <QMetaObject>
@@ -9,19 +7,6 @@
 #include <stdexcept>
 
 using namespace std::chrono_literals;
-
-// A small structure for known blackboard keys
-struct BlackboardKey
-{
-    std::string key;  // For example: "tube_length"
-    std::string type; // For example: "double", "pose", etc.
-};
-
-// List the keys the HMI expects (for non-button keys)
-static const std::vector<BlackboardKey> knownKeys = {
-    {"tube_length", "double"},
-    {"tube_diameter", "double"},
-    {"tube_spawn_pose", "pose"}};
 
 Ros2Worker::Ros2Worker(const std::string &node_name, HmiGui *gui, const std::string &robot_prefix)
     : Node(node_name), gui_(gui), robot_prefix_(robot_prefix)
@@ -76,17 +61,20 @@ void Ros2Worker::statusCallback(const std_msgs::msg::String::SharedPtr msg)
         return;
     }
 
+    // Get the known keys from AppModule.
+    const std::vector<BlackboardKey> &knownKeys = AppModule::getKnownKeys();
+
     // For each known key, try to extract its value from the JSON string.
     for (const auto &bk : knownKeys)
     {
-        // Look for the pattern: "key":
-        std::string pattern = "\"" + bk.key + "\":";
+        // Build a pattern from the key. We convert bk.key to std::string for search.
+        std::string pattern = "\"" + bk.key.toStdString() + "\":";
         size_t pos = data.find(pattern);
         if (pos == std::string::npos)
         {
             // Key not found; update with an empty value (which AppModule shows as "N/A").
             QMetaObject::invokeMethod(appModule, "updateField", Qt::QueuedConnection,
-                                      Q_ARG(QString, QString::fromStdString(bk.key)),
+                                      Q_ARG(QString, bk.key),
                                       Q_ARG(QString, QString()));
             continue;
         }
@@ -128,7 +116,6 @@ void Ros2Worker::statusCallback(const std_msgs::msg::String::SharedPtr msg)
         }
         else if (bk.type == "int")
         {
-            // Read until the next comma or closing brace.
             size_t valEnd = data.find_first_of(",}", valStart);
             if (valEnd == std::string::npos)
                 valEnd = data.size();
@@ -160,11 +147,10 @@ void Ros2Worker::statusCallback(const std_msgs::msg::String::SharedPtr msg)
                 size_t bracketEnd = data.find_first_of("]", valStart);
                 if (bracketEnd == std::string::npos)
                     bracketEnd = data.size();
-                valueStr = data.substr(valStart, bracketEnd - valStart + 1); // include the closing ']'
+                valueStr = data.substr(valStart, bracketEnd - valStart + 1); // include closing ']'
             }
             else
             {
-                // Fallback: read until comma or brace.
                 size_t valEnd = data.find_first_of(",}", valStart);
                 if (valEnd == std::string::npos)
                     valEnd = data.size();
@@ -227,8 +213,9 @@ void Ros2Worker::statusCallback(const std_msgs::msg::String::SharedPtr msg)
             }
         }
 
+        // Invoke updateField with the extracted value.
         QMetaObject::invokeMethod(appModule, "updateField", Qt::QueuedConnection,
-                                  Q_ARG(QString, QString::fromStdString(bk.key)),
+                                  Q_ARG(QString, bk.key),
                                   Q_ARG(QString, QString::fromStdString(valueStr)));
     }
 }
