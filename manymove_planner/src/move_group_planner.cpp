@@ -41,10 +41,10 @@ MoveGroupPlanner::MoveGroupPlanner(
         // Start listening to diffs / updates from move_group
         planning_scene_monitor_->startSceneMonitor("/monitored_planning_scene");
 
-        // Optional: start listening to the robot state topic
+        // Start listening to the robot state topic
         planning_scene_monitor_->startStateMonitor();
 
-        // If you want world geometry updates (collision objects) via /collision_object, etc.
+        // To get world geometry updates (collision objects) via /collision_object, etc.
         planning_scene_monitor_->startWorldGeometryMonitor();
 
         RCLCPP_INFO(logger_, "PlanningSceneMonitor started: listening to /monitored_planning_scene");

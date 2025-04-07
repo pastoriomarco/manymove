@@ -7,6 +7,13 @@
 #include <functional>
 #include <vector>
 
+class QLineEdit;
+class QLabel;
+class QPushButton;
+class QVBoxLayout;
+class QHBoxLayout;
+class QEvent;
+
 // Structure to configure each key in the module.
 struct KeyConfig {
     QString key;             // Name of the key.
@@ -16,12 +23,6 @@ struct KeyConfig {
     // A lambda that receives the current editable key values and returns the final string to send.
     std::function<QString(const QMap<QString, QString>&)> computeFunction;
 };
-
-class QLineEdit;
-class QLabel;
-class QPushButton;
-class QVBoxLayout;
-class QHBoxLayout;
 
 class AppModule : public QWidget
 {
@@ -33,6 +34,9 @@ public:
 public slots:
     // Toggle the visibility of a given key's row (label + widget).
     void setKeyVisibility(const QString &key, bool visible);
+
+    // New public slot: allows external components to update a given key’s field.
+    void updateField(const QString &key, const QString &newValue = QString());
 
 signals:
     // Emitted when the user clicks Send.
@@ -48,12 +52,20 @@ private:
     void setupUI();
     // Recalculate and update computed fields.
     void updateComputedFields();
+    // Check validations across all fields and update the Send button accordingly.
+    void updateSendButtonState();
+    // Returns true if the text is valid for the given key.
+    bool isFieldValid(const QString &key, const QString &text) const;
+
+protected:
+    // Event filter to handle focus events for QLineEdits.
+    bool eventFilter(QObject *obj, QEvent *event) override;
 
     // List of key configurations.
     std::vector<KeyConfig> keyConfigs_;
-    // For each key, store its editable/computed widget (e.g. QLineEdit or QLabel) for value handling.
+    // For each key, store its editable/computed widget (QLineEdit or QLabel).
     QMap<QString, QWidget*> keyWidgets_;
-    // For each key, store the container widget (row) that includes both label and value widget.
+    // For each key, store the container widget (row) that includes the label and the widget.
     QMap<QString, QWidget*> keyRowWidgets_;
     // For editable keys, store the current text values.
     QMap<QString, QString> editableValues_;

@@ -21,7 +21,7 @@ Ros2Worker::Ros2Worker(const std::string &node_name, HmiGui *gui, const std::str
     update_blackboard_client_ =
         this->create_client<manymove_msgs::srv::SetBlackboardValues>("update_blackboard");
 
-    // Optionally wait a little for the service
+    // Wait a little for the service
     if (!update_blackboard_client_->wait_for_service(2s))
     {
         RCLCPP_WARN(this->get_logger(),
