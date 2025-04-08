@@ -151,9 +151,10 @@ def launch_setup(context, *args, **kwargs):
         executable='manymove_hmi_executable',
         # name='manymove_hmi_node',
         output='screen',
-        # parameters=[{
-        #     'robot_prefixes': [prefix.perform(context)],
-        # }]
+        parameters=[{
+            'robot_prefixes': [""],
+            'robot_names': ["Franka_Emika_Panda"],
+        }]
     )
 
     # ================================================================

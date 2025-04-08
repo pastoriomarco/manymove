@@ -15,7 +15,7 @@ class HmiGui : public QMainWindow
     Q_OBJECT
 public:
     /// The new constructor accepts a list of robot prefixes.
-    explicit HmiGui(const std::vector<std::string> &robotPrefixes, QWidget *parent = nullptr);
+    explicit HmiGui(const std::vector<std::string> &robotPrefixes, std::vector<std::string> &robotNames, QWidget *parent = nullptr);
     ~HmiGui();
 
 public slots:
@@ -51,6 +51,7 @@ private:
     };
 
     std::vector<RobotInterface> robotInterfaces_;
+    std::vector<std::string> robotNames_;
 
     // (Optional) For TCP status broadcasting.
     QString lastStatusJson_;

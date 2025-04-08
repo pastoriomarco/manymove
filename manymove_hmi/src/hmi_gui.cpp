@@ -5,7 +5,7 @@
 #include <QMetaType>
 #include <sstream>
 
-HmiGui::HmiGui(const std::vector<std::string> &robotPrefixes, QWidget *parent)
+HmiGui::HmiGui(const std::vector<std::string> &robotPrefixes, std::vector<std::string> &robotNames, QWidget *parent)
     : QMainWindow(parent), tcpServer_(nullptr), clientSocket_(nullptr)
 {
     // Keep the window always on top
@@ -17,11 +17,13 @@ HmiGui::HmiGui(const std::vector<std::string> &robotPrefixes, QWidget *parent)
     QVBoxLayout *mainLayout = new QVBoxLayout(centralWidget_);
 
     // For each robot prefix, create one row of controls
-    for (const auto &prefix : robotPrefixes)
+    for (size_t i {0}; i < robotPrefixes.size(); i++)
     {
+        std::string prefix = robotPrefixes[i];
+        std::string name = robotNames[i];
 
         // A label to display the prefix name
-        QLabel *prefixLabel = new QLabel(QString::fromStdString("Robot prefix: " + prefix), this);
+        QLabel *prefixLabel = new QLabel(QString::fromStdString("ROBOT: " + prefix + name), this);
         // rowLayout->addWidget(prefixLabel);
         mainLayout->addWidget(prefixLabel);
 

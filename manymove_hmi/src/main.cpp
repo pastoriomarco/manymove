@@ -65,18 +65,34 @@ int main(int argc, char *argv[])
         "robot_prefixes",
         std::vector<std::string>({""}));
 
-    std::vector<std::string> prefixes;
-    loader_node_hmi->get_parameter("robot_prefixes", prefixes);
+    std::vector<std::string> robot_prefixes;
+    loader_node_hmi->get_parameter("robot_prefixes", robot_prefixes);
+
+    // Declare and get the parameter 'robot_prefixes' (default: {""})
+    loader_node_hmi->declare_parameter<std::vector<std::string>>(
+        "robot_names",
+        std::vector<std::string>({""}));
+
+    std::vector<std::string> robot_names;
+    loader_node_hmi->get_parameter("robot_names", robot_names);
+
+    // Check if sizes match
+    if (robot_prefixes.size() != robot_names.size())
+    {
+        qCritical() << "Error: robot_prefixes and robot_names must have the same number of elements.";
+        rclcpp::shutdown();
+        return 1;
+    }
 
     loader_node_hmi.reset();
 
     // Create the HMI GUI window with one row per robot.
-    HmiGui gui(prefixes);
+    HmiGui gui(robot_prefixes, robot_names);
     gui.show();
 
     // Create one ROS2 worker per robot. We give each worker a unique node name that embeds its prefix.
     std::vector<std::shared_ptr<Ros2Worker>> workers;
-    for (auto &prefix : prefixes)
+    for (auto &prefix : robot_prefixes)
     {
         std::string node_name = prefix + "hmi_worker";
         auto worker = std::make_shared<Ros2Worker>(node_name, &gui, prefix);

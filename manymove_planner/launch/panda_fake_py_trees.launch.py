@@ -100,9 +100,10 @@ def launch_setup(context, *args, **kwargs):
         executable='manymove_hmi_executable',
         # name='manymove_hmi_node',
         output='screen',
-        # parameters=[{
-        #     'robot_prefixes': [prefix.perform(context)],
-        # }]
+        parameters=[{
+            'robot_prefixes': [""],
+            'robot_names': ["Franka_Emika_Panda"],
+        }]
     )
 
     # ================================================================
@@ -128,7 +129,7 @@ def launch_setup(context, *args, **kwargs):
         ros2_control_hardware_type,
         action_server_node,
         object_manager_node,
-        # manymove_hmi_node,
+        manymove_hmi_node,
         manymove_py_trees_node
     ]
 

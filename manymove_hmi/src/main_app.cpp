@@ -64,14 +64,35 @@ int main(int argc, char *argv[])
 
     // Load robot prefixes parameter as before.
     auto loader_node_hmi = rclcpp::Node::make_shared("loader_node_hmi");
+
+    // Declare and get the parameter 'robot_prefixes' (default: {""})
     loader_node_hmi->declare_parameter<std::vector<std::string>>(
-        "robot_prefixes", std::vector<std::string>({""}));
-    std::vector<std::string> prefixes;
-    loader_node_hmi->get_parameter("robot_prefixes", prefixes);
+        "robot_prefixes",
+        std::vector<std::string>({""}));
+
+    std::vector<std::string> robot_prefixes;
+    loader_node_hmi->get_parameter("robot_prefixes", robot_prefixes);
+
+    // Declare and get the parameter 'robot_prefixes' (default: {""})
+    loader_node_hmi->declare_parameter<std::vector<std::string>>(
+        "robot_names",
+        std::vector<std::string>({""}));
+
+    std::vector<std::string> robot_names;
+    loader_node_hmi->get_parameter("robot_names", robot_names);
+
+    // Check if sizes match
+    if (robot_prefixes.size() != robot_names.size())
+    {
+        qCritical() << "Error: robot_prefixes and robot_names must have the same number of elements.";
+        rclcpp::shutdown();
+        return 1;
+    }
+
     loader_node_hmi.reset();
 
     // Create the original HMI window (robot modules).
-    HmiGui gui(prefixes);
+    HmiGui gui(robot_prefixes, robot_names);
     gui.show();
 
     // Append the application-specific module into the GUI.
@@ -114,7 +135,7 @@ int main(int argc, char *argv[])
 
     // Create ROS2 workers for each robot module (as before).
     std::vector<std::shared_ptr<Ros2Worker>> workers;
-    for (auto &prefix : prefixes)
+    for (auto &prefix : robot_prefixes)
     {
         std::string node_name = prefix + "hmi_worker";
         auto worker = std::make_shared<Ros2Worker>(node_name, &gui, prefix);

@@ -428,6 +428,7 @@ def launch_setup(context, *args, **kwargs):
         output='screen',
         parameters=[{
             'robot_prefixes': [prefix_1.perform(context), prefix_2.perform(context)],
+            'robot_names': [xarm_type_1, xarm_type_2],
         }]
     )
 
