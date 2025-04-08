@@ -131,17 +131,15 @@ namespace manymove_cpp_trees
      * @param object_id Unique identifier for the object.
      * @param pose Pose of the object.
      * @param mesh_file Path to the mesh file.
-     * @param scale_x Scale factor along the X-axis.
-     * @param scale_y Scale factor along the Y-axis.
-     * @param scale_z Scale factor along the Z-axis.
+     * @param scale Scale factors along the X, Y and Z axis.
      * @return Configured ObjectAction.
      */
     inline ObjectAction createAddMeshObject(const std::string &object_id,
                                             const geometry_msgs::msg::Pose &pose,
                                             const std::string &mesh_file,
-                                            double scale_x = 1.0, double scale_y = 1.0, double scale_z = 1.0)
+                                            std::vector<double> scale = {1.0, 1.0, 1.0})
     {
-        return ObjectAction(object_id, "mesh", {}, pose, mesh_file, scale_x, scale_y, scale_z);
+        return ObjectAction(object_id, "mesh", {}, pose, mesh_file, scale[0], scale[1], scale[2]);
     }
 
     /**
@@ -149,15 +147,13 @@ namespace manymove_cpp_trees
      * @param object_id Unique identifier for the object.
      * @param pose Blackboard key containing the pose of the object.
      * @param mesh_file Path to the mesh file.
-     * @param scale_x Scale factor along the X-axis.
-     * @param scale_y Scale factor along the Y-axis.
-     * @param scale_z Scale factor along the Z-axis.
+     * @param scale Scale factors along the X, Y and Z axis.
      * @return Configured ObjectAction.
      */
     inline ObjectAction createAddMeshObject(const std::string &object_id,
                                             const std::string &pose_key,
                                             const std::string &mesh_file,
-                                            double scale_x = 1.0, double scale_y = 1.0, double scale_z = 1.0)
+                                            std::vector<double> scale = {1.0, 1.0, 1.0})
     {
         ObjectAction action;
         action.type = ObjectActionType::ADD;
@@ -165,9 +161,9 @@ namespace manymove_cpp_trees
         action.shape = "mesh";
         action.pose_key = pose_key;
         action.mesh_file = mesh_file;
-        action.scale_mesh_x = scale_x;
-        action.scale_mesh_y = scale_y;
-        action.scale_mesh_z = scale_z;
+        action.scale_mesh_x = scale[0];
+        action.scale_mesh_y = scale[1];
+        action.scale_mesh_z = scale[2];
         return action;
     }
 

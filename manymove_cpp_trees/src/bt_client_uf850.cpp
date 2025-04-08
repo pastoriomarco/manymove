@@ -39,15 +39,11 @@ int main(int argc, char **argv)
     auto blackboard = BT::Blackboard::create();
     blackboard->set("node", node);
     RCLCPP_INFO(node->get_logger(), "Blackboard: set('node', <rclcpp::Node>)");
-    
+
     std::vector<manymove_cpp_trees::BlackboardEntry> keys;
 
     // Define all params and blackboard keys for the robot:
     RobotParams rp = defineRobotParams(node, blackboard, keys);
-
-    // Create the HMI Service Node and pass the same blackboard ***
-    auto hmi_node = std::make_shared<manymove_cpp_trees::HMIServiceNode>("hmi_service_node", blackboard, keys);
-    RCLCPP_INFO(node->get_logger(), "HMI Service Node instantiated.");
 
     // ----------------------------------------------------------------------------
     // 2) Setup joint targets, poses and moves
@@ -195,7 +191,7 @@ int main(int argc, char **argv)
     std::string add_ground_obj_xml = buildObjectActionXML("add_ground", createAddPrimitiveObject("obstacle_ground", "box", ground_dimension, ground_pose));
     std::string add_wall_obj_xml = buildObjectActionXML("add_wall", createAddPrimitiveObject("obstacle_wall", "box", wall_dimension, wall_pose));
     std::string add_cylinder_obj_xml = buildObjectActionXML("add_cylinder", createAddPrimitiveObject("graspable_cylinder", "cylinder", cylinder_dimension, cylinderpose));
-    std::string add_mesh_obj_xml = buildObjectActionXML("add_mesh", createAddMeshObject("graspable_mesh", mesh_pose, mesh_file, mesh_scale[0], mesh_scale[1], mesh_scale[2]));
+    std::string add_mesh_obj_xml = buildObjectActionXML("add_mesh", createAddMeshObject("graspable_mesh", mesh_pose, mesh_file, mesh_scale));
 
     // Compose the check and add sequence for objects
     std::string init_ground_obj_xml = fallbackWrapperXML("init_ground_obj", {check_ground_obj_xml, add_ground_obj_xml});
@@ -275,7 +271,7 @@ int main(int argc, char **argv)
     std::string move_gripper_close_xml =
         "<GripperTrajAction joint_names=\"[drive_joint]\" positions=\"[0.8]\" time_from_start=\"1.0\" action_server=\"" + rp.gripper_action_server + "\"/>";
     std::string move_gripper_open_xml =
-    "<GripperTrajAction joint_names=\"[drive_joint]\" positions=\"[0.4]\" time_from_start=\"1.0\" action_server=\"" + rp.gripper_action_server + "\"/>";
+        "<GripperTrajAction joint_names=\"[drive_joint]\" positions=\"[0.4]\" time_from_start=\"1.0\" action_server=\"" + rp.gripper_action_server + "\"/>";
 
     std::string close_gripper_xml = sequenceWrapperXML("CloseGripper", {move_gripper_close_xml, attach_obj_xml});
     std::string open_gripper_xml = sequenceWrapperXML("OpenGripper", {move_gripper_open_xml, detach_obj_xml});
@@ -325,6 +321,10 @@ int main(int argc, char **argv)
 
     // 10) ZMQ publisher (optional, to visualize in Groot)
     BT::PublisherZMQ publisher(tree);
+
+    // Create the HMI Service Node and pass the same blackboard ***
+    auto hmi_node = std::make_shared<manymove_cpp_trees::HMIServiceNode>("hmi_service_node", blackboard, keys);
+    RCLCPP_INFO(node->get_logger(), "HMI Service Node instantiated.");
 
     // Create a MultiThreadedExecutor so that both nodes can be spun concurrently.
     rclcpp::executors::MultiThreadedExecutor executor;

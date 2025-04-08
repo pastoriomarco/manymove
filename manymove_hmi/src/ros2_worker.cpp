@@ -159,6 +159,11 @@ void Ros2Worker::statusCallback(const std_msgs::msg::String::SharedPtr msg)
         }
         else if (bk.type == "pose")
         {
+            while (valStart < data.size() && std::isspace(data[valStart]))
+            {
+                ++valStart;
+            }
+            
             // For a pose, assume the value is a JSON object starting with '{'
             if (data[valStart] == '{')
             {

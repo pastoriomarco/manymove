@@ -15,6 +15,7 @@ const std::vector<BlackboardKey> &AppModule::getKnownKeys()
     static std::vector<BlackboardKey> keys = {
         {"tube_length", "double"},
         {"tube_diameter", "double"},
+        {"tube_scale", "double_array"},
         {"tube_spawn_pose", "pose"},
     };
     return keys;
@@ -48,6 +49,52 @@ AppModule::AppModule(QWidget *parent) : QWidget(parent)
         return values.value("tube_diameter", "");
     };
 
+    // tube_scale: an editable double_array field.
+    KeyConfig tubeScale;
+    tubeScale.key = "tube_scale";
+    tubeScale.value_type = "double_array";
+    tubeScale.editable = false;
+    tubeScale.visible = true;
+    tubeScale.computeFunction = [this](const QMap<QString, QString> &values) -> QString
+    {
+        // Get the tube_length value: check first in the override map, then in currentValues_ as fallback.
+        QString tubeLengthStr = values.value("tube_length", "");
+        // Get the tube_diameter value similarly.
+        QString tubeDiameterStr = values.value("tube_diameter", "");
+
+        // If either value is still empty, return an empty string so that no computed update overwrites the current value.
+        if (tubeLengthStr.isEmpty() && tubeDiameterStr.isEmpty())
+        {
+            return "";
+        }
+
+        if (tubeLengthStr.isEmpty())
+        {
+            tubeLengthStr = currentValues_.value("tube_length", "");
+        }
+        if (tubeDiameterStr.isEmpty())
+        {
+            tubeDiameterStr = currentValues_.value("tube_diameter", "");
+        }
+
+        bool ok1 = false, ok2 = false;
+        double tubeLengthVal = tubeLengthStr.toDouble(&ok1);
+        double tubeDiameterVal = tubeDiameterStr.toDouble(&ok2);
+        if (!ok1 || !ok2)
+        {
+            return "";
+        }
+
+        // Construct the computed double array string.
+        // Here, both the first two values are set to the tube_diameter (from input or fallback)
+        // and the third value is set from the tube_length.
+        QString computedArray = QString("[%1, %2, %3]")
+                                    .arg(tubeDiameterVal)
+                                    .arg(tubeDiameterVal)
+                                    .arg(tubeLengthVal);
+        return computedArray;
+    };
+
     // tube_spawn_pose: computed from tube_length and tube_diameter.
     KeyConfig tubeSpawnPose;
     tubeSpawnPose.key = "tube_spawn_pose";
@@ -56,12 +103,21 @@ AppModule::AppModule(QWidget *parent) : QWidget(parent)
     tubeSpawnPose.visible = true;
     tubeSpawnPose.computeFunction = [](const QMap<QString, QString> &values) -> QString
     {
-        bool ok1 = false;
-        double length = values.value("tube_length").toDouble(&ok1);
-        if (!ok1)
+        // If the user did not override tube_length, return empty.
+        // (Assume that an override means the user has typed a new value)
+        QString tubeLengthOverride = values.value("tube_length", "");
+        if (tubeLengthOverride.isEmpty())
         {
+            // No computed update was triggered: return empty so that the current (ROS) value is used.
             return "";
         }
+
+        bool ok = false;
+        double length = tubeLengthOverride.toDouble(&ok);
+        if (!ok)
+            return "";
+
+        // Compute a new pose based on the new tube_length.
         double x = (length / 2.0) + 0.973 + 0.005;
         double y = -0.6465;
         double z = 0.8055;
@@ -80,6 +136,7 @@ AppModule::AppModule(QWidget *parent) : QWidget(parent)
 
     keyConfigs_.push_back(tubeLength);
     keyConfigs_.push_back(tubeDiameter);
+    keyConfigs_.push_back(tubeScale);
     keyConfigs_.push_back(tubeSpawnPose);
 
     // Initialize maps for each key.
@@ -117,7 +174,7 @@ void AppModule::setupUI()
             // Create an editable QLineEdit.
             QLineEdit *lineEdit = new QLineEdit(rowWidget);
             lineEdit->setAlignment(Qt::AlignRight);
-            lineEdit->setFixedWidth(600);
+            lineEdit->setFixedWidth(750);
             // Initialize to show the current value ("N/A") in grey.
             lineEdit->setText("N/A");
             QPalette pal = lineEdit->palette();
@@ -136,7 +193,7 @@ void AppModule::setupUI()
             // For computed fields, use a QLabel.
             QLabel *valueLabel = new QLabel("N/A", rowWidget);
             valueLabel->setAlignment(Qt::AlignRight);
-            valueLabel->setFixedWidth(600);
+            valueLabel->setFixedWidth(750);
             rowLayout->addWidget(valueLabel);
             keyWidgets_[config.key] = valueLabel;
         }
@@ -205,16 +262,32 @@ void AppModule::onEditableFieldChanged(const QString &text)
 
 void AppModule::updateComputedFields()
 {
-    // For computed (non-editable) keys, update the label text.
+    // For each computed (noneditable) key, update the label text.
     for (const auto &config : keyConfigs_)
     {
         if (!config.editable)
         {
-            QString computedValue = config.computeFunction(editableValues_);
             QLabel *label = qobject_cast<QLabel *>(keyWidgets_.value(config.key));
-            if (label)
+            if (!label)
+                continue;
+
+            // Call the compute function.
+            QString computedValue = config.computeFunction(editableValues_);
+            QPalette pal = label->palette();
+            if (!computedValue.isEmpty())
             {
-                label->setText(computedValue.isEmpty() ? "N/A" : computedValue);
+                // A computed value is available. Use it and set text color to white.
+                currentValues_[config.key] = computedValue;
+                label->setText(computedValue);
+                pal.setColor(QPalette::WindowText, Qt::white);
+                label->setPalette(pal);
+            }
+            else
+            {
+                // No computed value; fall back to the current (ROS-provided) value.
+                label->setText(currentValues_.value(config.key, "N/A"));
+                pal.setColor(QPalette::WindowText, Qt::gray);
+                label->setPalette(pal);
             }
         }
     }

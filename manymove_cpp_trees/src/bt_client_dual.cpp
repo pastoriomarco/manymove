@@ -42,15 +42,10 @@ int main(int argc, char **argv)
     RCLCPP_INFO(node->get_logger(), "Blackboard: set('node', <rclcpp::Node>)");
 
     std::vector<manymove_cpp_trees::BlackboardEntry> keys;
-    
+
     // Define all params and blackboard keys for the robot:
     RobotParams rp_1 = defineRobotParams(node, blackboard, keys, "_1");
     RobotParams rp_2 = defineRobotParams(node, blackboard, keys, "_2");
-
-
-    // Create the HMI Service Node and pass the same blackboard ***
-    auto hmi_node = std::make_shared<manymove_cpp_trees::HMIServiceNode>("hmi_service_node", blackboard, keys);
-    RCLCPP_INFO(node->get_logger(), "HMI Service Nodes instantiated.");
 
     // ----------------------------------------------------------------------------
     // 2) Setup moves
@@ -207,7 +202,7 @@ int main(int argc, char **argv)
     std::string add_ground_obj_xml = buildObjectActionXML("add_ground", createAddPrimitiveObject("obstacle_ground", "box", ground_dimension, ground_pose));
     std::string add_wall_obj_xml = buildObjectActionXML("add_wall", createAddPrimitiveObject("obstacle_wall", "box", wall_dimension, wall_pose));
     std::string add_cylinder_obj_xml = buildObjectActionXML("add_cylinder", createAddPrimitiveObject("graspable_cylinder", "cylinder", cylinderdimension, cylinderpose));
-    std::string add_mesh_obj_xml = buildObjectActionXML("add_mesh", createAddMeshObject("graspable_mesh", mesh_pose, mesh_file, mesh_scale[0], mesh_scale[1], mesh_scale[2]));
+    std::string add_mesh_obj_xml = buildObjectActionXML("add_mesh", createAddMeshObject("graspable_mesh", mesh_pose, mesh_file, mesh_scale));
 
     // Compose the check and add sequence for objects
     std::string init_ground_obj_xml = fallbackWrapperXML("init_ground_obj", {check_ground_obj_xml, add_ground_obj_xml});
@@ -403,6 +398,10 @@ int main(int argc, char **argv)
 
     // 10) ZMQ publisher (optional, to visualize in Groot)
     BT::PublisherZMQ publisher(tree);
+
+    // Create the HMI Service Node and pass the same blackboard ***
+    auto hmi_node = std::make_shared<manymove_cpp_trees::HMIServiceNode>("hmi_service_node", blackboard, keys);
+    RCLCPP_INFO(node->get_logger(), "HMI Service Nodes instantiated.");
 
     // Create a MultiThreadedExecutor so that both nodes can be spun concurrently.
     rclcpp::executors::MultiThreadedExecutor executor;

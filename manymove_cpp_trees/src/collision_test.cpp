@@ -55,10 +55,6 @@ int main(int argc, char **argv)
     RobotParams rp_1 = defineRobotParams(node, blackboard, keys, "_1");
     RobotParams rp_2 = defineRobotParams(node, blackboard, keys, "_2");
 
-    // Create the HMI Service Node and pass the same blackboard ***
-    auto hmi_node = std::make_shared<manymove_cpp_trees::HMIServiceNode>("hmi_service_node", blackboard, keys);
-    RCLCPP_INFO(node->get_logger(), "HMI Service Nodes instantiated.");
-
     //
 
     // ----------------------------------------------------------------------------
@@ -100,7 +96,7 @@ int main(int argc, char **argv)
             object_to_manipulate_1,
             graspable_mesh_pose,
             graspable_mesh_file,
-            graspable_mesh_scale[0], graspable_mesh_scale[1], graspable_mesh_scale[2]));
+            graspable_mesh_scale));
 
     // We define a logic fallback to check if the object is already on the scene, and if not we add it.
     std::string init_graspable_mesh_obj_xml = fallbackWrapperXML("init_graspable_mesh_obj", {check_graspable_mesh_obj_xml, add_graspable_mesh_obj_xml});
@@ -225,7 +221,7 @@ int main(int argc, char **argv)
             object_to_manipulate_2,
             dropped_target_key_name, // We use the overload with the blakboard key to retrive it dynamically
             graspable_mesh_file,
-            graspable_mesh_scale[0], graspable_mesh_scale[1], graspable_mesh_scale[2]));
+            graspable_mesh_scale));
 
     /** 
      * We get the pose of the dropped object to use it to insert the renamed object
@@ -273,7 +269,7 @@ int main(int argc, char **argv)
             "machine_mesh",
             createPoseRPY(0.0, 0.0, -0.001, 0.0, 0.0, 0.0),
             machine_mesh_file,
-            1.0, 1.0, 1.0));
+            {1.0, 1.0, 1.0}));
 
     // The slider is in a variable position. We still use the tube_length variable and not a dedicated blackboard key, this may change
     // if we want to set the length from HMI
@@ -283,7 +279,7 @@ int main(int argc, char **argv)
             "slider_mesh",
             createPoseRPY(((tube_length) + 0.01), 0.0, 0.0, 0.0, 0.0, 0.0),
             slider_mesh_file,
-            1.0, 1.0, 1.0));
+            {1.0, 1.0, 1.0}));
 
     // Save the name of the endplate mesh since we'll use it to get the pose for the second robot to load the object in the machine
     std::string endplate_name = "endplate_mesh";
@@ -303,7 +299,7 @@ int main(int argc, char **argv)
             endplate_name,
             load_target_2_key_name,
             endplate_mesh_file,
-            1.0, 1.0, 1.0));
+            {1.0, 1.0, 1.0}));
 
     // Compose the check and add sequence for objects
     std::string init_machine_mesh_obj_xml = fallbackWrapperXML("init_machine_mesh_obj", {check_machine_mesh_obj_xml, add_machine_mesh_obj_xml});
@@ -743,6 +739,10 @@ int main(int argc, char **argv)
 
     // ZMQ publisher (optional, to visualize in Groot)
     BT::PublisherZMQ publisher(tree);
+
+    // Create the HMI Service Node and pass the same blackboard ***
+    auto hmi_node = std::make_shared<manymove_cpp_trees::HMIServiceNode>("hmi_service_node", blackboard, keys);
+    RCLCPP_INFO(node->get_logger(), "HMI Service Nodes instantiated.");
 
     // Create a MultiThreadedExecutor so that both nodes can be spun concurrently.
     rclcpp::executors::MultiThreadedExecutor executor;

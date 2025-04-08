@@ -53,16 +53,12 @@ int main(int argc, char **argv)
 
     // Define all params and blackboard keys for the robot:
     RobotParams rp_1 = defineRobotParams(node, blackboard, keys, "_1");
-    RobotParams rp_2 = defineRobotParams(node, blackboard, keys,"_2");
+    RobotParams rp_2 = defineRobotParams(node, blackboard, keys, "_2");
 
-    double tube_length;
-    tube_length = defineBlackboardEntry<double>(node, blackboard, keys, "tube_length", "double", tube_length, 0.1);
-
-    // Create the HMI Service Node and pass the same blackboard ***
-    auto hmi_node = std::make_shared<manymove_cpp_trees::HMIServiceNode>("hmi_service_node", blackboard, keys);
-    RCLCPP_INFO(node->get_logger(), "HMI Service Nodes instantiated.");
-
-    //
+    double tube_length = 0.1;
+    defineBlackboardEntry<double>(node, blackboard, keys, "tube_length", "double", tube_length);
+    double tube_diameter = 0.01;
+    defineBlackboardEntry<double>(node, blackboard, keys, "tube_diameter", "double", tube_diameter);
 
     // ----------------------------------------------------------------------------
     // Build blocks for poses and objects handling
@@ -85,7 +81,11 @@ int main(int argc, char **argv)
      * in the future we can also make so the dimensions depend on a blackboard key and let the user modify it from the HMI.
      */
     std::vector<double> graspable_mesh_scale = {0.01, 0.01, tube_length};
-    blackboard->set("graspable_mesh_scale_key", graspable_mesh_scale);
+    std::string graspable_mesh_scale_key = "tube_scale";
+    defineBlackboardEntry<std::vector<double>>(node, blackboard, keys,
+                                               graspable_mesh_scale_key,
+                                               "double_array",
+                                               graspable_mesh_scale);
 
     /**
      * This is the pose for the object, aligned so the X+ axis corresponds to the exit direction from the distributor's holder.
@@ -93,7 +93,11 @@ int main(int argc, char **argv)
      * perpendicular to the Z axis of the object, but defining one specific alignment lets us define a specific direction for grasping.
      */
     Pose graspable_mesh_pose = createPoseRPY(((tube_length / 2) + 0.973 + 0.005), -0.6465, 0.8055, 1.57, 2.05, 1.57);
-    blackboard->set("graspable_mesh_pose_key", graspable_mesh_pose);
+    std::string graspable_mesh_pose_key = "tube_spawn_pose";
+    defineBlackboardEntry<Pose>(node, blackboard, keys,
+                                graspable_mesh_pose_key,
+                                "pose",
+                                graspable_mesh_pose);
 
     //
     std::string check_graspable_mesh_obj_xml = buildObjectActionXML("check_" + object_to_manipulate_1, createCheckObjectExists(object_to_manipulate_1));
@@ -103,9 +107,9 @@ int main(int argc, char **argv)
         "add_graspable_mesh",
         createAddMeshObject(
             object_to_manipulate_1,
-            graspable_mesh_pose,
+            graspable_mesh_pose_key,
             graspable_mesh_file,
-            graspable_mesh_scale[0], graspable_mesh_scale[1], graspable_mesh_scale[2]));
+            graspable_mesh_scale));
 
     // We define a logic fallback to check if the object is already on the scene, and if not we add it.
     std::string init_graspable_mesh_obj_xml = fallbackWrapperXML("init_graspable_mesh_obj", {check_graspable_mesh_obj_xml, add_graspable_mesh_obj_xml});
@@ -235,7 +239,7 @@ int main(int argc, char **argv)
             object_to_manipulate_2,
             dropped_target_key_name, // We use the overload with the blakboard key to retrive it dynamically
             graspable_mesh_file,
-            graspable_mesh_scale[0], graspable_mesh_scale[1], graspable_mesh_scale[2]));
+            graspable_mesh_scale));
 
     /**
      * We get the pose of the dropped object to use it to insert the renamed object
@@ -283,7 +287,7 @@ int main(int argc, char **argv)
             "machine_mesh",
             createPoseRPY(0.0, 0.0, -0.001, 0.0, 0.0, 0.0),
             machine_mesh_file,
-            1.0, 1.0, 1.0));
+            {1.0, 1.0, 1.0}));
 
     // The slider is in a variable position. We still use the tube_length variable and not a dedicated blackboard key, this may change
     // if we want to set the length from HMI
@@ -293,7 +297,7 @@ int main(int argc, char **argv)
             "slider_mesh",
             createPoseRPY(((tube_length) + 0.01), 0.0, 0.0, 0.0, 0.0, 0.0),
             slider_mesh_file,
-            1.0, 1.0, 1.0));
+            {1.0, 1.0, 1.0}));
 
     // Save the name of the endplate mesh since we'll use it to get the pose for the second robot to load the object in the machine
     std::string endplate_name = "endplate_mesh";
@@ -313,7 +317,7 @@ int main(int argc, char **argv)
             endplate_name,
             load_target_2_key_name,
             endplate_mesh_file,
-            1.0, 1.0, 1.0));
+            {1.0, 1.0, 1.0}));
 
     // Compose the check and add sequence for objects
     std::string init_machine_mesh_obj_xml = fallbackWrapperXML("init_machine_mesh_obj", {check_machine_mesh_obj_xml, add_machine_mesh_obj_xml});
@@ -712,6 +716,10 @@ int main(int argc, char **argv)
 
     // ZMQ publisher (optional, to visualize in Groot)
     BT::PublisherZMQ publisher(tree);
+
+    // Create the HMI Service Node and pass the same blackboard ***
+    auto hmi_node = std::make_shared<manymove_cpp_trees::HMIServiceNode>("hmi_service_node", blackboard, keys);
+    RCLCPP_INFO(node->get_logger(), "HMI Service Nodes instantiated.");
 
     // Create a MultiThreadedExecutor so that both nodes can be spun concurrently.
     rclcpp::executors::MultiThreadedExecutor executor;
