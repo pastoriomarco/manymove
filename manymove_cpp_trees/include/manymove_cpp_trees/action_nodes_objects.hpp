@@ -59,9 +59,7 @@ namespace manymove_cpp_trees
                 BT::InputPort<std::vector<double>>("dimensions", "Dimensions for primitive shapes"),
                 BT::InputPort<geometry_msgs::msg::Pose>("pose", "Pose of the object"),
                 BT::InputPort<std::string>("mesh_file", "", "Mesh file path (for mesh objects)"),
-                BT::InputPort<double>("scale_mesh_x", 1.0, "Scale factor along X-axis (for mesh)"),
-                BT::InputPort<double>("scale_mesh_y", 1.0, "Scale factor along Y-axis (for mesh)"),
-                BT::InputPort<double>("scale_mesh_z", 1.0, "Scale factor along Z-axis (for mesh)")};
+                BT::InputPort<std::vector<double>>("scale_mesh", "Scale factor along X-axis (for mesh)")};
         }
 
     protected:

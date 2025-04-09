@@ -33,21 +33,23 @@ namespace manymove_cpp_trees
         // Parameters for ADD action
         std::string shape;              ///< Shape type (e.g., box, mesh).
         std::vector<double> dimensions; ///< Dimensions for primitive shapes (e.g., width, height, depth).
-        geometry_msgs::msg::Pose pose;  ///< Pose of the object in the planning scene.
-        std::string mesh_file;          ///< Path to the mesh file (required if shape is mesh).
-        double scale_mesh_x = 1.0;      ///< Scale factor along the X-axis for mesh objects.
-        double scale_mesh_y = 1.0;      ///< Scale factor along the Y-axis for mesh objects.
-        double scale_mesh_z = 1.0;      ///< Scale factor along the Z-axis for mesh objects.
+
+        geometry_msgs::msg::Pose pose; ///< Pose of the object in the planning scene.
+        std::string pose_key;          ///< Blackboard key to store the retrieved pose (used only for GET_POSE).
+
+        std::string mesh_file; ///< Path to the mesh file (required if shape is mesh).
+
+        std::vector<double> scale_mesh = {1.0, 1.0, 1.0}; ///< Scale factor along the X, Y and Z axis for mesh objects.
+        std::string scale_key;                            ///< Blackboard key to store the retrieved scale (used only for GET_POSE).
 
         // Parameters for ATTACH and DETACH actions
-        std::string link_name;                  ///< Name of the robot link to attach/detach the object.
-        bool attach = true;                     ///< Flag indicating whether to attach (true) or detach (false) the object.
-        std::vector<std::string> touch_links;   ///< (Optional) List of robot links to exclude from collision checking.
+        std::string link_name;                ///< Name of the robot link to attach/detach the object.
+        bool attach = true;                   ///< Flag indicating whether to attach (true) or detach (false) the object.
+        std::vector<std::string> touch_links; ///< (Optional) List of robot links to exclude from collision checking.
 
         // Parameters for GET_POSE action (also uses the link_name for relative)
         std::vector<double> pre_transform_xyz_rpy;  ///< Linear transform in x, y and z and rotation in roll, pitch, yaw of the pose of the object
         std::vector<double> post_transform_xyz_rpy; ///< Reference orientation for the pose transform of the pose
-        std::string pose_key;                       ///< Blackboard key to store the retrieved pose (used only for GET_POSE).
 
         /**
          * @brief Default constructor.
@@ -61,16 +63,14 @@ namespace manymove_cpp_trees
          * @param dims Dimensions for the shape.
          * @param ps Pose of the object.
          * @param mesh Path to mesh file.
-         * @param sx Scale factor X.
-         * @param sy Scale factor Y.
-         * @param sz Scale factor Z.
+         * @param scale_mesh Scale factors for X, Y and Z axis.
          */
         ObjectAction(const std::string &obj_id, const std::string &shp,
                      const std::vector<double> &dims, const geometry_msgs::msg::Pose &ps,
-                     const std::string &mesh = "", double sx = 1.0, double sy = 1.0, double sz = 1.0)
+                     const std::string &mesh = "", std::vector<double> scale = {1.0, 1.0, 1.0})
             : type(ObjectActionType::ADD), object_id(obj_id), shape(shp),
               dimensions(dims), pose(ps), mesh_file(mesh),
-              scale_mesh_x(sx), scale_mesh_y(sy), scale_mesh_z(sz) {}
+              scale_mesh(scale) {}
 
         /**
          * @brief Parameterized constructor for ATTACH/DETACH action.
@@ -81,13 +81,12 @@ namespace manymove_cpp_trees
         ObjectAction(const std::string &obj_id,
                      const std::string &link,
                      bool att,
-                     const std::vector<std::string>& tlinks = {})
+                     const std::vector<std::string> &tlinks = {})
             : type(att ? ObjectActionType::ATTACH : ObjectActionType::DETACH),
-                object_id(obj_id), 
-                link_name(link), 
-                attach(att),
-                touch_links(tlinks) {}
-
+              object_id(obj_id),
+              link_name(link),
+              attach(att),
+              touch_links(tlinks) {}
 
         /**
          * @brief Parameterized constructor for CHECK action.
@@ -101,11 +100,11 @@ namespace manymove_cpp_trees
          * @param obj_id Unique identifier for the object.
          * @param xyz_rpy Offset values in format {x, y, z, roll, pitch, yaw}.
          * @param rpy Reference orientation in format {roll, pitch, yaw}.
-         * @param key Blackboard key to store the retrieved pose.
+         * @param p_key Blackboard key to store the retrieved pose.
          */
-        ObjectAction(const std::string &obj_id, const std::string &key, const std::string &link_name,const std::vector<double> &pre_xyz_rpy = {0.0, 0.0, 0.0, 0.0, 0.0, 0.0}, const std::vector<double> &post_xyz_rpy = {0.0, 0.0, 0.0, 0.0, 0.0, 0.0})
+        ObjectAction(const std::string &obj_id, const std::string &p_key, const std::string &link_name, const std::vector<double> &pre_xyz_rpy = {0.0, 0.0, 0.0, 0.0, 0.0, 0.0}, const std::vector<double> &post_xyz_rpy = {0.0, 0.0, 0.0, 0.0, 0.0, 0.0})
             : type(ObjectActionType::GET_POSE), object_id(obj_id),
-              pose_key(key),
+              pose_key(p_key),
               link_name(link_name),
               pre_transform_xyz_rpy(pre_xyz_rpy), post_transform_xyz_rpy(post_xyz_rpy) {}
     };
@@ -139,13 +138,13 @@ namespace manymove_cpp_trees
                                             const std::string &mesh_file,
                                             std::vector<double> scale = {1.0, 1.0, 1.0})
     {
-        return ObjectAction(object_id, "mesh", {}, pose, mesh_file, scale[0], scale[1], scale[2]);
+        return ObjectAction(object_id, "mesh", {}, pose, mesh_file, scale);
     }
 
     /**
      * @brief Helper function to create an ObjectAction for adding a mesh-shaped object.
      * @param object_id Unique identifier for the object.
-     * @param pose Blackboard key containing the pose of the object.
+     * @param pose_key Blackboard key containing the pose of the object.
      * @param mesh_file Path to the mesh file.
      * @param scale Scale factors along the X, Y and Z axis.
      * @return Configured ObjectAction.
@@ -161,9 +160,30 @@ namespace manymove_cpp_trees
         action.shape = "mesh";
         action.pose_key = pose_key;
         action.mesh_file = mesh_file;
-        action.scale_mesh_x = scale[0];
-        action.scale_mesh_y = scale[1];
-        action.scale_mesh_z = scale[2];
+        action.scale_mesh = scale;
+        return action;
+    }
+
+    /**
+     * @brief Helper function to create an ObjectAction for adding a mesh-shaped object.
+     * @param object_id Unique identifier for the object.
+     * @param pose_key Blackboard key containing the pose of the object.
+     * @param mesh_file Path to the mesh file.
+     * @param scale_key Blackboard kye representing cale factors along the X, Y and Z axis.
+     * @return Configured ObjectAction.
+     */
+    inline ObjectAction createAddMeshObject(const std::string &object_id,
+                                            const std::string &pose_key,
+                                            const std::string &mesh_file,
+                                            const std::string scale_key)
+    {
+        ObjectAction action;
+        action.type = ObjectActionType::ADD;
+        action.object_id = object_id;
+        action.shape = "mesh";
+        action.pose_key = pose_key;
+        action.mesh_file = mesh_file;
+        action.scale_key = scale_key;
         return action;
     }
 
@@ -173,11 +193,11 @@ namespace manymove_cpp_trees
      * @param link_name Name of the robot link to attach the object to.
      * @return Configured ObjectAction.
      */
-    inline ObjectAction createAttachObject(const std::string &object_id, 
+    inline ObjectAction createAttachObject(const std::string &object_id,
                                            const std::string &link_name,
                                            const std::vector<std::string> &touch_links = {})
     {
-    return ObjectAction(object_id, link_name, true, touch_links);
+        return ObjectAction(object_id, link_name, true, touch_links);
     }
 
     /**

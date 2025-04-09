@@ -82,10 +82,8 @@ namespace manymove_cpp_trees
             }
         }
 
-        double scale_x, scale_y, scale_z;
-        getInput<double>("scale_mesh_x", scale_x);
-        getInput<double>("scale_mesh_y", scale_y);
-        getInput<double>("scale_mesh_z", scale_z);
+        std::vector<double> scale;
+        getInput<std::vector<double>>("scale_mesh", scale);
 
         // Create and send the goal
         auto goal_msg = AddCollisionObject::Goal();
@@ -96,9 +94,7 @@ namespace manymove_cpp_trees
         if (shape == "mesh")
         {
             goal_msg.mesh_file = mesh_file;
-            goal_msg.scale_mesh_x = scale_x;
-            goal_msg.scale_mesh_y = scale_y;
-            goal_msg.scale_mesh_z = scale_z;
+            goal_msg.scale_mesh = scale;
         }
         else
         {

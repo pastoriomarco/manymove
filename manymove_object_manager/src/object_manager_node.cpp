@@ -287,7 +287,7 @@ namespace manymove_object_manager
         auto result = std::make_shared<AddCollisionObject::Result>();
 
         // Publish the collision object
-        auto collision_object = createCollisionObject(goal->id, goal->shape, goal->dimensions, goal->pose, goal->mesh_file, goal->scale_mesh_x, goal->scale_mesh_y, goal->scale_mesh_z);
+        auto collision_object = createCollisionObject(goal->id, goal->shape, goal->dimensions, goal->pose, goal->mesh_file, goal->scale_mesh);
         collision_object_publisher_->publish(collision_object);
         RCLCPP_INFO(this->get_logger(),
                     "Published ADD operation for object '%s'.", goal->id.c_str());
@@ -1084,9 +1084,7 @@ namespace manymove_object_manager
         const std::vector<double> &dimensions,
         const geometry_msgs::msg::Pose &pose,
         const std::string &mesh_file,
-        const double scale_mesh_x,
-        const double scale_mesh_y,
-        const double scale_mesh_z) const
+        const std::vector<double> scale_mesh) const
     {
         moveit_msgs::msg::CollisionObject collision_object;
         collision_object.header.frame_id = frame_id_;
@@ -1107,9 +1105,9 @@ namespace manymove_object_manager
                 // Apply scaling to the mesh vertices
                 for (unsigned int i = 0; i < mesh->vertex_count; ++i)
                 {
-                    mesh->vertices[3 * i + 0] *= scale_mesh_x; // Scale X
-                    mesh->vertices[3 * i + 1] *= scale_mesh_y; // Scale Y
-                    mesh->vertices[3 * i + 2] *= scale_mesh_z; // Scale Z
+                    mesh->vertices[3 * i + 0] *= scale_mesh[0]; // Scale X
+                    mesh->vertices[3 * i + 1] *= scale_mesh[1]; // Scale Y
+                    mesh->vertices[3 * i + 2] *= scale_mesh[2]; // Scale Z
                 }
                 // Convert the scaled mesh into a shape_msgs::Mesh
                 shape_msgs::msg::Mesh mesh_msg;

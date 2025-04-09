@@ -120,11 +120,20 @@ namespace manymove_cpp_trees
             }
             else
             {
-                // Mesh-specific attributes
-                xml << "mesh_file=\"" << action.mesh_file << "\" ";
-                xml << "scale_mesh_x=\"" << action.scale_mesh_x << "\" ";
-                xml << "scale_mesh_y=\"" << action.scale_mesh_y << "\" ";
-                xml << "scale_mesh_z=\"" << action.scale_mesh_z << "\" ";
+                if (!action.scale_key.empty())
+                {
+                    // Mesh-specific attributes
+                    xml << "mesh_file=\"" << action.mesh_file << "\" ";
+                    // When a key is provided, use it as a reference.
+                    xml << "scale_mesh=\"{" << action.scale_key << "}\" ";
+                }
+                else
+                {
+                    std::string scale_str = serializeVector(action.scale_mesh);
+                    // Mesh-specific attributes
+                    xml << "mesh_file=\"" << action.mesh_file << "\" ";
+                    xml << "scale_mesh=\"" << scale_str << "\" ";
+                }
             }
 
             if (!action.pose_key.empty())

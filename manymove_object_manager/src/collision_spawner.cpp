@@ -26,9 +26,7 @@ public:
         bool has_pose;
         geometry_msgs::msg::Pose pose;
         std::optional<std::string> mesh_file;
-        double scale_mesh_x;
-        double scale_mesh_z;
-        double scale_mesh_y;
+        std::vector<double> scale_mesh;
     };
 
     using AddCollisionObject = manymove_msgs::action::AddCollisionObject;
@@ -154,9 +152,11 @@ private:
                     // Parse scaling values for mesh
                     if (obj_node["scale"])
                     {
-                        obj_spec.scale_mesh_x = obj_node["scale"]["x"].as<double>(1.0);
-                        obj_spec.scale_mesh_y = obj_node["scale"]["y"].as<double>(1.0);
-                        obj_spec.scale_mesh_z = obj_node["scale"]["z"].as<double>(1.0);
+                        obj_spec.scale_mesh = obj_node["scale"].as<std::vector<double>>();
+                    }
+                    else
+                    {
+                        obj_spec.scale_mesh = {1.0, 1.0, 1.0};
                     }
                 }
                 else
@@ -307,9 +307,7 @@ private:
         if (obj_spec.type == "mesh")
         {
             goal.mesh_file = obj_spec.mesh_file.value();
-            goal.scale_mesh_x = obj_spec.scale_mesh_x;
-            goal.scale_mesh_y = obj_spec.scale_mesh_y;
-            goal.scale_mesh_z = obj_spec.scale_mesh_z;
+            goal.scale_mesh = obj_spec.scale_mesh;
         }
 
         RCLCPP_INFO(this->get_logger(), "Sending add goal for object '%s'.", obj_spec.name.c_str());

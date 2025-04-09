@@ -109,7 +109,7 @@ int main(int argc, char **argv)
             object_to_manipulate_1,
             graspable_mesh_pose_key,
             graspable_mesh_file,
-            graspable_mesh_scale));
+            graspable_mesh_scale_key));
 
     // We define a logic fallback to check if the object is already on the scene, and if not we add it.
     std::string init_graspable_mesh_obj_xml = fallbackWrapperXML("init_graspable_mesh_obj", {check_graspable_mesh_obj_xml, add_graspable_mesh_obj_xml});
@@ -157,6 +157,8 @@ int main(int argc, char **argv)
 
     // We want the pick pose to be at a fixed distance from the end of the tube regardless of the length so we set a grasp offset:
     double grasp_offset = 0.025;
+    defineBlackboardEntry<double>(node, blackboard, keys, "grasp_offset", "double", grasp_offset);
+
     std::vector<double> pick_post_transform_xyz_rpy_1 = {0.0, 0.0, ((-tube_length) / 2) + grasp_offset, 3.14, 0.0, 0.0};
 
     /**
@@ -239,7 +241,7 @@ int main(int argc, char **argv)
             object_to_manipulate_2,
             dropped_target_key_name, // We use the overload with the blakboard key to retrive it dynamically
             graspable_mesh_file,
-            graspable_mesh_scale));
+            graspable_mesh_scale_key));
 
     /**
      * We get the pose of the dropped object to use it to insert the renamed object
@@ -297,7 +299,7 @@ int main(int argc, char **argv)
             "slider_mesh",
             createPoseRPY(((tube_length) + 0.01), 0.0, 0.0, 0.0, 0.0, 0.0),
             slider_mesh_file,
-            {1.0, 1.0, 1.0}));
+            std::vector<double>{1.0, 1.0, 1.0}));
 
     // Save the name of the endplate mesh since we'll use it to get the pose for the second robot to load the object in the machine
     std::string endplate_name = "endplate_mesh";
@@ -317,7 +319,7 @@ int main(int argc, char **argv)
             endplate_name,
             load_target_2_key_name,
             endplate_mesh_file,
-            {1.0, 1.0, 1.0}));
+            std::vector<double>{1.0, 1.0, 1.0}));
 
     // Compose the check and add sequence for objects
     std::string init_machine_mesh_obj_xml = fallbackWrapperXML("init_machine_mesh_obj", {check_machine_mesh_obj_xml, add_machine_mesh_obj_xml});

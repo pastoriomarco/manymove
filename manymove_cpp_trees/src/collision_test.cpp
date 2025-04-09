@@ -299,7 +299,7 @@ int main(int argc, char **argv)
             endplate_name,
             load_target_2_key_name,
             endplate_mesh_file,
-            {1.0, 1.0, 1.0}));
+            std::vector<double>{1.0, 1.0, 1.0}));
 
     // Compose the check and add sequence for objects
     std::string init_machine_mesh_obj_xml = fallbackWrapperXML("init_machine_mesh_obj", {check_machine_mesh_obj_xml, add_machine_mesh_obj_xml});

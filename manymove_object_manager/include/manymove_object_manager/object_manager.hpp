@@ -214,9 +214,7 @@ namespace manymove_object_manager
          * @param dimensions Dimensions relevant to the shape type.
          * @param pose The pose of the collision object.
          * @param mesh_file Optional file path to a mesh resource (for mesh shape).
-         * @param scale_mesh_x Optional value to scale the original mesh on X axis
-         * @param scale_mesh_y Optional value to scale the original mesh on Y axis
-         * @param scale_mesh_z Optional value to scale the original mesh on Z axis
+         * @param scale_mesh Optional value to scale the original mesh on X, Y and Z axis
          * @return A fully populated CollisionObject message.
          */
         moveit_msgs::msg::CollisionObject createCollisionObject(
@@ -225,9 +223,7 @@ namespace manymove_object_manager
             const std::vector<double> &dimensions,
             const geometry_msgs::msg::Pose &pose,
             const std::string &mesh_file,
-            const double scale_mesh_x = 1.0,
-            const double scale_mesh_y = 1.0,
-            const double scale_mesh_z = 1.0) const;
+            const std::vector<double> scale_mesh = {1.0, 1.0, 1.0}) const;
 
         /**
          * @brief Print the current planning scene, listing all collision and attached objects found.
