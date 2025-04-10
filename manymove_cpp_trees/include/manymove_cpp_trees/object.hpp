@@ -28,227 +28,135 @@ namespace manymove_cpp_trees
     struct ObjectAction
     {
         ObjectActionType type; ///< The type of object action.
-        std::string object_id; ///< Unique identifier for the object.
-
+        std::string object_id_key_st; ///< Unique identifier for the object.
         // Parameters for ADD action
-        std::string shape;              ///< Shape type (e.g., box, mesh).
-        std::vector<double> dimensions; ///< Dimensions for primitive shapes (e.g., width, height, depth).
-
-        geometry_msgs::msg::Pose pose; ///< Pose of the object in the planning scene.
-        std::string pose_key;          ///< Blackboard key to store the retrieved pose (used only for GET_POSE).
-
-        std::string mesh_file; ///< Path to the mesh file (required if shape is mesh).
-
-        std::vector<double> scale_mesh = {1.0, 1.0, 1.0}; ///< Scale factor along the X, Y and Z axis for mesh objects.
-        std::string scale_key;                            ///< Blackboard key to store the retrieved scale (used only for GET_POSE).
-
+        std::string shape_key_st;       ///< Shape type (e.g., box, mesh).
+        std::string dimensions_key_d_a; ///< Dimensions for primitive shapes (e.g., width, height, depth).
+        std::string pose_key;           ///< Blackboard key to store the retrieved pose (used only for GET_POSE).
+        std::string mesh_file_key_st;   ///< Path to the mesh file (required if shape is mesh).
+        std::string scale_key_d_a;      ///< Blackboard key to store the retrieved scale (used only for GET_POSE).
         // Parameters for ATTACH and DETACH actions
-        std::string link_name;                ///< Name of the robot link to attach/detach the object.
-        bool attach = true;                   ///< Flag indicating whether to attach (true) or detach (false) the object.
-        std::vector<std::string> touch_links; ///< (Optional) List of robot links to exclude from collision checking.
-
+        std::string link_name_key_st;     ///< Name of the robot link to attach/detach the object.
+        std::string touch_links_key_st_a; ///< (Optional) List of robot links to exclude from collision checking.
         // Parameters for GET_POSE action (also uses the link_name for relative)
-        std::vector<double> pre_transform_xyz_rpy;  ///< Linear transform in x, y and z and rotation in roll, pitch, yaw of the pose of the object
-        std::vector<double> post_transform_xyz_rpy; ///< Reference orientation for the pose transform of the pose
+        std::string pre_transform_xyz_rpy_key_d_a;  ///< Linear transform in x, y and z and rotation in roll, pitch, yaw of the pose of the object
+        std::string post_transform_xyz_rpy_key_d_a; ///< Reference orientation for the pose transform of the pose
 
         /**
          * @brief Default constructor.
          */
         ObjectAction() = default;
-
-        /**
-         * @brief Parameterized constructor for ADD action.
-         * @param obj_id Unique identifier for the object.
-         * @param shp Shape type.
-         * @param dims Dimensions for the shape.
-         * @param ps Pose of the object.
-         * @param mesh Path to mesh file.
-         * @param scale_mesh Scale factors for X, Y and Z axis.
-         */
-        ObjectAction(const std::string &obj_id, const std::string &shp,
-                     const std::vector<double> &dims, const geometry_msgs::msg::Pose &ps,
-                     const std::string &mesh = "", std::vector<double> scale = {1.0, 1.0, 1.0})
-            : type(ObjectActionType::ADD), object_id(obj_id), shape(shp),
-              dimensions(dims), pose(ps), mesh_file(mesh),
-              scale_mesh(scale) {}
-
-        /**
-         * @brief Parameterized constructor for ATTACH/DETACH action.
-         * @param obj_id Unique identifier for the object.
-         * @param link Link name.
-         * @param att Attach flag (true for attach, false for detach).
-         */
-        ObjectAction(const std::string &obj_id,
-                     const std::string &link,
-                     bool att,
-                     const std::vector<std::string> &tlinks = {})
-            : type(att ? ObjectActionType::ATTACH : ObjectActionType::DETACH),
-              object_id(obj_id),
-              link_name(link),
-              attach(att),
-              touch_links(tlinks) {}
-
-        /**
-         * @brief Parameterized constructor for CHECK action.
-         * @param obj_id Unique identifier for the object.
-         */
-        ObjectAction(const std::string &obj_id)
-            : type(ObjectActionType::CHECK), object_id(obj_id) {}
-
-        /**
-         * @brief Parameterized constructor for GET_POSE action.
-         * @param obj_id Unique identifier for the object.
-         * @param xyz_rpy Offset values in format {x, y, z, roll, pitch, yaw}.
-         * @param rpy Reference orientation in format {roll, pitch, yaw}.
-         * @param p_key Blackboard key to store the retrieved pose.
-         */
-        ObjectAction(const std::string &obj_id, const std::string &p_key, const std::string &link_name, const std::vector<double> &pre_xyz_rpy = {0.0, 0.0, 0.0, 0.0, 0.0, 0.0}, const std::vector<double> &post_xyz_rpy = {0.0, 0.0, 0.0, 0.0, 0.0, 0.0})
-            : type(ObjectActionType::GET_POSE), object_id(obj_id),
-              pose_key(p_key),
-              link_name(link_name),
-              pre_transform_xyz_rpy(pre_xyz_rpy), post_transform_xyz_rpy(post_xyz_rpy) {}
     };
 
     /**
-     * @brief Helper function to create an ObjectAction for adding a box-shaped object.
-     * @param object_id Unique identifier for the object.
-     * @param dimensions Dimensions of the box (width, height, depth).
-     * @param pose Pose of the object.
-     * @param object_type Type of primitive object, possible values: box, cylinder, sphere.
+     * @brief Helper function to create an ObjectAction for adding a objects.
+     * @param object_id_key_st Unique identifier for the object.
+     * @param dimensions_key Dimensions of the box (width, height, depth).
+     * @param pose_key Pose of the object.
+     * @param object_shape_key Type of primitive object, possible values: box, cylinder, sphere, mesh.
+     * @param mesh_file_key Path to the mesh file.
+     * @param scale_key Scale factors along the X, Y and Z axis.
      * @return Configured ObjectAction.
      */
-    inline ObjectAction createAddPrimitiveObject(const std::string &object_id,
-                                                 const std::string &object_type,
-                                                 const std::vector<double> &dimensions,
-                                                 const geometry_msgs::msg::Pose &pose)
-    {
-        return ObjectAction(object_id, object_type, dimensions, pose);
-    }
-
-    /**
-     * @brief Helper function to create an ObjectAction for adding a mesh-shaped object.
-     * @param object_id Unique identifier for the object.
-     * @param pose Pose of the object.
-     * @param mesh_file Path to the mesh file.
-     * @param scale Scale factors along the X, Y and Z axis.
-     * @return Configured ObjectAction.
-     */
-    inline ObjectAction createAddMeshObject(const std::string &object_id,
-                                            const geometry_msgs::msg::Pose &pose,
-                                            const std::string &mesh_file,
-                                            std::vector<double> scale = {1.0, 1.0, 1.0})
-    {
-        return ObjectAction(object_id, "mesh", {}, pose, mesh_file, scale);
-    }
-
-    /**
-     * @brief Helper function to create an ObjectAction for adding a mesh-shaped object.
-     * @param object_id Unique identifier for the object.
-     * @param pose_key Blackboard key containing the pose of the object.
-     * @param mesh_file Path to the mesh file.
-     * @param scale Scale factors along the X, Y and Z axis.
-     * @return Configured ObjectAction.
-     */
-    inline ObjectAction createAddMeshObject(const std::string &object_id,
-                                            const std::string &pose_key,
-                                            const std::string &mesh_file,
-                                            std::vector<double> scale = {1.0, 1.0, 1.0})
+    inline ObjectAction createAddObject(const std::string &object_id_key_st,
+                                                 const std::string &object_shape_key,
+                                                 const std::string &dimensions_key,
+                                                 const std::string &pose_key,
+                                                 const std::string &scale_key,
+                                                 const std::string &mesh_file_key)
     {
         ObjectAction action;
         action.type = ObjectActionType::ADD;
-        action.object_id = object_id;
-        action.shape = "mesh";
+        action.object_id_key_st = object_id_key_st;
+        action.shape_key_st = object_shape_key;
+        action.dimensions_key_d_a = dimensions_key;
         action.pose_key = pose_key;
-        action.mesh_file = mesh_file;
-        action.scale_mesh = scale;
-        return action;
-    }
-
-    /**
-     * @brief Helper function to create an ObjectAction for adding a mesh-shaped object.
-     * @param object_id Unique identifier for the object.
-     * @param pose_key Blackboard key containing the pose of the object.
-     * @param mesh_file Path to the mesh file.
-     * @param scale_key Blackboard kye representing cale factors along the X, Y and Z axis.
-     * @return Configured ObjectAction.
-     */
-    inline ObjectAction createAddMeshObject(const std::string &object_id,
-                                            const std::string &pose_key,
-                                            const std::string &mesh_file,
-                                            const std::string scale_key)
-    {
-        ObjectAction action;
-        action.type = ObjectActionType::ADD;
-        action.object_id = object_id;
-        action.shape = "mesh";
-        action.pose_key = pose_key;
-        action.mesh_file = mesh_file;
-        action.scale_key = scale_key;
+        action.mesh_file_key_st = mesh_file_key;
+        action.scale_key_d_a = scale_key;
         return action;
     }
 
     /**
      * @brief Helper function to create an ObjectAction for attaching an object.
-     * @param object_id Unique identifier for the object.
+     * @param object_id_key_st Unique identifier for the object.
      * @param link_name Name of the robot link to attach the object to.
      * @return Configured ObjectAction.
      */
-    inline ObjectAction createAttachObject(const std::string &object_id,
-                                           const std::string &link_name,
-                                           const std::vector<std::string> &touch_links = {})
+    inline ObjectAction createAttachObject(const std::string &object_id_key_st,
+                                           const std::string &link_name_key,
+                                           const std::string &touch_links_key)
     {
-        return ObjectAction(object_id, link_name, true, touch_links);
+        ObjectAction action;
+        action.type = ObjectActionType::ATTACH;
+        action.object_id_key_st = object_id_key_st;
+        action.link_name_key_st = link_name_key;
+        action.touch_links_key_st_a = touch_links_key;
+        return action;
     }
 
     /**
      * @brief Helper function to create an ObjectAction for detaching an object.
-     * @param object_id Unique identifier for the object.
-     * @param link_name Name of the robot link to detach the object from.
+     * @param object_id_key_st Unique identifier for the object.
+     * @param link_name_key Name of the robot link to detach the object from.
      * @return Configured ObjectAction.
      */
-    inline ObjectAction createDetachObject(const std::string &object_id, const std::string &link_name)
+    inline ObjectAction createDetachObject(const std::string &object_id_key_st, const std::string &link_name_key)
     {
-        return ObjectAction(object_id, link_name, false);
+        ObjectAction action;
+        action.type = ObjectActionType::DETACH;
+        action.object_id_key_st = object_id_key_st;
+        action.link_name_key_st = link_name_key;
+        return action;
     }
 
     /**
      * @brief Helper function to create an ObjectAction for checking object existence.
-     * @param object_id Unique identifier for the object.
+     * @param object_id_key_st Unique identifier for the object.
      * @return Configured ObjectAction.
      */
-    inline ObjectAction createCheckObjectExists(const std::string &object_id)
+    inline ObjectAction createCheckObjectExists(const std::string &object_id_key_st)
     {
-        return ObjectAction(object_id);
+        ObjectAction action;
+        action.type = ObjectActionType::CHECK;
+        action.object_id_key_st = object_id_key_st;
+        return action;
     }
 
     /**
      * @brief Helper function to create an ObjectAction for removing an object.
-     * @param object_id Unique identifier for the object.
+     * @param object_id_key_st Unique identifier for the object.
      * @return Configured ObjectAction.
      */
-    inline ObjectAction createRemoveObject(const std::string &object_id)
+    inline ObjectAction createRemoveObject(const std::string &object_id_key_st)
     {
         ObjectAction action;
         action.type = ObjectActionType::REMOVE;
-        action.object_id = object_id;
+        action.object_id_key_st = object_id_key_st;
         return action;
     }
 
     /**
      * @brief Helper function to create an ObjectAction for getting and modifying object pose.
-     * @param object_id Unique identifier for the object.
-     * @param key Blackboard key to store the retrieved pose.
-     * @param xyz_rpy Transformation offsets in format {x, y, z, roll, pitch, yaw}.
-     * @param rpy Reference orientation in format {roll, pitch, yaw}.
+     * @param object_id_key_st Unique identifier for the object.
+     * @param pose_key Blackboard key to store the retrieved pose.
+     * @param pre_xyz_rpy_key Transformation offsets in format {x, y, z, roll, pitch, yaw}.
+     * @param post_xyz_rpy_key Secon transformation offsets in format {x, y, z, roll, pitch, yaw}.
      * @return Configured ObjectAction.
      */
-    inline ObjectAction createGetObjectPose(const std::string &object_id,
-                                            const std::string &key,
-                                            const std::string &link_name,
-                                            const std::vector<double> &pre_xyz_rpy = {0.0, 0.0, 0.0, 0.0, 0.0, 0.0},
-                                            const std::vector<double> &post_xyz_rpy = {0.0, 0.0, 0.0, 0.0, 0.0, 0.0})
+    inline ObjectAction createGetObjectPose(const std::string &object_id_key_st,
+                                            const std::string &pose_key,
+                                            const std::string &link_name_key,
+                                            const std::string &pre_xyz_rpy_key,
+                                            const std::string &post_xyz_rpy_key)
     {
-        return ObjectAction(object_id, key, link_name, pre_xyz_rpy, post_xyz_rpy);
+        ObjectAction action;
+        action.type = ObjectActionType::GET_POSE;
+        action.object_id_key_st = object_id_key_st;
+        action.pose_key = pose_key;
+        action.link_name_key_st = link_name_key;
+        action.pre_transform_xyz_rpy_key_d_a = pre_xyz_rpy_key;
+        action.post_transform_xyz_rpy_key_d_a = post_xyz_rpy_key;
+        return action;
     }
 
 } // namespace manymove_cpp_trees

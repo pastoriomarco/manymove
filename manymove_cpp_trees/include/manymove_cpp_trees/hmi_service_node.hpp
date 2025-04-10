@@ -66,7 +66,7 @@ namespace manymove_cpp_trees
     };
 
     template <class T>
-    void defineBlackboardEntry(const rclcpp::Node::SharedPtr &node_ptr,
+    void defineVariableKey(const rclcpp::Node::SharedPtr &node_ptr,
                                BT::Blackboard::Ptr blackboard,
                                std::vector<manymove_cpp_trees::BlackboardEntry> &keys,
                                const std::string &key_name,

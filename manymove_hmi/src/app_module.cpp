@@ -13,10 +13,15 @@
 const std::vector<BlackboardKey> &AppModule::getKnownKeys()
 {
     static std::vector<BlackboardKey> keys = {
-        {"tube_length", "double"},
-        {"tube_diameter", "double"},
-        {"tube_scale", "double_array"},
-        {"tube_spawn_pose", "pose"},
+        {"tube_length_key", "double"},
+        {"tube_diameter_key", "double"},
+        {"grasp_offset_key", "double"},
+        {"tube_scale_key", "double_array"},
+        {"pick_post_transform_xyz_rpy_1_key", "double_array"},
+        {"insert_post_transform_xyz_rpy_2_key", "double_array"},
+        {"load_post_transform_xyz_rpy_2_key", "double_array"},
+        {"tube_spawn_pose_key", "pose"},
+        {"slider_pose_key", "pose"},
     };
     return keys;
 }
@@ -29,38 +34,49 @@ AppModule::AppModule(QWidget *parent) : QWidget(parent)
 
     // tube_length: an editable double field.
     KeyConfig tubeLength;
-    tubeLength.key = "tube_length";
+    tubeLength.key = "tube_length_key";
     tubeLength.value_type = "double";
     tubeLength.editable = true;
     tubeLength.visible = true;
     tubeLength.computeFunction = [](const QMap<QString, QString> &values) -> QString
     {
-        return values.value("tube_length", "");
+        return values.value("tube_length_key", "");
     };
 
     // tube_diameter: an editable double field.
     KeyConfig tubeDiameter;
-    tubeDiameter.key = "tube_diameter";
+    tubeDiameter.key = "tube_diameter_key";
     tubeDiameter.value_type = "double";
     tubeDiameter.editable = true;
     tubeDiameter.visible = true;
     tubeDiameter.computeFunction = [](const QMap<QString, QString> &values) -> QString
     {
-        return values.value("tube_diameter", "");
+        return values.value("tube_diameter_key", "");
+    };
+
+    // tube_diameter: an editable double field.
+    KeyConfig graspOffset;
+    graspOffset.key = "grasp_offset_key";
+    graspOffset.value_type = "double";
+    graspOffset.editable = true;
+    graspOffset.visible = true;
+    graspOffset.computeFunction = [](const QMap<QString, QString> &values) -> QString
+    {
+        return values.value("grasp_offset_key", "");
     };
 
     // tube_scale: an editable double_array field.
     KeyConfig tubeScale;
-    tubeScale.key = "tube_scale";
+    tubeScale.key = "tube_scale_key";
     tubeScale.value_type = "double_array";
     tubeScale.editable = false;
     tubeScale.visible = true;
     tubeScale.computeFunction = [this](const QMap<QString, QString> &values) -> QString
     {
         // Get the tube_length value: check first in the override map, then in currentValues_ as fallback.
-        QString tubeLengthStr = values.value("tube_length", "");
+        QString tubeLengthStr = values.value("tube_length_key", "");
         // Get the tube_diameter value similarly.
-        QString tubeDiameterStr = values.value("tube_diameter", "");
+        QString tubeDiameterStr = values.value("tube_diameter_key", "");
 
         // If either value is still empty, return an empty string so that no computed update overwrites the current value.
         if (tubeLengthStr.isEmpty() && tubeDiameterStr.isEmpty())
@@ -70,11 +86,11 @@ AppModule::AppModule(QWidget *parent) : QWidget(parent)
 
         if (tubeLengthStr.isEmpty())
         {
-            tubeLengthStr = currentValues_.value("tube_length", "");
+            tubeLengthStr = currentValues_.value("tube_length_key", "");
         }
         if (tubeDiameterStr.isEmpty())
         {
-            tubeDiameterStr = currentValues_.value("tube_diameter", "");
+            tubeDiameterStr = currentValues_.value("tube_diameter_key", "");
         }
 
         bool ok1 = false, ok2 = false;
@@ -95,9 +111,136 @@ AppModule::AppModule(QWidget *parent) : QWidget(parent)
         return computedArray;
     };
 
+    // pick_post_transform_xyz_rpy_1_key: computed from tube_length and grasp_offset_key.
+    KeyConfig pickPostTransform;
+    pickPostTransform.key = "pick_post_transform_xyz_rpy_1_key";
+    pickPostTransform.value_type = "double_array";
+    pickPostTransform.editable = false;
+    pickPostTransform.visible = true;
+    pickPostTransform.computeFunction = [this](const QMap<QString, QString> &values) -> QString
+    {
+        // Retrieve values for tube_length and grasp_offset from the override map.
+        QString tubeLengthStr = values.value("tube_length_key", "");
+        QString graspOffsetStr = values.value("grasp_offset_key", "");
+
+        // If both values are empty, do not update.
+        if (tubeLengthStr.isEmpty() && graspOffsetStr.isEmpty())
+        {
+            return "";
+        }
+
+        // If one value is empty, fall back to the current stored value.
+        if (tubeLengthStr.isEmpty())
+        {
+            tubeLengthStr = currentValues_.value("tube_length_key", "");
+        }
+        if (graspOffsetStr.isEmpty())
+        {
+            graspOffsetStr = currentValues_.value("grasp_offset_key", "");
+        }
+
+        // Convert the retrieved string values to doubles.
+        bool ok1 = false, ok2 = false;
+        double tubeLengthVal = tubeLengthStr.toDouble(&ok1);
+        double graspOffsetVal = graspOffsetStr.toDouble(&ok2);
+        if (!ok1 || !ok2)
+        {
+            return "";
+        }
+
+        // Compute the third element using the given formula.
+        double computedZ = ((-tubeLengthVal) / 2.0) + graspOffsetVal;
+
+        // Construct the computed double array string.
+        QString computedArray = QString("[%1, %2, %3, %4, %5, %6]")
+                                    .arg(0.0)
+                                    .arg(0.0)
+                                    .arg(computedZ)
+                                    .arg(3.14)
+                                    .arg(0.0)
+                                    .arg(0.0);
+        return computedArray;
+    };
+
+    // post_insert_transform_xyz_rpy_2: computed double_array field.
+    KeyConfig insertPostTransform;
+    insertPostTransform.key = "insert_post_transform_xyz_rpy_2_key";
+    insertPostTransform.value_type = "double_array";
+    insertPostTransform.editable = false;
+    insertPostTransform.visible = true;
+    insertPostTransform.computeFunction = [this](const QMap<QString, QString> &values) -> QString
+    {
+        // Retrieve the tube_length value from the override map.
+        QString tubeLengthStr = values.value("tube_length_key", "");
+
+        // If the value is still empty, do not compute an updated value.
+        if (tubeLengthStr.isEmpty())
+        {
+            return "";
+        }
+
+        bool ok = false;
+        double tubeLengthVal = tubeLengthStr.toDouble(&ok);
+        if (!ok)
+        {
+            return "";
+        }
+
+        // Compute the third array element: ((-tube_length) / 2)
+        double computedZ = ((-tubeLengthVal) / 2.0);
+
+        // Construct the computed double array string.
+        QString computedArray = QString("[%1, %2, %3, %4, %5, %6]")
+                                    .arg(0.0)
+                                    .arg(0.0)
+                                    .arg(computedZ)
+                                    .arg(0.0)
+                                    .arg(0.0)
+                                    .arg(-0.785);
+        return computedArray;
+    };
+
+    // load_post_transform_xyz_rpy_2_key: computed double_array field.
+    KeyConfig loadPostTransform;
+    loadPostTransform.key = "load_post_transform_xyz_rpy_2_key";
+    loadPostTransform.value_type = "double_array";
+    loadPostTransform.editable = false;
+    loadPostTransform.visible = true;
+    loadPostTransform.computeFunction = [this](const QMap<QString, QString> &values) -> QString
+    {
+        // Retrieve the tube_length value from the override map.
+        QString tubeLengthStr = values.value("tube_length_key", "");
+
+        // If the value is still empty, do not compute an updated value.
+        if (tubeLengthStr.isEmpty())
+        {
+            return "";
+        }
+
+        bool ok = false;
+        double tubeLengthVal = tubeLengthStr.toDouble(&ok);
+        if (!ok)
+        {
+            return "";
+        }
+
+        // Compute the third array element:
+        double computedZ = (-tubeLengthVal);
+
+        // Construct the computed double array string.
+        QString computedArray = QString("[%1, %2, %3, %4, %5, %6]")
+                                    .arg(0.0)
+                                    .arg(0.0)
+                                    .arg(computedZ)
+                                    .arg(0.0)
+                                    .arg(0.0)
+                                    .arg(-0.785);
+        return computedArray;
+    };
+
     // tube_spawn_pose: computed from tube_length and tube_diameter.
     KeyConfig tubeSpawnPose;
-    tubeSpawnPose.key = "tube_spawn_pose";
+    tubeSpawnPose.key = "tube_spawn_pose_key";
     tubeSpawnPose.value_type = "pose";
     tubeSpawnPose.editable = false;
     tubeSpawnPose.visible = true;
@@ -105,7 +248,7 @@ AppModule::AppModule(QWidget *parent) : QWidget(parent)
     {
         // If the user did not override tube_length, return empty.
         // (Assume that an override means the user has typed a new value)
-        QString tubeLengthOverride = values.value("tube_length", "");
+        QString tubeLengthOverride = values.value("tube_length_key", "");
         if (tubeLengthOverride.isEmpty())
         {
             // No computed update was triggered: return empty so that the current (ROS) value is used.
@@ -134,10 +277,54 @@ AppModule::AppModule(QWidget *parent) : QWidget(parent)
         return poseJson;
     };
 
+    // slider_pose_key: computed from tube_length.
+    KeyConfig sliderPose;
+    sliderPose.key = "slider_pose_key";
+    sliderPose.value_type = "pose";
+    sliderPose.editable = false;
+    sliderPose.visible = true;
+    sliderPose.computeFunction = [](const QMap<QString, QString> &values) -> QString
+    {
+        // If the user did not override tube_length, return empty.
+        // (Assume that an override means the user has typed a new value)
+        QString tubeLengthOverride = values.value("tube_length_key", "");
+        if (tubeLengthOverride.isEmpty())
+        {
+            // No computed update was triggered: return empty so that the current (ROS) value is used.
+            return "";
+        }
+
+        bool ok = false;
+        double length = tubeLengthOverride.toDouble(&ok);
+        if (!ok)
+            return "";
+
+        // Compute a new pose based on the new tube_length.
+        double x = length + 0.01;
+        double y = 0.0;
+        double z = 0.0;
+        double roll = 0.0;
+        double pitch = 0.0;
+        double yaw = 0.0;
+        QString poseJson = QString("{\"x\":%1,\"y\":%2,\"z\":%3,\"roll\":%4,\"pitch\":%5,\"yaw\":%6}")
+                               .arg(x)
+                               .arg(y)
+                               .arg(z)
+                               .arg(roll)
+                               .arg(pitch)
+                               .arg(yaw);
+        return poseJson;
+    };
+
     keyConfigs_.push_back(tubeLength);
     keyConfigs_.push_back(tubeDiameter);
+    keyConfigs_.push_back(graspOffset);
     keyConfigs_.push_back(tubeScale);
+    keyConfigs_.push_back(pickPostTransform);
+    keyConfigs_.push_back(insertPostTransform);
+    keyConfigs_.push_back(loadPostTransform);
     keyConfigs_.push_back(tubeSpawnPose);
+    keyConfigs_.push_back(sliderPose);
 
     // Initialize maps for each key.
     for (const auto &config : keyConfigs_)
@@ -166,7 +353,7 @@ void AppModule::setupUI()
 
         // Create and add a label.
         QLabel *label = new QLabel(config.key, rowWidget);
-        label->setFixedWidth(200);
+        label->setFixedWidth(250);
         rowLayout->addWidget(label);
 
         if (config.editable)

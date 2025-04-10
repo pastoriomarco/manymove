@@ -683,11 +683,31 @@ namespace manymove_cpp_trees
             RCLCPP_ERROR(node_->get_logger(), "GetObjectPoseAction: Missing required input 'pre_transform_xyz_rpy'.");
             return BT::NodeStatus::FAILURE;
         }
+        else
+        {
+            RCLCPP_INFO(node_->get_logger(), "GetObjectPoseAction: 'pre_transform_xyz_rpy' = {%.3f, %.3f, %.3f, %.3f, %.3f, %.3f}",
+                        pre_transform_xyz_rpy_[0],
+                        pre_transform_xyz_rpy_[1],
+                        pre_transform_xyz_rpy_[2],
+                        pre_transform_xyz_rpy_[3],
+                        pre_transform_xyz_rpy_[4],
+                        pre_transform_xyz_rpy_[5]);
+        }
 
         if (!getInput<std::vector<double>>("post_transform_xyz_rpy", post_transform_xyz_rpy_))
         {
             RCLCPP_ERROR(node_->get_logger(), "GetObjectPoseAction: Missing required input 'post_transform_xyz_rpy'.");
             return BT::NodeStatus::FAILURE;
+        }
+        else
+        {
+            RCLCPP_INFO(node_->get_logger(), "GetObjectPoseAction: 'post_transform_xyz_rpy_' = {%.3f, %.3f, %.3f, %.3f, %.3f, %.3f}",
+                        post_transform_xyz_rpy_[0],
+                        post_transform_xyz_rpy_[1],
+                        post_transform_xyz_rpy_[2],
+                        post_transform_xyz_rpy_[3],
+                        post_transform_xyz_rpy_[4],
+                        post_transform_xyz_rpy_[5]);
         }
 
         if (!getInput<std::string>("pose_key", pose_key_))
@@ -757,15 +777,15 @@ namespace manymove_cpp_trees
                 }
 
                 // Log the new pose
-                RCLCPP_DEBUG(node_->get_logger(), "GetObjectPoseAction: New pose for '%s': Position (%.3f, %.3f, %.3f), Orientation (%.3f, %.3f, %.3f, %.3f)",
-                             pose_key_.c_str(),
-                             action_result_.pose.position.x,
-                             action_result_.pose.position.y,
-                             action_result_.pose.position.z,
-                             action_result_.pose.orientation.x,
-                             action_result_.pose.orientation.y,
-                             action_result_.pose.orientation.z,
-                             action_result_.pose.orientation.w);
+                RCLCPP_INFO(node_->get_logger(), "GetObjectPoseAction: New pose for '%s': Position (%.3f, %.3f, %.3f), Orientation (%.3f, %.3f, %.3f, %.3f)",
+                            pose_key_.c_str(),
+                            action_result_.pose.position.x,
+                            action_result_.pose.position.y,
+                            action_result_.pose.position.z,
+                            action_result_.pose.orientation.x,
+                            action_result_.pose.orientation.y,
+                            action_result_.pose.orientation.z,
+                            action_result_.pose.orientation.w);
 
                 return BT::NodeStatus::SUCCESS;
             }
@@ -885,8 +905,8 @@ namespace manymove_cpp_trees
             RCLCPP_WARN(node_->get_logger(), "WaitForObjectAction: Missing 'exists' => defaulting to 'true'");
             desired_exists_ = true;
         }
-        getInput<double>("timeout", timeout_);     
-        getInput<double>("poll_rate", poll_rate_); 
+        getInput<double>("timeout", timeout_);
+        getInput<double>("poll_rate", poll_rate_);
 
         // Record the start time
         start_time_ = node_->now();

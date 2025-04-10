@@ -73,17 +73,17 @@ int main(int argc, char **argv)
 
     // Populate the blackboard with the poses, one unique key for each pose we want to use.
     // Be careful not to use names that may conflict with the keys automatically created for the moves. (Usually move_{move_id})
-    blackboard->set("pick_target_1", Pose());
-    blackboard->set("approach_pick_target_1", Pose());
+    blackboard->set("pick_target_1_key", Pose());
+    blackboard->set("approach_pick_target_1_key", Pose());
 
-    blackboard->set("drop_target_1", drop_target_1);
-    blackboard->set("approach_drop_target_1", approach_drop_target_1);
+    blackboard->set("drop_target_1_key", drop_target_1);
+    blackboard->set("approach_drop_target_1_key", approach_drop_target_1);
 
-    blackboard->set("pick_target_2", Pose());
-    blackboard->set("approach_pick_target_2", Pose());
+    blackboard->set("pick_target_2_key", Pose());
+    blackboard->set("approach_pick_target_2_key", Pose());
 
-    blackboard->set("drop_target_2", drop_target_2);
-    blackboard->set("approach_drop_target_2", approach_drop_target_2);
+    blackboard->set("drop_target_2_key", drop_target_2);
+    blackboard->set("approach_drop_target_2_key", approach_drop_target_2);
 
     // Compose the sequences of moves. Each of the following sequences represent a logic
     std::vector<Move> rest_position_1 = {
@@ -95,35 +95,35 @@ int main(int argc, char **argv)
 
     // Sequences for Pick/Drop/Homing
     std::vector<Move> pick_sequence_1 = {
-        {rp_1.prefix, "pose", move_configs["mid_move"], "approach_pick_target_1"},
-        {rp_1.prefix, "cartesian", move_configs["slow_move"], "pick_target_1"},
+        {rp_1.prefix, "pose", move_configs["mid_move"], "approach_pick_target_1_key"},
+        {rp_1.prefix, "cartesian", move_configs["slow_move"], "pick_target_1_key"},
     };
 
     std::vector<Move> pick_sequence_2 = {
-        {rp_2.prefix, "pose", move_configs["mid_move"], "approach_pick_target_2"},
-        {rp_2.prefix, "cartesian", move_configs["slow_move"], "pick_target_2"},
+        {rp_2.prefix, "pose", move_configs["mid_move"], "approach_pick_target_2_key"},
+        {rp_2.prefix, "cartesian", move_configs["slow_move"], "pick_target_2_key"},
     };
 
     std::vector<Move> drop_sequence_1 = {
-        {rp_1.prefix, "pose", move_configs["mid_move"], "approach_pick_target_1"},
-        {rp_1.prefix, "pose", move_configs["max_move"], "approach_drop_target_1"},
-        {rp_1.prefix, "cartesian", move_configs["slow_move"], "drop_target_1"},
+        {rp_1.prefix, "pose", move_configs["mid_move"], "approach_pick_target_1_key"},
+        {rp_1.prefix, "pose", move_configs["max_move"], "approach_drop_target_1_key"},
+        {rp_1.prefix, "cartesian", move_configs["slow_move"], "drop_target_1_key"},
     };
 
     std::vector<Move> drop_sequence_2 = {
-        {rp_2.prefix, "pose", move_configs["mid_move"], "approach_pick_target_2"},
-        {rp_2.prefix, "pose", move_configs["max_move"], "approach_drop_target_2"},
-        {rp_2.prefix, "cartesian", move_configs["slow_move"], "drop_target_2"},
+        {rp_2.prefix, "pose", move_configs["mid_move"], "approach_pick_target_2_key"},
+        {rp_2.prefix, "pose", move_configs["max_move"], "approach_drop_target_2_key"},
+        {rp_2.prefix, "cartesian", move_configs["slow_move"], "drop_target_2_key"},
     };
 
     std::vector<Move> home_position_1 = {
-        {rp_1.prefix, "cartesian", move_configs["max_move"], "approach_drop_target_1"},
+        {rp_1.prefix, "cartesian", move_configs["max_move"], "approach_drop_target_1_key"},
         {rp_1.prefix, "named", move_configs["max_move"], "", {}, named_home_1},
         {rp_1.prefix, "joint", move_configs["max_move"], "", joint_rest_1},
     };
 
     std::vector<Move> home_position_2 = {
-        {rp_2.prefix, "cartesian", move_configs["max_move"], "approach_drop_target_2"},
+        {rp_2.prefix, "cartesian", move_configs["max_move"], "approach_drop_target_2_key"},
         {rp_2.prefix, "named", move_configs["max_move"], "", {}, named_home_2},
         {rp_2.prefix, "joint", move_configs["max_move"], "", joint_rest_2},
     };
@@ -179,30 +179,40 @@ int main(int argc, char **argv)
     // 3) Build blocks for objects handling
     // ----------------------------------------------------------------------------
 
-    std::vector<double> ground_dimension = {0.8, 2.0, 0.1};
-    auto ground_pose = createPoseRPY(0.0, 0.5, -0.051, 0.0, 0.0, 0.0);
+    blackboard->set("ground_id_key", "obstacle_ground");
+    blackboard->set("ground_shape_key", "box");
+    blackboard->set("ground_dimension_key", std::vector<double>{0.8, 2.0, 0.1});
+    blackboard->set("ground_pose_key", createPoseRPY(0.0, 0.5, -0.051, 0.0, 0.0, 0.0));
+    blackboard->set("ground_scale_key", std::vector<double>{1.0, 1.0, 1.0});
 
-    std::vector<double> wall_dimension = {0.8, 0.02, 0.8};
-    auto wall_pose = createPoseRPY(0.0, 0.5, 0.4, 0.0, 0.0, 0.0);
+    blackboard->set("wall_id_key", "obstacle_wall");
+    blackboard->set("wall_shape_key", "box");
+    blackboard->set("wall_dimension_key", std::vector<double>{0.8, 0.02, 0.8});
+    blackboard->set("wall_pose_key", createPoseRPY(0.0, 0.5, 0.4, 0.0, 0.0, 0.0));
+    blackboard->set("wall_scale_key", std::vector<double>{1.0, 1.0, 1.0});
 
-    std::vector<double> cylinderdimension = {0.1, 0.005};
-    auto cylinderpose = createPoseRPY(0.2, 0.7, 0.105, 0.0, 1.57, 0.0);
+    blackboard->set("cylinder_id_key", "graspable_cylinder");
+    blackboard->set("cylinder_shape_key", "cylinder");
+    blackboard->set("cylinder_dimension_key", std::vector<double>{0.1, 0.005});
+    blackboard->set("cylinder_pose_key", createPoseRPY(0.2, 0.7, 0.105, 0.0, 1.57, 0.0));
+    blackboard->set("cylinder_scale_key", std::vector<double>{1.0, 1.0, 1.0});
 
-    std::string mesh_file = "package://manymove_object_manager/meshes/unit_tube.stl";
-
-    std::vector<double> mesh_scale = {0.01, 0.01, 0.1};                  //< The tube is vertical with dimension 1m x 1m x 1m. We scale it to 10x10x100 mm
-    auto mesh_pose = createPoseRPY(0.1, -0.2, 0.2005, 0.785, 1.57, 0.0); //< We place it on the floor and lay it on its side, X+ facing down
+    blackboard->set("mesh_id_key", "graspable_mesh");
+    blackboard->set("mesh_shape_key", "mesh");
+    blackboard->set("mesh_file_key", "package://manymove_object_manager/meshes/unit_tube.stl");
+    blackboard->set("mesh_scale_key", std::vector<double>{0.01, 0.01, 0.1});              //< The tube is vertical with dimension 1m x 1m x 1m. We scale it to 10x10x100 mm
+    blackboard->set("mesh_pose_key", createPoseRPY(0.1, -0.2, 0.2005, 0.785, 1.57, 0.0)); //< We place it on the floor and lay it on its side, X+ facing down
 
     // Create object actions xml snippets (the object are created directly in the create*() functions relative to each type of object action)
-    std::string check_ground_obj_xml = buildObjectActionXML("check_ground", createCheckObjectExists("obstacle_ground"));
-    std::string check_wall_obj_xml = buildObjectActionXML("check_wall", createCheckObjectExists("obstacle_wall"));
-    std::string check_cylinder_obj_xml = buildObjectActionXML("check_cylinder", createCheckObjectExists("graspable_cylinder"));
-    std::string check_mesh_obj_xml = buildObjectActionXML("check_mesh", createCheckObjectExists("graspable_mesh"));
+    std::string check_ground_obj_xml = buildObjectActionXML("check_ground", createCheckObjectExists("ground_id_key"));
+    std::string check_wall_obj_xml = buildObjectActionXML("check_wall", createCheckObjectExists("wall_id_key"));
+    std::string check_cylinder_obj_xml = buildObjectActionXML("check_cylinder", createCheckObjectExists("cylinder_id_key"));
+    std::string check_mesh_obj_xml = buildObjectActionXML("check_mesh", createCheckObjectExists("mesh_id_key"));
 
-    std::string add_ground_obj_xml = buildObjectActionXML("add_ground", createAddPrimitiveObject("obstacle_ground", "box", ground_dimension, ground_pose));
-    std::string add_wall_obj_xml = buildObjectActionXML("add_wall", createAddPrimitiveObject("obstacle_wall", "box", wall_dimension, wall_pose));
-    std::string add_cylinder_obj_xml = buildObjectActionXML("add_cylinder", createAddPrimitiveObject("graspable_cylinder", "cylinder", cylinderdimension, cylinderpose));
-    std::string add_mesh_obj_xml = buildObjectActionXML("add_mesh", createAddMeshObject("graspable_mesh", mesh_pose, mesh_file, mesh_scale));
+    std::string add_ground_obj_xml = buildObjectActionXML("add_ground", createAddObject("ground_id_key", "ground_shape_key", "ground_dimension_key", "ground_pose_key", "ground_scale_key", ""));
+    std::string add_wall_obj_xml = buildObjectActionXML("add_wall", createAddObject("wall_id_key", "wall_shape_key", "wall_dimension_key", "wall_pose_key", "wall_scale_key", ""));
+    std::string add_cylinder_obj_xml = buildObjectActionXML("add_cylinder", createAddObject("cylinder_id_key", "cylinder_shape_key", "cylinder_dimension_key", "cylinder_pose_key", "cylinder_scale_key", ""));
+    std::string add_mesh_obj_xml = buildObjectActionXML("add_mesh", createAddObject("mesh_id_key", "mesh_shape_key", "", "mesh_pose_key", "mesh_scale_key", "mesh_file_key"));
 
     // Compose the check and add sequence for objects
     std::string init_ground_obj_xml = fallbackWrapperXML("init_ground_obj", {check_ground_obj_xml, add_ground_obj_xml});
@@ -211,72 +221,73 @@ int main(int argc, char **argv)
     std::string init_mesh_obj_xml = fallbackWrapperXML("init_mesh_obj", {check_mesh_obj_xml, add_mesh_obj_xml});
 
     // the name of the link to attach the object to, and the object to manipulate
-    std::string tcp_frame_name_1 = rp_1.prefix + rp_1.tcp_frame;
-    std::string tcp_frame_name_2 = rp_2.prefix + rp_2.tcp_frame;
-    std::string object_to_manipulate_1 = "graspable_mesh";
-    std::string object_to_manipulate_2 = "graspable_cylinder";
+    blackboard->set("tcp_frame_name_1_key", rp_1.prefix + rp_1.tcp_frame);
+    blackboard->set("object_to_manipulate_1_key", "graspable_mesh");
+    blackboard->set("tcp_frame_name_2_key", rp_2.prefix + rp_2.tcp_frame);
+    blackboard->set("object_to_manipulate_2_key", "graspable_cylinder");
 
-    std::string attach_obj_1_xml = buildObjectActionXML("attach_obj_to_manipulate_1", createAttachObject(object_to_manipulate_1, tcp_frame_name_1));
-    std::string detach_obj_1_xml = buildObjectActionXML("attach_obj_to_manipulate_1", createDetachObject(object_to_manipulate_1, tcp_frame_name_1));
-    std::string remove_obj_1_xml = buildObjectActionXML("remove_obj_to_manipulate_1", createRemoveObject(object_to_manipulate_1));
+    // The gripper is pneumatic so the jaws are not dynamically updated, we don't want touch links:
+    std::vector<std::string> touch_links_empty = {};
+    blackboard->set("touch_links_empty_key", touch_links_empty);
 
-    std::string attach_obj_2_xml = buildObjectActionXML("attach_obj_to_manipulate_2", createAttachObject(object_to_manipulate_2, tcp_frame_name_2));
-    std::string detach_obj_2_xml = buildObjectActionXML("attach_obj_to_manipulate_2", createDetachObject(object_to_manipulate_2, tcp_frame_name_2));
-    std::string remove_obj_2_xml = buildObjectActionXML("remove_obj_to_manipulate_2", createRemoveObject(object_to_manipulate_2));
+    std::string attach_obj_1_xml = buildObjectActionXML("attach_obj_to_manipulate_1", createAttachObject("object_to_manipulate_1_key", "tcp_frame_name_1_key", "touch_links_empty_key"));
+    std::string detach_obj_1_xml = buildObjectActionXML("attach_obj_to_manipulate_1", createDetachObject("object_to_manipulate_1_key", "tcp_frame_name_1_key"));
+    std::string remove_obj_1_xml = buildObjectActionXML("remove_obj_to_manipulate_1", createRemoveObject("object_to_manipulate_1_key"));
+
+    std::string attach_obj_2_xml = buildObjectActionXML("attach_obj_to_manipulate_2", createAttachObject("object_to_manipulate_2_key", "tcp_frame_name_2_key", "touch_links_empty_key"));
+    std::string detach_obj_2_xml = buildObjectActionXML("attach_obj_to_manipulate_2", createDetachObject("object_to_manipulate_2_key", "tcp_frame_name_2_key"));
+    std::string remove_obj_2_xml = buildObjectActionXML("remove_obj_to_manipulate_2", createRemoveObject("object_to_manipulate_2_key"));
 
     // ----------------------------------------------------------------------------
     // 4) Add GetObjectPoseAction Node and nodes to attach/detach objects
     // ----------------------------------------------------------------------------
 
-    // Define the object ID and pose_key where the pose will be stored for robot 1
-    std::string pick_pose_key_1 = "pick_target_1";
-    std::string approach_pose_key_1 = "approach_pick_target_1";
+    // Utility world frame key
+    blackboard->set("world_frame_key", "world");
 
     // Define the transformation and reference orientation
-    std::vector<double> pick_pre_transform_xyz_rpy_1 = {-0.002, 0.0, 0.0, 0.0, 1.57, 0.0};
-    std::vector<double> approach_pre_transform_xyz_rpy_1 = {-0.05, 0.0, 0.0, 0.0, 1.57, 0.0};
-    std::vector<double> post_transform_xyz_rpy_1 = {0.0, 0.0, -0.025, 3.14, 0.0, 0.0};
+    blackboard->set("pick_pre_transform_xyz_rpy_1_key", std::vector<double>{-0.002, 0.0, 0.0, 0.0, 1.57, 0.0});
+    blackboard->set("approach_pick_pre_transform_xyz_rpy_1_key", std::vector<double>{-0.05, 0.0, 0.0, 0.0, 1.57, 0.0});
+    blackboard->set("pick_post_transform_xyz_rpy_1_key", std::vector<double>{0.0, 0.0, -0.025, 3.14, 0.0, 0.0});
 
     // Translate get_pose_action to xml tree leaf
     std::string get_pick_pose_1_xml = buildObjectActionXML(
         "get_pick_pose_1", createGetObjectPose(
-                               object_to_manipulate_1,
-                               pick_pose_key_1,
-                               "world",
-                               pick_pre_transform_xyz_rpy_1,
-                               post_transform_xyz_rpy_1));
+                               "object_to_manipulate_1_key",
+                               "pick_target_1_key",
+                               "world_frame_key",
+                               "pick_pre_transform_xyz_rpy_1_key",
+                               "pick_post_transform_xyz_rpy_1_key"));
     std::string get_approach_pose_1_xml = buildObjectActionXML(
         "get_approach_pose_1", createGetObjectPose(
-                                   object_to_manipulate_1,
-                                   approach_pose_key_1,
-                                   "world",
-                                   approach_pre_transform_xyz_rpy_1,
-                                   post_transform_xyz_rpy_1));
+                                   "object_to_manipulate_1_key",
+                                   "approach_pick_target_1_key",
+                                   "world_frame_key",
+                                   "approach_pick_pre_transform_xyz_rpy_1_key",
+                                   "pick_post_transform_xyz_rpy_1_key"));
 
     // Define the object ID and pose_key where the pose will be stored for robot 2
-    std::string pick_pose_key_2 = "pick_target_2";
-    std::string approach_pose_key_2 = "approach_pick_target_2";
 
     // Define the transformation and reference orientation
-    std::vector<double> pick_pre_transform_xyz_rpy_2 = {-0.002, 0.0, 0.0, 0.0, 1.57, 0.0};
-    std::vector<double> approach_pre_transform_xyz_rpy_2 = {-0.05, 0.0, 0.0, 0.0, 1.57, 0.0};
-    std::vector<double> post_transform_xyz_rpy_2 = {0.0, 0.0, -0.025, 3.14, 0.0, 0.0};
+    blackboard->set("pick_pre_transform_xyz_rpy_2_key", std::vector<double>{-0.002, 0.0, 0.0, 0.0, 1.57, 0.0});
+    blackboard->set("approach_pick_pre_transform_xyz_rpy_2_key", std::vector<double>{-0.05, 0.0, 0.0, 0.0, 1.57, 0.0});
+    blackboard->set("pick_post_transform_xyz_rpy_2_key", std::vector<double>{0.0, 0.0, -0.025, 3.14, 0.0, 0.0});
 
     // Translate get_pose_action to xml tree leaf
     std::string get_pick_pose_2_xml = buildObjectActionXML(
         "get_pick_pose_2", createGetObjectPose(
-                               object_to_manipulate_2,
-                               pick_pose_key_2,
-                               "world",
-                               pick_pre_transform_xyz_rpy_2,
-                               post_transform_xyz_rpy_2));
+                               "object_to_manipulate_2_key",
+                               "pick_target_2_key",
+                               "world_frame_key",
+                               "pick_pre_transform_xyz_rpy_2_key",
+                               "pick_post_transform_xyz_rpy_2_key"));
     std::string get_approach_pose_2_xml = buildObjectActionXML(
         "get_approach_pose_2", createGetObjectPose(
-                                   object_to_manipulate_2,
-                                   approach_pose_key_2,
-                                   "world",
-                                   approach_pre_transform_xyz_rpy_2,
-                                   post_transform_xyz_rpy_2));
+                                   "object_to_manipulate_2_key",
+                                   "approach_pick_target_2_key",
+                                   "world_frame_key",
+                                   "approach_pick_pre_transform_xyz_rpy_2_key",
+                                   "pick_post_transform_xyz_rpy_2_key"));
 
     // ----------------------------------------------------------------------------
     // 5) Define Signals calls:

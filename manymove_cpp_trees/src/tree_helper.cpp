@@ -96,13 +96,13 @@ namespace manymove_cpp_trees
     std::string buildObjectActionXML(const std::string &node_prefix, const ObjectAction &action)
     {
         // Generate a unique node name using the node_prefix and object_id
-        std::string node_name = node_prefix + "_" + action.object_id + "_" + objectActionTypeToString(action.type);
+        std::string node_name = node_prefix + "_" + objectActionTypeToString(action.type);
 
         // Start constructing the XML node
         std::ostringstream xml;
         xml << "<" << objectActionTypeToString(action.type) << " ";
         xml << "name=\"" << node_name << "\" ";
-        xml << "object_id=\"" << action.object_id << "\" ";
+        xml << "object_id=\"{" << action.object_id_key_st << "}\" ";
 
         // Handle different action types
         switch (action.type)
@@ -110,42 +110,15 @@ namespace manymove_cpp_trees
         case ObjectActionType::ADD:
         {
             // Shape attribute
-            xml << "shape=\"" << action.shape << "\" ";
+            xml << "shape=\"{" << action.shape_key_st << "}\" ";
+            // Primitive-specific attributes
+            xml << "dimensions=\"{" << action.dimensions_key_d_a << "}\" ";
+            // Mesh-specific attributes
+            xml << "mesh_file=\"{" << action.mesh_file_key_st << "}\" ";
+            xml << "scale_mesh=\"{" << action.scale_key_d_a << "}\" ";
+            // When a key is provided, use it as a reference.
+            xml << "pose=\"{" << action.pose_key << "}\" ";
 
-            if (action.shape != "mesh")
-            {
-                // Serialize dimensions
-                std::string dimensions_str = serializeVector(action.dimensions);
-                xml << "dimensions=\"" << dimensions_str << "\" ";
-            }
-            else
-            {
-                if (!action.scale_key.empty())
-                {
-                    // Mesh-specific attributes
-                    xml << "mesh_file=\"" << action.mesh_file << "\" ";
-                    // When a key is provided, use it as a reference.
-                    xml << "scale_mesh=\"{" << action.scale_key << "}\" ";
-                }
-                else
-                {
-                    std::string scale_str = serializeVector(action.scale_mesh);
-                    // Mesh-specific attributes
-                    xml << "mesh_file=\"" << action.mesh_file << "\" ";
-                    xml << "scale_mesh=\"" << scale_str << "\" ";
-                }
-            }
-
-            if (!action.pose_key.empty())
-            {
-                // When a key is provided, use it as a reference.
-                xml << "pose=\"{" << action.pose_key << "}\" ";
-            }
-            else
-            {
-                std::string pose_str = serializePose(action.pose);
-                xml << "pose=\"" << pose_str << "\" ";
-            }
             break;
         }
         case ObjectActionType::REMOVE:
@@ -154,16 +127,27 @@ namespace manymove_cpp_trees
             break;
         }
         case ObjectActionType::ATTACH:
+        {
+            // Link name and attach flag
+            xml << "link_name=\"{" << action.link_name_key_st << "}\" ";
+            xml << "attach=\"" << "true" << "\" ";
+
+            if (!action.touch_links_key_st_a.empty())
+            {
+                xml << "touch_links=\"{" << action.touch_links_key_st_a << "}\" ";
+            }
+            break;
+        }
         case ObjectActionType::DETACH:
         {
             // Link name and attach flag
-            xml << "link_name=\"" << action.link_name << "\" ";
-            xml << "attach=\"" << (action.attach ? "true" : "false") << "\" ";
+            xml << "link_name=\"{" << action.link_name_key_st << "}\" ";
+            xml << "attach=\"" << "false" << "\" ";
 
             // If touch_links is not empty, serialize it as a comma-separated list.
-            if (!action.touch_links.empty())
+            if (!action.touch_links_key_st_a.empty())
             {
-                xml << "touch_links=\"" << BT::convertToString(action.touch_links) << "\" ";
+                xml << "touch_links=\"{" << action.touch_links_key_st_a << "}\" ";
             }
             break;
         }
@@ -174,18 +158,11 @@ namespace manymove_cpp_trees
         }
         case ObjectActionType::GET_POSE:
         {
-            // Serialize pre_transform_xyz_rpy and post_transform_xyz_rpy
-            std::string transform_str = serializeVector(action.pre_transform_xyz_rpy);
-            std::string reference_orient_str = serializeVector(action.post_transform_xyz_rpy);
-            xml << "pre_transform_xyz_rpy=\"" << transform_str << "\" ";
-            xml << "post_transform_xyz_rpy=\"" << reference_orient_str << "\" ";
-            xml << "link_name=\"" << action.link_name << "\" ";
+            xml << "pre_transform_xyz_rpy=\"{" << action.pre_transform_xyz_rpy_key_d_a << "}\" ";
+            xml << "post_transform_xyz_rpy=\"{" << action.post_transform_xyz_rpy_key_d_a << "}\" ";
+            xml << "link_name=\"{" << action.link_name_key_st << "}\" ";
 
-            // Serialize pose_key if it's not empty
-            if (!action.pose_key.empty())
-            {
-                xml << "pose_key=\"" << action.pose_key << "\" ";
-            }
+            xml << "pose_key=\"" << action.pose_key << "\" ";
             break;
         }
         default:
