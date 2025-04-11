@@ -79,7 +79,7 @@ This repository is composed of several sub-packages, each handling different res
 
 2. **`manymove_planner`**  
    - Implements the **motion-planning logic** using MoveIt 2 and ROS 2 action servers.  
-   - Offers an **Action Server** (e.g., `plan_manipulator`, `execute_trajectory`) so other modules can request motion plans and execute trajectories.  
+   - Offers the **Action Server** `move_manipulator` so other modules can request motion plans and execute trajectories.  
    - Contains configuration files for MoveIt 2 (e.g., `moveit_cpp.yaml`) and example launch files for single or dual robot setups.
 
 3. **`manymove_object_manager`**  
@@ -94,7 +94,7 @@ This repository is composed of several sub-packages, each handling different res
 5. **`manymove_cpp_trees`**  
    - A C++ **BehaviorTree.CPP** framework that integrates with the actions exposed by the planner, object manager, and signals packages.  
    - Offers custom BT nodes (e.g., planning, object manipulation, signal I/O, conditions, etc.) so you can compose robotic behaviors in a modular, visual manner.  
-   - Contains a **BT client** node (`bt_client.cpp`) that demonstrates how to build, run, and manage complex behavior trees at runtime.
+   - Contains a **BT client** nodes (e.g. `bt_client.cpp`) that demonstrates how to build, run, and manage complex behavior trees at runtime.
 
 6. **`manymove_py_trees`**  
    - A Python-based alternative using **py_trees** to build or test similar control flows.  
