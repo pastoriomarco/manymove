@@ -71,7 +71,7 @@ namespace manymove_cpp_trees
                                std::vector<manymove_cpp_trees::BlackboardEntry> &keys,
                                const std::string &key_name,
                                const std::string &key_type,
-                               T &value)
+                               const T &value)
     {
         // Set the blackboard key with initial value
         blackboard->set(key_name, value);

@@ -7,12 +7,14 @@
 #include <QDebug>
 #include <QEvent>
 #include <QPalette>
+#include <QCheckBox>
 
 // Static function returning the known keys.
 // This vector is constructed only once.
 const std::vector<BlackboardKey> &AppModule::getKnownKeys()
 {
     static std::vector<BlackboardKey> keys = {
+        {"cycle_on_key", "bool"},
         {"tube_length_key", "double"},
         {"tube_diameter_key", "double"},
         {"grasp_offset_key", "double"},
@@ -31,6 +33,19 @@ AppModule::AppModule(QWidget *parent) : QWidget(parent)
     layout_ = new QVBoxLayout(this);
 
     // Define key configurations.
+
+    KeyConfig cycleOn;
+    cycleOn.key = "cycle_on_key";
+    cycleOn.value_type = "bool";
+    cycleOn.editable = true;
+    cycleOn.visible = true;
+    cycleOn.computeFunction = [](const QMap<QString, QString> &values) -> QString
+    {
+        return values.value("cycle_on_key", "");
+    };
+
+    // Insert the cycle_on configuration as the first element.
+    keyConfigs_.insert(keyConfigs_.begin(), cycleOn);
 
     // tube_length: an editable double field.
     KeyConfig tubeLength;
@@ -234,7 +249,7 @@ AppModule::AppModule(QWidget *parent) : QWidget(parent)
                                     .arg(computedZ)
                                     .arg(0.0)
                                     .arg(0.0)
-                                    .arg(-0.785);
+                                    .arg(0.0);
         return computedArray;
     };
 
@@ -356,23 +371,37 @@ void AppModule::setupUI()
         label->setFixedWidth(250);
         rowLayout->addWidget(label);
 
-        if (config.editable)
+        if (config.value_type == "bool")
         {
-            // Create an editable QLineEdit.
+            // Create a QCheckBox for the boolean switch.
+            QCheckBox *checkBox = new QCheckBox(rowWidget);
+            // Set the default state (e.g., unchecked).
+            checkBox->setChecked(false);
+            rowLayout->addWidget(checkBox);
+            keyWidgets_[config.key] = checkBox;
+            // Connect stateChanged signal to update the override value.
+            connect(checkBox, &QCheckBox::stateChanged, this, [this, config, checkBox](int state)
+                    {
+                // Convert the state to a string ("true" or "false").
+                QString value = (state == Qt::Checked) ? "true" : "false";
+                userOverrides_[config.key] = value;
+                editableValues_[config.key] = value;
+                updateComputedFields();
+                updateSendButtonState(); });
+        }
+        else if (config.editable)
+        {
+            // Existing logic for editable QLineEdit fields.
             QLineEdit *lineEdit = new QLineEdit(rowWidget);
             lineEdit->setAlignment(Qt::AlignRight);
             lineEdit->setFixedWidth(750);
-            // Initialize to show the current value ("N/A") in grey.
             lineEdit->setText("N/A");
             QPalette pal = lineEdit->palette();
             pal.setColor(QPalette::Text, Qt::gray);
             lineEdit->setPalette(pal);
-
-            // Connect textChanged signal.
             connect(lineEdit, &QLineEdit::textChanged, this, &AppModule::onEditableFieldChanged);
             rowLayout->addWidget(lineEdit);
             keyWidgets_[config.key] = lineEdit;
-            // Install event filter for focus events.
             lineEdit->installEventFilter(this);
         }
         else

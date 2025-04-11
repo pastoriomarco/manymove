@@ -423,7 +423,7 @@ def launch_setup(context, *args, **kwargs):
     # HMI node
     manymove_hmi_node = Node(
         package='manymove_hmi',
-        executable='manymove_hmi_executable',
+        executable='manymove_hmi_app_executable',
         # name='manymove_hmi_node',
         output='screen',
         parameters=[{

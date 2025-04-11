@@ -474,62 +474,71 @@ int main(int argc, char **argv)
     // Setup wait conditions
     // ----------------------------------------------------------------------------
 
-    // Define the blackboard keys for the robots to interact with each other
-    std::string robot_1_in_working_position_key_name = "robot_1_in_working_position";
-    blackboard->set(robot_1_in_working_position_key_name, "false");
-
-    std::string robot_2_in_working_position_key_name = "robot_2_in_working_position";
-    blackboard->set(robot_2_in_working_position_key_name, "false");
+    defineVariableKey<bool>(node, blackboard, keys, "cycle_on_key", "bool", false);
 
     // Now I create branches to wait for the robots to be in position, or outside the working zone.
-    std::string wait_for_robot_1_in_working_position_xml = buildWaitForKey(
+    std::string wait_for_cycle_on = buildWaitForKeyBool(
+        "",
+        "wait_for_cycle_on",
+        "cycle_on_key",
+        true);
+
+    // Define the blackboard keys for the robots to interact with each other
+    std::string robot_1_in_working_position_key_name = "robot_1_in_working_position_key";
+    blackboard->set(robot_1_in_working_position_key_name, false);
+
+    std::string robot_2_in_working_position_key_name = "robot_2_in_working_position_key";
+    blackboard->set(robot_2_in_working_position_key_name, false);
+
+    // Now I create branches to wait for the robots to be in position, or outside the working zone.
+    std::string wait_for_robot_1_in_working_position_xml = buildWaitForKeyBool(
         rp_1.prefix,
         "robot_1_in_working_position",
         robot_1_in_working_position_key_name,
-        "true");
+        true);
 
-    std::string wait_for_robot_1_out_of_working_position_xml = buildWaitForKey(
+    std::string wait_for_robot_1_out_of_working_position_xml = buildWaitForKeyBool(
         rp_1.prefix,
         "robot_1_out_of_working_position",
         robot_1_in_working_position_key_name,
-        "false");
+        false);
 
-    std::string wait_for_robot_2_in_working_position_xml = buildWaitForKey(
+    std::string wait_for_robot_2_in_working_position_xml = buildWaitForKeyBool(
         rp_2.prefix,
         "robot_2_in_working_position",
         robot_2_in_working_position_key_name,
-        "true");
+        true);
 
-    std::string wait_for_robot_2_out_of_working_position_xml = buildWaitForKey(
+    std::string wait_for_robot_2_out_of_working_position_xml = buildWaitForKeyBool(
         rp_2.prefix,
         "robot_2_out_of_working_position",
         robot_2_in_working_position_key_name,
-        "false");
+        false);
 
     // Branches to set the blackboard keys
-    std::string set_robot_1_in_working_position_xml = buildSetBlackboardKey(
+    std::string set_robot_1_in_working_position_xml = buildSetKeyBool(
         rp_1.prefix,
         "robot_1_in_working_position",
         robot_1_in_working_position_key_name,
-        "true");
+        true);
 
-    std::string set_robot_1_out_of_working_position = buildSetBlackboardKey(
+    std::string set_robot_1_out_of_working_position = buildSetKeyBool(
         rp_1.prefix,
         "robot_1_out_of_working_position",
         robot_1_in_working_position_key_name,
-        "false");
+        false);
 
-    std::string set_robot_2_in_working_position = buildSetBlackboardKey(
+    std::string set_robot_2_in_working_position = buildSetKeyBool(
         rp_2.prefix,
         "robot_2_in_working_position",
         robot_2_in_working_position_key_name,
-        "true");
+        true);
 
-    std::string set_robot_2_out_of_working_position_xml = buildSetBlackboardKey(
+    std::string set_robot_2_out_of_working_position_xml = buildSetKeyBool(
         rp_2.prefix,
         "robot_2_out_of_working_position",
         robot_2_in_working_position_key_name,
-        "false");
+        false);
 
     //
 
@@ -695,6 +704,7 @@ int main(int argc, char **argv)
         "RepeatForever",
         {
             set_robot_1_out_of_working_position,          //<
+            wait_for_cycle_on,                            //<
             spawn_graspable_objects_1_xml,                //< We add all the objects to the scene
             reset_movable_obj_xml,                        //< We reset the movable objects in the scene
             get_grasp_object_poses_1_xml,                 //< We get the updated poses relative to the objects
@@ -718,6 +728,7 @@ int main(int argc, char **argv)
         "RepeatForever",
         {
             set_robot_2_out_of_working_position_xml,      //<
+            wait_for_cycle_on,                            //<
             wait_for_robot_1_in_working_position_xml,     //<
             get_grasp_object_poses_2_xml,                 //< We get the updated poses relative to the objects
             get_load_poses_from_endplate_xml,             //<

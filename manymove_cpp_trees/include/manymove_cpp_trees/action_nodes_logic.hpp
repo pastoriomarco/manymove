@@ -32,11 +32,11 @@ namespace manymove_cpp_trees
     };
 
     /**
-     * @class CheckBlackboardKeyValue
+     * @class CheckKeyBoolValue
      * @brief A simple condition node that checks if a blackboard key
      *        matches an expected string value.
      */
-    class CheckBlackboardKeyValue : public BT::ConditionNode
+    class CheckKeyBoolValue : public BT::ConditionNode
     {
     public:
         /**
@@ -44,7 +44,7 @@ namespace manymove_cpp_trees
          * @param name The node's name in the XML
          * @param config The node's configuration (ports, blackboard, etc.)
          */
-        CheckBlackboardKeyValue(const std::string &name,
+        CheckKeyBoolValue(const std::string &name,
                                 const BT::NodeConfiguration &config);
 
         /**
@@ -54,7 +54,7 @@ namespace manymove_cpp_trees
         {
             return {
                 BT::InputPort<std::string>("key", "Name of the blackboard key to check"),
-                BT::InputPort<std::string>("value", "Expected value"),
+                BT::InputPort<bool>("value", "Expected value"),
                 BT::InputPort<std::string>("robot_prefix", "Optional robot namespace prefix, e.g. 'R_' or 'L_'."),
             };
         }
@@ -68,17 +68,17 @@ namespace manymove_cpp_trees
     };
 
     /**
-     * @class SetBlackboardKeyValue
+     * @class SetKeyBoolValue
      * @brief A node that sets a blackboard key to a given string value.
      *
      * Usage example in XML:
-     *   <SetBlackboardKeyValue name="SetKeyExample" key="some_key" value="foo"/>
+     *   <SetKeyBoolValue name="SetKeyExample" key="some_key" value="foo"/>
      */
-    class SetBlackboardKeyValue : public BT::SyncActionNode
+    class SetKeyBoolValue : public BT::SyncActionNode
     {
     public:
         // Constructor
-        SetBlackboardKeyValue(const std::string &name, const BT::NodeConfiguration &config)
+        SetKeyBoolValue(const std::string &name, const BT::NodeConfiguration &config)
             : BT::SyncActionNode(name, config)
         {
         }
@@ -88,7 +88,7 @@ namespace manymove_cpp_trees
         {
             return {
                 BT::InputPort<std::string>("key", "Blackboard key to set"),
-                BT::InputPort<std::string>("value", "Value to set (as a string)")};
+                BT::InputPort<bool>("value", "Value to set (as a string)")};
         }
 
         // The main tick function; sets the blackboard key to the specified string
@@ -96,28 +96,28 @@ namespace manymove_cpp_trees
     };
 
     /**
-     * @class WaitForKeyAction
+     * @class WaitForKeyBool
      * @brief Periodically checks a blackboard key for a string value = expected_value.
      *        If it matches => SUCCESS, if timeout is reached => FAILURE.
      *        Timeout=0 => infinite wait. Poll_rate => how often to re-check.
      *
      * Ports:
      *   - "key" (string) : blackboard key name
-     *   - "expected_value" (string) : the value we want
+     *   - "expected_value" (bool) : the value we want
      *   - "timeout" (double) : seconds, 0 => infinite
      *   - "poll_rate" (double) : frequency in s
      */
-    class WaitForKeyAction : public BT::StatefulActionNode
+    class WaitForKeyBool : public BT::StatefulActionNode
     {
     public:
-        WaitForKeyAction(const std::string &name,
+        WaitForKeyBool(const std::string &name,
                          const BT::NodeConfiguration &config);
 
         static BT::PortsList providedPorts()
         {
             return {
                 BT::InputPort<std::string>("key", "Blackboard key to read"),
-                BT::InputPort<std::string>("expected_value", "Desired string value"),
+                BT::InputPort<bool>("expected_value", "Desired string value"),
                 BT::InputPort<double>("timeout", 10.0, "Seconds before giving up (0 => infinite)"),
                 BT::InputPort<double>("poll_rate", 0.25, "Check frequency (seconds)")};
         }
@@ -130,7 +130,7 @@ namespace manymove_cpp_trees
     private:
         // read from ports:
         std::string key_;
-        std::string expected_value_;
+        bool expected_value_;
         double timeout_;
         double poll_rate_;
 

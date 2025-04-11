@@ -333,20 +333,12 @@ namespace manymove_cpp_trees
     std::string buildWaitForObject(const std::string &robot_prefix,
                                    const std::string &node_prefix,
                                    const std::string &object_id,
-                                   bool exists,
-                                   int timeout_ms,
-                                   int poll_rate_ms)
+                                   const bool exists,
+                                   const int timeout_ms,
+                                   const int poll_rate_ms)
     {
         // Construct a unique name for the node
-        // e.g. "R_pickup_WaitForObject"
         std::string node_name = robot_prefix + node_prefix + "_WaitForObject";
-
-        // Now produce a single <WaitForObjectAction> node:
-        //   <WaitForObjectAction name="node_name"
-        //       object_id="object_id"
-        //       exists="true/false"
-        //       timeout="X"
-        //       poll_rate="0.25" />
 
         std::ostringstream xml;
         xml << "<WaitForObjectAction"
@@ -360,98 +352,43 @@ namespace manymove_cpp_trees
         return xml.str();
     }
 
-    // std::string buildWaitForKey(const std::string &robot_prefix,
-    //                             const std::string &node_prefix,
-    //                             const std::string &key_id,
-    //                             const std::string &expected_value,
-    //                             int timeout_ms)
-    // {
-    //     // Construct a unique node name.
-    //     std::string node_name = robot_prefix + node_prefix + "_WaitForKey";
-
-    //     // Create a condition that compares the blackboard key to the expected value.
-    //     std::ostringstream condition;
-    //     condition << "<Condition ID=\"CheckBlackboardKeyValue\""
-    //               << " key=\"" << key_id << "\""
-    //               << " value=\"" << expected_value << "\" />";
-
-    //     /// TODO: hardcoded dalay, evaluate if it should be set by user or not:
-    //     int delay_ms = 250;
-
-    //     // Check here for details about <Delay> : https://github.com/BehaviorTree/BehaviorTree.CPP/issues/413
-    //     std::ostringstream delay_and_fail_xml;
-    //     delay_and_fail_xml << "<Delay delay_msec=\"" << delay_ms << "\">\n"
-    //                        << "<AlwaysFailure />" << "\n"
-    //                        << "</Delay>" << "\n";
-
-    //     std::string fallback_check_or_delay_xml = fallbackWrapperXML((node_name + "_Fallback"), {condition.str(), delay_and_fail_xml.str()});
-
-    //     std::ostringstream wait_xml;
-
-    //     // Tree modified after finding this issue:
-    //     // https://github.com/BehaviorTree/BehaviorTree.CPP/issues/395
-    //     // wait_xml << "<RetryUntilSuccessful name=\"" << node_name << "_Retry\" max_attempts=\"-1\">\n"
-    //     //       << fallback_check_or_delay << "\n"
-    //     //       << "</RetryUntilSuccessful>";
-
-    //     wait_xml << "<Inverter>\n"
-    //              << "<KeepRunningUntilFailure>\n"
-    //              << "<Inverter>\n"
-    //              << fallback_check_or_delay_xml << "\n"
-    //              << "</Inverter>\n"
-    //              << "</KeepRunningUntilFailure>\n"
-    //              << "</Inverter>\n";
-
-    //     if (timeout_ms > 0)
-    //     {
-    //         std::ostringstream timeout_xml;
-    //         timeout_xml << "<Timeout msec=\"" << timeout_ms << "\">\n"
-    //                     << wait_xml.str()
-    //                     << "</Timeout>";
-
-    //         return sequenceWrapperXML(node_name + "_WaitForKeyTimeout", {timeout_xml.str()});
-    //     }
-
-    //     return sequenceWrapperXML(node_name + "_WaitForKey", {wait_xml.str()});
-    // }
-
-    std::string buildWaitForKey(const std::string &robot_prefix,
+    std::string buildWaitForKeyBool(const std::string &robot_prefix,
                                 const std::string &node_prefix,
                                 const std::string &key_id,
-                                const std::string &expected_value,
-                                int timeout_ms,
-                                int poll_rate_ms)
+                                const bool &expected_value,
+                                const int timeout_ms,
+                                const int poll_rate_ms)
     {
-        // Similar approach for <WaitForKeyAction... />
+        // Construct a unique name for the node
         std::string node_name = robot_prefix + node_prefix + "_WaitForKey";
         double timeout_sec = (timeout_ms <= 0) ? 0.0 : (double)timeout_ms / 1000.0;
         double poll_sec = (poll_rate_ms <= 0) ? 0.25 : (double)poll_rate_ms / 1000.0;
 
         std::ostringstream xml;
-        xml << "<WaitForKeyAction"
+        xml << "<WaitForKeyBool"
             << " name=\"" << node_name << "\""
             << " key=\"" << key_id << "\""
-            << " expected_value=\"" << expected_value << "\""
+            << " expected_value=\"" << (expected_value ? "true" : "false") << "\""
             << " timeout=\"" << timeout_sec << "\""
             << " poll_rate=\"" << poll_sec << "\""
             << "/>";
         return xml.str();
     }
 
-    std::string buildSetBlackboardKey(const std::string &robot_prefix,
+    std::string buildSetKeyBool(const std::string &robot_prefix,
                                       const std::string &node_prefix,
                                       const std::string &key,
-                                      const std::string &value)
+                                      const bool &value)
     {
         // Construct a node name
         std::string node_name = node_prefix + "_SetKey";
 
         // Build the XML snippet
         std::ostringstream xml;
-        xml << "<SetBlackboardKeyValue "
+        xml << "<SetKeyBoolValue "
             << "name=\"" << node_name << "\" "
             << "key=\"" << key << "\" "
-            << "value=\"" << value << "\"/>";
+            << "value=\"" << (value ? "true" : "false") << "\"/>";
 
         return xml.str();
     }

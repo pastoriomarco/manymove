@@ -42,9 +42,9 @@ namespace manymove_cpp_trees
         factory.registerNodeType<CheckRobotStateAction>("CheckRobotStateAction");
         factory.registerNodeType<ResetRobotStateAction>("ResetRobotStateAction");
 
-        factory.registerNodeType<CheckBlackboardKeyValue>("CheckBlackboardKeyValue");
-        factory.registerNodeType<SetBlackboardKeyValue>("SetBlackboardKeyValue");
-        factory.registerNodeType<WaitForKeyAction>("WaitForKeyAction");
+        factory.registerNodeType<CheckKeyBoolValue>("CheckKeyBoolValue");
+        factory.registerNodeType<SetKeyBoolValue>("SetKeyBoolValue");
+        factory.registerNodeType<WaitForKeyBool>("WaitForKeyBool");
         factory.registerNodeType<BT::RetryNode>("RetryNode");
         factory.registerNodeType<RetryPauseResetNode>("RetryPauseResetNode");
         factory.registerNodeType<GripperCommandAction>("GripperCommandAction");
@@ -193,12 +193,12 @@ namespace manymove_cpp_trees
     std::string buildWaitForObject(const std::string &robot_prefix,
                                    const std::string &node_prefix,
                                    const std::string &object_id,
-                                   bool exists = true,
-                                   int timeout_ms = 0,
-                                   int poll_rate_ms = 100);
+                                   const bool exists = true,
+                                   const int timeout_ms = 0,
+                                   const int poll_rate_ms = 100);
 
     /**
-     * @brief Build an XML snippet for a single <WaitForKeyAction> node.
+     * @brief Build an XML snippet for a single <WaitForKeyBool> node.
      * @param robot_prefix    e.g. "R_"
      * @param node_prefix     used in the 'name' attribute
      * @param key_id          blackboard key
@@ -207,27 +207,27 @@ namespace manymove_cpp_trees
      * @param poll_rate_ms    how often to check
      * @return XML snippet
      */
-    std::string buildWaitForKey(const std::string &robot_prefix,
+    std::string buildWaitForKeyBool(const std::string &robot_prefix,
                                 const std::string &node_prefix,
                                 const std::string &key_id,
-                                const std::string &expected_value,
-                                int timeout_ms = 0,
-                                int poll_rate_ms = 100);
+                                const bool &expected_value,
+                                const int timeout_ms = 0,
+                                const int poll_rate_ms = 100);
 
     /**
-     * @brief Build an XML snippet for SetBlackboardKeyValue.
+     * @brief Build an XML snippet for SetKeyBool.
      *
      * @param robot_prefix    A prefix for the robot's action servers (not strictly needed,
      *                        but we keep consistency with other build* functions).
      * @param node_prefix     Used to construct a unique name attribute for the node.
      * @param key             The name of the blackboard key to set.
      * @param value           The value to store in the blackboard key.
-     * @return A string with the generated XML snippet for the SetBlackboardKeyValue node.
+     * @return A string with the generated XML snippet for the SetKeyValue node.
      */
-    std::string buildSetBlackboardKey(const std::string &robot_prefix,
+    std::string buildSetKeyBool(const std::string &robot_prefix,
                                       const std::string &node_prefix,
                                       const std::string &key,
-                                      const std::string &value);
+                                      const bool &value);
 
     /**
      * @brief Build an XML snippet for CheckRobotStateAction.
