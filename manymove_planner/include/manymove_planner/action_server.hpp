@@ -14,6 +14,7 @@
 #include "manymove_msgs/action/unload_traj_controller.hpp"
 #include "manymove_msgs/action/load_traj_controller.hpp"
 #include "planner_interface.hpp"
+#include <moveit_msgs/msg/constraints.hpp>
 
 enum class MoveExecutionState
 {

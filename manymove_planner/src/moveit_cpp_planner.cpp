@@ -1067,3 +1067,78 @@ void MoveItCppPlanner::jointStateCallback(const sensor_msgs::msg::JointState::Sh
         current_velocities_[joint_name] = vel;
     }
 }
+
+bool MoveItCppPlanner::isTrajectoryValid(
+    const robot_trajectory::RobotTrajectory &trajectory,
+    const moveit_msgs::msg::Constraints &path_constraints,
+    const std::string &group,
+    bool verbose,
+    std::vector<std::size_t> *invalid_index) const
+{
+    // Get a lock on the planning scene through the planning scene monitor.
+    planning_scene_monitor::LockedPlanningSceneRO lscene(moveit_cpp_ptr_->getPlanningSceneMonitor());
+    if (!lscene)
+    {
+        RCLCPP_ERROR(logger_, "PlanningSceneMonitor is not available in isTrajectoryValid().");
+        return false;
+    }
+
+    // Delegate the validity check to the PlanningScene's isPathValid method.
+    // Note that the isPathValid overload taking a robot_trajectory::RobotTrajectory,
+    // constraints, group name, verbosity flag, and an optional invalid index vector
+    // iterates over each waypoint and performs collision/constraint checking.
+    bool valid = lscene->isPathValid(trajectory, path_constraints, group, verbose, invalid_index);
+
+    return valid;
+}
+
+bool MoveItCppPlanner::isTrajectoryValid(
+    const trajectory_msgs::msg::JointTrajectory &joint_traj_msg,
+    const moveit_msgs::msg::Constraints &path_constraints,
+    const std::string &group,
+    bool verbose,
+    std::vector<std::size_t> *invalid_index) const
+{
+    // Lock the current planning scene via the planning scene monitor.
+    planning_scene_monitor::LockedPlanningSceneRO lscene(moveit_cpp_ptr_->getPlanningSceneMonitor());
+    if (!lscene)
+    {
+        RCLCPP_ERROR(logger_, "Failed to lock the PlanningScene in isTrajectoryValid");
+        return false;
+    }
+
+    // Create a diff (clone) of the current planning scene.
+    planning_scene::PlanningScenePtr scene = lscene->diff();
+    scene->decoupleParent(); // Ensure the diff scene is independent.
+
+    // Get a "current state" from the move group interface.
+    auto current_state_ptr = moveit_cpp_ptr_->getCurrentState();
+    if (!current_state_ptr)
+    {
+        RCLCPP_ERROR(logger_, "No current robot state available in isTrajectoryValid");
+        return false;
+    }
+    const moveit::core::RobotState &current_state = *current_state_ptr;
+
+    // Convert the input JointTrajectory message to a moveit_msgs::msg::RobotTrajectory.
+    moveit_msgs::msg::RobotTrajectory rt_msg;
+    rt_msg.joint_trajectory = joint_traj_msg;
+
+    // Create a RobotTrajectory object from the robot model and planning group.
+    robot_trajectory::RobotTrajectoryPtr robot_traj_ptr =
+        std::make_shared<robot_trajectory::RobotTrajectory>(moveit_cpp_ptr_->getRobotModel(), group);
+
+    // Set the trajectory using the current state and the constructed message.
+    robot_traj_ptr->setRobotTrajectoryMsg(current_state, rt_msg);
+
+    // Delegate the validity check to the PlanningScene's isPathValid overload.
+    bool valid = scene->isPathValid(*robot_traj_ptr, path_constraints, group, verbose, invalid_index);
+
+    return valid;
+}
+
+// getPlanningGroup returns the planning group string.
+const std::string &MoveItCppPlanner::getPlanningGroup() const
+{
+    return planning_group_;
+}

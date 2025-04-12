@@ -176,16 +176,13 @@ void ManipulatorActionServer::execute_move(
         bool starts_ok = planner_->isTrajectoryStartValid(goal->existing_trajectory, current_joints, tolerance);
 
         bool all_ok = true;
-        const auto &pts = goal->existing_trajectory.joint_trajectory.points;
-        for (size_t i = 0; i < pts.size(); ++i)
+        // const auto &pts = goal->existing_trajectory.joint_trajectory.points;
+        if (!planner_->isTrajectoryValid(goal->existing_trajectory.joint_trajectory, moveit_msgs::msg::Constraints(), planner_->getPlanningGroup(), /*verbose*/ false, nullptr))
         {
-            if (!planner_->isJointStateValid(pts[i].positions))
-            {
-                RCLCPP_WARN(node_->get_logger(), "[MoveManipulator] existing_trajectory fails at waypoint %zu", i);
-                all_ok = false;
-                break;
-            }
+            RCLCPP_WARN(node_->get_logger(), "[MoveManipulator] existing_trajectory fails.");
+            all_ok = false;
         }
+
         if (starts_ok && all_ok)
         {
             have_valid_traj = true;
@@ -739,13 +736,10 @@ bool ManipulatorActionServer::executeTrajectoryWithCollisionChecks(
         return false;
     }
 
-    for (size_t i = 0; i < points.size(); i++)
+    if (!planner_->isTrajectoryValid(traj.joint_trajectory, moveit_msgs::msg::Constraints(), planner_->getPlanningGroup(), /*verbose*/ false, nullptr))
     {
-        if (!planner_->isJointStateValid(points[i].positions))
-        {
-            abort_reason = "Invalid state or collision at waypoint " + std::to_string(i);
-            return false;
-        }
+        abort_reason = "Invalid state or collision.";
+        return false;
     }
 
     // 2) We'll set up a promise/future so we know if the final action result was success or fail
@@ -769,9 +763,8 @@ bool ManipulatorActionServer::executeTrajectoryWithCollisionChecks(
 
     // Feedback callback => partial collision checks
     opts.feedback_callback =
-        [this, &collision_detected, goal_handle, points, last_idx = size_t(0)](
-            auto /*unused_handle*/,
-            const std::shared_ptr<const control_msgs::action::FollowJointTrajectory::Feedback> &feedback) mutable
+        [this, &collision_detected, goal_handle, points, joint_names = traj.joint_trajectory.joint_names, last_idx = size_t(0)](auto /*unused_handle*/,
+                                                                                                                                const std::shared_ptr<const control_msgs::action::FollowJointTrajectory::Feedback> &feedback) mutable
     {
         if (!feedback || feedback->actual.positions.empty())
         {
@@ -787,7 +780,7 @@ bool ManipulatorActionServer::executeTrajectoryWithCollisionChecks(
             return;
         }
 
-        // find the closest index
+        // Find the closest index in the trajectory waypoints corresponding to the feedback.
         size_t best_idx = last_idx;
         double best_dist = std::numeric_limits<double>::infinity();
         for (size_t i = last_idx; i < points.size(); i++)
@@ -811,19 +804,27 @@ bool ManipulatorActionServer::executeTrajectoryWithCollisionChecks(
         }
         last_idx = best_idx;
 
-        // Check future points for collisions
-        for (size_t i = best_idx + 1; i < points.size(); i++)
+        // Instead of checking each future point with isJointStateValid, build a truncated trajectory
+        // from best_idx+1 to the end and use isTrajectoryValid on the complete sequence.
+        if (best_idx + 1 < points.size())
         {
-            if (!planner_->isJointStateValid(points[i].positions))
+            trajectory_msgs::msg::JointTrajectory truncated;
+            truncated.joint_names = joint_names;
+            truncated.points.insert(truncated.points.end(), points.begin() + best_idx + 1, points.end());
+            // Call the trajectory validity check (using the JointTrajectory message overload)
+            if (!planner_->isTrajectoryValid(truncated,
+                                             moveit_msgs::msg::Constraints(), // using empty constraints
+                                             planner_->getPlanningGroup(),
+                                             false, // verbose = false
+                                             nullptr))
             {
                 RCLCPP_WARN(node_->get_logger(),
-                            "[executeTrajectoryWithCollisionChecks] future waypoint %zu in collision => stopping", i);
+                            "[executeTrajectoryWithCollisionChecks] future truncated trajectory (starting at waypoint %zu) is in collision => stopping", best_idx + 1);
                 collision_detected.store(true);
-                break;
             }
         }
 
-        // publish partial feedback
+        // Publish partial feedback
         auto fb = std::make_shared<FeedbackT>();
         fb->progress = static_cast<float>(best_idx);
         fb->in_collision = collision_detected.load();

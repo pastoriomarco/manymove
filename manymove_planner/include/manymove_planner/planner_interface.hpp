@@ -12,6 +12,7 @@
 #include <rclcpp_action/rclcpp_action.hpp>
 #include <moveit/robot_trajectory/robot_trajectory.h>
 #include <control_msgs/action/follow_joint_trajectory.hpp>
+#include <moveit_msgs/msg/constraints.hpp>
 
 /**
  * @class PlannerInterface
@@ -105,6 +106,22 @@ public:
     virtual bool isTrajectoryStartValid(const moveit_msgs::msg::RobotTrajectory &traj,
                                         const std::vector<double> &current_joint_state,
                                         double tolerance) const = 0;
+
+    virtual bool isTrajectoryValid(
+        const trajectory_msgs::msg::JointTrajectory &joint_traj_msg,
+        const moveit_msgs::msg::Constraints &path_constraints,
+        const std::string &group,
+        bool verbose,
+        std::vector<std::size_t> *invalid_index) const = 0;
+
+    virtual bool isTrajectoryValid(
+        const robot_trajectory::RobotTrajectory &trajectory,
+        const moveit_msgs::msg::Constraints &path_constraints,
+        const std::string &group,
+        bool verbose,
+        std::vector<std::size_t> *invalid_index) const = 0;
+
+    virtual const std::string &getPlanningGroup() const = 0;
 
 protected:
     /**
