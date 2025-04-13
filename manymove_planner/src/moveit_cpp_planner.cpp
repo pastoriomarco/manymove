@@ -1089,17 +1089,43 @@ bool MoveItCppPlanner::isTrajectoryEndValid(
     else if (move_request.movement_type == "joint" || move_request.movement_type == "named")
     {
         const auto &last_point = traj.joint_trajectory.points.back();
-        if (last_point.positions.size() != move_request.joint_values.size())
+        std::vector<double> target_joint_values;
+        if (move_request.movement_type == "named")
+        {
+            // getNamedTargetStateValues returns a map<string, double>
+            auto named_map = planning_components_->getNamedTargetStateValues(move_request.named_target);
+            // Create a vector by iterating over the trajectory's joint_names (ensuring proper order)
+            for (const auto &joint_name : traj.joint_trajectory.joint_names)
+            {
+                auto it = named_map.find(joint_name);
+                if (it != named_map.end())
+                {
+                    target_joint_values.push_back(it->second);
+                }
+                else
+                {
+                    RCLCPP_ERROR(logger_, "Joint '%s' not found in named target values for '%s'.",
+                                 joint_name.c_str(), move_request.named_target.c_str());
+                    return false;
+                }
+            }
+        }
+        else
+        {
+            target_joint_values = move_request.joint_values;
+        }
+
+        if (last_point.positions.size() != target_joint_values.size())
         {
             RCLCPP_ERROR(logger_,
                          "Mismatch: trajectory joints (%zu) vs. target joints (%zu).",
-                         last_point.positions.size(), move_request.joint_values.size());
+                         last_point.positions.size(), target_joint_values.size());
             return false;
         }
 
         for (size_t i = 0; i < last_point.positions.size(); ++i)
         {
-            double diff = std::fabs(last_point.positions[i] - move_request.joint_values[i]);
+            double diff = std::fabs(last_point.positions[i] - target_joint_values[i]);
             if (diff > joint_tolerance)
             {
                 RCLCPP_INFO(logger_,
