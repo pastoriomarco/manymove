@@ -98,9 +98,8 @@ private:
     void configureControllerAsync(const std::string &, std::function<void()>, std::function<void(const std::string &)>);
 
     // Helper functions
-    template <typename GoalHandleT, typename FeedbackT>
     bool executeTrajectoryWithCollisionChecks(
-        const std::shared_ptr<GoalHandleT> &goal_handle,
+        const std::shared_ptr<GoalHandleMoveManipulator> &goal_handle,
         const moveit_msgs::msg::RobotTrajectory &traj,
         std::string &abort_reason);
 };

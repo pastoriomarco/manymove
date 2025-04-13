@@ -177,7 +177,7 @@ double MoveItCppPlanner::computePathLength(const moveit_msgs::msg::RobotTrajecto
 
 // Function to get a geometry_msgs::msg::Pose from a RobotState and frame
 geometry_msgs::msg::Pose MoveItCppPlanner::getPoseFromRobotState(const moveit::core::RobotState &robot_state,
-                                                                 const std::string &link_frame)
+                                                                 const std::string &link_frame) const
 {
 
     // Clone the state to ensure the original state isn't modified
@@ -208,7 +208,7 @@ geometry_msgs::msg::Pose MoveItCppPlanner::getPoseFromRobotState(const moveit::c
 
 // Function to compute the Euclidean distance between the start pose and the target pose
 double MoveItCppPlanner::computeCartesianDistance(const geometry_msgs::msg::Pose &start_pose,
-                                                  const geometry_msgs::msg::Pose &target_pose)
+                                                  const geometry_msgs::msg::Pose &target_pose) const
 {
     // Compute the Euclidean distance to the target pose
     double dx = target_pose.position.x - start_pose.position.x;
@@ -222,7 +222,7 @@ double MoveItCppPlanner::computeCartesianDistance(const geometry_msgs::msg::Pose
 geometry_msgs::msg::Pose MoveItCppPlanner::getPoseFromTrajectory(const moveit_msgs::msg::RobotTrajectory &traj_msg,
                                                                  const moveit::core::RobotState &robot_state,
                                                                  const std::string &link_frame,
-                                                                 bool use_last_point)
+                                                                 bool use_last_point) const
 {
     geometry_msgs::msg::Pose pose;
 
@@ -455,9 +455,9 @@ std::pair<bool, moveit_msgs::msg::RobotTrajectory> MoveItCppPlanner::plan(const 
                 // double starts_euclidean_distance = computeCartesianDistance(start_pose, traj_start_pose);
                 double targets_euclidean_distance = computeCartesianDistance(traj_end_pose, goal_msg.goal.pose_target);
 
-                // RCLCPP_INFO_STREAM(logger_, "Minimum theoretical eclidean distance between start pose and target pose: " << min_euclidean_distance);
+                // RCLCPP_INFO_STREAM(logger_, "Minimum theoretical euclidean distance between start pose and target pose: " << min_euclidean_distance);
                 // RCLCPP_INFO_STREAM(logger_, "Euclidean distance between trajectory first point and trajectory last point: " << traj_euclidean_distance);
-                // RCLCPP_INFO_STREAM(logger_, "Eclidean distance between theoretical start and calculated trajectory first point: " << starts_euclidean_distance);
+                // RCLCPP_INFO_STREAM(logger_, "Euclidean distance between theoretical start and calculated trajectory first point: " << starts_euclidean_distance);
 
                 double traj_tolerance = 0.001;
 
@@ -473,7 +473,7 @@ std::pair<bool, moveit_msgs::msg::RobotTrajectory> MoveItCppPlanner::plan(const 
                 }
                 else
                 {
-                    RCLCPP_WARN_STREAM(logger_, "Eclidean distance between theoretical target and calculated trajectory last point: " << targets_euclidean_distance);
+                    RCLCPP_WARN_STREAM(logger_, "Euclidean distance between theoretical target and calculated trajectory last point: " << targets_euclidean_distance);
 
                     RCLCPP_WARN_STREAM(logger_, "The planner was not able to calculate trajectory with end point within tolerance." << targets_euclidean_distance);
                     RCLCPP_WARN(logger_, "%s target planning attempt %d failed: trajectory is empty.",
@@ -1043,6 +1043,81 @@ bool MoveItCppPlanner::isTrajectoryStartValid(const moveit_msgs::msg::RobotTraje
         }
     }
     return true;
+}
+
+bool MoveItCppPlanner::isTrajectoryEndValid(
+    const moveit_msgs::msg::RobotTrajectory &traj,
+    const manymove_msgs::msg::MoveManipulatorGoal &move_request,
+    double joint_tolerance,
+    double pose_tolerance) const
+{
+    // Check that the trajectory is not empty.
+    if (traj.joint_trajectory.points.empty())
+    {
+        RCLCPP_ERROR(logger_, "Trajectory is empty. Cannot validate end.");
+        return false;
+    }
+
+    auto const current_state = *moveit_cpp_ptr_->getCurrentState();
+
+    // For Cartesian/pose-type movements, compare the computed end pose to the target pose.
+    if (move_request.movement_type == "pose" || move_request.movement_type == "cartesian")
+    {
+        geometry_msgs::msg::Pose traj_end_pose;
+        try
+        {
+            // Get the pose from the last point of the trajectory.
+            traj_end_pose = getPoseFromTrajectory(traj, current_state, tcp_frame_, true);
+        }
+        catch (const std::exception &e)
+        {
+            RCLCPP_ERROR(logger_, "Error extracting trajectory end pose: %s", e.what());
+            return false;
+        }
+
+        double distance = computeCartesianDistance(traj_end_pose, move_request.pose_target);
+        if (distance > pose_tolerance)
+        {
+            RCLCPP_INFO(logger_,
+                        "Trajectory end pose invalid: Euclidean distance (%.6f) exceeds tolerance (%.6f)",
+                        distance, pose_tolerance);
+            return false;
+        }
+        return true;
+    }
+    // For joint or named target movements, compare the joint positions.
+    else if (move_request.movement_type == "joint" || move_request.movement_type == "named")
+    {
+        const auto &last_point = traj.joint_trajectory.points.back();
+        if (last_point.positions.size() != move_request.joint_values.size())
+        {
+            RCLCPP_ERROR(logger_,
+                         "Mismatch: trajectory joints (%zu) vs. target joints (%zu).",
+                         last_point.positions.size(), move_request.joint_values.size());
+            return false;
+        }
+
+        for (size_t i = 0; i < last_point.positions.size(); ++i)
+        {
+            double diff = std::fabs(last_point.positions[i] - move_request.joint_values[i]);
+            if (diff > joint_tolerance)
+            {
+                RCLCPP_INFO(logger_,
+                            "Joint %zu difference (%.6f) exceeds tolerance (%.6f) for end validation.",
+                            i, diff, joint_tolerance);
+                return false;
+            }
+        }
+        return true;
+    }
+    else
+    {
+        // If movement_type is unrecognized, warn and allow the trajectory.
+        RCLCPP_WARN(logger_,
+                    "Unknown movement type '%s'; skipping end validation.",
+                    move_request.movement_type.c_str());
+        return true;
+    }
 }
 
 void MoveItCppPlanner::jointStateCallback(const sensor_msgs::msg::JointState::SharedPtr msg)

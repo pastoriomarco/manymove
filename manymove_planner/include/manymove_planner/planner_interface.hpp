@@ -107,6 +107,12 @@ public:
                                         const std::vector<double> &current_joint_state,
                                         double tolerance) const = 0;
 
+    virtual bool isTrajectoryEndValid(
+        const moveit_msgs::msg::RobotTrajectory &traj,
+        const manymove_msgs::msg::MoveManipulatorGoal &move_request,
+        double joint_tolerance,
+        double pose_tolerance) const = 0;
+
     virtual bool isTrajectoryValid(
         const trajectory_msgs::msg::JointTrajectory &joint_traj_msg,
         const moveit_msgs::msg::Constraints &path_constraints,

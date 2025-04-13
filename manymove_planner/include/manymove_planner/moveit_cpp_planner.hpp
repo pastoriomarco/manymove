@@ -145,6 +145,12 @@ public:
                                 const std::vector<double> &current_joint_state,
                                 double tolerance) const;
 
+    bool isTrajectoryEndValid(
+        const moveit_msgs::msg::RobotTrajectory &traj,
+        const manymove_msgs::msg::MoveManipulatorGoal &move_request,
+        double joint_tolerance,
+        double pose_tolerance) const;
+
     bool isTrajectoryValid(
         const trajectory_msgs::msg::JointTrajectory &joint_traj_msg,
         const moveit_msgs::msg::Constraints &path_constraints,
@@ -176,7 +182,7 @@ private:
      * @return The computed distance between the two poses.
      */
     geometry_msgs::msg::Pose getPoseFromRobotState(const moveit::core::RobotState &robot_state,
-                                                   const std::string &link_frame);
+                                                   const std::string &link_frame) const;
 
     /**
      * @brief Compute the euclidean distance between two poses.
@@ -185,7 +191,7 @@ private:
      * @return The computed distance between the two poses.
      */
     double computeCartesianDistance(const geometry_msgs::msg::Pose &start_pose,
-                                    const geometry_msgs::msg::Pose &target_pose);
+                                    const geometry_msgs::msg::Pose &target_pose) const;
 
     /**
      * @brief Calculate the pose relative to a frame from the first or the last point of a trajectory.
@@ -198,7 +204,7 @@ private:
     geometry_msgs::msg::Pose getPoseFromTrajectory(const moveit_msgs::msg::RobotTrajectory &traj_msg,
                                                    const moveit::core::RobotState &robot_state,
                                                    const std::string &link_frame,
-                                                   bool use_last_point = true);
+                                                   bool use_last_point = true) const;
 
     /**
      * @brief Compute the maximum Cartesian speed found in a trajectory.

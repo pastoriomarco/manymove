@@ -134,6 +134,83 @@ double MoveGroupPlanner::computePathLength(const moveit_msgs::msg::RobotTrajecto
     return total_length;
 }
 
+// Function to get a geometry_msgs::msg::Pose from a RobotState and frame
+geometry_msgs::msg::Pose MoveGroupPlanner::getPoseFromRobotState(const moveit::core::RobotState &robot_state,
+                                                                 const std::string &link_frame) const
+{
+
+    // Clone the state to ensure the original state isn't modified
+    moveit::core::RobotState state(robot_state);
+
+    // Update link transforms to ensure they are valid
+    state.updateLinkTransforms();
+
+    geometry_msgs::msg::Pose pose;
+
+    // Get the transform of the frame
+    const Eigen::Isometry3d &pose_eigen = state.getGlobalLinkTransform(link_frame);
+
+    // Extract position
+    pose.position.x = pose_eigen.translation().x();
+    pose.position.y = pose_eigen.translation().y();
+    pose.position.z = pose_eigen.translation().z();
+
+    // Extract orientation as a quaternion
+    Eigen::Quaterniond quat(pose_eigen.rotation());
+    pose.orientation.x = quat.x();
+    pose.orientation.y = quat.y();
+    pose.orientation.z = quat.z();
+    pose.orientation.w = quat.w();
+
+    return pose;
+}
+
+// Function to compute the Euclidean distance between the start pose and the target pose
+double MoveGroupPlanner::computeCartesianDistance(const geometry_msgs::msg::Pose &start_pose,
+                                                  const geometry_msgs::msg::Pose &target_pose) const
+{
+    // Compute the Euclidean distance to the target pose
+    double dx = target_pose.position.x - start_pose.position.x;
+    double dy = target_pose.position.y - start_pose.position.y;
+    double dz = target_pose.position.z - start_pose.position.z;
+
+    return std::sqrt(dx * dx + dy * dy + dz * dz);
+}
+
+// Function to get a pose from a trajectory and TCP frame
+geometry_msgs::msg::Pose MoveGroupPlanner::getPoseFromTrajectory(const moveit_msgs::msg::RobotTrajectory &traj_msg,
+                                                                 const moveit::core::RobotState &robot_state,
+                                                                 const std::string &link_frame,
+                                                                 bool use_last_point) const
+{
+    geometry_msgs::msg::Pose pose;
+
+    // Ensure the trajectory is not empty
+    if (traj_msg.joint_trajectory.points.empty())
+    {
+        throw std::runtime_error("Trajectory is empty, cannot extract pose.");
+    }
+
+    // Select the point to use (first or last)
+    const auto &point = use_last_point ? traj_msg.joint_trajectory.points.back() : traj_msg.joint_trajectory.points.front();
+    const auto &joint_names = traj_msg.joint_trajectory.joint_names;
+    std::vector<double> joint_positions(point.positions.begin(), point.positions.end());
+
+    // Clone the robot state to avoid modifying the original
+    moveit::core::RobotState state(robot_state);
+
+    // Update link transforms to ensure they are valid
+    state.updateLinkTransforms();
+
+    // Set the joint positions in the cloned state
+    state.setVariablePositions(joint_names, joint_positions);
+
+    // Get the pose of the TCP frame
+    pose = getPoseFromRobotState(state, link_frame);
+
+    return pose;
+}
+
 double MoveGroupPlanner::computeMaxCartesianSpeed(const robot_trajectory::RobotTrajectoryPtr &trajectory) const
 {
     // Compute max Cartesian speed by analyzing consecutive waypoints
@@ -730,6 +807,81 @@ bool MoveGroupPlanner::isTrajectoryStartValid(const moveit_msgs::msg::RobotTraje
         }
     }
     return true;
+}
+
+bool MoveGroupPlanner::isTrajectoryEndValid(
+    const moveit_msgs::msg::RobotTrajectory &traj,
+    const manymove_msgs::msg::MoveManipulatorGoal &move_request,
+    double joint_tolerance,
+    double pose_tolerance) const
+{
+    // Check that the trajectory is not empty.
+    if (traj.joint_trajectory.points.empty())
+    {
+        RCLCPP_ERROR(logger_, "Trajectory is empty. Cannot validate end.");
+        return false;
+    }
+
+    auto const current_state = *move_group_interface_->getCurrentState();
+
+    // For Cartesian/pose-type movements, compare the computed end pose to the target pose.
+    if (move_request.movement_type == "pose" || move_request.movement_type == "cartesian")
+    {
+        geometry_msgs::msg::Pose traj_end_pose;
+        try
+        {
+            // Get the pose from the last point of the trajectory.
+            traj_end_pose = getPoseFromTrajectory(traj, current_state, tcp_frame_, true);
+        }
+        catch (const std::exception &e)
+        {
+            RCLCPP_ERROR(logger_, "Error extracting trajectory end pose: %s", e.what());
+            return false;
+        }
+
+        double distance = computeCartesianDistance(traj_end_pose, move_request.pose_target);
+        if (distance > pose_tolerance)
+        {
+            RCLCPP_INFO(logger_,
+                        "Trajectory end pose invalid: Euclidean distance (%.6f) exceeds tolerance (%.6f)",
+                        distance, pose_tolerance);
+            return false;
+        }
+        return true;
+    }
+    // For joint or named target movements, compare the joint positions.
+    else if (move_request.movement_type == "joint" || move_request.movement_type == "named")
+    {
+        const auto &last_point = traj.joint_trajectory.points.back();
+        if (last_point.positions.size() != move_request.joint_values.size())
+        {
+            RCLCPP_ERROR(logger_,
+                         "Mismatch: trajectory joints (%zu) vs. target joints (%zu).",
+                         last_point.positions.size(), move_request.joint_values.size());
+            return false;
+        }
+
+        for (size_t i = 0; i < last_point.positions.size(); ++i)
+        {
+            double diff = std::fabs(last_point.positions[i] - move_request.joint_values[i]);
+            if (diff > joint_tolerance)
+            {
+                RCLCPP_INFO(logger_,
+                            "Joint %zu difference (%.6f) exceeds tolerance (%.6f) for end validation.",
+                            i, diff, joint_tolerance);
+                return false;
+            }
+        }
+        return true;
+    }
+    else
+    {
+        // If movement_type is unrecognized, warn and allow the trajectory.
+        RCLCPP_WARN(logger_,
+                    "Unknown movement type '%s'; skipping end validation.",
+                    move_request.movement_type.c_str());
+        return true;
+    }
 }
 
 void MoveGroupPlanner::jointStateCallback(const sensor_msgs::msg::JointState::SharedPtr msg)
