@@ -1172,7 +1172,6 @@ void MoveItCppPlanner::jointStateCallback(const sensor_msgs::msg::JointState::Sh
 bool MoveItCppPlanner::isTrajectoryValid(
     const robot_trajectory::RobotTrajectory &trajectory,
     const moveit_msgs::msg::Constraints &path_constraints,
-    const std::string &group,
     bool verbose,
     std::vector<std::size_t> *invalid_index) const
 {
@@ -1188,7 +1187,7 @@ bool MoveItCppPlanner::isTrajectoryValid(
     // Note that the isPathValid overload taking a robot_trajectory::RobotTrajectory,
     // constraints, group name, verbosity flag, and an optional invalid index vector
     // iterates over each waypoint and performs collision/constraint checking.
-    bool valid = lscene->isPathValid(trajectory, path_constraints, group, verbose, invalid_index);
+    bool valid = lscene->isPathValid(trajectory, path_constraints, planning_group_, verbose, invalid_index);
 
     return valid;
 }
@@ -1196,7 +1195,6 @@ bool MoveItCppPlanner::isTrajectoryValid(
 bool MoveItCppPlanner::isTrajectoryValid(
     const trajectory_msgs::msg::JointTrajectory &joint_traj_msg,
     const moveit_msgs::msg::Constraints &path_constraints,
-    const std::string &group,
     bool verbose,
     std::vector<std::size_t> *invalid_index) const
 {
@@ -1227,19 +1225,13 @@ bool MoveItCppPlanner::isTrajectoryValid(
 
     // Create a RobotTrajectory object from the robot model and planning group.
     robot_trajectory::RobotTrajectoryPtr robot_traj_ptr =
-        std::make_shared<robot_trajectory::RobotTrajectory>(moveit_cpp_ptr_->getRobotModel(), group);
+        std::make_shared<robot_trajectory::RobotTrajectory>(moveit_cpp_ptr_->getRobotModel(), planning_group_);
 
     // Set the trajectory using the current state and the constructed message.
     robot_traj_ptr->setRobotTrajectoryMsg(current_state, rt_msg);
 
     // Delegate the validity check to the PlanningScene's isPathValid overload.
-    bool valid = scene->isPathValid(*robot_traj_ptr, path_constraints, group, verbose, invalid_index);
+    bool valid = scene->isPathValid(*robot_traj_ptr, path_constraints, planning_group_, verbose, invalid_index);
 
     return valid;
-}
-
-// getPlanningGroup returns the planning group string.
-const std::string &MoveItCppPlanner::getPlanningGroup() const
-{
-    return planning_group_;
 }

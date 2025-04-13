@@ -177,7 +177,7 @@ void ManipulatorActionServer::execute_move(
 
         bool all_ok = true;
         // const auto &pts = goal->existing_trajectory.joint_trajectory.points;
-        if (!planner_->isTrajectoryValid(goal->existing_trajectory.joint_trajectory, moveit_msgs::msg::Constraints(), planner_->getPlanningGroup(), /*verbose*/ false, nullptr))
+        if (!planner_->isTrajectoryValid(goal->existing_trajectory.joint_trajectory, moveit_msgs::msg::Constraints(), /*verbose*/ false, nullptr))
         {
             RCLCPP_WARN(node_->get_logger(), "[MoveManipulator] existing_trajectory fails.");
             all_ok = false;
@@ -745,7 +745,6 @@ bool ManipulatorActionServer::executeTrajectoryWithCollisionChecks(
     // 3) Check the full trajectory validity (collision checking)
     if (!planner_->isTrajectoryValid(traj.joint_trajectory,
                                      moveit_msgs::msg::Constraints(),
-                                     planner_->getPlanningGroup(),
                                      false, // verbose = false
                                      nullptr))
     {
@@ -822,7 +821,6 @@ bool ManipulatorActionServer::executeTrajectoryWithCollisionChecks(
 
             if (!planner_->isTrajectoryValid(truncated,
                                              moveit_msgs::msg::Constraints(), // using empty constraints
-                                             planner_->getPlanningGroup(),
                                              false,
                                              nullptr))
             {

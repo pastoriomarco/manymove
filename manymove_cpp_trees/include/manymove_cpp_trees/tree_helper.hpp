@@ -208,11 +208,11 @@ namespace manymove_cpp_trees
      * @return XML snippet
      */
     std::string buildWaitForKeyBool(const std::string &robot_prefix,
-                                const std::string &node_prefix,
-                                const std::string &key_id,
-                                const bool &expected_value,
-                                const int timeout_ms = 0,
-                                const int poll_rate_ms = 100);
+                                    const std::string &node_prefix,
+                                    const std::string &key_id,
+                                    const bool &expected_value,
+                                    const int timeout_ms = 0,
+                                    const int poll_rate_ms = 100);
 
     /**
      * @brief Build an XML snippet for SetKeyBool.
@@ -225,9 +225,9 @@ namespace manymove_cpp_trees
      * @return A string with the generated XML snippet for the SetKeyValue node.
      */
     std::string buildSetKeyBool(const std::string &robot_prefix,
-                                      const std::string &node_prefix,
-                                      const std::string &key,
-                                      const bool &value);
+                                const std::string &node_prefix,
+                                const std::string &key,
+                                const bool &value);
 
     /**
      * @brief Build an XML snippet for CheckRobotStateAction.
@@ -306,6 +306,21 @@ namespace manymove_cpp_trees
      * @return A string containing the generated XML snippet.
      */
     std::string repeatWrapperXML(const std::string &sequence_name,
+                                 const std::vector<std::string> &branches,
+                                 const int num_cycles = -1);
+
+    /**
+     * @brief Wrap multiple snippets in a <retryNode> node with a given name.
+     *
+     * This wrapper allows retrying its child node multiple times based on the specified
+     * number of attempts. To retry indefinitely, set num_cycles to -1.
+     *
+     * @param sequence_name A unique name for the retryNode node.
+     * @param branches      A vector of XML snippets representing the child nodes.
+     * @param num_cycles    Number of retry attempts (-1 for infinite retries).
+     * @return A string containing the generated XML snippet.
+     */
+    std::string retryWrapperXML(const std::string &sequence_name,
                                  const std::vector<std::string> &branches,
                                  const int num_cycles = -1);
 

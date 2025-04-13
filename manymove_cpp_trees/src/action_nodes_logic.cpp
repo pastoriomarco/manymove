@@ -15,19 +15,24 @@ namespace manymove_cpp_trees
         bool collision_detected = false;
         bool reset = false;
         bool stop_execution = false;
+        std::string robot_prefix = "";
 
         if (!child_node_)
             throw BT::RuntimeError("RetryPauseResetNode: missing child");
 
-        if ((!getInput("reset", reset)) || (!getInput("stop_execution", stop_execution)) || (!getInput("collision_detected", collision_detected)))
+        if ((!getInput("reset", reset)) ||
+            (!getInput("stop_execution", stop_execution)) ||
+            (!getInput("collision_detected", collision_detected)) ||
+            (!getInput("robot_prefix", robot_prefix)))
         {
-            throw BT::RuntimeError("RetryPauseResetNode: Missing required input [key]");
+            throw BT::RuntimeError("RetryPauseResetNode: Missing required input key");
             return BT::NodeStatus::FAILURE;
         }
 
         // Priority 1: reset is true: halt child and return FAILURE.
         if (reset)
         {
+            config().blackboard->set(robot_prefix + "reset", false);
             if (child_node_ && child_node_->status() == BT::NodeStatus::RUNNING)
                 child_node_->halt();
             return BT::NodeStatus::FAILURE;
@@ -254,8 +259,8 @@ namespace manymove_cpp_trees
         }
 
         RCLCPP_DEBUG(node_ ? node_->get_logger() : rclcpp::get_logger("WaitForKeyBool"),
-                    "[%s] WaitForKeyBool: key='%s', expected='%s', actual='%s' timeout=%.2f, poll_rate=%.2f",
-                    name().c_str(), key_.c_str(), (expected_value_ ? "true" : "false"), (actual_value ? "true" : "false"), timeout_, poll_rate_);
+                     "[%s] WaitForKeyBool: key='%s', expected='%s', actual='%s' timeout=%.2f, poll_rate=%.2f",
+                     name().c_str(), key_.c_str(), (expected_value_ ? "true" : "false"), (actual_value ? "true" : "false"), timeout_, poll_rate_);
 
         if (actual_value == expected_value_)
         {

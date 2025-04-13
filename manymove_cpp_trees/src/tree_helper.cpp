@@ -56,7 +56,8 @@ namespace manymove_cpp_trees
             execution_seq << "    <RetryPauseResetNode name=\"StopSafe_Retry_" << this_move_id << "\""
                           << " collision_detected=\"{" << robot_prefix << "collision_detected}\""
                           << " stop_execution=\"{" << robot_prefix << "stop_execution}\""
-                          << " reset=\"{" << robot_prefix << "reset}\">\n"
+                          << " reset=\"{" << robot_prefix << "reset}\""
+                          << " robot_prefix=\"" << robot_prefix << "\">\n"
                           << "    <Sequence>\n"
                           << "      <MoveManipulatorAction"
                           << " name=\"MoveManip_" << this_move_id << "\""
@@ -540,6 +541,22 @@ namespace manymove_cpp_trees
         }
         xml << "    </Sequence>\n";
         xml << "  </Repeat>\n";
+        return xml.str();
+    }
+
+    std::string retryWrapperXML(const std::string &sequence_name,
+                                 const std::vector<std::string> &branches,
+                                 const int num_cycles)
+    {
+        std::ostringstream xml;
+        xml << "  <RetryNode name=\"" << sequence_name << "\" num_attempts=\"" << num_cycles << "\">\n";
+        xml << "    <Sequence name=\"" << sequence_name << "_sequence\">\n";
+        for (const auto &b : branches)
+        {
+            xml << b << "\n";
+        }
+        xml << "    </Sequence>\n";
+        xml << "  </RetryNode>\n";
         return xml.str();
     }
 

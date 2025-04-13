@@ -24,7 +24,8 @@ namespace manymove_cpp_trees
             return {
                 BT::InputPort<bool>("stop_execution", false, "Pause execution when true"),
                 BT::InputPort<bool>("collision_detected", false, "Stops current move when true, then retries planning"),
-                BT::InputPort<bool>("reset", false, "Reset branch when true")};
+                BT::InputPort<bool>("reset", false, "Reset branch when true"),
+                BT::InputPort<std::string>("robot_prefix", "Robot prefix for setting correct blackboard key")};
         }
 
         BT::NodeStatus tick() override;

@@ -111,7 +111,7 @@ int main(int argc, char **argv)
                             graspable_mesh_pose);
 
     //
-    std::string check_graspable_mesh_obj_xml = buildObjectActionXML("check_" + object_to_manipulate_1, createCheckObjectExists(object_to_manipulate_1));
+    std::string check_graspable_mesh_obj_xml = buildObjectActionXML("check_" + object_to_manipulate_1, createCheckObjectExists(object_to_manipulate_1_key_name));
 
     // We create the xml snippet to add the mesh to the scene through a behaviortree action.
     std::string add_graspable_mesh_obj_xml = buildObjectActionXML(
@@ -745,8 +745,11 @@ int main(int argc, char **argv)
         },
         -1); //< num_cycles=-1 for infinite
 
+    std::string retry_forever_wrapper_1_xml = retryWrapperXML("RetryForever", {repeat_forever_wrapper_1_xml}, -1);
+    std::string retry_forever_wrapper_2_xml = retryWrapperXML("RetryForever", {repeat_forever_wrapper_2_xml}, -1);
+
     // Runningh both robot sequences in parallel:
-    std::string parallel_repeat_forever_sequences_xml = parallelWrapperXML("PARALLEL_MOTION_SEQUENCES", {repeat_forever_wrapper_1_xml, repeat_forever_wrapper_2_xml}, 2, 1);
+    std::string parallel_repeat_forever_sequences_xml = parallelWrapperXML("PARALLEL_MOTION_SEQUENCES", {retry_forever_wrapper_1_xml, retry_forever_wrapper_2_xml}, 2, 1);
 
     // MasterSequence with startup sequence and RepeatForever as child to set BehaviorTree ID and root main_tree_to_execute in the XML
     std::vector<std::string> master_branches_xml = {startup_sequence_xml, parallel_repeat_forever_sequences_xml};
