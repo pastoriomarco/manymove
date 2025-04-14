@@ -8,6 +8,7 @@
 #include <QEvent>
 #include <QPalette>
 #include <QCheckBox>
+#include <QToolButton>
 
 // Static function returning the known keys.
 // This vector is constructed only once.
@@ -373,21 +374,31 @@ void AppModule::setupUI()
 
         if (config.value_type == "bool")
         {
-            // Create a QCheckBox for the boolean switch.
-            QCheckBox *checkBox = new QCheckBox(rowWidget);
-            // Set the default state (e.g., unchecked).
-            checkBox->setChecked(false);
-            rowLayout->addWidget(checkBox);
-            keyWidgets_[config.key] = checkBox;
-            // Connect stateChanged signal to update the override value.
-            connect(checkBox, &QCheckBox::stateChanged, this, [this, config, checkBox](int state)
+            // Use a checkable QToolButton as a toggle.
+            QToolButton *toggle = new QToolButton(rowWidget);
+            toggle->setCheckable(true);
+            toggle->setChecked(false); // start off as false
+            toggle->setText("ROBOT CYCLE OFF");    // initial text
+            toggle->setFixedWidth(750);
+            rowLayout->addWidget(toggle);
+            keyWidgets_[config.key] = toggle;
+            // Connect the toggled signal.
+            connect(toggle, &QToolButton::toggled, this, [this, config, toggle](bool checked)
                     {
-                // Convert the state to a string ("true" or "false").
-                QString value = (state == Qt::Checked) ? "true" : "false";
-                userOverrides_[config.key] = value;
-                editableValues_[config.key] = value;
-                updateComputedFields();
-                updateSendButtonState(); });
+        // Update the toggle’s text to reflect its state.
+        toggle->setText(checked ? "ROBOT CYCLE ON" : "ROBOT CYCLE OFF");
+        // Convert the state to a string.
+        QString value = (checked ? "true" : "false");
+        userOverrides_[config.key] = value;
+        editableValues_[config.key] = value;
+        updateComputedFields();
+        updateSendButtonState();
+
+        // For "cycle_on_key", send its update immediately.
+        if (config.key == "cycle_on_key")
+        {
+            emit keyUpdateRequested(config.key, config.value_type, value);
+        } });
         }
         else if (config.editable)
         {
@@ -511,14 +522,25 @@ void AppModule::updateComputedFields()
 
 void AppModule::updateSendButtonState()
 {
+
+    // Make sure the cycle_on_key toggle is off.
+    if (auto toggle = qobject_cast<QAbstractButton *>(keyWidgets_.value("cycle_on_key")))
+    {
+        if (toggle->isChecked())
+        { // if toggle is On, do not enable Send.
+            sendButton_->setEnabled(false);
+            return;
+        }
+    }
+
     bool atLeastOneValid = false;
     bool hasInvalid = false;
 
+    // Check all editable fields, as before.
     for (const auto &config : keyConfigs_)
     {
         if (!config.editable)
             continue;
-        // Use userOverrides_; if override is empty or equals current, treat as empty.
         QString text = userOverrides_.value(config.key);
         if (text.isEmpty() || text == currentValues_[config.key])
             continue;
@@ -530,7 +552,8 @@ void AppModule::updateSendButtonState()
             break;
         }
     }
-    // Enable Send if at least one field is valid and none are invalid.
+
+    // Finally, only if at least one valid field is present and none are invalid.
     sendButton_->setEnabled(!hasInvalid && atLeastOneValid);
 }
 
