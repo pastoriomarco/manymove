@@ -700,7 +700,7 @@ int main(int argc, char **argv)
 
     // ROBOT 1
     // Repeat node must have only one children, so it also wrap a Sequence child that wraps the other children
-    std::string repeat_forever_wrapper_1_xml = repeatWrapperXML(
+    std::string repeat_forever_wrapper_1_xml = repeatSequenceWrapperXML(
         "RepeatForever",
         {
             set_robot_1_out_of_working_position,          //<
@@ -724,7 +724,7 @@ int main(int argc, char **argv)
 
     // ROBOT 2
     // Repeat node must have only one children, so it also wrap a Sequence child that wraps the other children
-    std::string repeat_forever_wrapper_2_xml = repeatWrapperXML(
+    std::string repeat_forever_wrapper_2_xml = repeatSequenceWrapperXML(
         "RepeatForever",
         {
             set_robot_2_out_of_working_position_xml,      //<

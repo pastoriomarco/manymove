@@ -305,7 +305,22 @@ namespace manymove_cpp_trees
      * @param num_cycles    Number of repeat attempts (-1 for infinite retries).
      * @return A string containing the generated XML snippet.
      */
-    std::string repeatWrapperXML(const std::string &sequence_name,
+    std::string repeatSequenceWrapperXML(const std::string &sequence_name,
+                                 const std::vector<std::string> &branches,
+                                 const int num_cycles = -1);
+
+    /**
+     * @brief Wrap multiple snippets in a <RepeatNode> node with a given name.
+     *
+     * This wrapper allows repeating its child node multiple times based on the specified
+     * number of attempts. To repeat indefinitely, set num_cycles to -1.
+     *
+     * @param sequence_name A unique name for the RepeatNode node.
+     * @param branches      A vector of XML snippets representing the child nodes.
+     * @param num_cycles    Number of repeat attempts (-1 for infinite retries).
+     * @return A string containing the generated XML snippet.
+     */
+    std::string repeatFallbackWrapperXML(const std::string &sequence_name,
                                  const std::vector<std::string> &branches,
                                  const int num_cycles = -1);
 
@@ -320,9 +335,9 @@ namespace manymove_cpp_trees
      * @param num_cycles    Number of retry attempts (-1 for infinite retries).
      * @return A string containing the generated XML snippet.
      */
-    std::string retryWrapperXML(const std::string &sequence_name,
-                                 const std::vector<std::string> &branches,
-                                 const int num_cycles = -1);
+    std::string retrySequenceWrapperXML(const std::string &sequence_name,
+                                const std::vector<std::string> &branches,
+                                const int num_cycles = -1);
 
     /**
      * @brief Wrap multiple snippets in a <Fallback> with a given name.

@@ -354,11 +354,11 @@ namespace manymove_cpp_trees
     }
 
     std::string buildWaitForKeyBool(const std::string &robot_prefix,
-                                const std::string &node_prefix,
-                                const std::string &key_id,
-                                const bool &expected_value,
-                                const int timeout_ms,
-                                const int poll_rate_ms)
+                                    const std::string &node_prefix,
+                                    const std::string &key_id,
+                                    const bool &expected_value,
+                                    const int timeout_ms,
+                                    const int poll_rate_ms)
     {
         // Construct a unique name for the node
         std::string node_name = robot_prefix + node_prefix + "_WaitForKey";
@@ -377,9 +377,9 @@ namespace manymove_cpp_trees
     }
 
     std::string buildSetKeyBool(const std::string &robot_prefix,
-                                      const std::string &node_prefix,
-                                      const std::string &key,
-                                      const bool &value)
+                                const std::string &node_prefix,
+                                const std::string &key,
+                                const bool &value)
     {
         // Construct a node name
         std::string node_name = node_prefix + "_SetKey";
@@ -528,9 +528,9 @@ namespace manymove_cpp_trees
         return xml.str();
     }
 
-    std::string repeatWrapperXML(const std::string &sequence_name,
-                                 const std::vector<std::string> &branches,
-                                 const int num_cycles)
+    std::string repeatSequenceWrapperXML(const std::string &sequence_name,
+                                         const std::vector<std::string> &branches,
+                                         const int num_cycles)
     {
         std::ostringstream xml;
         xml << "  <Repeat name=\"" << sequence_name << "\" num_cycles=\"" << num_cycles << "\">\n";
@@ -544,9 +544,25 @@ namespace manymove_cpp_trees
         return xml.str();
     }
 
-    std::string retryWrapperXML(const std::string &sequence_name,
-                                 const std::vector<std::string> &branches,
-                                 const int num_cycles)
+    std::string repeatFallbackWrapperXML(const std::string &sequence_name,
+                                         const std::vector<std::string> &branches,
+                                         const int num_cycles)
+    {
+        std::ostringstream xml;
+        xml << "  <Repeat name=\"" << sequence_name << "\" num_cycles=\"" << num_cycles << "\">\n";
+        xml << "    <Fallback name=\"" << sequence_name << "_fallback\">\n";
+        for (const auto &b : branches)
+        {
+            xml << b << "\n";
+        }
+        xml << "    </Fallback>\n";
+        xml << "  </Repeat>\n";
+        return xml.str();
+    }
+
+    std::string retrySequenceWrapperXML(const std::string &sequence_name,
+                                        const std::vector<std::string> &branches,
+                                        const int num_cycles)
     {
         std::ostringstream xml;
         xml << "  <RetryNode name=\"" << sequence_name << "\" num_attempts=\"" << num_cycles << "\">\n";

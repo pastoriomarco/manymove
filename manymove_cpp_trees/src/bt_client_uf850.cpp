@@ -292,7 +292,7 @@ int main(int argc, char **argv)
     std::string startup_sequence_xml = sequenceWrapperXML("StartUpSequence", {check_reset_robot_xml, spawn_fixed_objects_xml, prep_sequence_xml});
 
     // Repeat node must have only one children, so it also wrap a Sequence child that wraps the other children
-    std::string repeat_forever_wrapper_xml = repeatWrapperXML(
+    std::string repeat_forever_wrapper_xml = repeatSequenceWrapperXML(
         "RepeatForever",
         {check_reset_robot_xml,       //< We check if the robot is active, if not we try to reset it
          spawn_graspable_objects_xml, //< We add all the objects to the scene

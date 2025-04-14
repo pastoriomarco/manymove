@@ -348,7 +348,7 @@ int main(int argc, char **argv)
 
     // ROBOT 1
     // Repeat node must have only one children, so it also wrap a Sequence child that wraps the other children
-    std::string repeat_forever_wrapper_1_xml = repeatWrapperXML(
+    std::string repeat_forever_wrapper_1_xml = repeatSequenceWrapperXML(
         "RepeatForever",
         {check_reset_robot_1_xml,       //< We check if the robot is active, if not we try to reset it
          spawn_graspable_objects_1_xml, //< We add all the objects to the scene
@@ -363,7 +363,7 @@ int main(int argc, char **argv)
 
     // ROBOT 2
     // Repeat node must have only one children, so it also wrap a Sequence child that wraps the other children
-    std::string repeat_forever_wrapper_2_xml = repeatWrapperXML(
+    std::string repeat_forever_wrapper_2_xml = repeatSequenceWrapperXML(
         "RepeatForever",
         {check_reset_robot_2_xml,       //< We check if the robot is active, if not we try to reset it
          spawn_graspable_objects_2_xml, //< We add all the objects to the scene

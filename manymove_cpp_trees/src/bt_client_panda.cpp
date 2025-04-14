@@ -285,7 +285,7 @@ int main(int argc, char **argv)
     std::string startup_sequence_xml = sequenceWrapperXML("StartUpSequence", {spawn_fixed_objects_xml, prep_sequence_xml, move_gripper_open_xml});
 
     // Repeat node must have only one children, so it also wrap a Sequence child that wraps the other children
-    std::string repeat_forever_wrapper_xml = repeatWrapperXML(
+    std::string repeat_forever_wrapper_xml = repeatSequenceWrapperXML(
         "RepeatForever",
         {spawn_graspable_objects_xml, //< We add all the objects to the scene
          get_grasp_object_poses_xml,  //< We get the updated poses relative to the objects
