@@ -231,13 +231,20 @@ int main(int argc, char **argv)
     blackboard->set("touch_links_empty_key", touch_links_empty);
 
     std::string attach_obj_1_xml = buildObjectActionXML("attach_obj_to_manipulate_1", createAttachObject("object_to_manipulate_1_key", "tcp_frame_name_1_key", "touch_links_empty_key"));
-    std::string detach_obj_1_xml = buildObjectActionXML("attach_obj_to_manipulate_1", createDetachObject("object_to_manipulate_1_key", "tcp_frame_name_1_key"));
-    std::string remove_obj_1_xml = buildObjectActionXML("remove_obj_to_manipulate_1", createRemoveObject("object_to_manipulate_1_key"));
+    std::string detach_obj_1_xml = fallbackWrapperXML("detach_obj_to_manipulate_1_always_success",
+                                                      {buildObjectActionXML("detach_obj_to_manipulate_1", createDetachObject("object_to_manipulate_1_key", "tcp_frame_name_1_key")),
+                                                       "<AlwaysSuccess />"});
+    std::string remove_obj_1_xml = fallbackWrapperXML("remove_obj_to_manipulate_1_always_success",
+                                                      {buildObjectActionXML("remove_obj_to_manipulate_1", createRemoveObject("object_to_manipulate_1_key")),
+                                                       "<AlwaysSuccess />"});
 
     std::string attach_obj_2_xml = buildObjectActionXML("attach_obj_to_manipulate_2", createAttachObject("object_to_manipulate_2_key", "tcp_frame_name_2_key", "touch_links_empty_key"));
-    std::string detach_obj_2_xml = buildObjectActionXML("attach_obj_to_manipulate_2", createDetachObject("object_to_manipulate_2_key", "tcp_frame_name_2_key"));
-    std::string remove_obj_2_xml = buildObjectActionXML("remove_obj_to_manipulate_2", createRemoveObject("object_to_manipulate_2_key"));
-
+    std::string detach_obj_2_xml = fallbackWrapperXML("detach_obj_to_manipulate_2_always_success",
+                                                      {buildObjectActionXML("detach_obj_to_manipulate_2", createDetachObject("object_to_manipulate_2_key", "tcp_frame_name_2_key")),
+                                                       "<AlwaysSuccess />"});
+    std::string remove_obj_2_xml = fallbackWrapperXML("remove_obj_to_manipulate_2_always_success",
+                                                      {buildObjectActionXML("remove_obj_to_manipulate_2", createRemoveObject("object_to_manipulate_2_key")),
+                                                       "<AlwaysSuccess />"});
     // ----------------------------------------------------------------------------
     // 4) Add GetObjectPoseAction Node and nodes to attach/detach objects
     // ----------------------------------------------------------------------------
@@ -343,8 +350,17 @@ int main(int argc, char **argv)
     std::string startup_sequence_2_xml = sequenceWrapperXML("StartUpSequence_2", {check_reset_robot_2_xml, prep_sequence_2_xml});
     std::string parallel_sub_startup_sequences_xml = parallelWrapperXML("Parallel_startupSequences", {startup_sequence_1_xml, startup_sequence_2_xml}, 2, 1);
 
+    // Set up a sequence to reset the scene:
+    std::string reset_graspable_objects_xml = sequenceWrapperXML("reset_graspable_objects", {open_gripper_1_xml, remove_obj_1_xml, open_gripper_2_xml, remove_obj_2_xml});
+
     // General startup sequence:
-    std::string startup_sequence_xml = sequenceWrapperXML("StartUpSequence", {check_reset_robot_1_xml, spawn_fixed_objects_xml, parallel_sub_startup_sequences_xml});
+    std::string startup_sequence_xml = sequenceWrapperXML(
+        "StartUpSequence",
+        {check_reset_robot_1_xml,
+         check_reset_robot_2_xml,
+         spawn_fixed_objects_xml,
+         reset_graspable_objects_xml,
+         parallel_sub_startup_sequences_xml});
 
     // ROBOT 1
     // Repeat node must have only one children, so it also wrap a Sequence child that wraps the other children
@@ -379,8 +395,10 @@ int main(int argc, char **argv)
     // Runningh both robot sequences in parallel:
     std::string parallel_repeat_forever_sequences_xml = parallelWrapperXML("PARALLEL_MOTION_SEQUENCES", {repeat_forever_wrapper_1_xml, repeat_forever_wrapper_2_xml}, 2, 1);
 
+    std::string retry_forever_wrapper_xml = retrySequenceWrapperXML("RetryForever", {startup_sequence_xml, parallel_repeat_forever_sequences_xml}, -1);
+
     // MasterSequence with startup sequence and RepeatForever as child to set BehaviorTree ID and root main_tree_to_execute in the XML
-    std::vector<std::string> master_branches_xml = {startup_sequence_xml, parallel_repeat_forever_sequences_xml};
+    std::vector<std::string> master_branches_xml = {retry_forever_wrapper_xml};
     std::string master_body = sequenceWrapperXML("GlobalMasterSequence", master_branches_xml);
 
     // ----------------------------------------------------------------------------

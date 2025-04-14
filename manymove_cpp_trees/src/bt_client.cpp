@@ -228,8 +228,12 @@ int main(int argc, char **argv)
     blackboard->set("touch_links_empty_key", touch_links_empty);
 
     std::string attach_obj_xml = buildObjectActionXML("attach_obj_to_manipulate", createAttachObject("object_to_manipulate_key", "tcp_frame_name_key", "touch_links_empty_key"));
-    std::string detach_obj_xml = buildObjectActionXML("attach_obj_to_manipulate", createDetachObject("object_to_manipulate_key", "tcp_frame_name_key"));
-    std::string remove_obj_xml = buildObjectActionXML("remove_obj_to_manipulate", createRemoveObject("object_to_manipulate_key"));
+    std::string detach_obj_xml = fallbackWrapperXML("detach_obj_to_manipulate_always_success",
+                                                    {buildObjectActionXML("detach_obj_to_manipulate", createDetachObject("object_to_manipulate_key", "tcp_frame_name_key")),
+                                                     "<AlwaysSuccess />"});
+    std::string remove_obj_xml = fallbackWrapperXML("remove_obj_to_manipulate_always_success",
+                                                    {buildObjectActionXML("remove_obj_to_manipulate", createRemoveObject("object_to_manipulate_key")),
+                                                     "<AlwaysSuccess />"});
 
     // ----------------------------------------------------------------------------
     // 4) Add GetObjectPoseAction Node and nodes to attach/detach objects
@@ -290,7 +294,15 @@ int main(int argc, char **argv)
     std::string close_gripper_xml = sequenceWrapperXML("CloseGripper", {signal_gripper_close_xml, check_gripper_close_xml, attach_obj_xml});
     std::string open_gripper_xml = sequenceWrapperXML("OpenGripper", {signal_gripper_open_xml, detach_obj_xml});
 
-    std::string startup_sequence_xml = sequenceWrapperXML("StartUpSequence", {check_reset_robot_xml, spawn_fixed_objects_xml, prep_sequence_xml});
+    // Set up a sequence to reset the scene:
+    std::string reset_graspable_objects_xml = sequenceWrapperXML("reset_graspable_objects", {open_gripper_xml, remove_obj_xml});
+
+    std::string startup_sequence_xml = sequenceWrapperXML(
+        "StartUpSequence",
+        {check_reset_robot_xml,
+         spawn_fixed_objects_xml,
+         reset_graspable_objects_xml,
+         prep_sequence_xml});
 
     // Repeat node must have only one children, so it also wrap a Sequence child that wraps the other children
     std::string repeat_forever_wrapper_xml = repeatSequenceWrapperXML(
@@ -306,8 +318,10 @@ int main(int argc, char **argv)
          remove_obj_xml},             //< We delete the object for it to be added on the next cycle in the original position
         -1);                          //< num_cycles=-1 for infinite
 
+    std::string retry_forever_wrapper_xml = retrySequenceWrapperXML("RetryForever", {startup_sequence_xml, repeat_forever_wrapper_xml}, -1);
+
     // GlobalMasterSequence with RepeatForever as child to set BehaviorTree ID and root main_tree_to_execute in the XML
-    std::vector<std::string> master_branches_xml = {startup_sequence_xml, repeat_forever_wrapper_xml};
+    std::vector<std::string> master_branches_xml = {retry_forever_wrapper_xml};
     std::string master_body = sequenceWrapperXML("GlobalMasterSequence", master_branches_xml);
 
     // ----------------------------------------------------------------------------

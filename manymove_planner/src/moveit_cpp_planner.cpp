@@ -1187,9 +1187,7 @@ bool MoveItCppPlanner::isTrajectoryValid(
     // Note that the isPathValid overload taking a robot_trajectory::RobotTrajectory,
     // constraints, group name, verbosity flag, and an optional invalid index vector
     // iterates over each waypoint and performs collision/constraint checking.
-    bool valid = lscene->isPathValid(trajectory, path_constraints, planning_group_, verbose, invalid_index);
-
-    return valid;
+    return lscene->isPathValid(trajectory, path_constraints, planning_group_, verbose, invalid_index);
 }
 
 bool MoveItCppPlanner::isTrajectoryValid(
@@ -1205,10 +1203,6 @@ bool MoveItCppPlanner::isTrajectoryValid(
         RCLCPP_ERROR(logger_, "Failed to lock the PlanningScene in isTrajectoryValid");
         return false;
     }
-
-    // Create a diff (clone) of the current planning scene.
-    planning_scene::PlanningScenePtr scene = lscene->diff();
-    scene->decoupleParent(); // Ensure the diff scene is independent.
 
     // Get a "current state" from the move group interface.
     auto current_state_ptr = moveit_cpp_ptr_->getCurrentState();
@@ -1231,7 +1225,7 @@ bool MoveItCppPlanner::isTrajectoryValid(
     robot_traj_ptr->setRobotTrajectoryMsg(current_state, rt_msg);
 
     // Delegate the validity check to the PlanningScene's isPathValid overload.
-    bool valid = scene->isPathValid(*robot_traj_ptr, path_constraints, planning_group_, verbose, invalid_index);
+    bool valid = lscene->isPathValid(*robot_traj_ptr, path_constraints, planning_group_, verbose, invalid_index);
 
     return valid;
 }

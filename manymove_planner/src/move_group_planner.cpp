@@ -951,9 +951,7 @@ bool MoveGroupPlanner::isTrajectoryValid(
     // Note that the isPathValid overload taking a robot_trajectory::RobotTrajectory,
     // constraints, group name, verbosity flag, and an optional invalid index vector
     // iterates over each waypoint and performs collision/constraint checking.
-    bool valid = lscene->isPathValid(trajectory, path_constraints, planning_group_, verbose, invalid_index);
-
-    return valid;
+    return lscene->isPathValid(trajectory, path_constraints, planning_group_, verbose, invalid_index);
 }
 
 bool MoveGroupPlanner::isTrajectoryValid(
@@ -962,7 +960,7 @@ bool MoveGroupPlanner::isTrajectoryValid(
     bool verbose,
     std::vector<std::size_t> *invalid_index) const
 {
-    // Lock the current planning scene via the planning scene monitor.
+    // 1) Lock the planning scene
     planning_scene_monitor::LockedPlanningSceneRO lscene(planning_scene_monitor_);
     if (!lscene)
     {
@@ -970,32 +968,53 @@ bool MoveGroupPlanner::isTrajectoryValid(
         return false;
     }
 
-    // Create a diff (clone) of the current planning scene.
-    planning_scene::PlanningScenePtr scene = lscene->diff();
-    scene->decoupleParent(); // Ensure the diff scene is independent.
-
-    // Get a "current state" from the move group interface.
-    auto current_state_ptr = move_group_interface_->getCurrentState(5.0);
-    if (!current_state_ptr)
+    // 2) Get the RobotModel
+    auto robot_model_ptr = move_group_interface_->getRobotModel();
+    if (!robot_model_ptr)
     {
-        RCLCPP_ERROR(logger_, "No current robot state available in isTrajectoryValid");
+        RCLCPP_ERROR(logger_, "Robot model is null in isTrajectoryValid");
         return false;
     }
-    const moveit::core::RobotState &current_state = *current_state_ptr;
 
-    // Convert the input JointTrajectory message to a moveit_msgs::msg::RobotTrajectory.
+    // 3) Copy the *scene’s* current RobotState (including any attached objects!)
+    //    so that we preserve the attached bodies.
+    moveit::core::RobotState local_state(lscene->getCurrentState());
+
+    // 4) Override just the joint angles from your current_positions_ map
+    {
+        std::lock_guard<std::mutex> lock(js_mutex_);
+
+        for (const auto &joint_name : joint_traj_msg.joint_names)
+        {
+            auto it = current_positions_.find(joint_name);
+            if (it != current_positions_.end())
+            {
+                local_state.setVariablePosition(joint_name, it->second);
+            }
+            else
+            {
+                RCLCPP_WARN(logger_,
+                            "Joint '%s' not found in current_positions_. Using default value instead.",
+                            joint_name.c_str());
+            }
+        }
+    }
+
+    // Make sure transforms are up to date
+    local_state.update();
+
+    // 5) Convert your trajectory message to a RobotTrajectory
     moveit_msgs::msg::RobotTrajectory rt_msg;
     rt_msg.joint_trajectory = joint_traj_msg;
 
-    // Create a RobotTrajectory object from the robot model and planning group.
-    robot_trajectory::RobotTrajectoryPtr robot_traj_ptr =
-        std::make_shared<robot_trajectory::RobotTrajectory>(move_group_interface_->getRobotModel(), planning_group_);
+    auto robot_traj_ptr = std::make_shared<robot_trajectory::RobotTrajectory>(
+        robot_model_ptr, planning_group_);
 
-    // Set the trajectory using the current state and the constructed message.
-    robot_traj_ptr->setRobotTrajectoryMsg(current_state, rt_msg);
+    robot_traj_ptr->setRobotTrajectoryMsg(local_state, rt_msg);
 
-    // Delegate the validity check to the PlanningScene's isPathValid overload.
-    bool valid = scene->isPathValid(*robot_traj_ptr, path_constraints, planning_group_, verbose, invalid_index);
+    // 6) Finally, let the PlanningScene do the path validity check.
+    //    Because 'local_state' came from the scene, it already has the attached object.
+    bool valid = lscene->isPathValid(*robot_traj_ptr, path_constraints, planning_group_, verbose, invalid_index);
 
     return valid;
 }

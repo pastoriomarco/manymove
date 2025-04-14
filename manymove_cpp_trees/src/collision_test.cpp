@@ -111,7 +111,7 @@ int main(int argc, char **argv)
                             graspable_mesh_pose);
 
     //
-    std::string check_graspable_mesh_obj_xml = buildObjectActionXML("check_" + object_to_manipulate_1, createCheckObjectExists(object_to_manipulate_1));
+    std::string check_graspable_mesh_obj_xml = buildObjectActionXML("check_" + object_to_manipulate_1, createCheckObjectExists(object_to_manipulate_1_key_name));
 
     // We create the xml snippet to add the mesh to the scene through a behaviortree action.
     std::string add_graspable_mesh_obj_xml = buildObjectActionXML(
@@ -134,8 +134,12 @@ int main(int argc, char **argv)
 
     // Then we create the xml snippets to attach, detach the object to/from a link, and to remove it from the scene.
     std::string attach_obj_1_xml = buildObjectActionXML("attach_obj_to_manipulate_1", createAttachObject(object_to_manipulate_1_key_name, tcp_frame_name_1_key_name, "touch_links_empty_key"));
-    std::string detach_obj_1_xml = buildObjectActionXML("detach_obj_to_manipulate_1", createDetachObject(object_to_manipulate_1_key_name, tcp_frame_name_1_key_name));
-    std::string remove_obj_1_xml = buildObjectActionXML("remove_obj_to_manipulate_1", createRemoveObject(object_to_manipulate_1_key_name));
+    std::string detach_obj_1_xml = fallbackWrapperXML("detach_obj_to_manipulate_1_always_success",
+                                                      {buildObjectActionXML("detach_obj_to_manipulate_1", createDetachObject(object_to_manipulate_1_key_name, tcp_frame_name_1_key_name)),
+                                                       "<AlwaysSuccess />"});
+    std::string remove_obj_1_xml = fallbackWrapperXML("detach_obj_to_manipulate_1_always_success",
+                                                      {buildObjectActionXML("remove_obj_to_manipulate_1", createRemoveObject(object_to_manipulate_1_key_name)),
+                                                       "<AlwaysSuccess />"});
 
     // Now that we have all we need for the first object, we can create the first poses relative to it.
 
@@ -317,8 +321,12 @@ int main(int argc, char **argv)
     std::string check_endplate_mesh_obj_xml = buildObjectActionXML("check_endplate_mesh", createCheckObjectExists("endplate_id_key"));
 
     // We might want to remove the objects with variable position to replace them
-    std::string remove_slider_mesh_obj_xml = buildObjectActionXML("remove_slider_mesh", createRemoveObject("slider_id_key"));
-    std::string remove_endplate_mesh_obj_xml = buildObjectActionXML("remove_endplate_mesh", createRemoveObject("endplate_id_key"));
+    std::string remove_slider_mesh_obj_xml = fallbackWrapperXML("remove_slider_mesh_always_success",
+                                                                {buildObjectActionXML("remove_slider_mesh", createRemoveObject("slider_id_key")),
+                                                                 "<AlwaysSuccess />"});
+    std::string remove_endplate_mesh_obj_xml = fallbackWrapperXML("remove_endplate_mesh_always_success",
+                                                                  {buildObjectActionXML("remove_endplate_mesh", createRemoveObject("endplate_id_key")),
+                                                                   "<AlwaysSuccess />"});
 
     // Here we add the objects that create the scene. The machine is in a fixed position
     std::string add_machine_mesh_obj_xml = buildObjectActionXML(
@@ -372,9 +380,6 @@ int main(int argc, char **argv)
     std::string init_endplate_mesh_obj_xml = fallbackWrapperXML("init_endplate_mesh_obj", {check_endplate_mesh_obj_xml, add_endplate_mesh_obj_xml});
     std::string init_slider_mesh_obj_xml = fallbackWrapperXML("init_slider_mesh_obj", {check_slider_mesh_obj_xml, add_slider_mesh_obj_xml});
 
-    // Compose the reset sequence of variable objects
-    std::string reset_movable_obj_xml = sequenceWrapperXML("reset_movable_objects", {remove_slider_mesh_obj_xml, add_slider_mesh_obj_xml, remove_endplate_mesh_obj_xml, add_endplate_mesh_obj_xml});
-
     // Set the name for the TCP of ROBOT 2
     std::string tcp_frame_name_2 = rp_2.prefix + rp_2.tcp_frame;
     std::string tcp_frame_name_2_key_name = "tcp_frame_name_2_key";
@@ -382,8 +387,12 @@ int main(int argc, char **argv)
 
     // Create the xml snippets to attach/detach the second object to manipulate to/from a link, and to remove it from the scene
     std::string attach_obj_2_xml = buildObjectActionXML("attach_obj_to_manipulate_2", createAttachObject(object_to_manipulate_2_key_name, tcp_frame_name_2_key_name, "touch_links_empty_key"));
-    std::string detach_obj_2_xml = buildObjectActionXML("attach_obj_to_manipulate_2", createDetachObject(object_to_manipulate_2_key_name, tcp_frame_name_2_key_name));
-    std::string remove_obj_2_xml = buildObjectActionXML("remove_obj_to_manipulate_2", createRemoveObject(object_to_manipulate_2_key_name));
+    std::string detach_obj_2_xml = fallbackWrapperXML("detach_obj_to_manipulate_2_always_success",
+                                                      {buildObjectActionXML("detach_obj_to_manipulate_2", createDetachObject(object_to_manipulate_2_key_name, tcp_frame_name_2_key_name)),
+                                                       "<AlwaysSuccess />"});
+    std::string remove_obj_2_xml = fallbackWrapperXML("detach_obj_to_manipulate_2_always_success",
+                                                      {buildObjectActionXML("remove_obj_to_manipulate_2", createRemoveObject(object_to_manipulate_2_key_name)),
+                                                       "<AlwaysSuccess />"});
 
     //
 
@@ -584,8 +593,8 @@ int main(int argc, char **argv)
          {rp_1.prefix, "pose", move_configs["max_move"], approach_drop_target_1_key_name}},
         blackboard);
 
-    std::string exit_move_parallel_1_xml = buildMoveXML(
-        rp_1.prefix, rp_1.prefix + "exit",
+    std::string ready_move_parallel_1_xml = buildMoveXML(
+        rp_1.prefix, rp_1.prefix + "ready",
         {{rp_1.prefix, "pose", move_configs["max_move"], approach_drop_target_1_key_name}},
         blackboard);
 
@@ -646,18 +655,18 @@ int main(int argc, char **argv)
     // Robot 1
     std::string signal_gripper_close_1_xml = (rp_1.is_real ? buildSetOutputXML(rp_1.prefix, "GripperClose", "controller", 0, 1) : "");
     std::string signal_gripper_open_1_xml = (rp_1.is_real ? buildSetOutputXML(rp_1.prefix, "GripperOpen", "controller", 0, 0) : "");
-    std::string check_gripper_close_1_xml = (rp_1.is_real ? buildWaitForInput(rp_1.prefix, "WaitForSensor", "controller", 0, 1) : "<Delay delay_msec=\"250\">\n<AlwaysSuccess />\n</Delay>\n");
-    std::string check_gripper_open_1_xml = (rp_1.is_real ? buildWaitForInput(rp_1.prefix, "WaitForSensor", "controller", 0, 0) : "<Delay delay_msec=\"250\">\n  <AlwaysSuccess />\n</Delay>\n");
+    std::string wait_for_gripper_close_1_xml = (rp_1.is_real ? buildWaitForInput(rp_1.prefix, "WaitForSensor", "controller", 0, 1) : "<Delay delay_msec=\"250\">\n<AlwaysSuccess />\n</Delay>\n");
+    std::string wait_for_gripper_open_1_xml = (rp_1.is_real ? buildWaitForInput(rp_1.prefix, "WaitForSensor", "controller", 0, 0) : "<Delay delay_msec=\"250\">\n  <AlwaysSuccess />\n</Delay>\n");
     std::string check_robot_state_1_xml = buildCheckRobotStateXML(rp_1.prefix, "CheckRobot", "robot_ready", "error_code", "robot_mode", "robot_state", "robot_msg");
     std::string reset_robot_state_1_xml = buildResetRobotStateXML(rp_1.prefix, "ResetRobot", rp_1.model);
 
-    std::string check_reset_robot_1_xml = (rp_1.is_real ? fallbackWrapperXML(rp_1.prefix + "CheckResetFallback", {check_robot_state_1_xml, reset_robot_state_1_xml}) : "<Delay delay_msec=\"250\">\n<AlwaysSuccess />\n</Delay>\n");
+    std::string check_reset_robot_1_xml = (rp_1.is_real ? fallbackWrapperXML(rp_1.prefix + "CheckResetFallback", {check_robot_state_1_xml, reset_robot_state_1_xml}) : "<Delay delay_msec=\"100\">\n<AlwaysSuccess />\n</Delay>\n");
 
     // Robot 2
     std::string check_robot_state_2_xml = buildCheckRobotStateXML(rp_2.prefix, "CheckRobot", "robot_ready", "error_code", "robot_mode", "robot_state", "robot_msg");
     std::string reset_robot_state_2_xml = buildResetRobotStateXML(rp_2.prefix, "ResetRobot", rp_2.model);
 
-    std::string check_reset_robot_2_xml = (rp_2.is_real ? fallbackWrapperXML(rp_2.prefix + "CheckResetFallback", {check_robot_state_2_xml, reset_robot_state_2_xml}) : "<Delay delay_msec=\"250\">\n<AlwaysSuccess />\n</Delay>\n");
+    std::string check_reset_robot_2_xml = (rp_2.is_real ? fallbackWrapperXML(rp_2.prefix + "CheckResetFallback", {check_robot_state_2_xml, reset_robot_state_2_xml}) : "<Delay delay_msec=\"100\">\n<AlwaysSuccess />\n</Delay>\n");
 
     //
 
@@ -667,17 +676,17 @@ int main(int argc, char **argv)
 
     // Let's build the full sequence in logically separated blocks:
     // General
-    std::string spawn_fixed_objects_xml = sequenceWrapperXML("SpawnFixedObjects", {init_machine_mesh_obj_xml, init_endplate_mesh_obj_xml, init_slider_mesh_obj_xml});
+    std::string spawn_fixed_objects_xml = sequenceWrapperXML("SpawnFixedObjects", {init_machine_mesh_obj_xml}); //, init_endplate_mesh_obj_xml, init_slider_mesh_obj_xml});
 
     // Robot 1
     std::string go_to_rest_pose_1_xml = sequenceWrapperXML("GoToRestPose", {rest_move_parallel_1_xml});
     std::string get_grasp_object_poses_1_xml = sequenceWrapperXML("GetGraspPoses", {get_pick_pose_1_xml, get_approach_pose_1_xml});
     std::string go_to_pick_pose_1_xml = sequenceWrapperXML("GoToPickPose", {pick_move_parallel_1_xml});
-    std::string close_gripper_1_xml = sequenceWrapperXML("CloseGripper", {signal_gripper_close_1_xml, check_gripper_close_1_xml, attach_obj_1_xml});
+    std::string close_gripper_1_xml = sequenceWrapperXML("CloseGripper", {signal_gripper_close_1_xml, wait_for_gripper_close_1_xml, attach_obj_1_xml});
     std::string go_to_wait_pose_1_xml = sequenceWrapperXML("GoToWaitPose", {wait_move_parallel_1_xml});
     std::string go_to_drop_pose_1_xml = sequenceWrapperXML("GoToDropPose", {drop_move_parallel_1_xml});
-    std::string open_gripper_1_xml = sequenceWrapperXML("OpenGripper", {signal_gripper_open_1_xml, detach_obj_1_xml, check_gripper_open_1_xml});
-    std::string go_to_exit_pose_1_xml = sequenceWrapperXML("GoToExitPose", {exit_move_parallel_1_xml});
+    std::string open_gripper_1_xml = sequenceWrapperXML("OpenGripper", {signal_gripper_open_1_xml, detach_obj_1_xml, wait_for_gripper_open_1_xml});
+    std::string go_to_ready_pose_1_xml = sequenceWrapperXML("GoToExitPose", {ready_move_parallel_1_xml});
 
     // Robot 2
     std::string go_to_rest_pose_2_xml = sequenceWrapperXML("GoToRestPose", {rest_move_parallel_2_xml});
@@ -687,26 +696,40 @@ int main(int argc, char **argv)
     std::string go_to_load_pose_2_xml = sequenceWrapperXML("GoToLoadPose", {load_move_parallel_2_xml});
     std::string go_to_exit_pose_2_xml = sequenceWrapperXML("GoToExitPose", {exit_move_parallel_2_xml});
 
+    // Reset sequence of variable objects
+    std::string reset_movable_objects_xml = sequenceWrapperXML("reset_movable_objects", {remove_slider_mesh_obj_xml, add_slider_mesh_obj_xml, remove_endplate_mesh_obj_xml, add_endplate_mesh_obj_xml});
+    std::string reset_graspable_objects_xml = sequenceWrapperXML("reset_graspable_objects", {open_gripper_1_xml, remove_obj_1_xml, detach_obj_2_xml, remove_obj_2_xml});
+
     // Dedicated spawnable objects per robot:
-    std::string spawn_graspable_objects_1_xml = sequenceWrapperXML("SpawnGraspableObjects", {init_graspable_mesh_obj_xml});
+    std::string spawn_graspable_object_1_xml = sequenceWrapperXML("SpawnGraspableObjects", {init_graspable_mesh_obj_xml});
 
     // Parallel startup subsequences:
     std::string startup_sequence_1_xml = sequenceWrapperXML("StartUpSequence_1", {check_reset_robot_1_xml, rest_move_parallel_1_xml});
-    std::string startup_sequence_2_xml = sequenceWrapperXML("StartUpSequence_2", {check_reset_robot_2_xml, ready_move_parallel_2_xml});
+    std::string startup_sequence_2_xml = sequenceWrapperXML("StartUpSequence_2", {check_reset_robot_2_xml, rest_move_parallel_2_xml});
     std::string parallel_sub_startup_sequences_xml = parallelWrapperXML("Parallel_startupSequences", {startup_sequence_1_xml, startup_sequence_2_xml}, 2, 1);
 
     // General startup sequence:
-    std::string startup_sequence_xml = sequenceWrapperXML("StartUpSequence", {spawn_fixed_objects_xml, parallel_sub_startup_sequences_xml});
+    std::string startup_sequence_xml = sequenceWrapperXML(
+        "StartUpSequence",
+        {
+            spawn_fixed_objects_xml,
+            reset_movable_objects_xml,
+            reset_graspable_objects_xml,
+            parallel_sub_startup_sequences_xml,
+        });
+
+    // Reset :
 
     // ROBOT 1
     // Repeat node must have only one children, so it also wrap a Sequence child that wraps the other children
     std::string repeat_forever_wrapper_1_xml = repeatSequenceWrapperXML(
         "RepeatForever",
         {
+            go_to_ready_pose_1_xml,                       //< Ready move sequence
             set_robot_1_out_of_working_position,          //<
             wait_for_cycle_on,                            //<
-            spawn_graspable_objects_1_xml,                //< We add all the objects to the scene
-            reset_movable_obj_xml,                        //< We reset the movable objects in the scene
+            spawn_graspable_object_1_xml,                 //< We add all the objects to the scene
+            reset_movable_objects_xml,                    //< We reset the movable objects in the scene
             get_grasp_object_poses_1_xml,                 //< We get the updated poses relative to the objects
             go_to_pick_pose_1_xml,                        //< Pick move sequence
             close_gripper_1_xml,                          //< We attach the object
@@ -718,7 +741,6 @@ int main(int argc, char **argv)
             wait_for_robot_2_in_working_position_xml,     //<
             open_gripper_1_xml,                           //< We detach the object
             rename_obj_1_xml,                             //< We rename the object for the other robot to use, we will add the original one back on the next cycle in the original position
-            go_to_exit_pose_1_xml,                        //< Exit move sequence
         },
         -1); //< num_cycles=-1 for infinite
 
@@ -727,6 +749,7 @@ int main(int argc, char **argv)
     std::string repeat_forever_wrapper_2_xml = repeatSequenceWrapperXML(
         "RepeatForever",
         {
+            go_to_ready_pose_2_xml,                       //< Homing sequence
             set_robot_2_out_of_working_position_xml,      //<
             wait_for_cycle_on,                            //<
             wait_for_robot_1_in_working_position_xml,     //<
@@ -740,16 +763,17 @@ int main(int argc, char **argv)
             go_to_load_pose_2_xml,                        //< Load sequence
             go_to_exit_pose_2_xml,                        //<
             detach_obj_2_xml,                             //< We detach the object
-            remove_obj_2_xml,                             //< Homing sequence
-            go_to_ready_pose_2_xml,                       //< We delete the object for it to be added on the next cycle in the original position
+            remove_obj_2_xml,                             //< We delete the object for it to be added on the next cycle in the original position
         },
         -1); //< num_cycles=-1 for infinite
 
     // Runningh both robot sequences in parallel:
     std::string parallel_repeat_forever_sequences_xml = parallelWrapperXML("PARALLEL_MOTION_SEQUENCES", {repeat_forever_wrapper_1_xml, repeat_forever_wrapper_2_xml}, 2, 1);
 
+    std::string retry_forever_wrapper_xml = retrySequenceWrapperXML("RetryForever", {startup_sequence_xml, parallel_repeat_forever_sequences_xml}, -1);
+
     // MasterSequence with startup sequence and RepeatForever as child to set BehaviorTree ID and root main_tree_to_execute in the XML
-    std::vector<std::string> master_branches_xml = {startup_sequence_xml, parallel_repeat_forever_sequences_xml};
+    std::vector<std::string> master_branches_xml = {retry_forever_wrapper_xml};
     std::string master_body = sequenceWrapperXML("GlobalMasterSequence", master_branches_xml);
 
     //

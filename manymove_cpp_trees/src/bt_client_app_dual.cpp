@@ -718,8 +718,6 @@ int main(int argc, char **argv)
             parallel_sub_startup_sequences_xml,
         });
 
-    // Reset :
-
     // ROBOT 1
     // Repeat node must have only one children, so it also wrap a Sequence child that wraps the other children
     std::string repeat_forever_wrapper_1_xml = repeatSequenceWrapperXML(

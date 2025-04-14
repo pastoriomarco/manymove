@@ -298,7 +298,7 @@ int main(int argc, char **argv)
          spawn_graspable_objects_xml, //< We add all the objects to the scene
          get_grasp_object_poses_xml,  //< We get the updated poses relative to the objects
          go_to_pick_pose_xml,         //< Prep sequence and pick sequence
-         close_gripper_xml,           //< We attach the object
+         close_gripper_xml,           //< We attach the object   
          drop_object_xml,             //< Drop sequence
          open_gripper_xml,            //< We detach the object
          home_sequence_xml,           //< Homing sequence
