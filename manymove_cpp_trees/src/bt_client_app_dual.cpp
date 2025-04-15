@@ -723,22 +723,22 @@ int main(int argc, char **argv)
     std::string repeat_forever_wrapper_1_xml = repeatSequenceWrapperXML(
         "RepeatForever",
         {
-            go_to_ready_pose_1_xml,                       //< Ready move sequence
-            set_robot_1_out_of_working_position,          //<
-            wait_for_cycle_on,                            //<
-            spawn_graspable_object_1_xml,                 //< We add all the objects to the scene
-            reset_movable_objects_xml,                    //< We reset the movable objects in the scene
-            get_grasp_object_poses_1_xml,                 //< We get the updated poses relative to the objects
+            go_to_ready_pose_1_xml,                       //< Go to ready position
+            set_robot_1_out_of_working_position,          //< Signal robot 1 out of working position
+            wait_for_cycle_on,                            //< Wait for robot cycle to be on
+            spawn_graspable_object_1_xml,                 //< Add the graspable object to the scene
+            reset_movable_objects_xml,                    //< Reset and reload the movable objects in the scene
+            get_grasp_object_poses_1_xml,                 //< Get the updated poses relative to the graspable object
             go_to_pick_pose_1_xml,                        //< Pick move sequence
-            close_gripper_1_xml,                          //< We attach the object
-            go_to_wait_pose_1_xml,                        //<
-            wait_for_robot_2_out_of_working_position_xml, //<
-            wait_for_renamed_obj_removed_xml,             //<
+            close_gripper_1_xml,                          //< Attach the object
+            go_to_wait_pose_1_xml,                        //< Go to wait pose
+            wait_for_robot_2_out_of_working_position_xml, //< Wait for other robot out of working position
+            wait_for_renamed_obj_removed_xml,             //< Wait for other robot to unload the graspable object
             go_to_drop_pose_1_xml,                        //< Drop move sequence
-            set_robot_1_in_working_position_xml,          //<
-            wait_for_robot_2_in_working_position_xml,     //<
-            open_gripper_1_xml,                           //< We detach the object
-            rename_obj_1_xml,                             //< We rename the object for the other robot to use, we will add the original one back on the next cycle in the original position
+            set_robot_1_in_working_position_xml,          //< Signal robot 1 in working position
+            wait_for_robot_2_in_working_position_xml,     //< Wait for other robot to be in working position
+            open_gripper_1_xml,                           //< Detach the object
+            rename_obj_1_xml,                             //< Rename the object for the other robot to use
         },
         -1); //< num_cycles=-1 for infinite
 
@@ -747,20 +747,20 @@ int main(int argc, char **argv)
     std::string repeat_forever_wrapper_2_xml = repeatSequenceWrapperXML(
         "RepeatForever",
         {
-            go_to_ready_pose_2_xml,                       //< Homing sequence
-            set_robot_2_out_of_working_position_xml,      //<
-            wait_for_robot_1_in_working_position_xml,     //<
-            get_grasp_object_poses_2_xml,                 //< We get the updated poses relative to the objects
-            get_load_poses_from_endplate_xml,             //<
-            go_to_insert_pose_2_xml,                      //< Prep sequence and pick sequence
-            set_robot_2_in_working_position,              //<
-            wait_for_robot_1_out_of_working_position_xml, //<
-            wait_for_renamed_drop_obj_xml,                //<
-            attach_obj_2_xml,                             //< We attach the object
+            go_to_ready_pose_2_xml,                       //< Go to ready position
+            set_robot_2_out_of_working_position_xml,      //< Signal robot 2 out of working position
+            wait_for_robot_1_in_working_position_xml,     //< Wait for other robot in working position
+            get_grasp_object_poses_2_xml,                 //< Get the updated poses relative to the renamed graspable object
+            get_load_poses_from_endplate_xml,             //< Get the updated pose from the machine's end plate
+            go_to_insert_pose_2_xml,                      //< Go to insert pose
+            set_robot_2_in_working_position,              //< Signal robot 2 in working position
+            wait_for_robot_1_out_of_working_position_xml, //< Wait for other robot out of working position
+            wait_for_renamed_drop_obj_xml,                //< Wait for other robot to release the graspable object and rename it
+            attach_obj_2_xml,                             //< Attach the renamed graspable object
             go_to_load_pose_2_xml,                        //< Load sequence
-            go_to_exit_pose_2_xml,                        //<
-            detach_obj_2_xml,                             //< We detach the object
-            remove_obj_2_xml,                             //< We delete the object for it to be added on the next cycle in the original position
+            go_to_exit_pose_2_xml,                        //< Exit sequence
+            detach_obj_2_xml,                             //< Detach the object
+            remove_obj_2_xml,                             //< Delete the object for it to be added on the next cycle in the original position
         },
         -1); //< num_cycles=-1 for infinite
 
