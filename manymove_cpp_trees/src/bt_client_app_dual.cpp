@@ -749,7 +749,6 @@ int main(int argc, char **argv)
         {
             go_to_ready_pose_2_xml,                       //< Homing sequence
             set_robot_2_out_of_working_position_xml,      //<
-            wait_for_cycle_on,                            //<
             wait_for_robot_1_in_working_position_xml,     //<
             get_grasp_object_poses_2_xml,                 //< We get the updated poses relative to the objects
             get_load_poses_from_endplate_xml,             //<

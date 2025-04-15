@@ -377,9 +377,22 @@ void AppModule::setupUI()
             // Use a checkable QToolButton as a toggle.
             QToolButton *toggle = new QToolButton(rowWidget);
             toggle->setCheckable(true);
-            toggle->setChecked(false); // start off as false
-            toggle->setText("ROBOT CYCLE OFF");    // initial text
+            toggle->setChecked(false);          // start off as false
+            toggle->setText("ROBOT CYCLE OFF"); // initial text
             toggle->setFixedWidth(750);
+            toggle->setFixedHeight(70);
+
+            // Set a stylesheet to change background colors based on state.
+            toggle->setStyleSheet(
+                "QToolButton {"
+                "   background-color: darkred;" // Off state color
+                "   border: 1px solid gray;"
+                "   padding: 5px;"
+                "}"
+                "QToolButton:checked {"
+                "   background-color: green;" // On state color
+                "}");
+
             rowLayout->addWidget(toggle);
             keyWidgets_[config.key] = toggle;
             // Connect the toggled signal.
