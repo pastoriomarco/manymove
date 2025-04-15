@@ -115,22 +115,22 @@ This repository is composed of several sub-packages, each handling different res
 - **Lite 6 manipulator** 
   with MoveItCPP and BehaviorTree.CPP:
   ```bash
-  ros2 launch manymove_planner lite_moveitcpp_fake_cpp_trees.launch.py
+  ros2 launch manymove_bringup lite_moveitcpp_fake_cpp_trees.launch.py
   ```
   
   with MoveGroupInterface and BehaviorTree.CPP:
   ```bash
-  ros2 launch manymove_planner lite_movegroup_fake_cpp_trees.launch.py
+  ros2 launch manymove_bringup lite_movegroup_fake_cpp_trees.launch.py
   ```
   
   with MoveGroupInterface and py_trees (minimal):
   ```bash
-  ros2 launch manymove_planner lite_movegroup_fake_py_trees.launch.py
+  ros2 launch manymove_bringup lite_movegroup_fake_py_trees.launch.py
   ```
 
 - **Dual robot (Lite 6 + UF850)**  
   ```bash
-  ros2 launch manymove_planner dual_moveitcpp_fake_cpp_trees.launch.py
+  ros2 launch manymove_bringup dual_moveitcpp_fake_cpp_trees.launch.py
   ```
   - Note: to run the app example with the robots in custom positions you'll have to use the fork of xarm_ros2 modified to handle this kind of scenario. Follow the instructions in the above link from the original repository, but change the instruction on point 4.2 with:
     ```bash
@@ -143,14 +143,14 @@ This repository is composed of several sub-packages, each handling different res
 
     with BehaviorTree.CPP:
      ```bash
-     ros2 launch manymove_planner panda_moveitcpp_fake_cpp_trees.launch.py
+     ros2 launch manymove_bringup panda_moveitcpp_fake_cpp_trees.launch.py
      ```
      ```bash
-     ros2 launch manymove_planner panda_movegroup_fake_cpp_trees.launch.py
+     ros2 launch manymove_bringup panda_movegroup_fake_cpp_trees.launch.py
      ```
     with py_trees:
      ```bash
-     ros2 launch manymove_planner panda_movegroup_fake_py_trees.launch.py
+     ros2 launch manymove_bringup panda_movegroup_fake_py_trees.launch.py
      ```
   Alternative with standard panda demo launch and manymove started from a separate launcher:
   
