@@ -217,13 +217,13 @@ int main(int argc, char **argv)
      * Note that this pose directly refer to the pose that the TCP will allign to and it's referred to the world frame.
      * For example, this pose has the Z+ facing downard, 45 degrees in the XZ plane, in between X- and Z-.
      */
-    Pose drop_target_1 = createPoseRPY(0.57, -0.25, 0.72, -0.785, -3.14, 1.57);
+    Pose drop_target_1 = createPoseRPY(0.571, -0.2, 0.725, -0.785, -3.14, 1.57);
 
     Pose approach_drop_target_1 = drop_target_1;
     // We need to modify the exit pose accordingly: we move in X+ and Z+ to obtain a 45 degree exit in the XZ plane, in the opposite
     // direction of the Z+ of the TCP in the drop_target_1 pose.
-    approach_drop_target_1.position.x += 0.075;
-    approach_drop_target_1.position.z += 0.075;
+    approach_drop_target_1.position.x += 0.1;
+    approach_drop_target_1.position.z += 0.1;
 
     // We still create the blackboard key, even if we don't modify the pose later, since the pose is always passed through blackboard keys for consistency
     std::string drop_target_1_key_name = "drop_target_1_key";
@@ -562,7 +562,7 @@ int main(int argc, char **argv)
     std::vector<double> joint_rest_1 = {0.0, -0.785, 0.785, 0.0, 1.57, 0.0};
 
     std::vector<double> joint_rest_2 = {0.0, 0.785, -0.785, 0.0, -1.57, 0.0};
-    std::vector<double> joint_ready_2 = {0.314, -0.3837, -1.5874, 1.6747, 1.8665, 0.3663};
+    std::vector<double> joint_ready_2 = {0.4148, -0.4549, -1.7041, 1.7057, 1.9652, 0.3485};
 
     std::string named_home_1 = "home";
     std::string named_home_2 = "home";

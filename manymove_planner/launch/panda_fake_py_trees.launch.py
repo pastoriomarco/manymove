@@ -6,16 +6,6 @@ from moveit_configs_utils import MoveItConfigsBuilder
 
 def launch_setup(context, *args, **kwargs):
 
-    velocity_scaling_factor = LaunchConfiguration('velocity_scaling_factor')
-    acceleration_scaling_factor = LaunchConfiguration('acceleration_scaling_factor')
-    max_exec_retries = LaunchConfiguration('max_exec_retries')
-    smoothing_type = LaunchConfiguration('smoothing_type')
-    step_size = LaunchConfiguration('step_size')
-    jump_threshold = LaunchConfiguration('jump_threshold')
-    max_cartesian_speed = LaunchConfiguration('max_cartesian_speed')
-    plan_number_target = LaunchConfiguration('plan_number_target')
-    plan_number_limit = LaunchConfiguration('plan_number_limit')
-
     planning_group = LaunchConfiguration('planning_group')
     base_frame = LaunchConfiguration('base_frame')
     tcp_frame = LaunchConfiguration('tcp_frame')
@@ -59,15 +49,6 @@ def launch_setup(context, *args, **kwargs):
             {
                 'node_prefix': "{}_".format(planning_group.perform(context)),
                 'planner_type': "movegroup",
-                'velocity_scaling_factor': velocity_scaling_factor,
-                'acceleration_scaling_factor': acceleration_scaling_factor,
-                'max_exec_retries': max_exec_retries,
-                'smoothing_type': smoothing_type,
-                'step_size': step_size,
-                'jump_threshold': jump_threshold,
-                'max_cartesian_speed': max_cartesian_speed,
-                'plan_number_target': plan_number_target,
-                'plan_number_limit': plan_number_limit,
                 
                 'planning_group': planning_group,
                 'base_frame': base_frame,
@@ -135,17 +116,6 @@ def launch_setup(context, *args, **kwargs):
 
 def generate_launch_description():
     return LaunchDescription([
-        # DeclareLaunchArguments for movements defaults
-        DeclareLaunchArgument('velocity_scaling_factor', default_value='0.5', description='Velocity scaling factor'),
-        DeclareLaunchArgument('acceleration_scaling_factor', default_value='0.5', description='Acceleration scaling factor'),
-        DeclareLaunchArgument('max_exec_retries', default_value='5', description='Maximum number of retries'),
-        DeclareLaunchArgument('smoothing_type', default_value='time_optimal', description='Smoothing type'),
-        DeclareLaunchArgument('step_size', default_value='0.05', description='Step size'),
-        DeclareLaunchArgument('jump_threshold', default_value='0.0', description='Jump threshold'),
-        DeclareLaunchArgument('max_cartesian_speed', default_value='0.5', description='Max cartesian speed'),
-        DeclareLaunchArgument('plan_number_target', default_value='8', description='Plan number target'),
-        DeclareLaunchArgument('plan_number_limit', default_value='32', description='Plan number limit'),
-        
         # DeclareLaunchArguments for planning_group, base_frame, tcp_frame
         DeclareLaunchArgument('planning_group', default_value='panda_arm', description='MoveIt planning group'),
         DeclareLaunchArgument('base_frame', default_value='panda_link0', description='Base frame of the robot'),
