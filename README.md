@@ -106,6 +106,9 @@ This repository is composed of several sub-packages, each handling different res
    - Provides a GUI (`hmi_gui`) and related tools (`ros2_worker`) so that operators can issue commands, monitor status, or set parameters.  
    - Can be integrated with the behavior trees (or any other logic) to pause, stop, or resume execution.
 
+8. **`manymove_bringup`**   
+   - Contains the launchers for the complete multi-package examples listed below (and more).
+
 ---
 
 ## Examples
