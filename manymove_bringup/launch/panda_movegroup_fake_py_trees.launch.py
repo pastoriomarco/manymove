@@ -173,7 +173,7 @@ def launch_setup(context, *args, **kwargs):
         output='screen',
         parameters=[{
             'robot_model': planning_group,
-            # 'robot_prefix': prefix,
+            'robot_prefix': "",
             'tcp_frame': tcp_frame,
             'gripper_action_server': gripper_action_server,
             'contact_links': contact_links,

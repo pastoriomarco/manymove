@@ -23,8 +23,7 @@ namespace manymove_cpp_trees
       return {
           BT::InputPort<double>("position", 0.0, "Desired gripper position"),
           BT::InputPort<double>("max_effort", 0.0, "Maximum effort"),
-          BT::InputPort<std::string>("action_server", "/panda_hand_controller/gripper_cmd",
-                                     "Action server name"),
+          BT::InputPort<std::string>("action_server", "Action server name"),
           BT::OutputPort<double>("current_position", "Current gripper position")};
     }
 
@@ -63,8 +62,7 @@ namespace manymove_cpp_trees
     {
       return {
           BT::InputPort<std::string>(
-              "action_server", "/uf850_gripper_traj_controller/follow_joint_trajectory",
-              "FollowJointTrajectory server name"),
+              "action_server", "FollowJointTrajectory server name"),
           BT::InputPort<std::vector<std::string>>("joint_names", "List of gripper joint names"),
           BT::InputPort<std::vector<double>>("positions", "Target joint positions for each joint_name"),
           BT::InputPort<double>("time_from_start", 1.0, "Trajectory duration in seconds")};
