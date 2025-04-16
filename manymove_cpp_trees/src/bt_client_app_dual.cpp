@@ -708,7 +708,7 @@ int main(int argc, char **argv)
     std::string startup_sequence_2_xml = sequenceWrapperXML("StartUpSequence_2", {check_reset_robot_2_xml, rest_move_parallel_2_xml});
     std::string parallel_sub_startup_sequences_xml = parallelWrapperXML("Parallel_startupSequences", {startup_sequence_1_xml, startup_sequence_2_xml}, 2, 1);
 
-    // General startup sequence:
+    // General startup/reset sequence:
     std::string startup_sequence_xml = sequenceWrapperXML(
         "StartUpSequence",
         {
@@ -719,7 +719,7 @@ int main(int argc, char **argv)
         });
 
     // ROBOT 1
-    // Repeat node must have only one children, so it also wrap a Sequence child that wraps the other children
+    // Repeat node must have only one children, so it also wraps a Sequence child that wraps the other children
     std::string repeat_forever_wrapper_1_xml = repeatSequenceWrapperXML(
         "RepeatForever",
         {
