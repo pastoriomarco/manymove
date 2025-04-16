@@ -473,17 +473,6 @@ def launch_setup(context, *args, **kwargs):
 
 def generate_launch_description():
     return LaunchDescription([
-        # DeclareLaunchArgument('planner_type', default_value='moveitcpp', description='Type of planner to use: moveitcpp or movegroup'), #hardcoded
-        DeclareLaunchArgument('velocity_scaling_factor', default_value='0.5', description='Velocity scaling factor'),
-        DeclareLaunchArgument('acceleration_scaling_factor', default_value='0.5', description='Acceleration scaling factor'),
-        DeclareLaunchArgument('max_exec_retries', default_value='5', description='Maximum number of retries'),
-        DeclareLaunchArgument('smoothing_type', default_value='time_optimal', description='Smoothing type'),
-        DeclareLaunchArgument('step_size', default_value='0.05', description='Step size'),
-        DeclareLaunchArgument('jump_threshold', default_value='0.0', description='Jump threshold'),
-        DeclareLaunchArgument('max_cartesian_speed', default_value='0.5', description='Max cartesian speed'),
-        DeclareLaunchArgument('plan_number_target', default_value='8', description='Plan number target'),
-        DeclareLaunchArgument('plan_number_limit', default_value='16', description='Plan number limit'),
-
         DeclareLaunchArgument('base_frame_1', default_value='link_base', description='Base frame of the robot 1'),
         DeclareLaunchArgument('tcp_frame_1', default_value='link_tcp', description='TCP (end effector) frame of the robot 1' ),
         DeclareLaunchArgument('base_frame_2', default_value='link_base', description='Base frame of the robot 2'),

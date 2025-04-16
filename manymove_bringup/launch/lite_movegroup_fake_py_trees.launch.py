@@ -307,7 +307,7 @@ def launch_setup(context, *args, **kwargs):
 def generate_launch_description():
     return LaunchDescription([
         
-        # New DeclareLaunchArguments for base_frame, tcp_frame
+        # DeclareLaunchArguments for base_frame, tcp_frame
         DeclareLaunchArgument('base_frame', default_value='link_base', description='Base frame of the robot'),
         DeclareLaunchArgument('tcp_frame', default_value='link_tcp', description='TCP (end effector) frame of the robot' ),
 
