@@ -397,14 +397,34 @@ std::pair<bool, moveit_msgs::msg::RobotTrajectory> MoveItCppPlanner::plan(const 
             auto solution = planning_components_->plan(params);
             if (solution)
             {
+                // Proceeding only if the traj is valid
+
+                // Get the raw msg
                 moveit_msgs::msg::RobotTrajectory traj_msg;
                 solution.trajectory->getRobotTrajectoryMsg(traj_msg);
 
-                // We compute the traj length only if the traj is valid
-                double length = computePathLength(traj_msg);
+                // // Path chosen depending on length
+                // double length = computePathLength(traj_msg);
+                // trajectories.emplace_back(traj_msg, length);
+                // RCLCPP_INFO_STREAM(logger_, "Calculated " << goal_msg.goal.movement_type << " traj length: " << length);
 
-                trajectories.emplace_back(traj_msg, length);
-                RCLCPP_INFO_STREAM(logger_, "Calculated " << goal_msg.goal.movement_type << " traj length: " << length);
+                // Choosing shortest path
+                // Time‑parametrize it
+                auto [ok, timed_traj] = applyTimeParameterization(traj_msg, cfg);
+                if (!ok || timed_traj.joint_trajectory.points.empty())
+                {
+                    RCLCPP_WARN(logger_, "Time‑parameterization failed; skipping this candidate.");
+                }
+                else
+                {
+                    // Extract duration from the last point
+                    const auto &pts = timed_traj.joint_trajectory.points;
+                    double duration = rclcpp::Duration(pts.back().time_from_start).seconds();
+
+                    // Store the time‑parametrized trajectory and its duration
+                    trajectories.emplace_back(timed_traj, duration);
+                    RCLCPP_INFO_STREAM(logger_, "Trajectory duration: " << duration << " s");
+                }
             }
             else
             {
@@ -463,13 +483,30 @@ std::pair<bool, moveit_msgs::msg::RobotTrajectory> MoveItCppPlanner::plan(const 
 
                 if (targets_euclidean_distance < traj_tolerance)
                 {
-                    // Only compute path length if the traj is valid
-                    double length = computePathLength(traj_msg);
+                    // Proceeding only if the traj is valid
 
-                    trajectories.emplace_back(traj_msg, length);
-                    RCLCPP_DEBUG_STREAM(logger_, "Calculated pose traj length: " << length);
-                    RCLCPP_DEBUG(logger_, "moveit::core::MoveItErrorCode = %d.",
-                                 solution.error_code.val);
+                    // // Path chosen depending on length, only if the traj is valid
+                    // double length = computePathLength(traj_msg);
+
+                    // trajectories.emplace_back(traj_msg, length);
+                    // RCLCPP_DEBUG_STREAM(logger_, "Calculated pose traj length: " << length);
+                    // RCLCPP_DEBUG(logger_, "moveit::core::MoveItErrorCode = %d.",
+                    //              solution.error_code.val);
+
+                    auto [ok, timed_traj] = applyTimeParameterization(traj_msg, cfg);
+                    if (ok && !timed_traj.joint_trajectory.points.empty())
+                    {
+                        double duration =
+                            rclcpp::Duration(
+                                timed_traj.joint_trajectory.points.back().time_from_start)
+                                .seconds();
+                        trajectories.emplace_back(timed_traj, duration);
+                        RCLCPP_DEBUG_STREAM(logger_, "Pose traj duration: " << duration);
+                    }
+                    else
+                    {
+                        RCLCPP_WARN(logger_, "Time‑param failed on pose candidate.");
+                    }
                 }
                 else
                 {
@@ -556,6 +593,7 @@ std::pair<bool, moveit_msgs::msg::RobotTrajectory> MoveItCppPlanner::plan(const 
 
             if (fraction >= 1.0)
             {
+                // Proceeding only if the traj is valid
 
                 RCLCPP_DEBUG_STREAM(logger_, "trajectory_states length: " << trajectory_states.size());
                 // Construct a RobotTrajectory from the computed states
@@ -567,9 +605,25 @@ std::pair<bool, moveit_msgs::msg::RobotTrajectory> MoveItCppPlanner::plan(const 
 
                 // Convert to message
                 moveit_msgs::msg::RobotTrajectory traj_msg = convertToMsg(robot_trajectory);
-                double length = computePathLength(traj_msg);
-                trajectories.emplace_back(traj_msg, length);
-                RCLCPP_DEBUG_STREAM(logger_, "Calculated traj length: " << length);
+
+                // double length = computePathLength(traj_msg);
+                // trajectories.emplace_back(traj_msg, length);
+                // RCLCPP_DEBUG_STREAM(logger_, "Calculated traj length: " << length);
+
+                auto [ok, timed_traj] = applyTimeParameterization(traj_msg, cfg);
+                if (ok && !timed_traj.joint_trajectory.points.empty())
+                {
+                    double duration =
+                        rclcpp::Duration(
+                            timed_traj.joint_trajectory.points.back().time_from_start)
+                            .seconds();
+                    trajectories.emplace_back(timed_traj, duration);
+                    RCLCPP_DEBUG_STREAM(logger_, "Cartesian traj duration: " << duration);
+                }
+                else
+                {
+                    RCLCPP_WARN(logger_, "Time‑param failed on Cartesian candidate.");
+                }
             }
             else
             {

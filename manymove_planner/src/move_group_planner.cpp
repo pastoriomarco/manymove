@@ -130,7 +130,7 @@ double MoveGroupPlanner::computePathLength(const moveit_msgs::msg::RobotTrajecto
     double joint_length = computeJointPathLength(joint_trajectory);
     double cart_length = computeCartesianPathLength();
 
-    total_length = (2 * cart_length) + (joint_length / 2.0);
+    total_length = joint_length + (4 * cart_length);
     return total_length;
 }
 
@@ -430,8 +430,27 @@ std::pair<bool, moveit_msgs::msg::RobotTrajectory> MoveGroupPlanner::plan(const 
             moveit::planning_interface::MoveGroupInterface::Plan plan;
             if (move_group_interface_->plan(plan) == moveit::core::MoveItErrorCode::SUCCESS)
             {
-                double length = computePathLength(plan.trajectory_);
-                trajectories.emplace_back(plan.trajectory_, length);
+                // // Calculate the path lenght and choose the shortest
+                // double length = computePathLength(plan.trajectory_);
+                // trajectories.emplace_back(plan.trajectory_, length);
+
+                // Time parametrize the path and choose the fastest:
+                auto [ok, timed_traj] = applyTimeParameterization(plan.trajectory_, cfg);
+                if (!ok)
+                {
+                    RCLCPP_WARN(logger_, "Time‑parameterization failed on this candidate, skipping.");
+                }
+                else
+                {
+                    // grab the very last point's time_from_start
+                    const auto &pts = timed_traj.joint_trajectory.points;
+                    if (!pts.empty())
+                    {
+                        // convert to seconds
+                        double duration = rclcpp::Duration(pts.back().time_from_start).seconds();
+                        trajectories.emplace_back(timed_traj, duration);
+                    }
+                }
             }
             else
             {
@@ -457,8 +476,29 @@ std::pair<bool, moveit_msgs::msg::RobotTrajectory> MoveGroupPlanner::plan(const 
 
             if (fraction >= 1.0)
             {
-                double length = computePathLength(plan.trajectory_);
-                trajectories.emplace_back(plan.trajectory_, length);
+                // // Calculate the path lenght and choose the shortest
+                // double length = computePathLength(plan.trajectory_);
+                // trajectories.emplace_back(plan.trajectory_, length);
+
+                // Time parametrize the path and choose the fastest:
+                if (fraction >= 1.0)
+                {
+                    // double length = computePathLength(plan.trajectory_);
+                    // trajectories.emplace_back(plan.trajectory_, length);
+
+                    auto [ok, timed_traj] = applyTimeParameterization(plan.trajectory_, cfg);
+                    if (ok && !timed_traj.joint_trajectory.points.empty())
+                    {
+                        double duration =
+                            rclcpp::Duration(timed_traj.joint_trajectory.points.back().time_from_start)
+                                .seconds();
+                        trajectories.emplace_back(timed_traj, duration);
+                    }
+                    else
+                    {
+                        RCLCPP_WARN(logger_, "Time‑param failed on Cartesian candidate.");
+                    }
+                }
             }
             else
             {

@@ -216,16 +216,20 @@ void ManipulatorActionServer::execute_move(
             return;
         }
 
-        auto [param_ok, timed] = planner_->applyTimeParameterization(planned_traj, goal->plan_request.config);
-        if (!param_ok)
-        {
-            RCLCPP_ERROR(node_->get_logger(), "[MoveManipulator] time param failed => ABORT");
-            result->success = false;
-            result->message = "Time parameterization failed";
-            goal_handle->abort(result);
-            return;
-        }
-        final_traj = timed;
+        // // If the planner chooses the shortest path, and not the fastest, we need to time parametrize it:
+        // auto [param_ok, timed] = planner_->applyTimeParameterization(planned_traj, goal->plan_request.config);
+        // if (!param_ok)
+        // {
+        //     RCLCPP_ERROR(node_->get_logger(), "[MoveManipulator] time param failed => ABORT");
+        //     result->success = false;
+        //     result->message = "Time parameterization failed";
+        //     goal_handle->abort(result);
+        //     return;
+        // }
+        // final_traj = timed;
+
+        // With time parametrization active in the planner, the path returned is already good to go:
+        final_traj = planned_traj;
     }
 
     if (goal_handle->is_canceling())
