@@ -34,7 +34,7 @@ namespace manymove_cpp_trees
          * # moveit planner parameters
          * float64 velocity_scaling_factor         # 0.0 to 1.0
          * float64 acceleration_scaling_factor     # 0.0 to 1.0
-         * string planning_pipeline                # e.g. "ompl", "chomp", "pilz_industrial_motion_planner", ...
+         * string planning_pipeline                # e.g. "ompl", "pilz", "pilz_industrial_motion_planner", ...
          * string planner_id                       # e.g. "RRTConnect", "PTP", "LIN", ...
          * float64 planning_time                   # overall time budget in seconds
          * int32  planning_attempts                # e.g. 1, 5, etc.
@@ -63,6 +63,9 @@ namespace manymove_cpp_trees
         max_move_config.plan_number_target = 8;
         max_move_config.plan_number_limit = 16;
         max_move_config.smoothing_type = "time_optimal";
+        max_move_config.planning_pipeline = "ompl";
+        max_move_config.planner_id = "RRTConnect";
+        max_move_config.planning_time = 5;
 
         MovementConfig mid_move_config = max_move_config;
         mid_move_config.velocity_scaling_factor /= 2.0;
@@ -92,8 +95,39 @@ namespace manymove_cpp_trees
         cumotion_max_move_config.planning_attempts = 1;
         cumotion_max_move_config.plan_number_target = 1;
 
+        MovementConfig PTP_max_move_config = max_move_config;
+        PTP_max_move_config.planning_pipeline = "pilz_industrial_motion_planner";
+        PTP_max_move_config.planner_id = "PTP";
+        PTP_max_move_config.planning_time = 5;
+        PTP_max_move_config.planning_attempts = 1;
+        PTP_max_move_config.plan_number_target = 1;
+
+        MovementConfig LIN_max_move_config = max_move_config;
+        LIN_max_move_config.planning_pipeline = "pilz_industrial_motion_planner";
+        LIN_max_move_config.planner_id = "LIN";
+        LIN_max_move_config.planning_time = 5;
+        LIN_max_move_config.planning_attempts = 1;
+        LIN_max_move_config.plan_number_target = 1;
+        LIN_max_move_config.velocity_scaling_factor = 0.5;
+        LIN_max_move_config.acceleration_scaling_factor = 0.5;
+
+        MovementConfig LIN_mid_move_config = LIN_max_move_config;
+        LIN_mid_move_config.velocity_scaling_factor = 0.25;
+        LIN_mid_move_config.acceleration_scaling_factor = 0.25;
+
+        MovementConfig LIN_slow_move_config = LIN_max_move_config;
+        LIN_slow_move_config.velocity_scaling_factor = 0.25;
+        LIN_slow_move_config.acceleration_scaling_factor = 0.25;
+
+        MovementConfig CHOMP_max_move_config = max_move_config;
+        CHOMP_max_move_config.planning_pipeline = "chomp";
+        CHOMP_max_move_config.planner_id = "CHOMP";
+        CHOMP_max_move_config.planning_time = 5;
+        CHOMP_max_move_config.planning_attempts = 1;
+        CHOMP_max_move_config.plan_number_target = 1;
+
         return {
-            // Standard moves for joint and pose
+            // Standard moves for joint and pose for OMPL planning library
             {"max_move", max_move_config},
             {"mid_move", mid_move_config},
             {"slow_move", slow_move_config},
@@ -102,6 +136,15 @@ namespace manymove_cpp_trees
             {"cartesian_max_move", cartesian_max_move_config},
             {"cartesian_mid_move", cartesian_mid_move_config},
             {"cartesian_slow_move", cartesian_slow_move_config},
+
+            // Params for pilz_industrial_planner planning library
+            {"PTP_max_move", PTP_max_move_config},
+            {"LIN_max_move", LIN_max_move_config},
+            {"LIN_mid_move", LIN_mid_move_config},
+            {"LIN_slow_move", LIN_slow_move_config},
+
+            // Params for chomp planning library
+            {"CHOMP_max_move", CHOMP_max_move_config},
             
             // Test for moves with cuMotion planning library
             {"cumotion_max_move", cumotion_max_move_config}};

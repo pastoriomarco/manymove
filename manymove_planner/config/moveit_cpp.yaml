@@ -8,7 +8,7 @@ planning_scene_monitor_options:
   wait_for_initial_state_timeout: 10.0
 
 planning_pipelines:
-  pipeline_names: ["ompl"]
+  pipeline_names: ["ompl", "chomp", "pilz_industrial_motion_planner"]
 
 plan_request_params:
   planning_attempts: 1

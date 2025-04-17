@@ -48,6 +48,31 @@ ament_target_dependencies(bt_client
   manymove_msgs
 )
 
+# Add executable for BT client
+add_executable(bt_client_mixed_pipelines
+    src/bt_client_mixed_pipelines.cpp
+    src/action_nodes_planner.cpp
+    src/action_nodes_signals.cpp
+    src/action_nodes_objects.cpp
+    src/action_nodes_logic.cpp
+    src/action_nodes_gripper.cpp
+    src/hmi_service_node.cpp
+    src/tree_helper.cpp
+)
+
+ament_target_dependencies(bt_client_mixed_pipelines
+  rclcpp
+  rclcpp_action
+  behaviortree_cpp_v3
+  manymove_planner
+  manymove_object_manager
+  manymove_signals
+  moveit_msgs
+  tf2
+  std_srvs
+  manymove_msgs
+)
+
 # Add executable for BT client with cumotion planner
 add_executable(bt_client_cumotion
     src/bt_client_cumotion.cpp
@@ -201,6 +226,7 @@ ament_target_dependencies(collision_test
 # Install executable
 install(TARGETS
   bt_client
+  bt_client_mixed_pipelines
   bt_client_cumotion
   bt_client_dual
   bt_client_app_dual

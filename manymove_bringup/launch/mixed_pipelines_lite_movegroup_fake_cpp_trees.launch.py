@@ -162,7 +162,6 @@ def launch_setup(context, *args, **kwargs):
             {
                 'node_prefix': prefix.perform(context),
                 'planner_type': 'movegroup',
-                
                 'planner_prefix': prefix.perform(context),
                 'planning_group': xarm_type, 
                 'base_frame': base_frame.perform(context), 
@@ -278,14 +277,15 @@ def launch_setup(context, *args, **kwargs):
     # launch manymove_cpp_trees
     # ================================================================
 
-    # py_trees node
-    manymove_py_trees_node = Node(
-        package='manymove_py_trees',
-        executable='bt_client_fake',
+    # behaviortree.cpp node
+    manymove_cpp_trees_node = Node(
+        package='manymove_cpp_trees',
+        executable='bt_client_mixed_pipelines',
+        # name='manymove_cpp_tree_node',
         output='screen',
         parameters=[{
             'robot_model': xarm_type,
-            'robot_prefix': prefix.perform(context),
+            'robot_prefix': prefix,
             'tcp_frame': tcp_frame,
             'is_robot_real': False,
         }]
@@ -301,13 +301,13 @@ def launch_setup(context, *args, **kwargs):
         ros2_control_node,
         object_manager_node,
         manymove_hmi_node,
-        manymove_py_trees_node,
+        manymove_cpp_trees_node,
     ] + controller_nodes
 
 def generate_launch_description():
     return LaunchDescription([
         
-        # DeclareLaunchArguments for base_frame, tcp_frame
+        # New DeclareLaunchArguments for base_frame, tcp_frame
         DeclareLaunchArgument('base_frame', default_value='link_base', description='Base frame of the robot'),
         DeclareLaunchArgument('tcp_frame', default_value='link_tcp', description='TCP (end effector) frame of the robot' ),
 
