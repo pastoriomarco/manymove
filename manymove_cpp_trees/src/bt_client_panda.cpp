@@ -54,19 +54,15 @@ int main(int argc, char **argv)
      * defined in the helper function definition.
      * Here we created some default configs like "max_move", "mid_move" and "slow_move",
      * each with its own limits in scaling factors, max cartesian speed, step size and
-     * so on, and we use it on any kind of move. We may also create specific configurations
+     * so on, and we use them on any kind of move. We may also create specific configurations
      * for certain moves, for example with a finer step size on a short cartesian move, or
      * a lower plan number target for faster planning times in moves that are not time sensitive
-     * during execution, but require planning times as short as possible.
-     * Please note that composing the moves in sequences with parallel planning and execute usually
-     * proves to be much more effective in reducing overall completion time than reducing planning
-     * time, as usually the planning of a single move is much faster than its execution, unless
-     * we need to plan for barely reachable poses or complex collision avoidance scenarios.
+     * during execution, but require planning times as short as possible in a dynamic environment.
      */
     auto move_configs = defineMovementConfigs();
 
     // We define the joint targets we need for the joint moves as vectors of doubles.
-    // Be careful that the number of values must match the number of DOF of the robot (here, 6 DOF)
+    // Be careful that the number of values must match the number of DOF of the robot (here, 7 DOF)
     std::vector<double> joint_ready = {0.0, -0.785, 0.0, -2.355, 0.0, 1.57, 0.785};
     std::string named_home = "extended";
 
@@ -114,18 +110,15 @@ int main(int argc, char **argv)
     };
 
     /*
-     * Build parallel move sequence blocks
-     * The buildMoveXML creates the xml tree branch that parallelizes completely the planning and
-     * the execution of the sequence of moves. The moves will be planned in sequence until the last move is successfully
-     * planned, and the trajectories will be stored in the blackboard and set as valid. The execution starts in parallel,
-     * with the first move polling the blackboard until its trajectory is flagged as valid, then the execution begins.
-     * This allows for the best performance in related move sequences since the robot needs to wait for just the first
-     * trajectory to be available before starting to move.
-     * Each move execution resets the validity of the respective trajectory in the blackboard but, to avoid the risk of
-     * stale trajectories in scenarios where a branch could be restarted or repeated, you can set the flag reset_trajs to
-     * true to add a leaf node that resets all the trajectories of that move sequence in the blackboard.
-     * Notice that on any string representing an XML snippet it's better to use _xml at the end of the name to give better
-     * sense of what's in that variable.
+     * Build move sequence blocks
+     * The buildMoveXML creates the xml tree branch that manages the planning and execution of each move with the given
+     * parameters. Unless the reset_trajs is set to true, each move that will plan and execute successfully will store the
+     * trajectory in the blackboard, thus avoiding recalculating it the next cycle. This allow to save cycle time on all but
+     * the first logic cycle, unless the scene changes. If a previously planned trajectory fails on execution it gets reset,
+     * and a new one is planned. The manymove_planner checks for collisions before sending the traj, but also during the execution.
+     *
+     * Notice that on any string representing an XML snippet I use _xml at the end of the name to give better sense of
+     * what's in that variable: if it ends with _xml, it could potentially be directly inserted as a tree branch or leaf.
      */
     std::string to_rest_xml = buildMoveXML(
         rp.prefix, rp.prefix + "toRest", rest_position, blackboard);
@@ -140,17 +133,16 @@ int main(int argc, char **argv)
         rp.prefix, rp.prefix + "home", home_position, blackboard);
 
     /*
-     * Combine the parallel move sequence blocks in logic sequences for the entire logic.
-     * Each subsequence will plan and execute in parallel, but the next subsequence will start planning all its moves
-     * only after the last move of the previous sequence executes.
-     * This can be useful for example if you have a camera mounted on the robot's arm and you want the next moves to be
-     * planned only after the scene have been scanned. For example: the first move to_rest will take the robot in an
-     * upright position with the camera pointing down to where the robot base is: I want the octomap to update before
-     * continuing planning, but I don't need to wait for inputs or do any other action before planning.
-     * Once the scan_around sequence is executed I will want to check for some inputs before continuing, so I terminate the
-     * move sequence here: this will let me wrap this serie of sequences with other leaf nodes.
-     * Other sequences like the ones to pick and to drop the objects will need to wait for inputs and/or give outputs, so
-     * we sepearate them from the beginning.
+     * We can further combine the move sequence blocks in logic sequences.
+     * This allows reusing and combining moves or sequences that are used more than once in the scene,
+     * or that are used in different contexts, without risking to reuse the wrong trajectory.
+     * When we call buildMoveXML() we create a new move with its own unique ID. If that move is used in more than one leaf,
+     * we need to decide if we always want to try to reuse the previously successfull trajectory or not.
+     * The manymove_planner logic checks for the start point of the traj to be valid and within tolerance, so we shouldn't
+     * worry too much of undefined behavior, but it helps me reason on the moves sequence structure. Keeping the Move vectors at
+     * minimum, using only the moves logically interconnected, makes the sequences easier to understand and debug.
+     * It's also important if we want to combine sequences that retain their previously successful trajectory with sequences that don't:
+     * if we need to repeat the prep sequence at some point we may be in a unkown position, so we don't want the traj to be reused.
      */
 
     // Translate it to xml tree leaf or branch
@@ -231,8 +223,9 @@ int main(int argc, char **argv)
 
     // Define the transformation and reference orientation
     /*
-     * The reference orientation determines how the tranform behaves: if we leave the reference orientation to all zeroes the
+     * The reference orientation determines how the tranform behaves: if we leave the reference orientation to all zeroes, the
      * transform of the object will be referred to the frame we specify, here the "world" frame.
+     * The object here is modelled vertically, with the simmetry axis aligned to Z.
      * Since we want to grasp the object aligning the Z axis of the gripper perpendicularly to the Z axis of the object, we need
      * to rotate the Y 90 degrees, so 1.57 radians. Also, the center of the jaws is about 0.102 m from the link we defined as TCP,
      * so we move the pick position consequently in the X- direction. The approach position is further away of about 5 cm.

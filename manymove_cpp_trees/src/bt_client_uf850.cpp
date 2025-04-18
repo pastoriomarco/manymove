@@ -54,14 +54,10 @@ int main(int argc, char **argv)
      * defined in the helper function definition.
      * Here we created some default configs like "max_move", "mid_move" and "slow_move",
      * each with its own limits in scaling factors, max cartesian speed, step size and
-     * so on, and we use it on any kind of move. We may also create specific configurations
+     * so on, and we use them on any kind of move. We may also create specific configurations
      * for certain moves, for example with a finer step size on a short cartesian move, or
      * a lower plan number target for faster planning times in moves that are not time sensitive
-     * during execution, but require planning times as short as possible.
-     * Please note that composing the moves in sequences with parallel planning and execute usually
-     * proves to be much more effective in reducing overall completion time than reducing planning
-     * time, as usually the planning of a single move is much faster than its execution, unless
-     * we need to plan for barely reachable poses or complex collision avoidance scenarios.
+     * during execution, but require planning times as short as possible in a dynamic environment.
      */
     auto move_configs = defineMovementConfigs();
 
@@ -124,7 +120,7 @@ int main(int argc, char **argv)
      * Build move sequence blocks
      * The buildMoveXML creates the xml tree branch that manages the planning and execution of each move with the given
      * parameters. Unless the reset_trajs is set to true, each move that will plan and execute successfully will store the
-     * trajectory in the blackboar, thus avoiding recalculating it the next cycle. This allow to save cycle time on all but
+     * trajectory in the blackboard, thus avoiding recalculating it the next cycle. This allow to save cycle time on all but
      * the first logic cycle, unless the scene changes. If a previously planned trajectory fails on execution it gets reset,
      * and a new one is planned. The manymove_planner checks for collisions before sending the traj, but also during the execution.
      *
@@ -151,7 +147,7 @@ int main(int argc, char **argv)
      * This allows reusing and combining moves or sequences that are used more than once in the scene,
      * or that are used in different contexts, without risking to reuse the wrong trajectory.
      * When we call buildMoveXML() we create a new move with its own unique ID. If that move is used in more than one leaf,
-     * we need to decide if always want to try to reuse the previously successfull trajectory or not.
+     * we need to decide if we always want to try to reuse the previously successfull trajectory or not.
      * The manymove_planner logic checks for the start point of the traj to be valid and within tolerance, so we shouldn't
      * worry too much of undefined behavior, but it helps me reason on the moves sequence structure. Keeping the Move vectors at
      * minimum, using only the moves logically interconnected, makes the sequences easier to understand and debug.
@@ -233,9 +229,14 @@ int main(int argc, char **argv)
 
     // Define the transformation and reference orientation
     /*
-     * The reference orientation determines how the tranform behaves: if we leave the reference orientation to all zeroes the
-     * transform of the object will be referred to the world frame or, if it's attached, to the frame it is attached to.
-     * Since we may want to grasp an object, we may need to move [TODO]...
+     * The reference orientation determines how the tranform behaves: if we leave the reference orientation to all zeroes, the
+     * transform of the object will be referred to the frame we specify, here the "world" frame.
+     * The object here is modelled vertically, with the simmetry axis aligned to Z.
+     * We want to grasp the object aligning the Z axis of the gripper perpendicularly to the X axis of the object, thus we need
+     * to rotate the Y 90 degrees, so 1.57 radians. The approach position is further away of about 5 cm in the X direction.
+     * Getting this right with just one transform can be not very intuitive, so I also set up the function to enable a second transform.
+     * Here, the second transform is the same for both poses, and creates a decentered grasping pose sliding in the original Z axis.
+     * We then flip the grasp direction 180 degrees, or 3.14 radians, as we want the TCP's Z axis to be facing down.
      */
     blackboard->set("pick_pre_transform_xyz_rpy_1_key", std::vector<double>{0.02, 0.0, 0.0, 0.0, 1.57, 0.0});
     blackboard->set("approach_pick_pre_transform_xyz_rpy_1_key", std::vector<double>{-0.05, 0.0, 0.0, 0.0, 1.57, 0.0});

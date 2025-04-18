@@ -24,13 +24,13 @@ namespace manymove_cpp_trees
 
         /**
          * REFERENCE MovementConfig STRUCTURE
-         * 
+         *
          * # manymove parameters
          * float64 max_cartesian_speed             # max cartesian speed for the move, referred to TCP
          * int32 plan_number_target                # number of valid plans to find before declaring success
          * int32 plan_number_limit                 # max planning tries before fail
          * string smoothing_type                   # "time-optimal" / "ruckig"
-         * 
+         *
          * # moveit planner parameters
          * float64 velocity_scaling_factor         # 0.0 to 1.0
          * float64 acceleration_scaling_factor     # 0.0 to 1.0
@@ -38,7 +38,7 @@ namespace manymove_cpp_trees
          * string planner_id                       # e.g. "RRTConnect", "PTP", "LIN", ...
          * float64 planning_time                   # overall time budget in seconds
          * int32  planning_attempts                # e.g. 1, 5, etc.
-         * 
+         *
          * # CartesianInterpolator parameters
          * float64 step_size
          * float64 jump_threshold
@@ -97,6 +97,7 @@ namespace manymove_cpp_trees
         PTP_max_move_config.planning_time = 5;
         PTP_max_move_config.planning_attempts = 1;
         PTP_max_move_config.plan_number_target = 1;
+        PTP_max_move_config.velocity_scaling_factor = 1.0; ///< This scales the max_rot_vel in pilz_cartesian_limits.yaml
 
         MovementConfig LIN_max_move_config = max_move_config;
         LIN_max_move_config.planning_pipeline = "pilz_industrial_motion_planner";
@@ -104,8 +105,8 @@ namespace manymove_cpp_trees
         LIN_max_move_config.planning_time = 5;
         LIN_max_move_config.planning_attempts = 1;
         LIN_max_move_config.plan_number_target = 1;
-        LIN_max_move_config.velocity_scaling_factor = 0.5;
-        LIN_max_move_config.acceleration_scaling_factor = 0.5;
+        LIN_max_move_config.velocity_scaling_factor = 0.5;     ///< This scales the max_trans_vel in pilz_cartesian_limits.yaml
+        LIN_max_move_config.acceleration_scaling_factor = 0.5; ///< This scales the max_trans_acc in pilz_cartesian_limits.yaml
 
         MovementConfig LIN_mid_move_config = LIN_max_move_config;
         LIN_mid_move_config.velocity_scaling_factor = 0.2;
@@ -141,7 +142,7 @@ namespace manymove_cpp_trees
 
             // Params for chomp planning library
             {"CHOMP_max_move", CHOMP_max_move_config},
-            
+
             // Test for moves with cuMotion planning library
             {"cumotion_max_move", cumotion_max_move_config}};
     }
