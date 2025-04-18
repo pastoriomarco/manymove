@@ -67,6 +67,8 @@ This series of packages was created around Ufactory Lite6 and UF850 cobots, but 
 
 --- 
 
+## Bring you own robot
+
 If you want to create a new application in ManyMove, once you have a working moveit config package you just need the following information:
 - Base frame/link of the robot
 - TCP (end effector) frame/link
