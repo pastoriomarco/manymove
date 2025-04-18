@@ -52,7 +52,6 @@ private:
     {
       std::string full_planning_group = robot_prefixes[i] + planning_groups[i];
       std::string full_base_frame = robot_prefixes[i] + base_frames[i];
-      std::string full_tcp_frame = robot_prefixes[i] + tcp_frames[i];
       std::string full_controller = robot_prefixes[i] + traj_controllers[i];
 
       RCLCPP_INFO(get_logger(),
@@ -60,7 +59,7 @@ private:
                   robot_prefixes[i].c_str(), full_planning_group.c_str());
 
       auto planner = std::make_shared<MoveItCppPlanner>(
-          self, full_planning_group, full_base_frame, full_tcp_frame, full_controller, moveit_cpp_);
+          self, full_planning_group, full_base_frame, full_controller, moveit_cpp_);
 
       auto action_server = std::make_shared<ManipulatorActionServer>(
           self, planner, robot_prefixes[i]);

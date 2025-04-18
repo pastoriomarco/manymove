@@ -95,25 +95,27 @@ int main(int argc, char **argv)
      * We could also keep all moves separated, but it'd be harder to obtain an easily understandable
      * tree later, expecially if we need to reuse a series of moves in a certain logic order.
      */
+    std::string tcp_frame_name = rp.prefix + rp.tcp_frame;
+    
     std::vector<Move> rest_position = {
-        {rp.prefix, "joint", move_configs["max_move"], "", joint_rest},
+        {rp.prefix, tcp_frame_name, "joint", move_configs["max_move"], "", joint_rest},
     };
 
     // Sequences for Pick/Drop/Homing
     std::vector<Move> pick_sequence = {
-        {rp.prefix, "pose", move_configs["mid_move"], "approach_pick_target_key"},
-        {rp.prefix, "cartesian", move_configs["cartesian_slow_move"], "pick_target_key"},
+        {rp.prefix, tcp_frame_name, "pose", move_configs["mid_move"], "approach_pick_target_key"},
+        {rp.prefix, tcp_frame_name, "cartesian", move_configs["cartesian_slow_move"], "pick_target_key"},
     };
 
     std::vector<Move> drop_sequence = {
-        {rp.prefix, "cartesian", move_configs["cartesian_mid_move"], "approach_pick_target_key"},
-        {rp.prefix, "pose", move_configs["max_move"], "approach_drop_target_key"},
-        {rp.prefix, "cartesian", move_configs["cartesian_slow_move"], "drop_target_key"},
+        {rp.prefix, tcp_frame_name, "cartesian", move_configs["cartesian_mid_move"], "approach_pick_target_key"},
+        {rp.prefix, tcp_frame_name, "pose", move_configs["max_move"], "approach_drop_target_key"},
+        {rp.prefix, tcp_frame_name, "cartesian", move_configs["cartesian_slow_move"], "drop_target_key"},
     };
 
     std::vector<Move> home_position = {
-        {rp.prefix, "cartesian", move_configs["cartesian_mid_move"], "approach_drop_target_key"},
-        {rp.prefix, "named", move_configs["max_move"], "", {}, named_home},
+        {rp.prefix, tcp_frame_name, "cartesian", move_configs["cartesian_mid_move"], "approach_drop_target_key"},
+        {rp.prefix, tcp_frame_name, "named", move_configs["max_move"], "", {}, named_home},
     };
 
     /*
@@ -207,7 +209,7 @@ int main(int argc, char **argv)
     std::string init_mesh_obj_xml = fallbackWrapperXML("init_mesh_obj", {check_mesh_obj_xml, add_mesh_obj_xml});
 
     // the name of the link to attach the object to, and the object to manipulate
-    blackboard->set("tcp_frame_name_key", rp.prefix + rp.tcp_frame);
+    blackboard->set("tcp_frame_name_key", tcp_frame_name);
     blackboard->set("object_to_manipulate_key", "graspable_mesh");
 
     blackboard->set("touch_links_key", rp.contact_links);

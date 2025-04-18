@@ -91,29 +91,31 @@ int main(int argc, char **argv)
      * As we'll se later, we can then compose these sequences of moves together to build bigger blocks
      * of logically corralated moves.
      */
+    std::string tcp_frame_name = rp.prefix + rp.tcp_frame;
+    
     std::vector<Move> rest_position = {
-        {rp.prefix, "joint", move_configs["cumotion_max_move"], "", joint_rest},
+        {rp.prefix, tcp_frame_name, "joint", move_configs["cumotion_max_move"], "", joint_rest},
     };
 
     std::vector<Move> scan_surroundings = {
-        {rp.prefix, "joint", move_configs["cumotion_max_move"], "", joint_look_sx},
-        {rp.prefix, "joint", move_configs["cumotion_max_move"], "", joint_look_dx},
+        {rp.prefix, tcp_frame_name, "joint", move_configs["cumotion_max_move"], "", joint_look_sx},
+        {rp.prefix, tcp_frame_name, "joint", move_configs["cumotion_max_move"], "", joint_look_dx},
     };
 
     // Sequences for Pick/Drop/Homing
     std::vector<Move> pick_sequence = {
-        {rp.prefix, "pose", move_configs["cumotion_max_move"], "pick_target_key"},
+        {rp.prefix, tcp_frame_name, "pose", move_configs["cumotion_max_move"], "pick_target_key"},
     };
 
     std::vector<Move> drop_sequence = {
-        {rp.prefix, "cartesian", move_configs["cartesian_mid_move"], "approach_pick_target_key"},
-        {rp.prefix, "cartesian", move_configs["cumotion_max_move"], "approach_drop_target"},
-        {rp.prefix, "pose", move_configs["cumotion_slow_move"], "drop_target_key"},
+        {rp.prefix, tcp_frame_name, "cartesian", move_configs["cartesian_mid_move"], "approach_pick_target_key"},
+        {rp.prefix, tcp_frame_name, "cartesian", move_configs["cumotion_max_move"], "approach_drop_target"},
+        {rp.prefix, tcp_frame_name, "pose", move_configs["cumotion_slow_move"], "drop_target_key"},
     };
 
     std::vector<Move> home_position = {
-        {rp.prefix, "cartesian", move_configs["cartesian_mid_move"], "approach_drop_target"},
-        //{rp.prefix, "named", move_configs["cumotion_max_move"], "", {}, named_home},
+        {rp.prefix, tcp_frame_name, "cartesian", move_configs["cartesian_mid_move"], "approach_drop_target"},
+        //{rp.prefix, tcp_frame_name, "named", move_configs["cumotion_max_move"], "", {}, named_home},
     };
 
     /*
@@ -214,7 +216,7 @@ int main(int argc, char **argv)
     std::string init_mesh_obj_xml = fallbackWrapperXML("init_mesh_obj", {check_mesh_obj_xml, add_mesh_obj_xml});
 
     // the name of the link to attach the object to, and the object to manipulate
-    blackboard->set("tcp_frame_name_key", rp.prefix + rp.tcp_frame);
+    blackboard->set("tcp_frame_name_key", tcp_frame_name);
     blackboard->set("object_to_manipulate_key", "graspable_mesh");
 
     // The gripper is pneumatic so the jaws are not dynamically updated, we don't want touch links:

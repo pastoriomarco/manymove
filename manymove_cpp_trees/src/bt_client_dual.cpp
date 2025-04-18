@@ -86,46 +86,49 @@ int main(int argc, char **argv)
     blackboard->set("approach_drop_target_2_key", approach_drop_target_2);
 
     // Compose the sequences of moves. Each of the following sequences represent a logic
+    std::string tcp_frame_name_1 = rp_1.prefix + rp_1.tcp_frame;
+    std::string tcp_frame_name_2 = rp_2.prefix + rp_2.tcp_frame;
+    
     std::vector<Move> rest_position_1 = {
-        {rp_1.prefix, "joint", move_configs["max_move"], "", joint_rest_1},
+        {rp_1.prefix, tcp_frame_name_1, "joint", move_configs["max_move"], "", joint_rest_1},
     };
     std::vector<Move> rest_position_2 = {
-        {rp_2.prefix, "joint", move_configs["max_move"], "", joint_rest_2},
+        {rp_2.prefix, tcp_frame_name_2, "joint", move_configs["max_move"], "", joint_rest_2},
     };
 
     // Sequences for Pick/Drop/Homing
     std::vector<Move> pick_sequence_1 = {
-        {rp_1.prefix, "pose", move_configs["mid_move"], "approach_pick_target_1_key"},
-        {rp_1.prefix, "cartesian", move_configs["slow_move"], "pick_target_1_key"},
+        {rp_1.prefix, tcp_frame_name_1, "pose", move_configs["mid_move"], "approach_pick_target_1_key"},
+        {rp_1.prefix, tcp_frame_name_1, "cartesian", move_configs["slow_move"], "pick_target_1_key"},
     };
 
     std::vector<Move> pick_sequence_2 = {
-        {rp_2.prefix, "pose", move_configs["mid_move"], "approach_pick_target_2_key"},
-        {rp_2.prefix, "cartesian", move_configs["slow_move"], "pick_target_2_key"},
+        {rp_2.prefix, tcp_frame_name_2, "pose", move_configs["mid_move"], "approach_pick_target_2_key"},
+        {rp_2.prefix, tcp_frame_name_2, "cartesian", move_configs["slow_move"], "pick_target_2_key"},
     };
 
     std::vector<Move> drop_sequence_1 = {
-        {rp_1.prefix, "pose", move_configs["mid_move"], "approach_pick_target_1_key"},
-        {rp_1.prefix, "pose", move_configs["max_move"], "approach_drop_target_1_key"},
-        {rp_1.prefix, "cartesian", move_configs["slow_move"], "drop_target_1_key"},
+        {rp_1.prefix, tcp_frame_name_1, "pose", move_configs["mid_move"], "approach_pick_target_1_key"},
+        {rp_1.prefix, tcp_frame_name_1, "pose", move_configs["max_move"], "approach_drop_target_1_key"},
+        {rp_1.prefix, tcp_frame_name_1, "cartesian", move_configs["slow_move"], "drop_target_1_key"},
     };
 
     std::vector<Move> drop_sequence_2 = {
-        {rp_2.prefix, "pose", move_configs["mid_move"], "approach_pick_target_2_key"},
-        {rp_2.prefix, "pose", move_configs["max_move"], "approach_drop_target_2_key"},
-        {rp_2.prefix, "cartesian", move_configs["slow_move"], "drop_target_2_key"},
+        {rp_2.prefix, tcp_frame_name_2, "pose", move_configs["mid_move"], "approach_pick_target_2_key"},
+        {rp_2.prefix, tcp_frame_name_2, "pose", move_configs["max_move"], "approach_drop_target_2_key"},
+        {rp_2.prefix, tcp_frame_name_2, "cartesian", move_configs["slow_move"], "drop_target_2_key"},
     };
 
     std::vector<Move> home_position_1 = {
-        {rp_1.prefix, "cartesian", move_configs["max_move"], "approach_drop_target_1_key"},
-        {rp_1.prefix, "named", move_configs["max_move"], "", {}, named_home_1},
-        {rp_1.prefix, "joint", move_configs["max_move"], "", joint_rest_1},
+        {rp_1.prefix, tcp_frame_name_1, "cartesian", move_configs["max_move"], "approach_drop_target_1_key"},
+        {rp_1.prefix, tcp_frame_name_1, "named", move_configs["max_move"], "", {}, named_home_1},
+        {rp_1.prefix, tcp_frame_name_1, "joint", move_configs["max_move"], "", joint_rest_1},
     };
 
     std::vector<Move> home_position_2 = {
-        {rp_2.prefix, "cartesian", move_configs["max_move"], "approach_drop_target_2_key"},
-        {rp_2.prefix, "named", move_configs["max_move"], "", {}, named_home_2},
-        {rp_2.prefix, "joint", move_configs["max_move"], "", joint_rest_2},
+        {rp_2.prefix, tcp_frame_name_2, "cartesian", move_configs["max_move"], "approach_drop_target_2_key"},
+        {rp_2.prefix, tcp_frame_name_2, "named", move_configs["max_move"], "", {}, named_home_2},
+        {rp_2.prefix, tcp_frame_name_2, "joint", move_configs["max_move"], "", joint_rest_2},
     };
 
     // build the xml snippets for the single moves of robot 1
@@ -221,9 +224,9 @@ int main(int argc, char **argv)
     std::string init_mesh_obj_xml = fallbackWrapperXML("init_mesh_obj", {check_mesh_obj_xml, add_mesh_obj_xml});
 
     // the name of the link to attach the object to, and the object to manipulate
-    blackboard->set("tcp_frame_name_1_key", rp_1.prefix + rp_1.tcp_frame);
+    blackboard->set("tcp_frame_name_1_key", tcp_frame_name_1);
     blackboard->set("object_to_manipulate_1_key", "graspable_mesh");
-    blackboard->set("tcp_frame_name_2_key", rp_2.prefix + rp_2.tcp_frame);
+    blackboard->set("tcp_frame_name_2_key", tcp_frame_name_2);
     blackboard->set("object_to_manipulate_2_key", "graspable_cylinder");
 
     // The gripper is pneumatic so the jaws are not dynamically updated, we don't want touch links:

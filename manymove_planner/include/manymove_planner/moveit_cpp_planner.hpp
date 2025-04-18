@@ -48,14 +48,12 @@ public:
      * @param node Shared pointer to the ROS2 node.
      * @param planning_group Name of the planning group (defined in MoveIt).
      * @param base_frame The base frame of the robot.
-     * @param tcp_frame The tool center point (TCP) frame for the manipulator.
      * @param traj_controller Name of the trajectory controller to use for execution.
      */
     MoveItCppPlanner(
         const rclcpp::Node::SharedPtr &node,
         const std::string &planning_group,
         const std::string &base_frame,
-        const std::string &tcp_frame,
         const std::string &traj_controller,
         const std::shared_ptr<moveit_cpp::MoveItCpp> &moveit_cpp_ptr = nullptr);
 
@@ -169,7 +167,8 @@ private:
      * @param trajectory The MoveIt robot trajectory message.
      * @return The computed path length in joint/Cartesian space.
      */
-    double computePathLength(const moveit_msgs::msg::RobotTrajectory &trajectory) const;
+    double computePathLength(const moveit_msgs::msg::RobotTrajectory &trajectory,
+                             const manymove_msgs::msg::MovementConfig &config) const;
 
     /**
      * @brief Calculate the pose relative to a frame from a robot state.
@@ -207,7 +206,8 @@ private:
      * @param trajectory A pointer to the robot trajectory object.
      * @return The maximum Cartesian speed (m/s) found in the trajectory.
      */
-    double computeMaxCartesianSpeed(const robot_trajectory::RobotTrajectoryPtr &trajectory) const;
+    double computeMaxCartesianSpeed(const robot_trajectory::RobotTrajectoryPtr &trajectory,
+                                    const manymove_msgs::msg::MovementConfig &config) const;
 
     /**
      * @brief Check if two joint targets (vectors of joint values) are equal within a specified tolerance.
@@ -252,7 +252,6 @@ private:
     rclcpp::Logger logger_;        ///< Logger instance for logging messages.
     std::string planning_group_;   ///< Name of the planning group.
     std::string base_frame_;       ///< The base frame of the robot.
-    std::string tcp_frame_;        ///< The tool center point (TCP) frame.
     std::string traj_controller_;  ///< Name of the trajectory controller.
 
     std::shared_ptr<moveit_cpp::MoveItCpp> moveit_cpp_ptr_;                ///< Shared pointer to the MoveItCpp instance.

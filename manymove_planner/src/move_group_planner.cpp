@@ -4,12 +4,10 @@ MoveGroupPlanner::MoveGroupPlanner(
     const rclcpp::Node::SharedPtr &node,
     const std::string &planning_group,
     const std::string &base_frame,
-    const std::string &tcp_frame,
     const std::string &traj_controller)
     : node_(node), logger_(node->get_logger()),
       planning_group_(planning_group),
       base_frame_(base_frame),
-      tcp_frame_(tcp_frame),
       traj_controller_(traj_controller)
 {
     // Initialize MoveGroupInterface with the shared node
@@ -78,60 +76,57 @@ rclcpp_action::Client<control_msgs::action::FollowJointTrajectory>::SharedPtr Mo
     return follow_joint_traj_client_;
 }
 
-double MoveGroupPlanner::computePathLength(const moveit_msgs::msg::RobotTrajectory &trajectory) const
+double MoveGroupPlanner::computePathLength(
+    const moveit_msgs::msg::RobotTrajectory &traj,
+    const manymove_msgs::msg::MovementConfig &config) const
 {
-    const auto &joint_trajectory = trajectory.joint_trajectory;
-    double total_length = 0.0;
+    if (traj.joint_trajectory.points.size() < 2)
+        return 0.0;
 
-    // Compute joint-space path length
-    auto computeJointPathLength = [&](const trajectory_msgs::msg::JointTrajectory &traj)
+    // ---------- helper: joint‑space ----------
+    auto jointLen = [&](const trajectory_msgs::msg::JointTrajectory &jt)
     {
-        double length = 0.0;
-        for (size_t i = 1; i < traj.points.size(); ++i)
+        double len = 0.0;
+        for (size_t i = 1; i < jt.points.size(); ++i)
         {
-            double segment_length = 0.0;
-            for (size_t j = 0; j < traj.points[i].positions.size(); ++j)
+            double seg = 0.0;
+            for (size_t j = 0; j < jt.points[i].positions.size(); ++j)
             {
-                double diff = traj.points[i].positions[j] - traj.points[i - 1].positions[j];
-                segment_length += diff * diff;
+                double d = jt.points[i].positions[j] - jt.points[i - 1].positions[j];
+                seg += d * d;
             }
-            length += std::sqrt(segment_length);
+            len += std::sqrt(seg);
         }
-        return length;
+        return len;
     };
 
-    // Compute Cartesian path length
-    auto computeCartesianPathLength = [&]()
+    // ---------- helper: TCP Cartesian ----------
+    auto cartLen = [&](const moveit_msgs::msg::RobotTrajectory &t)
     {
-        if (trajectory.multi_dof_joint_trajectory.joint_names.empty())
-            return 0.0;
+        const auto robot_model = move_group_interface_->getRobotModel();
+        const auto jmg = robot_model->getJointModelGroup(planning_group_);
 
-        double length = 0.0;
-        for (size_t i = 1; i < trajectory.multi_dof_joint_trajectory.points.size(); ++i)
+        moveit::core::RobotState st(robot_model);
+        double len = 0.0;
+
+        for (size_t i = 1; i < t.joint_trajectory.points.size(); ++i)
         {
-            const auto &prev_point = trajectory.multi_dof_joint_trajectory.points[i - 1];
-            const auto &curr_point = trajectory.multi_dof_joint_trajectory.points[i];
+            st.setJointGroupPositions(jmg, t.joint_trajectory.points[i - 1].positions);
+            Eigen::Vector3d p1 = st.getGlobalLinkTransform(config.tcp_frame).translation();
 
-            if (prev_point.transforms.empty() || curr_point.transforms.empty())
-                continue;
+            st.setJointGroupPositions(jmg, t.joint_trajectory.points[i].positions);
+            Eigen::Vector3d p2 = st.getGlobalLinkTransform(config.tcp_frame).translation();
 
-            const auto &prev_transform = prev_point.transforms[0];
-            const auto &curr_transform = curr_point.transforms[0];
-
-            Eigen::Vector3d prev_pos(prev_transform.translation.x, prev_transform.translation.y, prev_transform.translation.z);
-            Eigen::Vector3d curr_pos(curr_transform.translation.x, curr_transform.translation.y, curr_transform.translation.z);
-
-            double dist = (curr_pos - prev_pos).norm();
-            length += dist;
+            len += (p2 - p1).norm();
         }
-        return length;
+        return len;
     };
 
-    double joint_length = computeJointPathLength(joint_trajectory);
-    double cart_length = computeCartesianPathLength();
+    const double jl = jointLen(traj.joint_trajectory);
+    const double cl = cartLen(traj);
 
-    total_length = joint_length + (4 * cart_length);
-    return total_length;
+    // Tune the weight to taste (here: 4× as before)
+    return jl + 4.0 * cl;
 }
 
 // Function to get a geometry_msgs::msg::Pose from a RobotState and frame
@@ -211,7 +206,8 @@ geometry_msgs::msg::Pose MoveGroupPlanner::getPoseFromTrajectory(const moveit_ms
     return pose;
 }
 
-double MoveGroupPlanner::computeMaxCartesianSpeed(const robot_trajectory::RobotTrajectoryPtr &trajectory) const
+double MoveGroupPlanner::computeMaxCartesianSpeed(const robot_trajectory::RobotTrajectoryPtr &trajectory,
+                                                  const manymove_msgs::msg::MovementConfig &config) const
 {
     // Compute max Cartesian speed by analyzing consecutive waypoints
     if (trajectory->getWayPointCount() < 2)
@@ -219,8 +215,8 @@ double MoveGroupPlanner::computeMaxCartesianSpeed(const robot_trajectory::RobotT
     double max_speed = 0.0;
     for (size_t i = 1; i < trajectory->getWayPointCount(); i++)
     {
-        Eigen::Isometry3d prev_pose = trajectory->getWayPoint(i - 1).getGlobalLinkTransform(tcp_frame_);
-        Eigen::Isometry3d curr_pose = trajectory->getWayPoint(i).getGlobalLinkTransform(tcp_frame_);
+        Eigen::Isometry3d prev_pose = trajectory->getWayPoint(i - 1).getGlobalLinkTransform(config.tcp_frame);
+        Eigen::Isometry3d curr_pose = trajectory->getWayPoint(i).getGlobalLinkTransform(config.tcp_frame);
 
         double dist = (curr_pose.translation() - prev_pose.translation()).norm();
         double dt = trajectory->getWayPointDurationFromPrevious(i);
@@ -326,7 +322,7 @@ std::pair<bool, moveit_msgs::msg::RobotTrajectory> MoveGroupPlanner::applyTimePa
         }
 
         // Check cartesian speed if needed
-        double max_speed = computeMaxCartesianSpeed(robot_traj_ptr);
+        double max_speed = computeMaxCartesianSpeed(robot_traj_ptr, config);
         if (max_speed <= config.max_cartesian_speed)
         {
             // All good, we've param'd the trajectory
@@ -383,7 +379,7 @@ std::pair<bool, moveit_msgs::msg::RobotTrajectory> MoveGroupPlanner::plan(const 
     {
         // e.g. "chomp/CHOMP" or "ompl/RRTConnect" or "pilz_industrial_motion_planner/LIN"
         move_group_interface_->setPlanningPipelineId(cfg.planning_pipeline);
-        move_group_interface_->setPlannerId(cfg.planner_id);//cfg.planning_pipeline + "/" + cfg.planner_id);
+        move_group_interface_->setPlannerId(cfg.planner_id); // cfg.planning_pipeline + "/" + cfg.planner_id);
     }
     // If the user uses only movegroup version and needs compatibility, he can set the full string in planner_id only:
     else if (!cfg.planner_id.empty())
@@ -412,7 +408,7 @@ std::pair<bool, moveit_msgs::msg::RobotTrajectory> MoveGroupPlanner::plan(const 
     {
         if (goal_msg.goal.movement_type == "pose")
         {
-            move_group_interface_->setPoseTarget(goal_msg.goal.pose_target, tcp_frame_);
+            move_group_interface_->setPoseTarget(goal_msg.goal.pose_target, goal_msg.goal.config.tcp_frame);
         }
         else if (goal_msg.goal.movement_type == "joint")
         {
@@ -871,7 +867,7 @@ bool MoveGroupPlanner::isTrajectoryEndValid(
         try
         {
             // Get the pose from the last point of the trajectory.
-            traj_end_pose = getPoseFromTrajectory(traj, current_state, tcp_frame_, true);
+            traj_end_pose = getPoseFromTrajectory(traj, current_state, move_request.config.tcp_frame, true);
         }
         catch (const std::exception &e)
         {

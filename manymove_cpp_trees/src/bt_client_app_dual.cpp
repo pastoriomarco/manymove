@@ -573,34 +573,34 @@ int main(int argc, char **argv)
     // or translate them directly if they are only used once
     std::string rest_move_parallel_1_xml = buildMoveXML(
         rp_1.prefix, rp_1.prefix + "toRest",
-        {{rp_1.prefix, "joint", move_configs["max_move"], "", joint_rest_1}},
+        {{rp_1.prefix, tcp_frame_name_1, "joint", move_configs["max_move"], "", joint_rest_1}},
         blackboard);
 
     std::string pick_move_parallel_1_xml = buildMoveXML(
         rp_1.prefix, rp_1.prefix + "pick",
-        {{rp_1.prefix, "pose", move_configs["max_move"], approach_pick_target_1_key_name},
-         {rp_1.prefix, "cartesian", move_configs["cartesian_slow_move"], pick_target_1_key_name}},
+        {{rp_1.prefix, tcp_frame_name_1, "pose", move_configs["max_move"], approach_pick_target_1_key_name},
+         {rp_1.prefix, tcp_frame_name_1, "cartesian", move_configs["cartesian_slow_move"], pick_target_1_key_name}},
         blackboard);
 
     std::string drop_move_parallel_1_xml = buildMoveXML(
         rp_1.prefix, rp_1.prefix + "drop",
-        {{rp_1.prefix, "cartesian", move_configs["cartesian_max_move"], drop_target_1_key_name}},
+        {{rp_1.prefix, tcp_frame_name_1, "cartesian", move_configs["cartesian_max_move"], drop_target_1_key_name}},
         blackboard);
 
     std::string wait_move_parallel_1_xml = buildMoveXML(
         rp_1.prefix, rp_1.prefix + "wait",
-        {{rp_1.prefix, "cartesian", move_configs["cartesian_mid_move"], approach_pick_target_1_key_name},
-         {rp_1.prefix, "pose", move_configs["max_move"], approach_drop_target_1_key_name}},
+        {{rp_1.prefix, tcp_frame_name_1, "cartesian", move_configs["cartesian_mid_move"], approach_pick_target_1_key_name},
+         {rp_1.prefix, tcp_frame_name_1, "pose", move_configs["max_move"], approach_drop_target_1_key_name}},
         blackboard);
 
     std::string ready_move_parallel_1_xml = buildMoveXML(
         rp_1.prefix, rp_1.prefix + "ready",
-        {{rp_1.prefix, "pose", move_configs["max_move"], approach_drop_target_1_key_name}},
+        {{rp_1.prefix, tcp_frame_name_1, "pose", move_configs["max_move"], approach_drop_target_1_key_name}},
         blackboard);
 
     std::string home_move_parallel_1_xml = buildMoveXML(
         rp_1.prefix, rp_1.prefix + "home",
-        {{rp_1.prefix, "named", move_configs["max_move"], "", {}, named_home_1}},
+        {{rp_1.prefix, tcp_frame_name_1, "named", move_configs["max_move"], "", {}, named_home_1}},
         blackboard);
 
     // We can compose sequences together into a xml tree leaf or branch
@@ -611,34 +611,34 @@ int main(int argc, char **argv)
     // build the xml snippets for the single moves of robot 2
     std::string rest_move_parallel_2_xml = buildMoveXML(
         rp_2.prefix, rp_2.prefix + "toRest",
-        {{rp_2.prefix, "joint", move_configs["max_move"], "", joint_rest_2}},
+        {{rp_2.prefix, tcp_frame_name_2, "joint", move_configs["max_move"], "", joint_rest_2}},
         blackboard);
 
     std::string insert_move_parallel_2_xml = buildMoveXML(
         rp_2.prefix, rp_2.prefix + "pick",
-        {{rp_2.prefix, "pose", move_configs["max_move"], approach_insert_target_2_key_name},
-         {rp_2.prefix, "cartesian", move_configs["cartesian_slow_move"], insert_target_2_key_name}},
+        {{rp_2.prefix, tcp_frame_name_2, "pose", move_configs["max_move"], approach_insert_target_2_key_name},
+         {rp_2.prefix, tcp_frame_name_2, "cartesian", move_configs["cartesian_slow_move"], insert_target_2_key_name}},
         blackboard);
 
     std::string load_move_parallel_2_xml = buildMoveXML(
         rp_2.prefix, rp_2.prefix + "drop",
-        {{rp_2.prefix, "cartesian", move_configs["cartesian_mid_move"], approach_load_target_2_key_name},
-         {rp_2.prefix, "cartesian", move_configs["cartesian_slow_move"], load_target_2_key_name}},
+        {{rp_2.prefix, tcp_frame_name_2, "cartesian", move_configs["cartesian_mid_move"], approach_load_target_2_key_name},
+         {rp_2.prefix, tcp_frame_name_2, "cartesian", move_configs["cartesian_slow_move"], load_target_2_key_name}},
         blackboard);
 
     std::string exit_move_parallel_2_xml = buildMoveXML(
         rp_2.prefix, rp_2.prefix + "exit",
-        {{rp_2.prefix, "cartesian", move_configs["cartesian_max_move"], approach_insert_target_2_key_name}},
+        {{rp_2.prefix, tcp_frame_name_2, "cartesian", move_configs["cartesian_max_move"], approach_insert_target_2_key_name}},
         blackboard);
 
     std::string ready_move_parallel_2_xml = buildMoveXML(
         rp_2.prefix, rp_2.prefix + "toReady",
-        {{rp_2.prefix, "joint", move_configs["max_move"], "", joint_ready_2}},
+        {{rp_2.prefix, tcp_frame_name_2, "joint", move_configs["max_move"], "", joint_ready_2}},
         blackboard);
 
     std::string home_move_parallel_2_xml = buildMoveXML(
         rp_2.prefix, rp_2.prefix + "home",
-        {{rp_2.prefix, "named", move_configs["max_move"], "", {}, named_home_2}},
+        {{rp_2.prefix, tcp_frame_name_2, "named", move_configs["max_move"], "", {}, named_home_2}},
         blackboard);
 
     // We can compose sequences together into a xml tree leaf or branch

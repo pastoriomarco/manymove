@@ -29,7 +29,8 @@ namespace manymove_cpp_trees
          * float64 max_cartesian_speed             # max cartesian speed for the move, referred to TCP
          * int32 plan_number_target                # number of valid plans to find before declaring success
          * int32 plan_number_limit                 # max planning tries before fail
-         * string smoothing_type                   # "time-optimal" / "ruckig"
+         * string smoothing_type                   # "time-optimal" / "ruckig" (## under construction ##)
+         * string tcp_frame                        # End-effector (TCP) frame for this request
          *
          * # moveit planner parameters
          * float64 velocity_scaling_factor         # 0.0 to 1.0
@@ -50,6 +51,11 @@ namespace manymove_cpp_trees
          * With 4 plans I noticed a quite good result, 8 to 12 plans reach almost always a very good result but with planning time increases.
          * Some robots may need more, expecially if they have a wider range of movement on each joint.
          */
+
+        /**
+         * Note about tcp_frame: it's to be set on move basis, so we give it as an input to the Move constructor
+         */
+        
         MovementConfig max_move_config;
         max_move_config.velocity_scaling_factor = 1.0;
         max_move_config.acceleration_scaling_factor = 0.75;
@@ -164,8 +170,10 @@ namespace manymove_cpp_trees
         manymove_msgs::msg::MovementConfig config; ///< Movement configuration parameters.
         std::vector<double> start_joint_values;    ///< Starting joint values for planning.
         std::string robot_prefix;                  ///< Prefix to correctly reference previous moves.
+        std::string tcp_frame;                     ///< TCP for cartesian speed calculations
 
         Move(const std::string &robot_prefix,
+             const std::string &tcp_frame,
              const std::string &type,
              const manymove_msgs::msg::MovementConfig &config,
              const std::string &pose_key = "",
@@ -178,7 +186,8 @@ namespace manymove_cpp_trees
               named_target(named_target),
               config(config),
               start_joint_values(start_joint_values),
-              robot_prefix(robot_prefix)
+              robot_prefix(robot_prefix),
+              tcp_frame(tcp_frame)
         {
         }
 
@@ -201,8 +210,12 @@ namespace manymove_cpp_trees
             {
                 goal.named_target = named_target;
             }
+
             goal.start_joint_values = start_joint_values;
+
             goal.config = config;
+            goal.config.tcp_frame = tcp_frame;
+
             return goal;
         }
     };

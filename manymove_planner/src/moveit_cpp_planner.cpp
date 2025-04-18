@@ -7,12 +7,11 @@ MoveItCppPlanner::MoveItCppPlanner(
     const rclcpp::Node::SharedPtr &node,
     const std::string &planning_group,
     const std::string &base_frame,
-    const std::string &tcp_frame,
     const std::string &traj_controller,
     const std::shared_ptr<moveit_cpp::MoveItCpp> &moveit_cpp_ptr)
     : node_(node), logger_(node->get_logger()),
       planning_group_(planning_group),
-      base_frame_(base_frame), tcp_frame_(tcp_frame),
+      base_frame_(base_frame),
       traj_controller_(traj_controller),
       moveit_cpp_ptr_(moveit_cpp_ptr)
 {
@@ -85,7 +84,8 @@ rclcpp_action::Client<control_msgs::action::FollowJointTrajectory>::SharedPtr Mo
 }
 
 // Compute Path Length
-double MoveItCppPlanner::computePathLength(const moveit_msgs::msg::RobotTrajectory &trajectory) const
+double MoveItCppPlanner::computePathLength(const moveit_msgs::msg::RobotTrajectory &trajectory,
+                                           const manymove_msgs::msg::MovementConfig &config) const
 {
     if (trajectory.joint_trajectory.points.empty())
     {
@@ -150,10 +150,10 @@ double MoveItCppPlanner::computePathLength(const moveit_msgs::msg::RobotTrajecto
             const auto &curr_point = traj.joint_trajectory.points[i];
 
             robot_state.setJointGroupPositions(joint_model_group, prev_point.positions);
-            const Eigen::Isometry3d prev_tcp_pose = robot_state.getGlobalLinkTransform(tcp_frame_);
+            const Eigen::Isometry3d prev_tcp_pose = robot_state.getGlobalLinkTransform(config.tcp_frame);
 
             robot_state.setJointGroupPositions(joint_model_group, curr_point.positions);
-            const Eigen::Isometry3d curr_tcp_pose = robot_state.getGlobalLinkTransform(tcp_frame_);
+            const Eigen::Isometry3d curr_tcp_pose = robot_state.getGlobalLinkTransform(config.tcp_frame);
 
             // Calculate the Cartesian distance
             Eigen::Vector3d prev_position = prev_tcp_pose.translation();
@@ -253,15 +253,17 @@ geometry_msgs::msg::Pose MoveItCppPlanner::getPoseFromTrajectory(const moveit_ms
 }
 
 // Compute Max Cartesian Speed
-double MoveItCppPlanner::computeMaxCartesianSpeed(const robot_trajectory::RobotTrajectoryPtr &trajectory) const
+double MoveItCppPlanner::computeMaxCartesianSpeed(
+    const robot_trajectory::RobotTrajectoryPtr &trajectory,
+    const manymove_msgs::msg::MovementConfig &config) const
 {
     if (trajectory->getWayPointCount() < 2)
         return 0.0;
     double max_speed = 0.0;
     for (size_t i = 1; i < trajectory->getWayPointCount(); i++)
     {
-        Eigen::Isometry3d prev_pose = trajectory->getWayPoint(i - 1).getGlobalLinkTransform(tcp_frame_);
-        Eigen::Isometry3d curr_pose = trajectory->getWayPoint(i).getGlobalLinkTransform(tcp_frame_);
+        Eigen::Isometry3d prev_pose = trajectory->getWayPoint(i - 1).getGlobalLinkTransform(config.tcp_frame);
+        Eigen::Isometry3d curr_pose = trajectory->getWayPoint(i).getGlobalLinkTransform(config.tcp_frame);
         double dist = (curr_pose.translation() - prev_pose.translation()).norm();
         double dt = trajectory->getWayPointDurationFromPrevious(i);
         if (dt > 0.0)
@@ -437,7 +439,7 @@ std::pair<bool, moveit_msgs::msg::RobotTrajectory> MoveItCppPlanner::plan(const 
     else if (goal_msg.goal.movement_type == "pose")
     {
 
-        RCLCPP_DEBUG_STREAM(logger_, "Setting pose target for " << tcp_frame_);
+        RCLCPP_DEBUG_STREAM(logger_, "Setting pose target for " << goal_msg.goal.config.tcp_frame);
 
         int attempts = 0;
         while (attempts < goal_msg.goal.config.plan_number_limit &&
@@ -468,7 +470,7 @@ std::pair<bool, moveit_msgs::msg::RobotTrajectory> MoveItCppPlanner::plan(const 
 
                 // auto start_pose = getPoseFromRobotState(*robot_start_state_ptr, tcp_frame_);
                 // auto traj_start_pose = getPoseFromTrajectory(traj_msg, *robot_start_state_ptr, tcp_frame_, false);
-                auto traj_end_pose = getPoseFromTrajectory(traj_msg, *robot_start_state_ptr, tcp_frame_, true);
+                auto traj_end_pose = getPoseFromTrajectory(traj_msg, *robot_start_state_ptr, goal_msg.goal.config.tcp_frame, true);
 
                 // double min_euclidean_distance = computeCartesianDistance(start_pose, goal_msg.goal.pose_target);
                 // double traj_euclidean_distance = computeCartesianDistance(traj_start_pose, traj_end_pose);
@@ -553,7 +555,7 @@ std::pair<bool, moveit_msgs::msg::RobotTrajectory> MoveItCppPlanner::plan(const 
             auto start_state = planning_components_->getStartState();
 
             // Get the end-effector link model
-            const moveit::core::LinkModel *ee_link = joint_model_group_ptr->getLinkModel(tcp_frame_);
+            const moveit::core::LinkModel *ee_link = joint_model_group_ptr->getLinkModel(goal_msg.goal.config.tcp_frame);
 
             // Retrieve the global pose of the end-effector at the start
             Eigen::Isometry3d start_pose = start_state->getGlobalLinkTransform(ee_link);
@@ -752,7 +754,7 @@ std::pair<bool, moveit_msgs::msg::RobotTrajectory> MoveItCppPlanner::applyTimePa
         }
 
         // Check cartesian speed if needed
-        double max_speed = computeMaxCartesianSpeed(robot_traj_ptr);
+        double max_speed = computeMaxCartesianSpeed(robot_traj_ptr, config);
         if (max_speed <= config.max_cartesian_speed)
         {
             // All good, we've param'd the trajectory
@@ -1121,7 +1123,7 @@ bool MoveItCppPlanner::isTrajectoryEndValid(
         try
         {
             // Get the pose from the last point of the trajectory.
-            traj_end_pose = getPoseFromTrajectory(traj, current_state, tcp_frame_, true);
+            traj_end_pose = getPoseFromTrajectory(traj, current_state, move_request.config.tcp_frame, true);
         }
         catch (const std::exception &e)
         {

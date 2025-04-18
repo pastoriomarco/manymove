@@ -49,14 +49,12 @@ public:
      * @param node Shared pointer to the ROS2 node.
      * @param planning_group Name of the planning group (as configured in MoveIt).
      * @param base_frame The base frame of the robot.
-     * @param tcp_frame The tool center point (TCP) frame for the manipulator.
      * @param traj_controller Name of the trajectory controller to use for execution.
      */
     MoveGroupPlanner(
         const rclcpp::Node::SharedPtr &node,
         const std::string &planning_group,
         const std::string &base_frame,
-        const std::string &tcp_frame,
         const std::string &traj_controller);
 
     /**
@@ -169,7 +167,8 @@ private:
      * @param trajectory The input trajectory message.
      * @return The computed path length, combining joint and Cartesian distance.
      */
-    double computePathLength(const moveit_msgs::msg::RobotTrajectory &trajectory) const;
+    double computePathLength(const moveit_msgs::msg::RobotTrajectory &trajectory,
+                             const manymove_msgs::msg::MovementConfig &config) const;
 
     /**
      * @brief Calculate the pose relative to a frame from a robot state.
@@ -207,7 +206,8 @@ private:
      * @param trajectory A pointer to the robot trajectory to analyze.
      * @return The maximum speed in meters/second found along the trajectory.
      */
-    double computeMaxCartesianSpeed(const robot_trajectory::RobotTrajectoryPtr &trajectory) const;
+    double computeMaxCartesianSpeed(const robot_trajectory::RobotTrajectoryPtr &trajectory,
+                                    const manymove_msgs::msg::MovementConfig &config) const;
 
     /**
      * @brief Compare two sets of joint targets for equality within a tolerance.
@@ -245,7 +245,6 @@ private:
     rclcpp::Logger logger_;        ///< Logger for output messages.
     std::string planning_group_;   ///< The planning group name in MoveIt.
     std::string base_frame_;       ///< Base frame of the robot.
-    std::string tcp_frame_;        ///< Tool center point (TCP) frame for the manipulator.
     std::string traj_controller_;  ///< Name of the trajectory controller to be used.
 
     std::shared_ptr<moveit::planning_interface::MoveGroupInterface> move_group_interface_; ///< Shared pointer to MoveGroupInterface.
