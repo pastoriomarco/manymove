@@ -48,11 +48,7 @@ namespace manymove_cpp_trees
          * Note about plan_number_target:
          * Increasing the plan_number_target increase time to plan but produce trajs closer to optimal.
          * With 4 plans I noticed a quite good result, 8 to 12 plans reach almost always a very good result but with planning time increases.
-         * If you subdivide the path in more moves and you keep the easiest ones to plan first, you can chain the moves and plan the hardest
-         * ones to plan while the robot moves, thus obtaining quite fast cycle times AND better moves.
-         * The downside is that, at the moment, chained moves require a full stop between moves: this can impacts cycle times, as sometimes 
-         * it's better to follow a trajectory that is a bit longer and even move a bit slower in the whole traj, than reaching a full stop while
-         * going faster in a shorter path. 
+         * Some robots may need more, expecially if they have a wider range of movement on each joint.
          */
         MovementConfig max_move_config;
         max_move_config.velocity_scaling_factor = 1.0;
@@ -112,12 +108,12 @@ namespace manymove_cpp_trees
         LIN_max_move_config.acceleration_scaling_factor = 0.5;
 
         MovementConfig LIN_mid_move_config = LIN_max_move_config;
-        LIN_mid_move_config.velocity_scaling_factor = 0.25;
-        LIN_mid_move_config.acceleration_scaling_factor = 0.25;
+        LIN_mid_move_config.velocity_scaling_factor = 0.2;
+        LIN_mid_move_config.acceleration_scaling_factor = 0.2;
 
         MovementConfig LIN_slow_move_config = LIN_max_move_config;
-        LIN_slow_move_config.velocity_scaling_factor = 0.25;
-        LIN_slow_move_config.acceleration_scaling_factor = 0.25;
+        LIN_slow_move_config.velocity_scaling_factor = 0.1;
+        LIN_slow_move_config.acceleration_scaling_factor = 0.1;
 
         MovementConfig CHOMP_max_move_config = max_move_config;
         CHOMP_max_move_config.planning_pipeline = "chomp";
