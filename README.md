@@ -207,20 +207,6 @@ These launch files spin up the appropriate environment (fake or real) plus the n
 
 ---
 
-## Architecture Flow
-
-In a typical usage scenario:
-1. **`manymove_planner`** (motion-planning + trajectory execution) and **`manymove_object_manager`** (collision objects) run their respective action servers.
-2. **`manymove_signals`** handles the digital I/O action server.
-3. A **behavior tree** (from **`manymove_cpp_trees`** in C++, or **`manymove_py_trees`** in Python) orchestrates these actions:
-   - Check if the robot is ready and free of errors.
-   - Add or remove objects from the scene.
-   - Plan and execute a motion.
-   - Send signals to open/close a gripper or read a sensor input, etc.
-4. **`manymove_hmi`** can optionally provide a GUI or service-based interface to pause, stop, or resume these behaviors, and to visualize status or debug.
-
----
-
 ## Credits
 
 - **BehaviorTree.CPP v3.8** installed through ROS dependencies (`ros-humble-behaviortree-cpp-v3`)  
