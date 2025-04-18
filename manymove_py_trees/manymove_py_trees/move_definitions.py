@@ -20,6 +20,7 @@ class Move:
     Dataclass representing a single move request for the 'move_manipulator' action.
     """
     movement_type: str  # "pose", "joint", "named", "cartesian"
+    tcp_frame: str  
     pose_target: Optional[Pose] = None
     named_target: Optional[str] = None
     joint_values: Optional[List[float]] = None
@@ -40,6 +41,8 @@ class Move:
         mmg = MoveManipulatorGoal()
         mmg.movement_type = self.movement_type
         mmg.config = self.config
+
+        mmg.config.tcp_frame = self.tcp_frame
 
         if self.movement_type in ["pose", "cartesian"]:
             if not isinstance(self.pose_target, Pose):
@@ -116,6 +119,7 @@ def create_pose(position: dict, orientation: dict) -> Pose:
 
 def create_move(
     movement_type: str,
+    tcp_frame: str,
     target: Pose = None,
     named_target: str = None,
     joint_values: List[float] = None,
@@ -139,6 +143,7 @@ def create_move(
 
     return Move(
         movement_type=movement_type,
+        tcp_frame=tcp_frame,
         pose_target=target,
         named_target=named_target,
         joint_values=joint_values,

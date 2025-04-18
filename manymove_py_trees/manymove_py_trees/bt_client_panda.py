@@ -20,6 +20,8 @@ from manymove_py_trees.hmi_service_node import HMIServiceNode
 
 def build_and_run_bt(node: Node):
     node.get_logger().info("BT Client Node started")
+    node.declare_parameter('tcp_frame', 'panda_link8')
+    tcp_frame = node.get_parameter('tcp_frame').value
 
     # Create and initialize the Blackboard with the keys used by the behavior
     bb = Blackboard()
@@ -52,15 +54,15 @@ def build_and_run_bt(node: Node):
 
     # Define three sequences: rest, pick, and home.
     rest_position = [
-        create_move("joint", joint_values=joint_rest, config=movement_configs["max_move"]),
+        create_move("joint", tcp_frame, joint_values=joint_rest, config=movement_configs["max_move"]),
     ]
     pick_sequence = [
-        create_move("pose", target=approach_target, config=movement_configs["mid_move"]),
-        create_move("cartesian", target=pick_target, config=movement_configs["slow_move"]),
-        create_move("cartesian", target=approach_target, config=movement_configs["max_move"]),
+        create_move("pose", tcp_frame, target=approach_target, config=movement_configs["mid_move"]),
+        create_move("cartesian", tcp_frame, target=pick_target, config=movement_configs["slow_move"]),
+        create_move("cartesian", tcp_frame, target=approach_target, config=movement_configs["max_move"]),
     ]
     home_position = [
-        create_move("named", named_target=named_home, config=movement_configs["max_move"]),
+        create_move("named", tcp_frame, named_target=named_home, config=movement_configs["max_move"]),
     ]
 
     # Build a list of sequences and the Behavior Tree (BT)
@@ -103,11 +105,13 @@ def build_and_run_bt(node: Node):
 
 def main():
     rclpy.init()
+
     # Use a MultiThreadedExecutor so that the HMI service node and BT node can run concurrently
     executor = MultiThreadedExecutor(num_threads=2)
 
     # Create the BT node for the panda client
     bt_node = rclpy.create_node("bt_client_node")
+
     # Create the HMI service node (with empty prefix in this example)
     hmi_node = HMIServiceNode(node_name="hmi_service_node", robot_prefix="")
     hmi_node.get_logger().info("HMI service node created in the same process")

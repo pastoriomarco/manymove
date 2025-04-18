@@ -29,6 +29,8 @@ def build_and_run_bt(node: Node):
     returning after success/failure or keyboard interrupt.
     """
     node.get_logger().info("BT Client Node started")
+    node.declare_parameter('tcp_frame', 'link_tcp')
+    tcp_frame = node.get_parameter('tcp_frame').value
 
     bb = Blackboard()
     # Set defaults for keys used by MoveManipulatorBehavior:
@@ -57,22 +59,22 @@ def build_and_run_bt(node: Node):
     )
 
     rest_position = [
-        create_move("joint", joint_values=joint_rest, config=movement_configs["max_move"]),
+        create_move("joint", tcp_frame, joint_values=joint_rest, config=movement_configs["max_move"]),
     ]
 
     scan_surroundings = [
-        create_move("joint", joint_values=joint_look_sx, config=movement_configs["max_move"]),
-        create_move("joint", joint_values=joint_look_dx, config=movement_configs["max_move"]),
+        create_move("joint", tcp_frame, joint_values=joint_look_sx, config=movement_configs["max_move"]),
+        create_move("joint", tcp_frame, joint_values=joint_look_dx, config=movement_configs["max_move"]),
     ]
 
     pick_sequence = [
-        create_move("pose", target=approach_target, config=movement_configs["mid_move"]),
-        create_move("cartesian", target=pick_target, config=movement_configs["slow_move"]),
-        create_move("cartesian", target=approach_target, config=movement_configs["max_move"]),
+        create_move("pose", tcp_frame, target=approach_target, config=movement_configs["mid_move"]),
+        create_move("cartesian", tcp_frame, target=pick_target, config=movement_configs["slow_move"]),
+        create_move("cartesian", tcp_frame, target=approach_target, config=movement_configs["max_move"]),
     ]
 
     home_position = [
-        create_move("named", named_target=named_home, config=movement_configs["max_move"]),
+        create_move("named", tcp_frame, named_target=named_home, config=movement_configs["max_move"]),
     ]
 
     # Build a list of sequences
