@@ -11,6 +11,8 @@ find_package(ament_cmake REQUIRED)
 find_package(rclcpp REQUIRED)
 find_package(moveit_core REQUIRED)
 find_package(moveit_ros_planning_interface REQUIRED)
+find_package(moveit_ros_move_group REQUIRED)
+find_package(moveit_ros_planning REQUIRED)
 find_package(tf2_geometry_msgs REQUIRED)
 find_package(geometry_msgs REQUIRED)
 find_package(moveit_visual_tools REQUIRED)
@@ -36,6 +38,8 @@ ament_target_dependencies(move_group_planner_lib
   rclcpp
   moveit_core
   moveit_ros_planning_interface
+  moveit_ros_move_group
+  moveit_ros_planning
   tf2_geometry_msgs
   geometry_msgs
   control_msgs
@@ -49,6 +53,8 @@ add_library(moveit_cpp_planner_lib
 ament_target_dependencies(moveit_cpp_planner_lib
   rclcpp
   moveit_core
+  moveit_ros_move_group
+  moveit_ros_planning
   tf2_geometry_msgs
   geometry_msgs
   control_msgs

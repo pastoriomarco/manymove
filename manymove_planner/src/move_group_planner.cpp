@@ -427,11 +427,11 @@ std::pair<bool, moveit_msgs::msg::RobotTrajectory> MoveGroupPlanner::plan(const 
             if (move_group_interface_->plan(plan) == moveit::core::MoveItErrorCode::SUCCESS)
             {
                 // // Calculate the path lenght and choose the shortest
-                // double length = computePathLength(plan.trajectory_);
-                // trajectories.emplace_back(plan.trajectory_, length);
+                // double length = computePathLength(plan.trajectory);
+                // trajectories.emplace_back(plan.trajectory, length);
 
                 // Time parametrize the path and choose the fastest:
-                auto [ok, timed_traj] = applyTimeParameterization(plan.trajectory_, cfg);
+                auto [ok, timed_traj] = applyTimeParameterization(plan.trajectory, cfg);
                 if (!ok)
                 {
                     RCLCPP_WARN(logger_, "Time‑parameterization failed on this candidate, skipping.");
@@ -467,22 +467,23 @@ std::pair<bool, moveit_msgs::msg::RobotTrajectory> MoveGroupPlanner::plan(const 
         {
             moveit::planning_interface::MoveGroupInterface::Plan plan;
             RCLCPP_DEBUG_STREAM(logger_, "Cartesian path planning attempt with step size " << goal_msg.goal.config.step_size << ", jump threshold " << goal_msg.goal.config.jump_threshold);
+        
             double fraction = move_group_interface_->computeCartesianPath(
-                waypoints, goal_msg.goal.config.step_size, goal_msg.goal.config.jump_threshold, plan.trajectory_);
+                waypoints, goal_msg.goal.config.step_size, plan.trajectory);
 
             if (fraction >= 1.0)
             {
                 // // Calculate the path lenght and choose the shortest
-                // double length = computePathLength(plan.trajectory_);
-                // trajectories.emplace_back(plan.trajectory_, length);
+                // double length = computePathLength(plan.trajectory);
+                // trajectories.emplace_back(plan.trajectory, length);
 
                 // Time parametrize the path and choose the fastest:
                 if (fraction >= 1.0)
                 {
-                    // double length = computePathLength(plan.trajectory_);
-                    // trajectories.emplace_back(plan.trajectory_, length);
+                    // double length = computePathLength(plan.trajectory);
+                    // trajectories.emplace_back(plan.trajectory, length);
 
-                    auto [ok, timed_traj] = applyTimeParameterization(plan.trajectory_, cfg);
+                    auto [ok, timed_traj] = applyTimeParameterization(plan.trajectory, cfg);
                     if (ok && !timed_traj.joint_trajectory.points.empty())
                     {
                         double duration =

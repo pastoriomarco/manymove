@@ -60,42 +60,42 @@ namespace manymove_signals
         // Tool GPIO
         set_digital_io_clients_["tool"] = this->create_client<xarm_msgs::srv::SetDigitalIO>(
             namespace_prefix + "/set_tgpio_digital",
-            rmw_qos_profile_services_default,
+            rclcpp::ServicesQoS(),
             service_callback_group_);
         get_digital_io_clients_["tool"] = this->create_client<xarm_msgs::srv::GetDigitalIO>(
             namespace_prefix + "/get_tgpio_digital",
-            rmw_qos_profile_services_default,
+            rclcpp::ServicesQoS(),
             service_callback_group_);
 
         // Controller GPIO
         set_digital_io_clients_["controller"] = this->create_client<xarm_msgs::srv::SetDigitalIO>(
             namespace_prefix + "/set_cgpio_digital",
-            rmw_qos_profile_services_default,
+            rclcpp::ServicesQoS(),
             service_callback_group_);
         get_digital_io_clients_["controller"] = this->create_client<xarm_msgs::srv::GetDigitalIO>(
             namespace_prefix + "/get_cgpio_digital",
-            rmw_qos_profile_services_default,
+            rclcpp::ServicesQoS(),
             service_callback_group_);
 
         // Initialize SetInt16 clients for mode and state
         set_int16_clients_["mode"] = this->create_client<xarm_msgs::srv::SetInt16>(
             namespace_prefix + "/set_mode",
-            rmw_qos_profile_services_default,
+            rclcpp::ServicesQoS(),
             service_callback_group_);
         set_int16_clients_["state"] = this->create_client<xarm_msgs::srv::SetInt16>(
             namespace_prefix + "/set_state",
-            rmw_qos_profile_services_default,
+            rclcpp::ServicesQoS(),
             service_callback_group_);
 
         // Initialize additional service clients for ResetRobotState
         clean_error_client_ = this->create_client<xarm_msgs::srv::Call>(
             namespace_prefix + "/clean_error",
-            rmw_qos_profile_services_default,
+            rclcpp::ServicesQoS(),
             service_callback_group_);
 
         motion_enable_client_ = this->create_client<xarm_msgs::srv::SetInt16ById>(
             namespace_prefix + "/motion_enable",
-            rmw_qos_profile_services_default,
+            rclcpp::ServicesQoS(),
             service_callback_group_);
     }
 
@@ -174,7 +174,7 @@ namespace manymove_signals
     void SignalsNode::initialize_action_servers()
     {
         auto serverOptions = rcl_action_server_get_default_options();
-        serverOptions.result_service_qos = rmw_qos_profile_services_default;
+        serverOptions.result_service_qos = rclcpp::ServicesQoS().get_rmw_qos_profile();
 
         // Action Server for SetOutput
         set_output_server_ = rclcpp_action::create_server<SetOutput>(

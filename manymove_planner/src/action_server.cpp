@@ -559,7 +559,6 @@ void ManipulatorActionServer::activateControllerAsync(
     request->activate_controllers.push_back(controller_name);
     request->deactivate_controllers.clear();
     request->strictness = request->STRICT;
-    request->start_asap = false;
     request->timeout.sec = 0;
     request->timeout.nanosec = 0;
 
@@ -616,7 +615,6 @@ void ManipulatorActionServer::deactivateControllerAsync(
     request->activate_controllers.clear();                      // We are not starting any new controllers
     request->deactivate_controllers.push_back(controller_name); // We want to deactivate/stop this controller
     request->strictness = request->STRICT;                      // STRICT means all requested switches must succeed
-    request->start_asap = false;                                // You can set this to true or false depending on your usage
     request->timeout.sec = 0;                                   // Timeout for the switch
     request->timeout.nanosec = 0;
 

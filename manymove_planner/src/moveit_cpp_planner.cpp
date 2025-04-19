@@ -18,7 +18,7 @@ MoveItCppPlanner::MoveItCppPlanner(
     if (!moveit_cpp_ptr_)
     {
         moveit_cpp_ptr_ = std::make_shared<moveit_cpp::MoveItCpp>(node_);
-        moveit_cpp_ptr_->getPlanningSceneMonitor()->providePlanningSceneService();
+        moveit_cpp_ptr_->getPlanningSceneMonitorNonConst()->providePlanningSceneService();
     }
 
     /**
@@ -33,12 +33,6 @@ MoveItCppPlanner::MoveItCppPlanner(
     // moveit_cpp_ptr_->getPlanningSceneMonitor()->startWorldGeometryMonitor("/collision_object", "/attached_collision_object", true);
     // // moveit_cpp_ptr_->getPlanningSceneMonitor()->startPublishingPlanningScene(planning_scene_monitor::PlanningSceneMonitor::SceneUpdateType::UPDATE_GEOMETRY);
     // moveit_cpp_ptr_->getPlanningSceneMonitor()->monitorDiffs(true);
-
-    auto planning_pipeline_names = moveit_cpp_ptr_->getPlanningPipelineNames(planning_group_);
-    for (const auto &s : planning_pipeline_names)
-    {
-        RCLCPP_INFO(logger_, "Pipeline registered: %s", s.c_str());
-    }
 
     planning_components_ = std::make_shared<moveit_cpp::PlanningComponent>(planning_group_, moveit_cpp_ptr_);
     RCLCPP_INFO(logger_, "===================================================");
@@ -574,11 +568,12 @@ std::pair<bool, moveit_msgs::msg::RobotTrajectory> MoveItCppPlanner::plan(const 
                 eigen_waypoints.push_back(eigen_pose);
             }
 
-            std::vector<moveit::core::RobotStatePtr> trajectory_states;
-
             // Creating the callback to check for collisions on cartesian path
             moveit::core::GroupStateValidityCallbackFn custom_callback =
                 std::bind(&MoveItCppPlanner::isStateValid, this, std::placeholders::_1, std::placeholders::_2);
+
+            std::vector<moveit::core::RobotStatePtr> trajectory_states;
+            moveit::core::CartesianPrecision cartesian_precision{0.001, 0.01, 1e-3};
 
             double fraction = moveit::core::CartesianInterpolator::computeCartesianPath(
                 start_state.get(),
@@ -588,7 +583,7 @@ std::pair<bool, moveit_msgs::msg::RobotTrajectory> MoveItCppPlanner::plan(const 
                 eigen_waypoints,
                 true,
                 moveit::core::MaxEEFStep(goal_msg.goal.config.step_size),
-                moveit::core::JumpThreshold(goal_msg.goal.config.jump_threshold),
+                cartesian_precision,
                 custom_callback,
                 kinematics::KinematicsQueryOptions(),
                 nullptr);
@@ -989,7 +984,7 @@ bool MoveItCppPlanner::sendControlledStop(double deceleration_time)
 bool MoveItCppPlanner::isStateValid(const moveit::core::RobotState *state,
                                     const moveit::core::JointModelGroup *group) const
 {
-    auto psm = moveit_cpp_ptr_->getPlanningSceneMonitor();
+    auto psm = moveit_cpp_ptr_->getPlanningSceneMonitorNonConst();
     if (!psm)
     {
         RCLCPP_ERROR(logger_, "PlanningSceneMonitor is null. Cannot perform collision checking.");
@@ -1232,7 +1227,7 @@ bool MoveItCppPlanner::isTrajectoryValid(
     std::vector<std::size_t> *invalid_index) const
 {
     // Get a lock on the planning scene through the planning scene monitor.
-    planning_scene_monitor::LockedPlanningSceneRO lscene(moveit_cpp_ptr_->getPlanningSceneMonitor());
+    planning_scene_monitor::LockedPlanningSceneRO lscene(moveit_cpp_ptr_->getPlanningSceneMonitorNonConst());
     if (!lscene)
     {
         RCLCPP_ERROR(logger_, "PlanningSceneMonitor is not available in isTrajectoryValid().");
@@ -1253,7 +1248,7 @@ bool MoveItCppPlanner::isTrajectoryValid(
     std::vector<std::size_t> *invalid_index) const
 {
     // Lock the current planning scene via the planning scene monitor.
-    planning_scene_monitor::LockedPlanningSceneRO lscene(moveit_cpp_ptr_->getPlanningSceneMonitor());
+    planning_scene_monitor::LockedPlanningSceneRO lscene(moveit_cpp_ptr_->getPlanningSceneMonitorNonConst());
     if (!lscene)
     {
         RCLCPP_ERROR(logger_, "Failed to lock the PlanningScene in isTrajectoryValid");

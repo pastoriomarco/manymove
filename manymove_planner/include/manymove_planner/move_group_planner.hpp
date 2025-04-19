@@ -6,27 +6,27 @@
 #include <cmath>
 #include <future>
 #include <map>
-#include <tf2/LinearMath/Quaternion.h>
+#include <tf2/LinearMath/Quaternion.hpp>
 
-#include <moveit/move_group_interface/move_group_interface.h>
-#include <moveit/planning_scene_interface/planning_scene_interface.h>
+#include <moveit/move_group_interface/move_group_interface.hpp>
+#include <moveit/planning_scene_interface/planning_scene_interface.hpp>
 #include <moveit_msgs/msg/collision_object.hpp>
 #include <moveit_msgs/srv/get_planning_scene.hpp>
 #include <geometry_msgs/msg/pose_stamped.hpp>
 #include <moveit_msgs/msg/robot_trajectory.hpp>
-#include <moveit/trajectory_processing/time_optimal_trajectory_generation.h>
-#include <moveit/trajectory_processing/ruckig_traj_smoothing.h>
-#include <moveit/robot_trajectory/robot_trajectory.h>
+#include <moveit/trajectory_processing/time_optimal_trajectory_generation.hpp>
+#include <moveit/trajectory_processing/ruckig_traj_smoothing.hpp>
+#include <moveit/robot_trajectory/robot_trajectory.hpp>
 
-#include <moveit/planning_scene/planning_scene.h>
-#include <moveit/collision_detection/collision_common.h>
-#include <moveit/planning_scene_monitor/planning_scene_monitor.h>
+#include <moveit/planning_scene/planning_scene.hpp>
+#include <moveit/collision_detection/collision_common.hpp>
+#include <moveit/planning_scene_monitor/planning_scene_monitor.hpp>
 
 #include "manymove_msgs/msg/move_manipulator_goal.hpp"
 
 #include <control_msgs/action/follow_joint_trajectory.hpp>
 
-#include <moveit/robot_model/robot_model.h>
+#include <moveit/robot_model/robot_model.hpp>
 
 /**
  * @class MoveGroupPlanner
