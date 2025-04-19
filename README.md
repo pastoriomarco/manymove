@@ -1,4 +1,4 @@
-# ManyMove project - `ROS2 humble`
+# ManyMove project - `ROS2 Jazzy`
 
 ![ManyMove example](https://github.com/pastoriomarco/manymove/blob/dfc9c7f00e11d70d5e27fd2e0c13bfcf5de6de54/media/manymove_example.gif)
 
@@ -16,14 +16,14 @@ This is **HIGHLY EXPERIMENTAL** and comes with no warranty of stability or safet
 
 The `manymove` project is meant for roboticists to ease the transition to ROS2 coming from the classic frameworks of major manufacturers.  
 It provides a simplified, generalized framework for building robotic manipulator control logic using ROS 2 and MoveIt 2.  
-This series of packages was created around Ufactory Lite6 and UF850 cobots, but it is structured in a way that can extend to other robots. Also included is an example using Franka Emika Panda, which is the default demo model for Moveit in ROS2 Humble.
+This series of packages was created around Ufactory Lite6 and UF850 cobots, but it is structured in a way that can extend to other robots. Also included is an example using Franka Emika Panda, which is the default demo model for Moveit in ROS2 Jazzy.
 
 ---
 
 ## Prerequisites
 
-- **Install ROS2 Humble, Moveit2 and xarm_ros2**:
-  - You can follow the instructions on the Humble branch of [xarm_ros2 on github](https://github.com/xArm-Developer/xarm_ros2/tree/humble) to install all the required packages.
+- **Install ROS2 Jazzy, Moveit2 and xarm_ros2**:
+  - You can follow the instructions on the Jazzy branch of [xarm_ros2 on github](https://github.com/xArm-Developer/xarm_ros2/tree/jazzy) to install all the required packages.
 
 ---
 
@@ -32,10 +32,10 @@ This series of packages was created around Ufactory Lite6 and UF850 cobots, but 
 - **Define your `workspace dir`**:
   - You can use for example ~/dev_ws as in xarm_ros2 repo, or define an appropriate workspace.
   - From here on I'll refer to the installation directory of the workspace as `<workspace_dir>`
-- **Clone `manymove` humble branch**:
+- **Clone `manymove` jazzy branch**:
   - From `<workspace_dir>/src`:
   ```bash
-  git clone --branch=humble https://github.com/pastoriomarco/manymove.git
+  git clone --branch=jazzy https://github.com/pastoriomarco/manymove.git
   ```
 -  **Install the dependencies**
   - From `<workspace_dir>`:
@@ -172,7 +172,7 @@ This repository is composed of several sub-packages, each handling different res
     git clone https://github.com/pastoriomarco/xarm_ros2.git --recursive -b $ROS_DISTRO
     ```
 
-- **Panda Manipulator** (requires the installation of [moveit2_tutorials](https://moveit.picknik.ai/humble/doc/tutorials/getting_started/getting_started.html) )
+- **Panda Manipulator** (requires the installation of [moveit2_tutorials](https://moveit.picknik.ai/jazzy/doc/tutorials/getting_started/getting_started.html) )
 
   Standalone launchers for MoveItCPP or MoveGroup with Panda robot (you need the moveit2_tutorials package sourced):
 
@@ -209,11 +209,11 @@ These launch files spin up the appropriate environment (fake or real) plus the n
 
 ## Credits
 
-- **BehaviorTree.CPP v3.8** installed through ROS dependencies (`ros-humble-behaviortree-cpp-v3`)  
+- **BehaviorTree.CPP v3.8** installed through ROS dependencies (`ros-jazzy-behaviortree-cpp-v3`)  
   and its visualizer [Groot](https://github.com/BehaviorTree/Groot).
     - Groot is to be installed manually following the instructions in the [github page](https://github.com/BehaviorTree/Groot?tab=readme-ov-file#dependencies-installation-and-usage)
-- **py_trees_ros** from [splintered-reality/py_trees_ros](https://github.com/splintered-reality/py_trees_ros), installed through ROS dependencies, including its visualizer **ros-humble-py-trees-ros-viewer**.
-- The MoveIt 2 community and [xarm_ros2 on GitHub](https://github.com/xArm-Developer/xarm_ros2/tree/humble) for the underlying robot drivers and examples.
+- **py_trees_ros** from [splintered-reality/py_trees_ros](https://github.com/splintered-reality/py_trees_ros), installed through ROS dependencies, including its visualizer **ros-jazzy-py-trees-ros-viewer**.
+- The MoveIt 2 community and [xarm_ros2 on GitHub](https://github.com/xArm-Developer/xarm_ros2/tree/jazzy) for the underlying robot drivers and examples.
 
 ---
 
