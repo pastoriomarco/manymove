@@ -100,18 +100,15 @@ public:
      *        is within a specified tolerance of the given current joint state.
      * @param traj The planned trajectory.
      * @param current_joint_state A vector of doubles representing the current joint positions.
-     * @param tolerance The maximum allowed difference (in radians) for each joint.
      * @return true if each joint position in the first waypoint is within tolerance, false otherwise.
      */
     virtual bool isTrajectoryStartValid(const moveit_msgs::msg::RobotTrajectory &traj,
-                                        const std::vector<double> &current_joint_state,
-                                        double tolerance) const = 0;
+                                        const manymove_msgs::msg::MoveManipulatorGoal &move_request,
+                                        const std::vector<double> &current_joint_state) const = 0;
 
     virtual bool isTrajectoryEndValid(
         const moveit_msgs::msg::RobotTrajectory &traj,
-        const manymove_msgs::msg::MoveManipulatorGoal &move_request,
-        double joint_tolerance,
-        double pose_tolerance) const = 0;
+        const manymove_msgs::msg::MoveManipulatorGoal &move_request) const = 0;
 
     virtual bool isTrajectoryValid(
         const trajectory_msgs::msg::JointTrajectory &joint_traj_msg,

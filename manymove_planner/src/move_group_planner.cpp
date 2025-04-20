@@ -815,8 +815,8 @@ bool MoveGroupPlanner::isJointStateValid(const std::vector<double> &joint_positi
 }
 
 bool MoveGroupPlanner::isTrajectoryStartValid(const moveit_msgs::msg::RobotTrajectory &traj,
-                                              const std::vector<double> &current_joint_state,
-                                              double tolerance) const
+                                              const manymove_msgs::msg::MoveManipulatorGoal &move_request,
+                                              const std::vector<double> &current_joint_state) const
 {
     if (traj.joint_trajectory.points.empty())
     {
@@ -835,10 +835,10 @@ bool MoveGroupPlanner::isTrajectoryStartValid(const moveit_msgs::msg::RobotTraje
     // Check each joint's difference
     for (size_t i = 0; i < first_point.positions.size(); ++i)
     {
-        if (std::fabs(first_point.positions[i] - current_joint_state[i]) > tolerance)
+        if (std::fabs(first_point.positions[i] - current_joint_state[i]) > move_request.config.rotational_precision)
         {
             RCLCPP_INFO(logger_, "Joint %zu difference (%.6f) exceeds tolerance (%.6f).",
-                        i, std::fabs(first_point.positions[i] - current_joint_state[i]), tolerance);
+                        i, std::fabs(first_point.positions[i] - current_joint_state[i]), move_request.config.rotational_precision);
             return false;
         }
     }
@@ -847,9 +847,7 @@ bool MoveGroupPlanner::isTrajectoryStartValid(const moveit_msgs::msg::RobotTraje
 
 bool MoveGroupPlanner::isTrajectoryEndValid(
     const moveit_msgs::msg::RobotTrajectory &traj,
-    const manymove_msgs::msg::MoveManipulatorGoal &move_request,
-    double joint_tolerance,
-    double pose_tolerance) const
+    const manymove_msgs::msg::MoveManipulatorGoal &move_request) const
 {
     // Check that the trajectory is not empty.
     if (traj.joint_trajectory.points.empty())
@@ -876,11 +874,11 @@ bool MoveGroupPlanner::isTrajectoryEndValid(
         }
 
         double distance = computeCartesianDistance(traj_end_pose, move_request.pose_target);
-        if (distance > pose_tolerance)
+        if (distance > move_request.config.linear_precision)
         {
             RCLCPP_INFO(logger_,
                         "Trajectory end pose invalid: Euclidean distance (%.6f) exceeds tolerance (%.6f)",
-                        distance, pose_tolerance);
+                        distance, move_request.config.linear_precision);
             return false;
         }
         return true;
@@ -926,11 +924,11 @@ bool MoveGroupPlanner::isTrajectoryEndValid(
         for (size_t i = 0; i < last_point.positions.size(); ++i)
         {
             double diff = std::fabs(last_point.positions[i] - target_joint_values[i]);
-            if (diff > joint_tolerance)
+            if (diff > move_request.config.rotational_precision)
             {
                 RCLCPP_INFO(logger_,
                             "Joint %zu difference (%.6f) exceeds tolerance (%.6f) for end validation.",
-                            i, diff, joint_tolerance);
+                            i, diff, move_request.config.rotational_precision);
                 return false;
             }
         }

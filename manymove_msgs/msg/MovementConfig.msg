@@ -4,6 +4,8 @@ int32 plan_number_target                # number of valid plans to find before d
 int32 plan_number_limit                 # max planning tries before fail
 string smoothing_type                   # "time-optimal" / "ruckig"
 string tcp_frame                        # End-effector (TCP) frame for this request
+float64 linear_precision                # Linear precision for end-point trajectory position check
+float64 rotational_precision            # Rotational precision for end-point trajectory position check
 # moveit planner parameters
 float64 velocity_scaling_factor         # 0.0 to 1.0
 float64 acceleration_scaling_factor     # 0.0 to 1.0

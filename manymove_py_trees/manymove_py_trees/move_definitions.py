@@ -71,9 +71,11 @@ def define_movement_configs() -> Dict[str, MovementConfig]:
     max_move_config = MovementConfig()
     max_move_config.velocity_scaling_factor = 1.0
     max_move_config.acceleration_scaling_factor = 1.0
+    max_move_config.max_cartesian_speed = 0.5
+    max_move_config.linear_precision = 0.001
+    max_move_config.rotational_precision = 0.05
     max_move_config.step_size = 0.01
     max_move_config.jump_threshold = 0.0
-    max_move_config.max_cartesian_speed = 0.25
     max_move_config.plan_number_target = 8
     max_move_config.plan_number_limit = 32
     max_move_config.smoothing_type = "time_optimal"
@@ -81,19 +83,23 @@ def define_movement_configs() -> Dict[str, MovementConfig]:
     mid_move_config = MovementConfig()
     mid_move_config.velocity_scaling_factor = 0.5
     mid_move_config.acceleration_scaling_factor = 0.5
+    mid_move_config.max_cartesian_speed = 0.2
+    mid_move_config.linear_precision = 0.001
+    mid_move_config.rotational_precision = 0.05
     mid_move_config.step_size = 0.01
     mid_move_config.jump_threshold = 0.0
-    mid_move_config.max_cartesian_speed = 0.1
     mid_move_config.plan_number_target = 8
     mid_move_config.plan_number_limit = 32
     mid_move_config.smoothing_type = "time_optimal"
-
+    
     slow_move_config = MovementConfig()
-    slow_move_config.velocity_scaling_factor = 1.0 / 40.0
-    slow_move_config.acceleration_scaling_factor = 1.0 / 4.0
+    slow_move_config.velocity_scaling_factor = 0.25
+    slow_move_config.acceleration_scaling_factor = 0.25
+    slow_move_config.max_cartesian_speed = 0.05
+    slow_move_config.linear_precision = 0.001
+    slow_move_config.rotational_precision = 0.05
     slow_move_config.step_size = 0.01
     slow_move_config.jump_threshold = 0.0
-    slow_move_config.max_cartesian_speed = 0.05
     slow_move_config.plan_number_target = 8
     slow_move_config.plan_number_limit = 32
     slow_move_config.smoothing_type = "time_optimal"
