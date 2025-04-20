@@ -32,6 +32,7 @@ namespace manymove_cpp_trees
          * string smoothing_type                   # "time-optimal" / "ruckig" (## under construction ##)
          * string tcp_frame                        # End-effector (TCP) frame for this request
          * float64 linear_precision                # Linear precision for end-point trajectory position check
+         * float64 rotational_precision            # Rotational precisior Rnd-point trajectory position check
          *
          * # moveit planner parameters
          * float64 velocity_scaling_factor         # 0.0 to 1.0
@@ -112,12 +113,8 @@ namespace manymove_cpp_trees
         PTP_max_move_config.plan_number_target = 1;
         PTP_max_move_config.velocity_scaling_factor = 1.0; ///< This scales the max_rot_vel in pilz_cartesian_limits.yaml
 
-        MovementConfig LIN_max_move_config = max_move_config;
-        LIN_max_move_config.planning_pipeline = "pilz_industrial_motion_planner";
+        MovementConfig LIN_max_move_config = PTP_max_move_config;
         LIN_max_move_config.planner_id = "LIN";
-        LIN_max_move_config.planning_time = 5;
-        LIN_max_move_config.planning_attempts = 1;
-        LIN_max_move_config.plan_number_target = 1;
         LIN_max_move_config.velocity_scaling_factor = 0.5;     ///< This scales the max_trans_vel in pilz_cartesian_limits.yaml
         LIN_max_move_config.acceleration_scaling_factor = 0.5; ///< This scales the max_trans_acc in pilz_cartesian_limits.yaml
 
