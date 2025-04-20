@@ -23,7 +23,7 @@ This series of packages was created around Ufactory Lite6 and UF850 cobots, but 
 ## Prerequisites
 
 - **Install ROS2 Jazzy, Moveit2 and xarm_ros2**:
-  - You can follow the instructions on the Jazzy branch of [xarm_ros2 on github](https://github.com/xArm-Developer/xarm_ros2/tree/jazzy) to install all the required packages.
+  - You can follow the instructions on the Jazzy branch of my fork of [xarm_ros2 on github](https://github.com/pastoriomarco/xarm_ros2/tree/jazzy) to install all the required packages.
 
 ---
 
@@ -43,16 +43,11 @@ This series of packages was created around Ufactory Lite6 and UF850 cobots, but 
   rosdep install --from-paths . --ignore-src --rosdistro $ROS_DISTRO -y
   ```
 - **Copy the auxiliary files to run all examples with the right configuration**:
-  - Create the `other` folder in xarm_description/meshes. From `<workspace_dir>` run:
+  - Create the `other` folder in xarm_description/meshes, copy pneumatic gripper's mesh there and copy the user param file in xarm_api/config.
+  - From `<workspace_dir>` run:
   ```bash
   mkdir -p ./src/xarm_ros2/xarm_description/meshes/other
-  ```
-  - Copy pneumatic gripper's mesh. From `<workspace_dir>` run:
-  ```bash
   cp ./src/manymove/manymove_object_manager/meshes/custom_end_tools/* ./src/xarm_ros2/xarm_description/meshes/other/
-  ```
-  - Copy the user param file in xarm_api/config. From `<workspace_dir>` run:
-  ```bash
   cp ./src/manymove/manymove_planner/config/xarm_user_params.yaml ./src/xarm_ros2/xarm_api/config/
   ```
 - **Build the packages from `<workspace_dir>`**: 

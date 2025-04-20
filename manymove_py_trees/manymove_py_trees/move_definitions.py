@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import List, Optional, Dict
 
 import rclpy
@@ -24,7 +24,7 @@ class Move:
     pose_target: Optional[Pose] = None
     named_target: Optional[str] = None
     joint_values: Optional[List[float]] = None
-    config: MovementConfig = MovementConfig()
+    config: MovementConfig = field(default_factory=MovementConfig)
 
     def __post_init__(self):
         allowed_types = ["pose", "joint", "named", "cartesian"]
@@ -72,31 +72,23 @@ def define_movement_configs() -> Dict[str, MovementConfig]:
     max_move_config.velocity_scaling_factor = 1.0
     max_move_config.acceleration_scaling_factor = 1.0
     max_move_config.step_size = 0.01
-    max_move_config.jump_threshold = 0.0
-    max_move_config.max_cartesian_speed = 0.25
+    max_move_config.cartesian_precision = 0.001
+    max_move_config.cartesian_precision_rotational = 0.01
+    max_move_config.cartesian_precision_max_resolution = 0.001
+    max_move_config.max_cartesian_speed = 0.5
     max_move_config.plan_number_target = 8
     max_move_config.plan_number_limit = 32
     max_move_config.smoothing_type = "time_optimal"
 
-    mid_move_config = MovementConfig()
+    mid_move_config = max_move_config
     mid_move_config.velocity_scaling_factor = 0.5
     mid_move_config.acceleration_scaling_factor = 0.5
-    mid_move_config.step_size = 0.01
-    mid_move_config.jump_threshold = 0.0
-    mid_move_config.max_cartesian_speed = 0.1
-    mid_move_config.plan_number_target = 8
-    mid_move_config.plan_number_limit = 32
-    mid_move_config.smoothing_type = "time_optimal"
+    mid_move_config.max_cartesian_speed = 0.2
 
-    slow_move_config = MovementConfig()
+    slow_move_config = max_move_config
     slow_move_config.velocity_scaling_factor = 1.0 / 40.0
     slow_move_config.acceleration_scaling_factor = 1.0 / 4.0
-    slow_move_config.step_size = 0.01
-    slow_move_config.jump_threshold = 0.0
     slow_move_config.max_cartesian_speed = 0.05
-    slow_move_config.plan_number_target = 8
-    slow_move_config.plan_number_limit = 32
-    slow_move_config.smoothing_type = "time_optimal"
 
     return {
         "max_move": max_move_config,

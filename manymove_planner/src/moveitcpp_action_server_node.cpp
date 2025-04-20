@@ -99,7 +99,18 @@ int main(int argc, char **argv)
   planners_executor.spin();
 
   // Cleanup
-  rclcpp::shutdown();
+  planners_executor.cancel();
+  planners_executor.remove_node(planners_node);
+  planners_node.reset();
+
+  moveitcpp_executor.cancel();
+  moveitcpp_executor.remove_node(moveitcpp_node);
   moveitcpp_thread.join();
+
+  moveitcpp_node.reset();
+  moveit_cpp.reset();
+
+  rclcpp::shutdown();
+
   return 0;
 }

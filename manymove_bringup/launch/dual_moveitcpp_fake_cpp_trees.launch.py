@@ -206,7 +206,7 @@ def launch_setup(context, *args, **kwargs):
             geometry_mesh_tcp_rpy_1=geometry_mesh_tcp_rpy_1,
             geometry_mesh_tcp_rpy_2=geometry_mesh_tcp_rpy_2,
         ).planning_scene_monitor(publish_robot_description=True, publish_robot_description_semantic=True)
-        .planning_pipelines(pipelines=["ompl", "chomp", "pilz_industrial_motion_planner"])
+        .planning_pipelines(pipelines=["ompl", "stomp", "pilz_industrial_motion_planner"])
         .moveit_cpp(file_path=get_package_share_directory("manymove_planner") + "/config/moveit_cpp.yaml")
     ).to_moveit_configs()
 
@@ -266,7 +266,11 @@ def launch_setup(context, *args, **kwargs):
         executable='rviz2',
         # name='rviz2',
         output='screen',
-        arguments=['-d', rviz_config_file],
+        arguments=[
+            "-d", rviz_config_file,
+            "--ros-args",
+            "--log-level", "rviz2:=fatal"
+        ],
         parameters=[
             moveit_config.robot_description,
             moveit_config.robot_description_semantic,

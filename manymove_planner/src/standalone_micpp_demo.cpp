@@ -50,7 +50,6 @@ int main(int argc, char **argv)
     static const std::string PLANNING_GROUP = "lite6";
     static const std::string LOGNAME = "moveit_cpp_tutorial";
     static const std::vector<std::string> CONTROLLERS(1, "lite6_traj_controller");
-    bool blocking = true;
 
     /* Otherwise robot with zeros joint_states */
     rclcpp::sleep_for(std::chrono::seconds(1));
@@ -129,7 +128,7 @@ int main(int argc, char **argv)
         visual_tools.trigger();
 
         /* Uncomment if you want to execute the plan */
-        moveit_controller_manager::ExecutionStatus result = moveit_cpp_ptr->execute(plan_solution1.trajectory, blocking, CONTROLLERS); // Execute the plan
+        moveit_cpp_ptr->execute(plan_solution1.trajectory, CONTROLLERS); // Execute the plan
     }
 
     // Plan #1 visualization:
@@ -178,7 +177,7 @@ int main(int argc, char **argv)
         visual_tools.trigger();
 
         // Execute the plan
-        moveit_cpp_ptr->execute(plan_solution6.trajectory, true, CONTROLLERS); // Execute the plan
+        moveit_cpp_ptr->execute(plan_solution6.trajectory, CONTROLLERS); // Execute the plan
     }
 
     // Visualization
@@ -226,7 +225,7 @@ int main(int argc, char **argv)
         visual_tools.trigger();
 
         /* Uncomment if you want to execute the plan */
-        // moveit_cpp_ptr->execute(plan_solution2.trajectory, true, CONTROLLERS); // Execute the plan
+        // moveit_cpp_ptr->execute(plan_solution2.trajectory, CONTROLLERS); // Execute the plan
     }
 
     // Plan #3 visualization:
@@ -291,7 +290,7 @@ int main(int argc, char **argv)
         visual_tools.trigger();
 
         /* Uncomment if you want to execute the plan */
-        moveit_cpp_ptr->execute(plan_solution3.trajectory, true, CONTROLLERS); // Execute the plan
+        moveit_cpp_ptr->execute(plan_solution3.trajectory, CONTROLLERS); // Execute the plan
     }
 
     // Plan #4 visualization:
@@ -338,7 +337,7 @@ int main(int argc, char **argv)
         visual_tools.trigger();
 
         /* Uncomment if you want to execute the plan */
-        moveit_cpp_ptr->execute(plan_solution4.trajectory, true, CONTROLLERS); // Execute the plan
+        moveit_cpp_ptr->execute(plan_solution4.trajectory, CONTROLLERS); // Execute the plan
     }
 
     // Plan #5 visualization:
@@ -394,7 +393,7 @@ int main(int argc, char **argv)
         visual_tools.trigger();
 
         /* Uncomment if you want to execute the plan */
-        moveit_cpp_ptr->execute(plan_solution5.trajectory, true, CONTROLLERS); // Execute the plan
+        moveit_cpp_ptr->execute(plan_solution5.trajectory, CONTROLLERS); // Execute the plan
     }
 
     // Plan #6 visualization:
@@ -428,7 +427,7 @@ int main(int argc, char **argv)
     // Prepare a vector of RobotStatePtr for the resulting trajectory states
     std::vector<moveit::core::RobotStatePtr> trajectory_states;
     moveit::core::RobotStatePtr wp_start_state = planning_components->getStartState();
-    moveit::core::CartesianPrecision cartesian_precision{.translational = 0.001, .rotational = 0.01, .max_resolution = 1e-3};
+    moveit::core::CartesianPrecision cartesian_precision{0.001, 0.01, 1e-3}; // translational, rotational, max_resolution
 
     // Compute Cartesian path using the correct signature
     double fraction = moveit::core::CartesianInterpolator::computeCartesianPath(

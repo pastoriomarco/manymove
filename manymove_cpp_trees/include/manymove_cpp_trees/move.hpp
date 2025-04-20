@@ -31,6 +31,7 @@ namespace manymove_cpp_trees
          * int32 plan_number_limit                 # max planning tries before fail
          * string smoothing_type                   # "time-optimal" / "ruckig" (## under construction ##)
          * string tcp_frame                        # End-effector (TCP) frame for this request
+         * float64 linear_precision                # Linear precision for end-point trajectory position check
          *
          * # moveit planner parameters
          * float64 velocity_scaling_factor         # 0.0 to 1.0
@@ -42,7 +43,9 @@ namespace manymove_cpp_trees
          *
          * # CartesianInterpolator parameters
          * float64 step_size
-         * float64 jump_threshold
+         * float64 cartesian_precision_translational 0.001
+         * float64 cartesian_precision_rotational 0.01
+         * float64 cartesian_precision_max_resolution 0.001
          */
 
         /**
@@ -55,15 +58,19 @@ namespace manymove_cpp_trees
         /**
          * Note about tcp_frame: it's to be set on move basis, so we give it as an input to the Move constructor
          */
-        
+
         MovementConfig max_move_config;
         max_move_config.velocity_scaling_factor = 1.0;
         max_move_config.acceleration_scaling_factor = 0.75;
-        max_move_config.step_size = 0.005;
-        max_move_config.jump_threshold = 0.0;
         max_move_config.max_cartesian_speed = 0.5;
         max_move_config.plan_number_target = 8;
         max_move_config.plan_number_limit = 16;
+        max_move_config.step_size = 0.005;
+        max_move_config.linear_precision = 0.001;
+        max_move_config.rotational_precision = 0.05;
+        max_move_config.cartesian_precision_translational = 0.001;
+        max_move_config.cartesian_precision_rotational = 0.01;
+        max_move_config.cartesian_precision_max_resolution = 0.001;
         max_move_config.smoothing_type = "time_optimal";
         max_move_config.planning_pipeline = "ompl";
         max_move_config.planner_id = "RRTConnect";
@@ -122,12 +129,24 @@ namespace manymove_cpp_trees
         LIN_slow_move_config.velocity_scaling_factor = 0.1;
         LIN_slow_move_config.acceleration_scaling_factor = 0.1;
 
-        MovementConfig CHOMP_max_move_config = max_move_config;
-        CHOMP_max_move_config.planning_pipeline = "chomp";
-        CHOMP_max_move_config.planner_id = "CHOMP";
-        CHOMP_max_move_config.planning_time = 5;
-        CHOMP_max_move_config.planning_attempts = 1;
-        CHOMP_max_move_config.plan_number_target = 1;
+        MovementConfig STOMP_max_move_config = max_move_config;
+        STOMP_max_move_config.planning_pipeline = "stomp";
+        STOMP_max_move_config.planner_id = "STOMP";
+        STOMP_max_move_config.planning_time = 5;
+        STOMP_max_move_config.planning_attempts = 1;
+        STOMP_max_move_config.plan_number_target = 1;
+        STOMP_max_move_config.linear_precision = 0.0025; ///< Doesn't seem to succeed otherwise
+
+        MovementConfig STOMP_mid_move_config = STOMP_max_move_config;
+        STOMP_mid_move_config.velocity_scaling_factor /= 2.0;
+        STOMP_mid_move_config.acceleration_scaling_factor /= 2.0;
+        STOMP_mid_move_config.max_cartesian_speed = 0.2;
+
+        MovementConfig STOMP_slow_move_config = max_move_config;
+        STOMP_slow_move_config.step_size = 0.002;
+        STOMP_slow_move_config.velocity_scaling_factor /= 4.0;
+        STOMP_slow_move_config.acceleration_scaling_factor /= 4.0;
+        STOMP_slow_move_config.max_cartesian_speed = 0.05;
 
         return {
             // Standard moves for joint and pose for OMPL planning library
@@ -146,8 +165,10 @@ namespace manymove_cpp_trees
             {"LIN_mid_move", LIN_mid_move_config},
             {"LIN_slow_move", LIN_slow_move_config},
 
-            // Params for chomp planning library
-            {"CHOMP_max_move", CHOMP_max_move_config},
+            // Params for stomp planning library
+            {"STOMP_max_move", STOMP_max_move_config},
+            {"STOMP_mid_move", STOMP_mid_move_config},
+            {"STOMP_slow_move", STOMP_slow_move_config},
 
             // Test for moves with cuMotion planning library
             {"cumotion_max_move", cumotion_max_move_config}};

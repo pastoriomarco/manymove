@@ -34,7 +34,7 @@ namespace manymove_object_manager
         // Create a Reentrant callback group for the service client
         service_callback_group_ = this->create_callback_group(rclcpp::CallbackGroupType::Reentrant);
         get_planning_scene_client_ = this->create_client<moveit_msgs::srv::GetPlanningScene>(
-            "/get_planning_scene", rmw_qos_profile_services_default, service_callback_group_);
+            "/get_planning_scene", rclcpp::ServicesQoS(), service_callback_group_);
 
         RCLCPP_INFO(this->get_logger(), "Waiting for /get_planning_scene service...");
         if (!get_planning_scene_client_->wait_for_service(std::chrono::seconds(10)))
@@ -54,7 +54,7 @@ namespace manymove_object_manager
 
         // Configure action server options
         auto serverOptions = rcl_action_server_get_default_options();
-        serverOptions.result_service_qos = rmw_qos_profile_services_default;
+        serverOptions.result_service_qos = rclcpp::ServicesQoS().get_rmw_qos_profile();
 
         // Initialize action servers
         add_object_action_server_ = rclcpp_action::create_server<AddCollisionObject>(

@@ -10,16 +10,16 @@ ManipulatorActionServer::ManipulatorActionServer(
     param_callback_group_ = node_->create_callback_group(rclcpp::CallbackGroupType::Reentrant);
 
     unload_controller_client_ = node_->create_client<controller_manager_msgs::srv::UnloadController>(
-        "/controller_manager/unload_controller", rmw_qos_profile_services_default, param_callback_group_);
+        "/controller_manager/unload_controller", rclcpp::ServicesQoS(), param_callback_group_);
 
     load_controller_client_ = node_->create_client<controller_manager_msgs::srv::LoadController>(
-        "/controller_manager/load_controller", rmw_qos_profile_services_default, param_callback_group_);
+        "/controller_manager/load_controller", rclcpp::ServicesQoS(), param_callback_group_);
 
     switch_controller_client_ = node_->create_client<controller_manager_msgs::srv::SwitchController>(
-        "/controller_manager/switch_controller", rmw_qos_profile_services_default, param_callback_group_);
+        "/controller_manager/switch_controller", rclcpp::ServicesQoS(), param_callback_group_);
 
     configure_controller_client_ = node_->create_client<controller_manager_msgs::srv::ConfigureController>(
-        "/controller_manager/configure_controller", rmw_qos_profile_services_default, param_callback_group_);
+        "/controller_manager/configure_controller", rclcpp::ServicesQoS(), param_callback_group_);
 
     // **Wait for Services to Be Available**
     bool all_services_available = true;
@@ -172,8 +172,7 @@ void ManipulatorActionServer::execute_move(
                 current_joints.push_back(current_joint_positions_[jn]);
             }
         }
-        double tolerance = 0.05;
-        bool starts_ok = planner_->isTrajectoryStartValid(goal->existing_trajectory, current_joints, tolerance);
+        bool starts_ok = planner_->isTrajectoryStartValid(goal->existing_trajectory, goal_handle->get_goal()->plan_request, current_joints);
 
         bool all_ok = true;
         // const auto &pts = goal->existing_trajectory.joint_trajectory.points;
@@ -729,8 +728,7 @@ bool ManipulatorActionServer::executeTrajectoryWithCollisionChecks(
         }
     }
 
-    const double tolerance = 0.05;
-    if (!planner_->isTrajectoryStartValid(traj, current_joint_state, tolerance))
+    if (!planner_->isTrajectoryStartValid(traj, goal_handle->get_goal()->plan_request, current_joint_state))
     {
         abort_reason = "Trajectory start mismatch with current state";
         return false;
@@ -738,7 +736,7 @@ bool ManipulatorActionServer::executeTrajectoryWithCollisionChecks(
 
     // 2) Validate the trajectory's end configuration.
     // Note: use get_goal() to access the move request.
-    if (!planner_->isTrajectoryEndValid(traj, goal_handle->get_goal()->plan_request, 0.05, 0.001))
+    if (!planner_->isTrajectoryEndValid(traj, goal_handle->get_goal()->plan_request))
     {
         abort_reason = "Trajectory end mismatch with target";
         return false;

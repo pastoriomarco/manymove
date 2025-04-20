@@ -70,9 +70,20 @@ int main(int argc, char **argv)
     auto server = std::make_shared<ManipulatorActionServer>(node, planner, planner_prefix);
 
     loader_node.reset();
+
     rclcpp::executors::MultiThreadedExecutor executor;
     executor.add_node(node);
+
     executor.spin();
+
+    // Explicitly stop the executor and clean up
+    executor.cancel();
+    executor.remove_node(node);
+
+    // Clear node shared pointers explicitly
+    server.reset();
+    planner.reset();
+    node.reset();
 
     rclcpp::shutdown();
     return 0;

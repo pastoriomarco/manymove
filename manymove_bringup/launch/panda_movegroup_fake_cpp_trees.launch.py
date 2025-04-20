@@ -35,7 +35,7 @@ def launch_setup(context, *args, **kwargs):
         .robot_description_semantic(file_path="config/panda.srdf")
         .trajectory_execution(file_path="config/gripper_moveit_controllers.yaml")
         .planning_pipelines(
-            pipelines=["ompl", "chomp", "pilz_industrial_motion_planner"]
+            pipelines=["ompl", "stomp", "pilz_industrial_motion_planner"]
         )
         .to_moveit_configs()
     )
@@ -78,7 +78,11 @@ def launch_setup(context, *args, **kwargs):
         executable="rviz2",
         name="rviz2",
         output="log",
-        arguments=["-d", rviz_config_file],
+        arguments=[
+            "-d", rviz_config_file,
+            "--ros-args",
+            "--log-level", "rviz2:=fatal"
+        ],
         parameters=[
             moveit_configs.robot_description,
             moveit_configs.robot_description_semantic,
