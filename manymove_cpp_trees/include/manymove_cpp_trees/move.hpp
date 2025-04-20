@@ -31,6 +31,8 @@ namespace manymove_cpp_trees
          * int32 plan_number_limit                 # max planning tries before fail
          * string smoothing_type                   # "time-optimal" / "ruckig" (## under construction ##)
          * string tcp_frame                        # End-effector (TCP) frame for this request
+         * float64 linear_precision                # Linear precision for end-point trajectory position check
+         * float64 rotational_precision            # Rotational precision for end-point trajectory position check
          *
          * # moveit planner parameters
          * float64 velocity_scaling_factor         # 0.0 to 1.0
@@ -55,7 +57,7 @@ namespace manymove_cpp_trees
         /**
          * Note about tcp_frame: it's to be set on move basis, so we give it as an input to the Move constructor
          */
-        
+
         MovementConfig max_move_config;
         max_move_config.velocity_scaling_factor = 1.0;
         max_move_config.acceleration_scaling_factor = 0.75;

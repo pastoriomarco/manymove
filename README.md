@@ -23,7 +23,7 @@ This series of packages was created around Ufactory Lite6 and UF850 cobots, but 
 ## Prerequisites
 
 - **Install ROS2 Humble, Moveit2 and xarm_ros2**:
-  - You can follow the instructions on the Humble branch of [xarm_ros2 on github](https://github.com/xArm-Developer/xarm_ros2/tree/humble) to install all the required packages.
+  - You can follow the instructions on the Humble branch of my fork of [xarm_ros2 on github](https://github.com/pastoriomarco/xarm_ros2/tree/humble) to install all the required packages.
 
 ---
 
@@ -43,16 +43,12 @@ This series of packages was created around Ufactory Lite6 and UF850 cobots, but 
   rosdep install --from-paths . --ignore-src --rosdistro $ROS_DISTRO -y
   ```
 - **Copy the auxiliary files to run all examples with the right configuration**:
-  - Create the `other` folder in xarm_description/meshes. From `<workspace_dir>` run:
+  - Create the `other` folder in xarm_description/meshes and copy pneumatic gripper's mesh there. Also copy the user param file in xarm_api/config.
+  - From `<workspace_dir>` run:
+  
   ```bash
   mkdir -p ./src/xarm_ros2/xarm_description/meshes/other
-  ```
-  - Copy pneumatic gripper's mesh. From `<workspace_dir>` run:
-  ```bash
   cp ./src/manymove/manymove_object_manager/meshes/custom_end_tools/* ./src/xarm_ros2/xarm_description/meshes/other/
-  ```
-  - Copy the user param file in xarm_api/config. From `<workspace_dir>` run:
-  ```bash
   cp ./src/manymove/manymove_planner/config/xarm_user_params.yaml ./src/xarm_ros2/xarm_api/config/
   ```
 - **Build the packages from `<workspace_dir>`**: 
@@ -167,10 +163,6 @@ This repository is composed of several sub-packages, each handling different res
   ```bash
   ros2 launch manymove_bringup dual_moveitcpp_fake_cpp_trees.launch.py
   ```
-  - Note: to run the app example with the robots in custom positions you'll have to use the fork of xarm_ros2 modified to handle this kind of scenario. Follow the instructions in the above link from the original repository, but change the instruction on point 4.2 with:
-    ```bash
-    git clone https://github.com/pastoriomarco/xarm_ros2.git --recursive -b $ROS_DISTRO
-    ```
 
 - **Panda Manipulator** (requires the installation of [moveit2_tutorials](https://moveit.picknik.ai/humble/doc/tutorials/getting_started/getting_started.html) )
 
