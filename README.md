@@ -167,7 +167,11 @@ This repository is composed of several sub-packages, each handling different res
     git clone https://github.com/pastoriomarco/xarm_ros2.git --recursive -b $ROS_DISTRO
     ```
 
-- **Panda Manipulator** (requires the installation of [moveit2_tutorials](https://moveit.picknik.ai/jazzy/doc/tutorials/getting_started/getting_started.html) )
+- **Panda Manipulator** 
+
+**WARNING**: due to current mismatch between ros-jazzy-moveit version (2.12.2) and the tutorial's moveit2 vertion (2.13.2), running the examples with Panda robot requires the installation of [moveit2_tutorials](https://moveit.picknik.ai/main/doc/tutorials/getting_started/getting_started.html#download-source-code-of-moveit-and-the-tutorials), including the removal of the ros-jazzy-moveit* packages from the system.
+
+After compiling moveit2, remove any previous build of ManyMove and source moveit2 installation before running rosdep or building!
 
   Standalone launchers for MoveItCPP or MoveGroup with Panda robot (you need the moveit2_tutorials package sourced):
 
