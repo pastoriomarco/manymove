@@ -163,14 +163,14 @@ int main(int argc, char **argv)
 
     blackboard->set("ground_id_key", "obstacle_ground");
     blackboard->set("ground_shape_key", "box");
-    blackboard->set("ground_dimension_key", std::vector<double>{0.8, 0.8, 0.1});
+    blackboard->set("ground_dimension_key", std::vector<double>{1.0, 1.0, 0.1});
     blackboard->set("ground_pose_key", createPoseRPY(0.0, 0.0, -0.051, 0.0, 0.0, 0.0));
     blackboard->set("ground_scale_key", std::vector<double>{1.0, 1.0, 1.0});
 
     blackboard->set("wall_id_key", "obstacle_wall");
     blackboard->set("wall_shape_key", "box");
-    blackboard->set("wall_dimension_key", std::vector<double>{0.8, 0.02, 0.8});
-    blackboard->set("wall_pose_key", createPoseRPY(0.0, 0.4, 0.3, 0.0, 0.0, 0.0));
+    blackboard->set("wall_dimension_key", std::vector<double>{1.0, 0.02, 0.3});
+    blackboard->set("wall_pose_key", createPoseRPY(0.0, -0.2, 0.15, 0.0, 0.0, 0.0));
     blackboard->set("wall_scale_key", std::vector<double>{1.0, 1.0, 1.0});
 
     blackboard->set("cylinder_id_key", "graspable_cylinder");
@@ -183,7 +183,7 @@ int main(int argc, char **argv)
     blackboard->set("mesh_shape_key", "mesh");
     blackboard->set("mesh_file_key", "package://manymove_object_manager/meshes/unit_tube.stl");
     blackboard->set("mesh_scale_key", std::vector<double>{0.01, 0.01, 0.1});              //< The tube is vertical with dimension 1m x 1m x 1m. We scale it to 10x10x100 mm
-    blackboard->set("mesh_pose_key", createPoseRPY(0.1, -0.3, 0.2005, 0.785, 1.57, 0.0)); //< We place it on the floor and lay it on its side, X+ facing down
+    blackboard->set("mesh_pose_key", createPoseRPY(0.2, -0.4, 0.1, 0.785, 1.57, 0.0)); //< We place it on the floor and lay it on its side, X+ facing down
 
     // Create object actions xml snippets (the object are created directly in the create*() functions relative to each type of object action)
     std::string check_ground_obj_xml = buildObjectActionXML("check_ground", createCheckObjectExists("ground_id_key"));
