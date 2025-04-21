@@ -387,7 +387,7 @@ def launch_setup(context, *args, **kwargs):
     #  EVENT‑DRIVEN START‑UP ORDER
     # ================================================================
 
-    # 1) start moveitcpp_action_servers_node ONLY when the *last* spawner exits
+    # 1) start manymove action_server nodes ONLY when the *last* spawner exits
     last_spawner = controller_nodes[-1] if controller_nodes else joint_state_broadcaster
     start_action_server_evt = RegisterEventHandler(
         OnProcessExit(
@@ -416,6 +416,7 @@ def launch_setup(context, *args, **kwargs):
     #  RETURN LIST
     #  (Immediate nodes + event‑handlers; late nodes omitted here)
     # ================================================================
+    
     return [
         robot_state_publisher_node,
         rviz_node,
