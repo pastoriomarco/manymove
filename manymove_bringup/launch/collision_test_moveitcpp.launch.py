@@ -470,13 +470,23 @@ def launch_setup(context, *args, **kwargs):
     # ================================================================
 
     # 1) start manymove action_server nodes ONLY when the *last* spawner exits
-    last_spawner = controller_nodes[-1] if controller_nodes else joint_state_broadcaster
-    start_action_server_evt = RegisterEventHandler(
-        OnProcessExit(
-            target_action=last_spawner,
-            on_exit=[moveitcpp_action_servers_node],
-        )
-    )
+    # final action to run
+    on_exit_actions = [ moveitcpp_action_servers_node ]
+
+    # wrapping it in one RegisterEventHandler per spawner, from last→first
+    for spawner in reversed(controller_nodes):
+        on_exit_actions = [
+            RegisterEventHandler(
+                OnProcessExit(
+                    target_action=spawner,
+                    on_exit=on_exit_actions,
+                )
+            )
+        ]
+
+    # after the loop, on_exit_actions[0] is a nested RegisterEventHandler that
+    # won’t fire until *every* spawner in controller_nodes has exited
+    start_action_server_evt = on_exit_actions[0]
 
     # 2) start object_manager_node *and* cpp_trees when action‑server *starts*
     start_object_mgr_evt = RegisterEventHandler(

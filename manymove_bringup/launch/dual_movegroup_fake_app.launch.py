@@ -496,52 +496,81 @@ def launch_setup(context, *args, **kwargs):
         }]
     )
 
+
+
     # ================================================================
     #  EVENT‑DRIVEN START‑UP ORDER
     # ================================================================
 
-    # 1) start manymove action_server nodes ONLY when the *last* spawner exits
-    last_spawner = controller_nodes[-1] if controller_nodes else joint_state_broadcaster
-    start_action_server_evt = RegisterEventHandler(
-        OnProcessExit(
-            target_action=last_spawner,
-            on_exit=[action_server_node_1, action_server_node_2],
+    spawner_nodes = []
+    for ctrl in controllers:
+        spawner_nodes.append(
+            Node(
+                package='controller_manager',
+                executable='spawner',
+                output='screen',
+                arguments=[ctrl, '--controller-manager', f'{ros_namespace}/controller_manager'],
+            )
+        )
+
+    launch_actions = [
+        robot_state_publisher_node,
+        move_group_node,
+        static_tf_1, static_tf_2,
+        ros2_control_node,
+        joint_state_broadcaster,
+        spawner_nodes[0],
+    ]
+
+    handlers = []
+    # chain 1→2, 2→3, … for all spawners
+    for prev, nxt in zip(spawner_nodes, spawner_nodes[1:]):
+        handlers.append(
+            RegisterEventHandler(
+                OnProcessExit(
+                    target_action=prev,
+                    on_exit=[nxt],
+                )
+            )
+        )
+
+    # when the *last* spawner exits, launch both action servers
+    handlers.append(
+        RegisterEventHandler(
+            OnProcessExit(
+                target_action=spawner_nodes[-1],
+                on_exit=[rviz_node, action_server_node_1, action_server_node_2],
+            )
         )
     )
 
-    # 2) start object_manager_node *and* cpp_trees when action‑server *starts*
-    start_object_mgr_evt = RegisterEventHandler(
-        OnProcessStart(
-            target_action=action_server_node_1,
-            on_start=[object_manager_node, manymove_cpp_trees_node],
+    # when action_server_node_1 starts, launch object manager & BT client
+    handlers.append(
+        RegisterEventHandler(
+            OnProcessStart(
+                target_action=action_server_node_1,
+                on_start=[object_manager_node, manymove_cpp_trees_node],
+            )
         )
     )
 
-    # 3) finally start HMI when cpp_trees has started
-    start_hmi_evt = RegisterEventHandler(
-        OnProcessStart(
-            target_action=manymove_cpp_trees_node,
-            on_start=[manymove_hmi_node],
+    # when BT client starts, launch HMI
+    handlers.append(
+        RegisterEventHandler(
+            OnProcessStart(
+                target_action=manymove_cpp_trees_node,
+                on_start=[manymove_hmi_node],
+            )
         )
     )
 
     # ================================================================
     #  RETURN LIST
-    #  (Immediate nodes + event‑handlers; late nodes omitted here)
     # ================================================================
 
     return [
-        robot_state_publisher_node,
-        move_group_node,
-        rviz_node,
-        static_tf_1,
-        static_tf_2,
-        joint_state_broadcaster,
-        ros2_control_node,
-        *controller_nodes,
-        start_action_server_evt,
-        start_object_mgr_evt,
-        start_hmi_evt
+        *launch_actions,
+        *handlers,
     ]
 
 

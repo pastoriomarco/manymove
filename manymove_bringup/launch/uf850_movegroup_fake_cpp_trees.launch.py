@@ -307,47 +307,79 @@ def launch_setup(context, *args, **kwargs):
     #  EVENT‑DRIVEN START‑UP ORDER
     # ================================================================
 
-    # 1) start manymove action_server nodes ONLY when the *last* spawner exits
-    last_spawner = controller_nodes[-1] if controller_nodes else joint_state_broadcaster
-    start_action_server_evt = RegisterEventHandler(
-        OnProcessExit(
-            target_action=last_spawner,
-            on_exit=[action_server_node],
+    # Create a list of spawner nodes for the controllers
+    spawner_nodes = []
+    for ctrl in controllers:
+        spawner_nodes.append(
+            Node(
+                package='controller_manager',
+                executable='spawner',
+                output='screen',
+                arguments=[ctrl, '--controller-manager', f'{ros_namespace}/controller_manager'],
+            )
+        )
+
+    # Define the launch actions that will start immediately
+    launch_actions = [
+        robot_state_publisher_node,
+        move_group_node,
+        static_tf,  # Static transform
+        ros2_control_node,  # ros2_control node for hardware interface
+        joint_state_broadcaster,  # Joint state broadcaster node
+        spawner_nodes[0],  # Start the first controller spawner
+    ]
+
+    # Define the event handlers to chain the controllers' spawners
+    handlers = []
+    # Chain the spawners in a sequence: spawner_nodes[0] → spawner_nodes[1] → ...
+    for prev, nxt in zip(spawner_nodes, spawner_nodes[1:]):
+        handlers.append(
+            RegisterEventHandler(
+                OnProcessExit(
+                    target_action=prev,
+                    on_exit=[nxt],
+                )
+            )
+        )
+
+    # When the last spawner exits, launch the MoveItCpp action servers (only after all controllers are loaded)
+    handlers.append(
+        RegisterEventHandler(
+            OnProcessExit(
+                target_action=spawner_nodes[-1],
+                on_exit=[rviz_node, action_server_node],
+            )
         )
     )
 
-    # 2) start object_manager_node *and* cpp_trees when action‑server *starts*
-    start_object_mgr_evt = RegisterEventHandler(
-        OnProcessStart(
-            target_action=action_server_node,
-            on_start=[object_manager_node, manymove_cpp_trees_node],
+    # When the MoveItCpp action server starts, launch the object manager and behavior tree client
+    handlers.append(
+        RegisterEventHandler(
+            OnProcessStart(
+                target_action=action_server_node,
+                on_start=[object_manager_node, manymove_cpp_trees_node],
+            )
         )
     )
 
-    # 3) finally start HMI when cpp_trees has started
-    start_hmi_evt = RegisterEventHandler(
-        OnProcessStart(
-            target_action=manymove_cpp_trees_node,
-            on_start=[manymove_hmi_node],
+    # When the behavior tree client starts, launch the HMI (Human Machine Interface) node
+    handlers.append(
+        RegisterEventHandler(
+            OnProcessStart(
+                target_action=manymove_cpp_trees_node,
+                on_start=[manymove_hmi_node],
+            )
         )
     )
 
     # ================================================================
     #  RETURN LIST
-    #  (Immediate nodes + event‑handlers; late nodes omitted here)
     # ================================================================
 
+    # Return all the launch actions and event handlers to the launch system
     return [
-        robot_state_publisher_node,
-        joint_state_broadcaster,
-        move_group_node,
-        rviz_node,
-        static_tf,
-        ros2_control_node,
-        *controller_nodes,
-        start_action_server_evt,
-        start_object_mgr_evt,
-        start_hmi_evt,
+        *launch_actions,
+        *handlers,
     ]
 
 def generate_launch_description():
