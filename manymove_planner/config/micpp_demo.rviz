@@ -7,7 +7,7 @@ Panels:
         - /RobotModel1
         - /MarkerArray1
       Splitter Ratio: 0.46875
-    Tree Height: 505
+    Tree Height: 199
   - Class: rviz_common/Selection
     Name: Selection
   - Class: rviz_common/Tool Properties
@@ -46,7 +46,7 @@ Visualization Manager:
       Value: true
     - Acceleration_Scaling_Factor: 0.1
       Class: moveit_rviz_plugin/MotionPlanning
-      Enabled: false
+      Enabled: true
       Move Group Namespace: ""
       MoveIt_Allow_Approximate_IK: false
       MoveIt_Allow_External_Program: false
@@ -75,42 +75,21 @@ Visualization Manager:
           Expand Link Details: false
           Expand Tree: false
           Link Tree Style: Links in Alphabetic Order
-          camera_color_frame:
+          left_finger:
             Alpha: 1
             Show Axes: false
             Show Trail: false
-          camera_color_optical_frame:
+            Value: true
+          left_inner_knuckle:
             Alpha: 1
             Show Axes: false
             Show Trail: false
-          camera_depth_frame:
+            Value: true
+          left_outer_knuckle:
             Alpha: 1
             Show Axes: false
             Show Trail: false
-          camera_depth_optical_frame:
-            Alpha: 1
-            Show Axes: false
-            Show Trail: false
-          camera_left_ir_frame:
-            Alpha: 1
-            Show Axes: false
-            Show Trail: false
-          camera_left_ir_optical_frame:
-            Alpha: 1
-            Show Axes: false
-            Show Trail: false
-          camera_link:
-            Alpha: 1
-            Show Axes: false
-            Show Trail: false
-          camera_right_ir_frame:
-            Alpha: 1
-            Show Axes: false
-            Show Trail: false
-          camera_right_ir_optical_frame:
-            Alpha: 1
-            Show Axes: false
-            Show Trail: false
+            Value: true
           link1:
             Alpha: 1
             Show Axes: false
@@ -150,12 +129,21 @@ Visualization Manager:
             Alpha: 1
             Show Axes: false
             Show Trail: false
-            Value: true
           link_tcp:
             Alpha: 1
             Show Axes: false
             Show Trail: false
-          uflite_gripper_link:
+          right_finger:
+            Alpha: 1
+            Show Axes: false
+            Show Trail: false
+            Value: true
+          right_inner_knuckle:
+            Alpha: 1
+            Show Axes: false
+            Show Trail: false
+            Value: true
+          right_outer_knuckle:
             Alpha: 1
             Show Axes: false
             Show Trail: false
@@ -164,11 +152,16 @@ Visualization Manager:
             Alpha: 1
             Show Axes: false
             Show Trail: false
+          xarm_gripper_base_link:
+            Alpha: 1
+            Show Axes: false
+            Show Trail: false
+            Value: true
         Loop Animation: false
         Robot Alpha: 0.5
         Robot Color: 150; 50; 150
         Show Robot Collision: false
-        Show Robot Visual: true
+        Show Robot Visual: false
         Show Trail: false
         State Display Time: 0.05 s
         Trail Step Size: 1
@@ -187,7 +180,7 @@ Visualization Manager:
         Goal State Color: 250; 128; 0
         Interactive Marker Size: 0
         Joint Violation Color: 255; 0; 255
-        Planning Group: lite6
+        Planning Group: uf850
         Query Goal State: false
         Query Start State: false
         Show Workspace: false
@@ -210,42 +203,21 @@ Visualization Manager:
           Expand Link Details: false
           Expand Tree: false
           Link Tree Style: Links in Alphabetic Order
-          camera_color_frame:
+          left_finger:
             Alpha: 1
             Show Axes: false
             Show Trail: false
-          camera_color_optical_frame:
+            Value: true
+          left_inner_knuckle:
             Alpha: 1
             Show Axes: false
             Show Trail: false
-          camera_depth_frame:
+            Value: true
+          left_outer_knuckle:
             Alpha: 1
             Show Axes: false
             Show Trail: false
-          camera_depth_optical_frame:
-            Alpha: 1
-            Show Axes: false
-            Show Trail: false
-          camera_left_ir_frame:
-            Alpha: 1
-            Show Axes: false
-            Show Trail: false
-          camera_left_ir_optical_frame:
-            Alpha: 1
-            Show Axes: false
-            Show Trail: false
-          camera_link:
-            Alpha: 1
-            Show Axes: false
-            Show Trail: false
-          camera_right_ir_frame:
-            Alpha: 1
-            Show Axes: false
-            Show Trail: false
-          camera_right_ir_optical_frame:
-            Alpha: 1
-            Show Axes: false
-            Show Trail: false
+            Value: true
           link1:
             Alpha: 1
             Show Axes: false
@@ -285,12 +257,21 @@ Visualization Manager:
             Alpha: 1
             Show Axes: false
             Show Trail: false
-            Value: true
           link_tcp:
             Alpha: 1
             Show Axes: false
             Show Trail: false
-          uflite_gripper_link:
+          right_finger:
+            Alpha: 1
+            Show Axes: false
+            Show Trail: false
+            Value: true
+          right_inner_knuckle:
+            Alpha: 1
+            Show Axes: false
+            Show Trail: false
+            Value: true
+          right_outer_knuckle:
             Alpha: 1
             Show Axes: false
             Show Trail: false
@@ -299,10 +280,15 @@ Visualization Manager:
             Alpha: 1
             Show Axes: false
             Show Trail: false
+          xarm_gripper_base_link:
+            Alpha: 1
+            Show Axes: false
+            Show Trail: false
+            Value: true
         Robot Alpha: 1
         Show Robot Collision: false
         Show Robot Visual: true
-      Value: false
+      Value: true
       Velocity_Scaling_Factor: 0.1
     - Alpha: 1
       Class: rviz_default_plugins/RobotModel
@@ -322,42 +308,21 @@ Visualization Manager:
         Expand Link Details: false
         Expand Tree: false
         Link Tree Style: Links in Alphabetic Order
-        camera_color_frame:
+        left_finger:
           Alpha: 1
           Show Axes: false
           Show Trail: false
-        camera_color_optical_frame:
+          Value: true
+        left_inner_knuckle:
           Alpha: 1
           Show Axes: false
           Show Trail: false
-        camera_depth_frame:
+          Value: true
+        left_outer_knuckle:
           Alpha: 1
           Show Axes: false
           Show Trail: false
-        camera_depth_optical_frame:
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
-        camera_left_ir_frame:
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
-        camera_left_ir_optical_frame:
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
-        camera_link:
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
-        camera_right_ir_frame:
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
-        camera_right_ir_optical_frame:
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
+          Value: true
         link1:
           Alpha: 1
           Show Axes: false
@@ -397,12 +362,21 @@ Visualization Manager:
           Alpha: 1
           Show Axes: false
           Show Trail: false
-          Value: true
         link_tcp:
           Alpha: 1
           Show Axes: false
           Show Trail: false
-        uflite_gripper_link:
+        right_finger:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        right_inner_knuckle:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        right_outer_knuckle:
           Alpha: 1
           Show Axes: false
           Show Trail: false
@@ -411,6 +385,11 @@ Visualization Manager:
           Alpha: 1
           Show Axes: false
           Show Trail: false
+        xarm_gripper_base_link:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
       Mass Properties:
         Inertia: false
         Mass: false
@@ -421,7 +400,7 @@ Visualization Manager:
       Visual Enabled: true
     - Class: moveit_rviz_plugin/Trajectory
       Color Enabled: false
-      Enabled: false
+      Enabled: true
       Interrupt Display: false
       Links:
         All Links Enabled: true
@@ -429,42 +408,21 @@ Visualization Manager:
         Expand Link Details: false
         Expand Tree: false
         Link Tree Style: Links in Alphabetic Order
-        camera_color_frame:
+        left_finger:
           Alpha: 1
           Show Axes: false
           Show Trail: false
-        camera_color_optical_frame:
+          Value: true
+        left_inner_knuckle:
           Alpha: 1
           Show Axes: false
           Show Trail: false
-        camera_depth_frame:
+          Value: true
+        left_outer_knuckle:
           Alpha: 1
           Show Axes: false
           Show Trail: false
-        camera_depth_optical_frame:
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
-        camera_left_ir_frame:
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
-        camera_left_ir_optical_frame:
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
-        camera_link:
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
-        camera_right_ir_frame:
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
-        camera_right_ir_optical_frame:
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
+          Value: true
         link1:
           Alpha: 1
           Show Axes: false
@@ -504,12 +462,21 @@ Visualization Manager:
           Alpha: 1
           Show Axes: false
           Show Trail: false
-          Value: true
         link_tcp:
           Alpha: 1
           Show Axes: false
           Show Trail: false
-        uflite_gripper_link:
+        right_finger:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        right_inner_knuckle:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        right_outer_knuckle:
           Alpha: 1
           Show Axes: false
           Show Trail: false
@@ -518,19 +485,24 @@ Visualization Manager:
           Alpha: 1
           Show Axes: false
           Show Trail: false
+        xarm_gripper_base_link:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
       Loop Animation: false
       Name: Trajectory
       Robot Alpha: 0.5
       Robot Color: 150; 50; 150
       Robot Description: robot_description
       Show Robot Collision: false
-      Show Robot Visual: true
+      Show Robot Visual: false
       Show Trail: false
       State Display Time: 0.05 s
       Trail Step Size: 1
       Trajectory Topic: /display_planned_path
       Use Sim Time: false
-      Value: false
+      Value: true
     - Class: rviz_default_plugins/MarkerArray
       Enabled: true
       Name: MarkerArray
@@ -564,42 +536,21 @@ Visualization Manager:
           Expand Link Details: false
           Expand Tree: false
           Link Tree Style: Links in Alphabetic Order
-          camera_color_frame:
+          left_finger:
             Alpha: 1
             Show Axes: false
             Show Trail: false
-          camera_color_optical_frame:
+            Value: true
+          left_inner_knuckle:
             Alpha: 1
             Show Axes: false
             Show Trail: false
-          camera_depth_frame:
+            Value: true
+          left_outer_knuckle:
             Alpha: 1
             Show Axes: false
             Show Trail: false
-          camera_depth_optical_frame:
-            Alpha: 1
-            Show Axes: false
-            Show Trail: false
-          camera_left_ir_frame:
-            Alpha: 1
-            Show Axes: false
-            Show Trail: false
-          camera_left_ir_optical_frame:
-            Alpha: 1
-            Show Axes: false
-            Show Trail: false
-          camera_link:
-            Alpha: 1
-            Show Axes: false
-            Show Trail: false
-          camera_right_ir_frame:
-            Alpha: 1
-            Show Axes: false
-            Show Trail: false
-          camera_right_ir_optical_frame:
-            Alpha: 1
-            Show Axes: false
-            Show Trail: false
+            Value: true
           link1:
             Alpha: 1
             Show Axes: false
@@ -639,12 +590,21 @@ Visualization Manager:
             Alpha: 1
             Show Axes: false
             Show Trail: false
-            Value: true
           link_tcp:
             Alpha: 1
             Show Axes: false
             Show Trail: false
-          uflite_gripper_link:
+          right_finger:
+            Alpha: 1
+            Show Axes: false
+            Show Trail: false
+            Value: true
+          right_inner_knuckle:
+            Alpha: 1
+            Show Axes: false
+            Show Trail: false
+            Value: true
+          right_outer_knuckle:
             Alpha: 1
             Show Axes: false
             Show Trail: false
@@ -653,6 +613,11 @@ Visualization Manager:
             Alpha: 1
             Show Axes: false
             Show Trail: false
+          xarm_gripper_base_link:
+            Alpha: 1
+            Show Axes: false
+            Show Trail: false
+            Value: true
         Robot Alpha: 1
         Show Robot Collision: false
         Show Robot Visual: true
@@ -710,30 +675,30 @@ Visualization Manager:
         Swap Stereo Eyes: false
         Value: false
       Focal Point:
-        X: -0.22470346093177795
-        Y: -0.10482023656368256
-        Z: 0.39202386140823364
+        X: -0.15729719400405884
+        Y: 0.01828799955546856
+        Z: 0.2644333243370056
       Focal Shape Fixed Size: true
       Focal Shape Size: 0.05000000074505806
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.009999999776482582
-      Pitch: 0.24539829790592194
+      Pitch: 0.23039832711219788
       Target Frame: <Fixed Frame>
       Value: Orbit (rviz)
-      Yaw: 0.5303981304168701
+      Yaw: 5.59357213973999
     Saved: ~
 Window Geometry:
   Displays:
     collapsed: false
-  Height: 847
+  Height: 893
   Hide Left Dock: false
   Hide Right Dock: false
   MotionPlanning:
     collapsed: false
   MotionPlanning - Trajectory Slider:
     collapsed: false
-  QMainWindow State: 000000ff00000000fd000000040000000000000242000002edfc020000000dfb0000001200530065006c0065006300740069006f006e00000001e10000009b0000006b00fffffffb0000001e0054006f006f006c002000500072006f007000650072007400690065007302000001ed000001df00000185000000a3fb000000120056006900650077007300200054006f006f02000001df000002110000018500000122fb000000200054006f006f006c002000500072006f0070006500720074006900650073003203000002880000011d000002210000017afb000000100044006900730070006c00610079007301000000440000023a000000eb00fffffffb0000002000730065006c0065006300740069006f006e00200062007500660066006500720200000138000000aa0000023a00000294fb00000014005700690064006500530074006500720065006f02000000e6000000d2000003ee0000030bfb0000000c004b0069006e0065006300740200000186000001060000030c00000261fb0000003c005400720061006a006500630074006f007200790020002d0020005400720061006a006500630074006f0072007900200053006c00690064006500720000000000ffffffff0000001600000016fb00000044004d006f00740069006f006e0050006c0061006e006e0069006e00670020002d0020005400720061006a006500630074006f0072007900200053006c00690064006500720000000000ffffffff0000001600000016fb0000001c004d006f00740069006f006e0050006c0061006e006e0069006e00670000000136000001ad000001ad00fffffffb000000280020002d0020005400720061006a006500630074006f0072007900200053006c00690064006500720000000000ffffffff0000000000000000fb00000024005200760069007a00560069007300750061006c0054006f006f006c00730047007500690100000285000000ac0000004700ffffff000000010000010f000002d2fc0200000003fb0000001e0054006f006f006c002000500072006f00700065007200740069006500730100000041000000780000000000000000fb0000000a00560069006500770073000000003d000002d2000000b900fffffffb0000001200530065006c0065006300740069006f006e010000025a000000b200000000000000000000000200000490000000a9fc0100000001fb0000000a00560069006500770073030000004e00000080000002e10000019700000003000004420000003efc0100000002fb0000000800540069006d00650100000000000004420000000000000000fb0000000800540069006d00650100000000000004500000000000000000000003b4000002ed00000004000000040000000800000008fc0000000100000002000000010000000a0054006f006f006c00730100000000ffffffff0000000000000000
+  QMainWindow State: 000000ff00000000fd00000004000000000000024e00000315fc020000000dfb0000001200530065006c0065006300740069006f006e00000001e10000009b0000006e00fffffffb0000001e0054006f006f006c002000500072006f007000650072007400690065007302000001ed000001df00000185000000a3fb000000120056006900650077007300200054006f006f02000001df000002110000018500000122fb000000200054006f006f006c002000500072006f0070006500720074006900650073003203000002880000011d000002210000017afb000000100044006900730070006c00610079007301000000470000010e000000f100fffffffb0000002000730065006c0065006300740069006f006e00200062007500660066006500720200000138000000aa0000023a00000294fb00000014005700690064006500530074006500720065006f02000000e6000000d2000003ee0000030bfb0000000c004b0069006e0065006300740200000186000001060000030c00000261fb0000003c005400720061006a006500630074006f007200790020002d0020005400720061006a006500630074006f0072007900200053006c00690064006500720000000000ffffffff0000004d00fffffffb00000044004d006f00740069006f006e0050006c0061006e006e0069006e00670020002d0020005400720061006a006500630074006f0072007900200053006c00690064006500720000000000ffffffff0000004d00fffffffb0000001c004d006f00740069006f006e0050006c0061006e006e0069006e0067010000015c00000200000001bd00fffffffb000000280020002d0020005400720061006a006500630074006f0072007900200053006c00690064006500720000000000ffffffff0000000000000000fb00000024005200760069007a00560069007300750061006c0054006f006f006c0073004700750069000000030f0000004d0000004d00ffffff000000010000010f000002d2fc0200000003fb0000001e0054006f006f006c002000500072006f00700065007200740069006500730100000041000000780000000000000000fb0000000a00560069006500770073000000003d000002d2000000c200fffffffb0000001200530065006c0065006300740069006f006e010000025a000000b200000000000000000000000200000490000000a9fc0100000001fb0000000a00560069006500770073030000004e00000080000002e10000019700000003000004420000003efc0100000002fb0000000800540069006d00650100000000000004420000000000000000fb0000000800540069006d00650100000000000004500000000000000000000003a80000031500000004000000040000000800000008fc0000000100000002000000010000000a0054006f006f006c00730100000000ffffffff0000000000000000
   RvizVisualToolsGui:
     collapsed: false
   Selection:
@@ -745,5 +710,5 @@ Window Geometry:
   Views:
     collapsed: false
   Width: 1533
-  X: 486
-  Y: 551
+  X: 207
+  Y: 301

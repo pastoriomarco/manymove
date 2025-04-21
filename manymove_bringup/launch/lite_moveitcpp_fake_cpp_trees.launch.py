@@ -2,7 +2,11 @@ import os
 from launch import LaunchDescription
 from launch.substitutions import LaunchConfiguration
 from launch_ros.actions import Node
-from launch.actions import OpaqueFunction, DeclareLaunchArgument
+from launch.actions import OpaqueFunction, DeclareLaunchArgument, RegisterEventHandler
+from launch.event_handlers import (
+    OnProcessExit,
+    OnProcessStart,
+)
 from launch.launch_description_sources import load_python_launch_file_as_module
 # from launch_ros.substitutions import FindPackageShare
 from ament_index_python.packages import get_package_share_directory
@@ -150,7 +154,11 @@ def launch_setup(context, *args, **kwargs):
         executable='rviz2',
         # name='rviz2',
         output='screen',
-        arguments=['-d', rviz_config_file],
+        arguments=[
+            "-d", rviz_config_file,
+            "--ros-args",
+            "--log-level", "rviz2:=fatal"
+        ],
         parameters=[
             moveit_config.robot_description,
             moveit_config.robot_description_semantic,
@@ -267,18 +275,52 @@ def launch_setup(context, *args, **kwargs):
             'is_robot_real': False,
         }]
     )
-    
+
+        # ================================================================
+    #  EVENT‑DRIVEN START‑UP ORDER
+    # ================================================================
+
+    # 1) start manymove action_server nodes ONLY when the *last* spawner exits
+    last_spawner = controller_nodes[-1] if controller_nodes else joint_state_broadcaster
+    start_action_server_evt = RegisterEventHandler(
+        OnProcessExit(
+            target_action=last_spawner,
+            on_exit=[action_server_node],
+        )
+    )
+
+    # 2) start object_manager_node *and* cpp_trees when action‑server *starts*
+    start_object_mgr_evt = RegisterEventHandler(
+        OnProcessStart(
+            target_action=action_server_node,
+            on_start=[object_manager_node, manymove_cpp_trees_node],
+        )
+    )
+
+    # 3) finally start HMI when cpp_trees has started
+    start_hmi_evt = RegisterEventHandler(
+        OnProcessStart(
+            target_action=manymove_cpp_trees_node,
+            on_start=[manymove_hmi_node],
+        )
+    )
+
+    # ================================================================
+    #  RETURN LIST
+    #  (Immediate nodes + event‑handlers; late nodes omitted here)
+    # ================================================================
+
     return [
         robot_state_publisher,
         joint_state_broadcaster,
-        action_server_node,
         static_tf,
         ros2_control_node,
+        *controller_nodes,
         rviz_node,
-        object_manager_node,
-        manymove_hmi_node,
-        manymove_cpp_trees_node,
-    ] + controller_nodes
+        start_action_server_evt,
+        start_object_mgr_evt,
+        start_hmi_evt,
+    ]
 
 
 def generate_launch_description():

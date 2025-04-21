@@ -1,15 +1,21 @@
 # ================================================================
-# from: xarm_moveit_config/launch/_dual_robot_moveit_fake.launch.py
+# src/manymove/manymove_bringup/launch/dual_moveitcpp_fake_app.launch.py
 # ================================================================
 
 import os
 # import yaml
 from ament_index_python import get_package_share_directory
 from launch import LaunchDescription
-from launch.actions import OpaqueFunction, DeclareLaunchArgument #, IncludeLaunchDescription
-# from launch.launch_description_sources import PythonLaunchDescriptionSource
-from launch.substitutions import LaunchConfiguration #, PathJoinSubstitution
-# from launch_ros.substitutions import FindPackageShare
+from launch.actions import (
+    OpaqueFunction,
+    DeclareLaunchArgument,
+    RegisterEventHandler, 
+)
+from launch.event_handlers import (
+    OnProcessExit,
+    OnProcessStart,
+)
+from launch.substitutions import LaunchConfiguration
 from launch_ros.actions import Node
 from uf_ros_lib.moveit_configs_builder import DualMoveItConfigsBuilder
 from uf_ros_lib.uf_robot_utils import generate_dual_ros2_control_params_temp_file
@@ -229,60 +235,40 @@ def launch_setup(context, *args, **kwargs):
         .moveit_cpp(file_path=get_package_share_directory("manymove_planner") + "/config/moveit_cpp.yaml")
     ).to_moveit_configs()
 
-    # robot state publisher node
     robot_state_publisher_node = Node(
         package="robot_state_publisher",
         executable="robot_state_publisher",
         output="screen",
         parameters=[moveit_config.robot_description],
-        remappings=[
-            # ('joint_states', joint_states_remapping),
-            ('/tf', 'tf'),
-            ('/tf_static', 'tf_static'),
-        ]
+        remappings=[('/tf', 'tf'), ('/tf_static', 'tf_static')],
     )
 
-    # ================================================================
-    # from: xarm_moveit_config/launch/_dual_robot_moveit_common2.launch.py
-    # ================================================================
-
-    use_sim_time = LaunchConfiguration('use_sim_time', default=False)
-
-    # ================================================================
-    # from: src/manymove_planner/launch/lite_micpp_fake_action_server.launch.py
-    # instead of: xarm_moveit_config/launch/_dual_robot_moveit_common2.launch.py
-    # ================================================================
-
-    # Start the actual action server node
     moveitcpp_action_servers_node = Node(
         package='manymove_planner',
         executable='moveitcpp_action_server_node',
-        # Don't use the "name" parameter, the name will be automatically set with {node_prefix_*}action_server_node to avoid duplicate nodes
         output='screen',
         parameters=[
             moveit_config.to_dict(),
             {
                 'node_prefixes': [prefix_1.perform(context), prefix_2.perform(context)],
                 'planner_prefixes': [prefix_1.perform(context), prefix_2.perform(context)],
-                'planning_groups': [xarm_type_1, xarm_type_2], 
-                'base_frames': [base_frame_1.perform(context), base_frame_2.perform(context)], 
-                'tcp_frames': [tcp_frame_1.perform(context), tcp_frame_2.perform(context)], 
-                'traj_controllers': ["{}_traj_controller".format(xarm_type_1), "{}_traj_controller".format(xarm_type_2)],
-            }
+                'planning_groups': [xarm_type_1, xarm_type_2],
+                'base_frames': [base_frame_1.perform(context), base_frame_2.perform(context)],
+                'tcp_frames': [tcp_frame_1.perform(context), tcp_frame_2.perform(context)],
+                'traj_controllers': [f"{xarm_type_1}_traj_controller",
+                                     f"{xarm_type_2}_traj_controller"],
+            },
         ],
-    )
-
-    # Launch RViz
-    rviz_config_file = (
-        get_package_share_directory("manymove_planner") + "/config/micpp_demo_dual_app.rviz"
     )
 
     rviz_node = Node(
         package='rviz2',
         executable='rviz2',
-        # name='rviz2',
         output='screen',
-        arguments=['-d', rviz_config_file],
+        arguments=[
+            "-d", get_package_share_directory("manymove_planner") + "/config/micpp_demo_dual_app.rviz",
+            "--ros-args", "--log-level", "rviz2:=fatal"
+        ],
         parameters=[
             moveit_config.robot_description,
             moveit_config.robot_description_semantic,
@@ -292,155 +278,89 @@ def launch_setup(context, *args, **kwargs):
         ],
     )
 
-    # ================================================================
-    # from: xarm_moveit_config/launch/_dual_robot_moveit_common2.launch.py
-    # ================================================================
-
-    xyz_1 = attach_xyz_1.perform(context).split(' ')
-    rpy_1 = attach_rpy_1.perform(context).split(' ')
-    xyz_2 = attach_xyz_2.perform(context).split(' ')
-    rpy_2 = attach_rpy_2.perform(context).split(' ')
-    args_1 = [
-        '--x', xyz_1[0],
-        '--y', xyz_1[1],
-        '--z', xyz_1[2],
-        '--roll', rpy_1[0],
-        '--pitch', rpy_1[1],
-        '--yaw', rpy_1[2],
-        '--frame-id', attach_to_1.perform(context),
-        '--child-frame-id', f"{prefix_1.perform(context)}link_base"
-    ]
-    args_2 = [
-        '--x', xyz_2[0],
-        '--y', xyz_2[1],
-        '--z', xyz_2[2],
-        '--roll', rpy_2[0],
-        '--pitch', rpy_2[1],
-        '--yaw', rpy_2[2],
-        '--frame-id', attach_to_2.perform(context),
-        '--child-frame-id', f"{prefix_2.perform(context)}link_base"
-    ]
-
-    # Static TF
     static_tf_1 = Node(
         package='tf2_ros',
         executable='static_transform_publisher',
-        name='{}static_transform_publisher'.format(prefix_1.perform(context)),
+        name=f'{prefix_1.perform(context)}static_transform_publisher',
         output='screen',
-        arguments=args_1,
-        parameters=[{'use_sim_time': use_sim_time}],
+        arguments=[
+            '--x', attach_xyz_1.perform(context).split()[0],
+            '--y', attach_xyz_1.perform(context).split()[1],
+            '--z', attach_xyz_1.perform(context).split()[2],
+            '--roll', attach_rpy_1.perform(context).split()[0],
+            '--pitch', attach_rpy_1.perform(context).split()[1],
+            '--yaw', attach_rpy_1.perform(context).split()[2],
+            '--frame-id', attach_to_1.perform(context),
+            '--child-frame-id', f"{prefix_1.perform(context)}link_base",
+        ],
+        parameters=[{'use_sim_time': LaunchConfiguration('use_sim_time', default=False)}],
     )
     static_tf_2 = Node(
         package='tf2_ros',
         executable='static_transform_publisher',
-        name='{}static_transform_publisher'.format(prefix_2.perform(context)),
+        name=f'{prefix_2.perform(context)}static_transform_publisher',
         output='screen',
-        arguments=args_2,
-        parameters=[{'use_sim_time': use_sim_time}],
+        arguments=[
+            '--x', attach_xyz_2.perform(context).split()[0],
+            '--y', attach_xyz_2.perform(context).split()[1],
+            '--z', attach_xyz_2.perform(context).split()[2],
+            '--roll', attach_rpy_2.perform(context).split()[0],
+            '--pitch', attach_rpy_2.perform(context).split()[1],
+            '--yaw', attach_rpy_2.perform(context).split()[2],
+            '--frame-id', attach_to_2.perform(context),
+            '--child-frame-id', f"{prefix_2.perform(context)}link_base",
+        ],
+        parameters=[{'use_sim_time': LaunchConfiguration('use_sim_time', default=False)}],
     )
-
-    controllers = [
-        '{}{}_traj_controller'.format(prefix_1.perform(context), xarm_type_1),
-        '{}{}_traj_controller'.format(prefix_2.perform(context), xarm_type_2),
-    ]
-    if add_gripper_1.perform(context) in ('True', 'true') and robot_type_1.perform(context) != 'lite':
-        controllers.append('{}{}_gripper_traj_controller'.format(prefix_1.perform(context), robot_type_1.perform(context)))
-    elif add_bio_gripper_1.perform(context) in ('True', 'true') and robot_type_1.perform(context) != 'lite':
-        controllers.append('{}bio_gripper_traj_controller'.format(prefix_1.perform(context)))
-    if add_gripper_2.perform(context) in ('True', 'true') and robot_type_2.perform(context) != 'lite':
-        controllers.append('{}{}_gripper_traj_controller'.format(prefix_2.perform(context), robot_type_2.perform(context)))
-    elif add_bio_gripper_2.perform(context) in ('True', 'true') and robot_type_2.perform(context) != 'lite':
-        controllers.append('{}bio_gripper_traj_controller'.format(prefix_2.perform(context)))
-
-    # ================================================================
-    # from: xarm_controller/launch/_dual_ros2_control.launch.py
-    # ================================================================
 
     mod = load_python_launch_file_as_module(os.path.join(get_package_share_directory('xarm_api'), 'launch', 'lib', 'robot_api_lib.py'))
     generate_robot_api_params = getattr(mod, 'generate_robot_api_params')
-    robot_params = generate_robot_api_params(
-        os.path.join(get_package_share_directory('xarm_api'), 'config', 'xarm_params.yaml'),
-        os.path.join(get_package_share_directory('xarm_api'), 'config', 'xarm_user_params.yaml'),
-        LaunchConfiguration('ros_namespace', default='').perform(context), node_name='ufactory_driver'
-    )
-
-    # ros2 control node
     ros2_control_node = Node(
         package='controller_manager',
         executable='ros2_control_node',
-        parameters=[
-            moveit_config.robot_description,
-            ros2_control_params,
-            robot_params,
-        ],
+        parameters=[moveit_config.robot_description,
+                    ros2_control_params,
+                    generate_robot_api_params(
+                        os.path.join(get_package_share_directory('xarm_api'), 'config', 'xarm_params.yaml'),
+                        os.path.join(get_package_share_directory('xarm_api'), 'config', 'xarm_user_params.yaml'),
+                        LaunchConfiguration('ros_namespace', default='').perform(context),
+                        node_name='ufactory_driver')],
         output='screen',
     )
-
-    # ================================================================
-    # from: xarm_moveit_config/launch/_dual_robot_moveit_fake.launch.py
-    # ================================================================
 
     joint_state_broadcaster = Node(
         package='controller_manager',
         executable='spawner',
         output='screen',
-        arguments=[
-            'joint_state_broadcaster',
-            '--controller-manager', '{}/controller_manager'.format(ros_namespace)
-        ],
+        arguments=['joint_state_broadcaster',
+                   '--controller-manager', f"{LaunchConfiguration('ros_namespace', default='').perform(context)}/controller_manager"],
     )
 
-    # Load controllers
-    controller_nodes = []
-    for controller in controllers:
-        controller_nodes.append(Node(
+    controller_nodes = [
+        Node(
             package='controller_manager',
             executable='spawner',
             output='screen',
-            arguments=[
-                controller,
-                '--controller-manager', '{}/controller_manager'.format(ros_namespace)
-            ],
-        ))
+            arguments=[controller,
+                       '--controller-manager', f"{LaunchConfiguration('ros_namespace', default='').perform(context)}/controller_manager"],
+        ) for controller in [
+            f'{prefix_1.perform(context)}{xarm_type_1}_traj_controller',
+            f'{prefix_2.perform(context)}{xarm_type_2}_traj_controller',
+        ]
+    ]
 
-    # ================================================================
-    # launch manymove_object_manager
-    # ================================================================
-
-    # Object Manager node
+    # ------ Nodes that start later via event‑handlers ---------------
     object_manager_node = Node(
         package='manymove_object_manager',
         executable='object_manager_node',
         name='object_manager_node',
         output='screen',
-        parameters=[{'frame_id': 'world'}]
+        parameters=[{'frame_id': 'world'}],
     )
 
-    # ================================================================
-    # launch manymove_hmi
-    # ================================================================
-
-    # HMI node
-    manymove_hmi_node = Node(
-        package='manymove_hmi',
-        executable='manymove_hmi_app_executable',
-        # name='manymove_hmi_node',
-        output='screen',
-        parameters=[{
-            'robot_prefixes': [prefix_1.perform(context), prefix_2.perform(context)],
-            'robot_names': [xarm_type_1, xarm_type_2],
-        }]
-    )
-
-    # ================================================================
-    # launch manymove_cpp_trees
-    # ================================================================
-
-    # behaviortree.cpp node
     manymove_cpp_trees_node = Node(
         package='manymove_cpp_trees',
         executable='bt_client_app_dual',
-        # name='manymove_cpp_tree_node',
         output='screen',
         parameters=[{
             'robot_model_1': xarm_type_1,
@@ -450,33 +370,76 @@ def launch_setup(context, *args, **kwargs):
             'robot_prefix_2': prefix_2.perform(context),
             'tcp_frame_2': tcp_frame_2,
             'is_robot_real': False,
-        }]
+        }],
+    )
+
+    manymove_hmi_node = Node(
+        package='manymove_hmi',
+        executable='manymove_hmi_app_executable',
+        output='screen',
+        parameters=[{
+            'robot_prefixes': [prefix_1.perform(context), prefix_2.perform(context)],
+            'robot_names': [xarm_type_1, xarm_type_2],
+        }],
     )
 
     # ================================================================
-    # RETURN
+    #  EVENT‑DRIVEN START‑UP ORDER
     # ================================================================
 
+    # 1) start manymove action_server nodes ONLY when the *last* spawner exits
+    last_spawner = controller_nodes[-1] if controller_nodes else joint_state_broadcaster
+    start_action_server_evt = RegisterEventHandler(
+        OnProcessExit(
+            target_action=last_spawner,
+            on_exit=[moveitcpp_action_servers_node],
+        )
+    )
+
+    # 2) start object_manager_node *and* cpp_trees when action‑server *starts*
+    start_object_mgr_evt = RegisterEventHandler(
+        OnProcessStart(
+            target_action=moveitcpp_action_servers_node,
+            on_start=[object_manager_node, manymove_cpp_trees_node],
+        )
+    )
+
+    # 3) finally start HMI when cpp_trees has started
+    start_hmi_evt = RegisterEventHandler(
+        OnProcessStart(
+            target_action=manymove_cpp_trees_node,
+            on_start=[manymove_hmi_node],
+        )
+    )
+
+    # ================================================================
+    #  RETURN LIST
+    #  (Immediate nodes + event‑handlers; late nodes omitted here)
+    # ================================================================
+    
     return [
         robot_state_publisher_node,
-        moveitcpp_action_servers_node,
         rviz_node,
         static_tf_1,
         static_tf_2,
-        joint_state_broadcaster,
         ros2_control_node,
-        object_manager_node,
-        manymove_hmi_node,
-        manymove_cpp_trees_node
-    ] + controller_nodes
+        joint_state_broadcaster,
+        *controller_nodes,
+        start_action_server_evt,
+        start_object_mgr_evt,
+        start_hmi_evt,
+    ]
 
 
 def generate_launch_description():
     return LaunchDescription([
-        DeclareLaunchArgument('base_frame_1', default_value='link_base', description='Base frame of the robot 1'),
-        DeclareLaunchArgument('tcp_frame_1', default_value='link_tcp', description='TCP (end effector) frame of the robot 1' ),
-        DeclareLaunchArgument('base_frame_2', default_value='link_base', description='Base frame of the robot 2'),
-        DeclareLaunchArgument('tcp_frame_2', default_value='link_tcp', description='TCP (end effector) frame of the robot 2' ),
-
-        OpaqueFunction(function=launch_setup)
+        DeclareLaunchArgument('base_frame_1', default_value='link_base',
+                              description='Base frame of the robot 1'),
+        DeclareLaunchArgument('tcp_frame_1', default_value='link_tcp',
+                              description='TCP (end effector) frame of the robot 1'),
+        DeclareLaunchArgument('base_frame_2', default_value='link_base',
+                              description='Base frame of the robot 2'),
+        DeclareLaunchArgument('tcp_frame_2', default_value='link_tcp',
+                              description='TCP (end effector) frame of the robot 2'),
+        OpaqueFunction(function=launch_setup),
     ])

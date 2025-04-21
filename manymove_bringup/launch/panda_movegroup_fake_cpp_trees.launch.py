@@ -78,7 +78,11 @@ def launch_setup(context, *args, **kwargs):
         executable="rviz2",
         name="rviz2",
         output="log",
-        arguments=["-d", rviz_config_file],
+        arguments=[
+            "-d", rviz_config_file,
+            "--ros-args",
+            "--log-level", "rviz2:=fatal"
+        ],
         parameters=[
             moveit_configs.robot_description,
             moveit_configs.robot_description_semantic,
