@@ -72,6 +72,7 @@ namespace manymove_cpp_trees
         max_move_config.planning_pipeline = "ompl";
         max_move_config.planner_id = "RRTConnect";
         max_move_config.planning_time = 5;
+        max_move_config.planning_attempts = 5;
 
         MovementConfig mid_move_config = max_move_config;
         mid_move_config.velocity_scaling_factor /= 2.0;
