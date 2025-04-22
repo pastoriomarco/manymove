@@ -81,7 +81,7 @@ int main(int argc, char **argv)
 
     // The approach move from the drop pose is cartesian, we set an offset in the direction of the move (here, Z)
     Pose approach_drop_target = drop_target;
-    approach_drop_target.position.z += 0.02;
+    approach_drop_target.position.z += 0.05;
     blackboard->set("approach_drop_target_key", approach_drop_target);
 
     /*
@@ -240,8 +240,8 @@ int main(int argc, char **argv)
      * Here, the second transform is the same for both poses, and creates a decentered grasping pose sliding in the original Z axis.
      * We then flip the grasp direction 180 degrees, or 3.14 radians, as we want the TCP's Z axis to be facing down.
      */
-    blackboard->set("pick_pre_transform_xyz_rpy_1_key", std::vector<double>{0.02, 0.0, 0.0, 0.0, 1.57, 0.0});
-    blackboard->set("approach_pick_pre_transform_xyz_rpy_1_key", std::vector<double>{-0.05, 0.0, 0.0, 0.0, 1.57, 0.0});
+    blackboard->set("pick_pre_transform_xyz_rpy_1_key", std::vector<double>{0.01, 0.0, 0.0, 0.0, 1.57, 0.0});
+    blackboard->set("approach_pick_pre_transform_xyz_rpy_1_key", std::vector<double>{-0.07, 0.0, 0.0, 0.0, 1.57, 0.0});
     blackboard->set("pick_post_transform_xyz_rpy_1_key", std::vector<double>{0.0, 0.0, -0.025, 3.14, 0.0, 0.0});
 
     // Utility world frame key

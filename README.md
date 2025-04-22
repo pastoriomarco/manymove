@@ -84,7 +84,7 @@ These values will be used to start up the following nodes:
 - manymove_hmi_node: the HMI interface
 - manymove_signals: on a real robot, handles the service calls to get/set signals (currently taylored for Ufactory robots)
 
-A little side note: the reference TCP frame here is not actually centered between gripper's fingers, as 'panda_link8' represents the center of the flange. But since it's aligned to the ideal TCP, you can just offset the poses when you need to refer to the TCP, without having to create a new link. For example, the **-0.102** in the following line represents this offset:
+A little side note on Panda examples: the reference TCP frame there is not actually centered between gripper's fingers, as 'panda_link8' represents the center of the flange. But since it's aligned to the ideal TCP, you can just offset the poses when you need to refer to the TCP, without having to create a new link. In the Panda example, the **-0.102** in the following line represents this offset:
 
 ```
 blackboard->set("pick_pre_transform_xyz_rpy_1_key", std::vector<double>{-0.102, 0.0, 0.0, 0.0, 1.57, 0.0});
@@ -143,22 +143,35 @@ This repository is composed of several sub-packages, each handling different res
 
 ### Launching the Examples
 
-- **Lite 6 manipulator** 
+- **Lite6, uf850 and xarm7 manipulators** 
   with MoveItCPP and BehaviorTree.CPP:
   ```bash
   ros2 launch manymove_bringup lite_moveitcpp_fake_cpp_trees.launch.py
+  ```
+  with MoveItCPP and BehaviorTree.CPP:
+  ```bash
+  ros2 launch manymove_bringup uf850_moveitcpp_fake_cpp_trees.launch.py
+  ```
+  with MoveItCPP and BehaviorTree.CPP:
+  ```bash
+  ros2 launch manymove_bringup xarm7_moveitcpp_fake_cpp_trees.launch.py
   ```
   
   with MoveGroupInterface and BehaviorTree.CPP:
   ```bash
   ros2 launch manymove_bringup lite_movegroup_fake_cpp_trees.launch.py
   ```
+  ```bash
+  ros2 launch manymove_bringup uf850_movegroup_fake_cpp_trees.launch.py
+  ```
+  ```bash
+  ros2 launch manymove_bringup xarm7_movegroup_fake_cpp_trees.launch.py
+  ```
   
   with MoveGroupInterface and py_trees (minimal):
   ```bash
   ros2 launch manymove_bringup lite_movegroup_fake_py_trees.launch.py
   ```
-
 - **Dual robot (Lite 6 + UF850)**  
   ```bash
   ros2 launch manymove_bringup dual_moveitcpp_fake_cpp_trees.launch.py
