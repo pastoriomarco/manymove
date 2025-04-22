@@ -46,7 +46,7 @@ int main(int argc, char **argv)
     RobotParams rp = defineRobotParams(node, blackboard, keys);
 
     // ----------------------------------------------------------------------------
-    // 2) Setup moves
+    // 2) Setup joint targets, poses and moves
     // ----------------------------------------------------------------------------
 
     /*
@@ -68,6 +68,9 @@ int main(int argc, char **argv)
     std::vector<double> joint_look_dx = {0.733, -0.297, 1.378, -0.576, 1.692, 1.291};
     std::string named_home = "home";
 
+    // Populate the blackboard with the poses, one unique key for each pose we want to use.
+    // Be careful not to use names that may conflict with the keys automatically created for the moves. (Usually move_{move_id})
+
     // The pick target is to be obtained from the object later, so we put an empty pose for now.
     blackboard->set("pick_target_key", Pose());
     blackboard->set("approach_pick_target_key", Pose());
@@ -83,16 +86,18 @@ int main(int argc, char **argv)
     blackboard->set("approach_drop_target_key", approach_drop_target);
 
     /*
-     * Here we compose the sequences of moves. Each of the following sequences represent a logic
+     * Then we compose the sequences of moves. Each of the following sequences represent a logic
      * sequence of moves that are somehow correlated, and not interrupted by operations on I/Os,
-     * objects and so on. For example the pick_sequence is a short sequence of moves composed by
+     * objects and logic conditions. For example the pick_sequence is a short sequence of moves composed by
      * a "pose" move to get in a position to be ready to approach the object, and the "cartesian"
      * move to get the gripper to the grasp position moving linearly to minimize chances of collisions.
      * As we'll se later, we can then compose these sequences of moves together to build bigger blocks
      * of logically corralated moves.
+     * We could also keep all moves separated, but it'd be harder to obtain an easily understandable
+     * tree later, expecially if we need to reuse a series of moves in a certain logic order.
      */
     std::string tcp_frame_name = rp.prefix + rp.tcp_frame;
-    
+
     std::vector<Move> rest_position = {
         {rp.prefix, tcp_frame_name, "joint", move_configs["cumotion_max_move"], "", joint_rest},
     };
@@ -104,18 +109,19 @@ int main(int argc, char **argv)
 
     // Sequences for Pick/Drop/Homing
     std::vector<Move> pick_sequence = {
-        {rp.prefix, tcp_frame_name, "pose", move_configs["cumotion_max_move"], "pick_target_key"},
+        {rp.prefix, tcp_frame_name, "pose", move_configs["cumotion_max_move"], "approach_pick_target_key"},
+        {rp.prefix, tcp_frame_name, "cartesian", move_configs["cartesian_slow_move"], "pick_target_key"},
     };
 
     std::vector<Move> drop_sequence = {
         {rp.prefix, tcp_frame_name, "cartesian", move_configs["cartesian_mid_move"], "approach_pick_target_key"},
-        {rp.prefix, tcp_frame_name, "cartesian", move_configs["cumotion_max_move"], "approach_drop_target"},
-        {rp.prefix, tcp_frame_name, "pose", move_configs["cumotion_slow_move"], "drop_target_key"},
+        {rp.prefix, tcp_frame_name, "pose", move_configs["cumotion_max_move"], "approach_drop_target_key"},
+        {rp.prefix, tcp_frame_name, "cartesian", move_configs["cartesian_slow_move"], "drop_target_key"},
     };
 
     std::vector<Move> home_position = {
-        {rp.prefix, tcp_frame_name, "cartesian", move_configs["cartesian_mid_move"], "approach_drop_target"},
-        //{rp.prefix, tcp_frame_name, "named", move_configs["cumotion_max_move"], "", {}, named_home},
+        {rp.prefix, tcp_frame_name, "cartesian", move_configs["cartesian_mid_move"], "approach_drop_target_key"},
+        {rp.prefix, tcp_frame_name, "named", move_configs["cumotion_max_move"], "", {}, named_home},
     };
 
     /*
@@ -147,7 +153,7 @@ int main(int argc, char **argv)
     std::string to_home_xml = buildMoveXML(
         rp.prefix, rp.prefix + "home", home_position, blackboard);
 
-    /*
+    /**
      * We can further combine the move sequence blocks in logic sequences.
      * This allows reusing and combining moves or sequences that are used more than once in the scene,
      * or that are used in different contexts, without risking to reuse the wrong trajectory.
@@ -163,10 +169,6 @@ int main(int argc, char **argv)
     // Translate it to xml tree leaf or branch
     std::string prep_sequence_xml = sequenceWrapperXML(
         rp.prefix + "ComposedPrepSequence", {to_rest_reset_xml, scan_around_xml});
-    std::string pick_sequence_xml = sequenceWrapperXML(
-        rp.prefix + "ComposedPickSequence", {pick_object_xml});
-    std::string drop_sequence_xml = sequenceWrapperXML(
-        rp.prefix + "ComposedDropSequence", {drop_object_xml});
     std::string home_sequence_xml = sequenceWrapperXML(
         rp.prefix + "ComposedHomeSequence", {to_home_xml, to_rest_xml});
 
@@ -176,14 +178,14 @@ int main(int argc, char **argv)
 
     blackboard->set("ground_id_key", "obstacle_ground");
     blackboard->set("ground_shape_key", "box");
-    blackboard->set("ground_dimension_key", std::vector<double>{0.8, 0.8, 0.1});
+    blackboard->set("ground_dimension_key", std::vector<double>{1.0, 1.0, 0.1});
     blackboard->set("ground_pose_key", createPoseRPY(0.0, 0.0, -0.051, 0.0, 0.0, 0.0));
     blackboard->set("ground_scale_key", std::vector<double>{1.0, 1.0, 1.0});
 
     blackboard->set("wall_id_key", "obstacle_wall");
     blackboard->set("wall_shape_key", "box");
-    blackboard->set("wall_dimension_key", std::vector<double>{0.8, 0.02, 0.8});
-    blackboard->set("wall_pose_key", createPoseRPY(0.0, 0.4, 0.3, 0.0, 0.0, 0.0));
+    blackboard->set("wall_dimension_key", std::vector<double>{1.0, 0.02, 0.2});
+    blackboard->set("wall_pose_key", createPoseRPY(0.0, -0.15, 0.1, 0.0, 0.0, 0.0));
     blackboard->set("wall_scale_key", std::vector<double>{1.0, 1.0, 1.0});
 
     blackboard->set("cylinder_id_key", "graspable_cylinder");
@@ -195,8 +197,8 @@ int main(int argc, char **argv)
     blackboard->set("mesh_id_key", "graspable_mesh");
     blackboard->set("mesh_shape_key", "mesh");
     blackboard->set("mesh_file_key", "package://manymove_object_manager/meshes/unit_tube.stl");
-    blackboard->set("mesh_scale_key", std::vector<double>{0.01, 0.01, 0.1});              //< The tube is vertical with dimension 1m x 1m x 1m. We scale it to 10x10x100 mm
-    blackboard->set("mesh_pose_key", createPoseRPY(0.1, -0.2, 0.2005, 0.785, 1.57, 0.0)); //< We place it on the floor and lay it on its side, X+ facing down
+    blackboard->set("mesh_scale_key", std::vector<double>{0.01, 0.01, 0.1});                //< The tube is vertical with dimension 1m x 1m x 1m. We scale it to 10x10x100 mm
+    blackboard->set("mesh_pose_key", createPoseRPY(0.15, -0.25, 0.05, 0.785, 1.57, 0.0)); //< We place it on the floor and lay it on its side, X+ facing down
 
     // Create object actions xml snippets (the object are created directly in the create*() functions relative to each type of object action)
     std::string check_ground_obj_xml = buildObjectActionXML("check_ground", createCheckObjectExists("ground_id_key"));
@@ -227,7 +229,7 @@ int main(int argc, char **argv)
     std::string detach_obj_xml = fallbackWrapperXML("detach_obj_to_manipulate_always_success",
                                                     {buildObjectActionXML("detach_obj_to_manipulate", createDetachObject("object_to_manipulate_key", "tcp_frame_name_key")),
                                                      "<AlwaysSuccess />"});
-    std::string remove_obj_xml = fallbackWrapperXML("detach_obj_to_manipulate_always_success",
+    std::string remove_obj_xml = fallbackWrapperXML("remove_obj_to_manipulate_always_success",
                                                     {buildObjectActionXML("remove_obj_to_manipulate", createRemoveObject("object_to_manipulate_key")),
                                                      "<AlwaysSuccess />"});
 
@@ -291,7 +293,7 @@ int main(int argc, char **argv)
     std::string spawn_fixed_objects_xml = sequenceWrapperXML("SpawnFixedObjects", {init_ground_obj_xml, init_wall_obj_xml});
     std::string spawn_graspable_objects_xml = sequenceWrapperXML("SpawnGraspableObjects", {init_cylinder_obj_xml, init_mesh_obj_xml});
     std::string get_grasp_object_poses_xml = sequenceWrapperXML("GetGraspPoses", {get_pick_pose_xml, get_approach_pose_xml});
-    std::string go_to_pick_pose_xml = sequenceWrapperXML("GoToPickPose", {pick_sequence_xml});
+    std::string go_to_pick_pose_xml = sequenceWrapperXML("GoToPickPose", {pick_object_xml});
     std::string close_gripper_xml = sequenceWrapperXML("CloseGripper", {signal_gripper_close_xml, check_gripper_close_xml, attach_obj_xml});
     std::string open_gripper_xml = sequenceWrapperXML("OpenGripper", {signal_gripper_open_xml, detach_obj_xml});
 
@@ -313,7 +315,7 @@ int main(int argc, char **argv)
          get_grasp_object_poses_xml,  //< We get the updated poses relative to the objects
          go_to_pick_pose_xml,         //< Prep sequence and pick sequence
          close_gripper_xml,           //< We attach the object
-         drop_sequence_xml,           //< Drop sequence
+         drop_object_xml,             //< Drop sequence
          open_gripper_xml,            //< We detach the object
          home_sequence_xml,           //< Homing sequence
          remove_obj_xml},             //< We delete the object for it to be added on the next cycle in the original position
@@ -330,8 +332,7 @@ int main(int argc, char **argv)
     // ----------------------------------------------------------------------------
     std::string final_tree_xml = mainTreeWrapperXML("MasterTree", master_body);
 
-    // // To print the whole tree:
-    // RCLCPP_INFO(node->get_logger(), "=== Programmatically Generated Tree XML ===\n%s", final_tree_xml.c_str());
+    RCLCPP_INFO(node->get_logger(), "=== Programmatically Generated Tree XML ===\n%s", final_tree_xml.c_str());
 
     // 8) Register node types
     BT::BehaviorTreeFactory factory;
