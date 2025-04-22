@@ -46,7 +46,7 @@ int main(int argc, char **argv)
     RobotParams rp = defineRobotParams(node, blackboard, keys);
 
     // ----------------------------------------------------------------------------
-    // 2) Setup moves
+    // 2) Setup joint targets, poses and moves
     // ----------------------------------------------------------------------------
 
     /*
@@ -62,53 +62,60 @@ int main(int argc, char **argv)
     auto move_configs = defineMovementConfigs();
 
     // We define the joint targets we need for the joint moves as vectors of doubles.
-    // Be careful that the number of values must match the number of DOF of the robot (here, 6 DOF)
-    std::vector<double> joint_ready = {0.0, -0.35, -2.34, 0.0, -0.87, 1.57};
-    std::string named_home = "extended";
-
-    // Test poses to place the object, these are not overwritten later (for now)
-    Pose drop_target = createPoseRPY(0.4, 0.0, 0.35, 3.14, 0.0, -0.785);
-    Pose approach_drop_target = drop_target;
-    approach_drop_target.position.z += 0.02;
+    // Be careful that the number of values must match the number of DOF of the robot (here, 7 DOF)
+    std::vector<double> joint_rest = {0.0, -0.977, 0.0, 0.5931, 0.0, 1.57, 0.0};
+    std::string named_home = "home";
 
     // Populate the blackboard with the poses, one unique key for each pose we want to use.
     // Be careful not to use names that may conflict with the keys automatically created for the moves. (Usually move_{move_id})
+
+    // The pick target is to be obtained from the object later, so we put an empty pose for now.
     blackboard->set("pick_target_key", Pose());
     blackboard->set("approach_pick_target_key", Pose());
 
+    // Drop poses to place the object, these are not overwritten later, so we hardcode them
+    // Here we create the drop pose first, then we set it in the blackboard key
+    // Notice that, since the object will be created with Z+ pointing up, we need to flip the Z axis by rotating 360 deg in X axis
+    Pose drop_target = createPoseRPY(0.3, 0.05, 0.2, 3.14, 0.0, 0.785);
     blackboard->set("drop_target_key", drop_target);
+
+    // The approach move from the drop pose is cartesian, we set an offset in the direction of the move (here, Z)
+    Pose approach_drop_target = drop_target;
+    approach_drop_target.position.z += 0.05;
     blackboard->set("approach_drop_target_key", approach_drop_target);
 
     /*
-     * Here we compose the sequences of moves. Each of the following sequences represent a logic
+     * Then we compose the sequences of moves. Each of the following sequences represent a logic
      * sequence of moves that are somehow correlated, and not interrupted by operations on I/Os,
-     * objects and so on. For example the pick_sequence is a short sequence of moves composed by
+     * objects and logic conditions. For example the pick_sequence is a short sequence of moves composed by
      * a "pose" move to get in a position to be ready to approach the object, and the "cartesian"
      * move to get the gripper to the grasp position moving linearly to minimize chances of collisions.
      * As we'll se later, we can then compose these sequences of moves together to build bigger blocks
      * of logically corralated moves.
+     * We could also keep all moves separated, but it'd be harder to obtain an easily understandable
+     * tree later, expecially if we need to reuse a series of moves in a certain logic order.
      */
     std::string tcp_frame_name = rp.prefix + rp.tcp_frame;
     
     std::vector<Move> rest_position = {
-        {rp.prefix, tcp_frame_name, "joint", move_configs["max_move"], "", joint_ready},
+        {rp.prefix, tcp_frame_name, "joint", move_configs["STOMP_max_move"], "", joint_rest},
     };
 
     // Sequences for Pick/Drop/Homing
     std::vector<Move> pick_sequence = {
-        {rp.prefix, tcp_frame_name, "pose", move_configs["mid_move"], "approach_pick_target_key"},
+        {rp.prefix, tcp_frame_name, "pose", move_configs["STOMP_mid_move"], "approach_pick_target_key"},
         {rp.prefix, tcp_frame_name, "cartesian", move_configs["cartesian_slow_move"], "pick_target_key"},
     };
 
     std::vector<Move> drop_sequence = {
-        {rp.prefix, tcp_frame_name, "cartesian", move_configs["mid_move"], "approach_pick_target_key"},
-        {rp.prefix, tcp_frame_name, "pose", move_configs["max_move"], "approach_drop_target_key"},
+        {rp.prefix, tcp_frame_name, "cartesian", move_configs["cartesian_mid_move"], "approach_pick_target_key"},
+        {rp.prefix, tcp_frame_name, "pose", move_configs["STOMP_max_move"], "approach_drop_target_key"},
         {rp.prefix, tcp_frame_name, "cartesian", move_configs["cartesian_slow_move"], "drop_target_key"},
     };
 
     std::vector<Move> home_position = {
-        {rp.prefix, tcp_frame_name, "cartesian", move_configs["max_move"], "approach_drop_target_key"},
-        {rp.prefix, tcp_frame_name, "joint", move_configs["max_move"], "", joint_ready},
+        {rp.prefix, tcp_frame_name, "cartesian", move_configs["cartesian_mid_move"], "approach_drop_target_key"},
+        {rp.prefix, tcp_frame_name, "named", move_configs["max_move"], "", {}, named_home},
     };
 
     /*
@@ -122,6 +129,9 @@ int main(int argc, char **argv)
      * Notice that on any string representing an XML snippet I use _xml at the end of the name to give better sense of
      * what's in that variable: if it ends with _xml, it could potentially be directly inserted as a tree branch or leaf.
      */
+    std::string to_rest_reset_xml = buildMoveXML(
+        rp.prefix, rp.prefix + "toRest", rest_position, blackboard, true); // this will run only on prep sequence, so we reset it afterwards
+
     std::string to_rest_xml = buildMoveXML(
         rp.prefix, rp.prefix + "toRest", rest_position, blackboard);
 
@@ -134,7 +144,7 @@ int main(int argc, char **argv)
     std::string to_home_xml = buildMoveXML(
         rp.prefix, rp.prefix + "home", home_position, blackboard);
 
-    /*
+    /**
      * We can further combine the move sequence blocks in logic sequences.
      * This allows reusing and combining moves or sequences that are used more than once in the scene,
      * or that are used in different contexts, without risking to reuse the wrong trajectory.
@@ -149,11 +159,7 @@ int main(int argc, char **argv)
 
     // Translate it to xml tree leaf or branch
     std::string prep_sequence_xml = sequenceWrapperXML(
-        rp.prefix + "ComposedPrepSequence", {to_rest_xml});
-    std::string pick_sequence_xml = sequenceWrapperXML(
-        rp.prefix + "ComposedPickSequence", {pick_object_xml});
-    std::string drop_sequence_xml = sequenceWrapperXML(
-        rp.prefix + "ComposedDropSequence", {drop_object_xml});
+        rp.prefix + "ComposedPrepSequence", {to_rest_reset_xml});
     std::string home_sequence_xml = sequenceWrapperXML(
         rp.prefix + "ComposedHomeSequence", {to_home_xml, to_rest_xml});
 
@@ -173,10 +179,10 @@ int main(int argc, char **argv)
     blackboard->set("wall_pose_key", createPoseRPY(0.0, -0.2, 0.15, 0.0, 0.0, 0.0));
     blackboard->set("wall_scale_key", std::vector<double>{1.0, 1.0, 1.0});
 
-    blackboard->set("cylinder_id_key", "graspable_cylinder");
+    blackboard->set("cylinder_id_key", "support_cylinder");
     blackboard->set("cylinder_shape_key", "cylinder");
-    blackboard->set("cylinder_dimension_key", std::vector<double>{0.1, 0.005});
-    blackboard->set("cylinder_pose_key", createPoseRPY(0.2, 0.2, 0.005, 0.0, 1.57, 0.0));
+    blackboard->set("cylinder_dimension_key", std::vector<double>{0.1, 0.06});
+    blackboard->set("cylinder_pose_key", createPoseRPY(0.0, 0.0, 0.049, 0.0, 0.0, 0.0));
     blackboard->set("cylinder_scale_key", std::vector<double>{1.0, 1.0, 1.0});
 
     blackboard->set("mesh_id_key", "graspable_mesh");
@@ -215,7 +221,7 @@ int main(int argc, char **argv)
     std::string detach_obj_xml = fallbackWrapperXML("detach_obj_to_manipulate_always_success",
                                                     {buildObjectActionXML("detach_obj_to_manipulate", createDetachObject("object_to_manipulate_key", "tcp_frame_name_key")),
                                                      "<AlwaysSuccess />"});
-    std::string remove_obj_xml = fallbackWrapperXML("detach_obj_to_manipulate_always_success",
+    std::string remove_obj_xml = fallbackWrapperXML("remove_obj_to_manipulate_always_success",
                                                     {buildObjectActionXML("remove_obj_to_manipulate", createRemoveObject("object_to_manipulate_key")),
                                                      "<AlwaysSuccess />"});
 
@@ -228,16 +234,15 @@ int main(int argc, char **argv)
      * The reference orientation determines how the tranform behaves: if we leave the reference orientation to all zeroes, the
      * transform of the object will be referred to the frame we specify, here the "world" frame.
      * The object here is modelled vertically, with the simmetry axis aligned to Z.
-     * Since we want to grasp the object aligning the Z axis of the gripper perpendicularly to the Z axis of the object, we need
-     * to rotate the Y 90 degrees, so 1.57 radians. Also, the center of the jaws is about 0.102 m from the link we defined as TCP,
-     * so we move the pick position consequently in the X- direction. The approach position is further away of about 5 cm. Getting
-     * this right with just one transform can be not very intuitive, so I also set up the function to enable a second transform.
-     * Here the second transform is the same for both poses, and creates a decentered grasping pose sliding in the original Z axis
-     * and then rotating of 45 degrees (0.785 rad) in the original X axis.
+     * We want to grasp the object aligning the Z axis of the gripper perpendicularly to the X axis of the object, thus we need
+     * to rotate the Y 90 degrees, so 1.57 radians. The approach position is further away of about 5 cm in the X direction.
+     * Getting this right with just one transform can be not very intuitive, so I also set up the function to enable a second transform.
+     * Here, the second transform is the same for both poses, and creates a decentered grasping pose sliding in the original Z axis.
+     * We then flip the grasp direction 180 degrees, or 3.14 radians, as we want the TCP's Z axis to be facing down.
      */
-    blackboard->set("pick_pre_transform_xyz_rpy_1_key", std::vector<double>{-0.15, 0.0, 0.0, 0.0, 1.57, 0.0});
-    blackboard->set("approach_pick_pre_transform_xyz_rpy_1_key", std::vector<double>{-0.2, 0.0, 0.0, 0.0, 1.57, 0.0});
-    blackboard->set("pick_post_transform_xyz_rpy_1_key", std::vector<double>{0.0, 0.0, -0.025, 1.57, 0.0, 0.0});
+    blackboard->set("pick_pre_transform_xyz_rpy_1_key", std::vector<double>{0.01, 0.0, 0.0, 0.0, 1.57, 0.0});
+    blackboard->set("approach_pick_pre_transform_xyz_rpy_1_key", std::vector<double>{-0.075, 0.0, 0.0, 0.0, 1.57, 0.0});
+    blackboard->set("pick_post_transform_xyz_rpy_1_key", std::vector<double>{0.0, 0.0, -0.025, 3.14, 0.0, 0.0});
 
     // Utility world frame key
     blackboard->set("world_frame_key", "world");
@@ -259,25 +264,36 @@ int main(int argc, char **argv)
                                  "pick_post_transform_xyz_rpy_1_key"));
 
     // ----------------------------------------------------------------------------
-    // 5) Define Gripper commands:
+    // 5) Define Signals calls:
     // ----------------------------------------------------------------------------
 
-    // Setting commands for gripper open/close
-    std::string move_gripper_close_xml =
-        "<GripperCommandAction position=\"0.75\" max_effort=\"1.0\" action_server=\"" + rp.gripper_action_server + "\"/>";
-    std::string move_gripper_open_xml =
-        "<GripperCommandAction position=\"0.6\" max_effort=\"1.0\" action_server=\"" + rp.gripper_action_server + "\"/>";
+    // Let's send and receive signals only if the robot is real, and let's fake a delay on inputs otherwise
+    std::string signal_gripper_close_xml = (rp.is_real ? buildSetOutputXML(rp.prefix, "GripperClose", "controller", 0, 1) : "");
+    std::string signal_gripper_open_xml = (rp.is_real ? buildSetOutputXML(rp.prefix, "GripperOpen", "controller", 0, 0) : "");
+    std::string check_gripper_close_xml = (rp.is_real ? buildWaitForInput(rp.prefix, "WaitForSensor", "controller", 0, 1) : "<Delay delay_msec=\"250\">\n<AlwaysSuccess />\n</Delay>\n");
+    std::string check_gripper_open_xml = (rp.is_real ? buildWaitForInput(rp.prefix, "WaitForSensor", "controller", 0, 0) : "<Delay delay_msec=\"250\">\n  <AlwaysSuccess />\n</Delay>\n");
+    std::string check_robot_state_xml = buildCheckRobotStateXML(rp.prefix, "CheckRobot", "robot_ready", "error_code", "robot_mode", "robot_state", "robot_msg");
+    std::string reset_robot_state_xml = buildResetRobotStateXML(rp.prefix, "ResetRobot", rp.model);
+
+    std::string check_reset_robot_xml = (rp.is_real ? fallbackWrapperXML(rp.prefix + "CheckResetFallback", {check_robot_state_xml, reset_robot_state_xml}) : "<Delay delay_msec=\"250\">\n<AlwaysSuccess />\n</Delay>\n");
 
     // ----------------------------------------------------------------------------
     // 6) Combine the objects and moves in a sequences that can run a number of times:
     // ----------------------------------------------------------------------------
 
     // Let's build the full sequence in logically separated blocks:
-    std::string spawn_fixed_objects_xml = sequenceWrapperXML("SpawnFixedObjects", {init_ground_obj_xml, init_wall_obj_xml});
-    std::string spawn_graspable_objects_xml = sequenceWrapperXML("SpawnGraspableObjects", {init_cylinder_obj_xml, init_mesh_obj_xml});
+    std::string spawn_fixed_objects_xml = sequenceWrapperXML("SpawnFixedObjects", {init_ground_obj_xml, init_wall_obj_xml, init_cylinder_obj_xml});
+    std::string spawn_graspable_objects_xml = sequenceWrapperXML("SpawnGraspableObjects", {init_mesh_obj_xml});
     std::string get_grasp_object_poses_xml = sequenceWrapperXML("GetGraspPoses", {get_pick_pose_xml, get_approach_pose_xml});
-    std::string go_to_pick_pose_xml = sequenceWrapperXML("GoToPickPose", {pick_sequence_xml});
-    std::string close_gripper_xml = sequenceWrapperXML("CloseGripper", {attach_obj_xml, move_gripper_close_xml});
+    std::string go_to_pick_pose_xml = sequenceWrapperXML("GoToPickPose", {pick_object_xml});
+
+    // Setting commands for gripper open/close
+    std::string move_gripper_close_xml =
+        "<GripperTrajAction joint_names=\"[drive_joint]\" positions=\"[0.8]\" time_from_start=\"1.0\" action_server=\"" + rp.gripper_action_server + "\"/>";
+    std::string move_gripper_open_xml =
+        "<GripperTrajAction joint_names=\"[drive_joint]\" positions=\"[0.4]\" time_from_start=\"1.0\" action_server=\"" + rp.gripper_action_server + "\"/>";
+
+    std::string close_gripper_xml = sequenceWrapperXML("CloseGripper", {move_gripper_close_xml, attach_obj_xml});
     std::string open_gripper_xml = sequenceWrapperXML("OpenGripper", {move_gripper_open_xml, detach_obj_xml});
 
     // Set up a sequence to reset the scene:
@@ -285,19 +301,20 @@ int main(int argc, char **argv)
 
     std::string startup_sequence_xml = sequenceWrapperXML(
         "StartUpSequence",
-        {spawn_fixed_objects_xml,
+        {check_reset_robot_xml,
+         spawn_fixed_objects_xml,
          reset_graspable_objects_xml,
-         prep_sequence_xml,
-         move_gripper_open_xml});
+         prep_sequence_xml});
 
     // Repeat node must have only one children, so it also wrap a Sequence child that wraps the other children
     std::string repeat_forever_wrapper_xml = repeatSequenceWrapperXML(
         "RepeatForever",
-        {spawn_graspable_objects_xml, //< We add all the objects to the scene
+        {check_reset_robot_xml,       //< We check if the robot is active, if not we try to reset it
+         spawn_graspable_objects_xml, //< We add all the objects to the scene
          get_grasp_object_poses_xml,  //< We get the updated poses relative to the objects
          go_to_pick_pose_xml,         //< Prep sequence and pick sequence
          close_gripper_xml,           //< We attach the object
-         drop_sequence_xml,           //< Drop sequence
+         drop_object_xml,             //< Drop sequence
          open_gripper_xml,            //< We detach the object
          home_sequence_xml,           //< Homing sequence
          remove_obj_xml},             //< We delete the object for it to be added on the next cycle in the original position
@@ -335,7 +352,7 @@ int main(int argc, char **argv)
     // 10) ZMQ publisher (optional, to visualize in Groot)
     BT::PublisherZMQ publisher(tree);
 
-    // Create the HMI Service Node and pass the same blackboard
+    // Create the HMI Service Node and pass the same blackboard ***
     auto hmi_node = std::make_shared<manymove_cpp_trees::HMIServiceNode>("hmi_service_node", blackboard, keys);
     RCLCPP_INFO(node->get_logger(), "HMI Service Node instantiated.");
 
