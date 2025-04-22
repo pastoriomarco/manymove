@@ -1,9 +1,10 @@
 import os
 from launch.actions import OpaqueFunction, DeclareLaunchArgument, ExecuteProcess
 from launch import LaunchDescription
-from launch.substitutions import LaunchConfiguration
+from launch.substitutions import LaunchConfiguration, PathJoinSubstitution
 from launch_ros.actions import Node
 from moveit_configs_utils import MoveItConfigsBuilder
+from launch_ros.substitutions import FindPackageShare
 from ament_index_python.packages import get_package_share_directory
 
 def launch_setup(context, *args, **kwargs):
@@ -22,18 +23,22 @@ def launch_setup(context, *args, **kwargs):
         description="ROS2 control hardware interface type to use for the launch file -- possible values: [mock_components, isaac]",
     )
 
+    launch_arguments = {
+        "robot_ip": "xxx.yyy.zzz.www",
+        "use_fake_hardware": "true",
+        "gripper": "robotiq_2f_85",
+        "dof": "6",
+    }
+
     moveit_configs = (
-        MoveItConfigsBuilder("moveit_resources_panda")
-        .robot_description(
-            file_path="config/panda.urdf.xacro",
-            mappings={
-                "ros2_control_hardware_type": LaunchConfiguration(
-                    "ros2_control_hardware_type"
-                )
-            },
+        MoveItConfigsBuilder(
+            "gen3", package_name="kinova_gen3_6dof_robotiq_2f_85_moveit_config"
         )
-        .robot_description_semantic(file_path="config/panda.srdf")
-        .trajectory_execution(file_path="config/gripper_moveit_controllers.yaml")
+        .robot_description(mappings=launch_arguments)
+        .trajectory_execution(file_path="config/moveit_controllers.yaml")
+        .planning_scene_monitor(
+            publish_robot_description=True, publish_robot_description_semantic=True
+        )
         .planning_pipelines(
             pipelines=["ompl", "stomp", "pilz_industrial_motion_planner"]
         )
@@ -62,17 +67,25 @@ def launch_setup(context, *args, **kwargs):
     )
 
 
-    # RViz
-    rviz_config_file = (
-        get_package_share_directory("moveit2_tutorials") + "/launch/move_group.rviz"
+    # RViz for visualization
+    # Get the path to the RViz configuration file
+    rviz_config_arg = DeclareLaunchArgument(
+        "rviz_config",
+        default_value="kinova_moveit_config_demo.rviz",
+        description="RViz configuration file",
     )
+    rviz_base = LaunchConfiguration("rviz_config")
+    rviz_config = PathJoinSubstitution(
+        [FindPackageShare("moveit2_tutorials"), "launch", rviz_base]
+    )
+
     rviz_node = Node(
         package="rviz2",
         executable="rviz2",
         name="rviz2",
         output="log",
         arguments=[
-            "-d", rviz_config_file,
+            "-d", rviz_config,
             "--ros-args",
             "--log-level", "rviz2:=fatal"
         ],
@@ -105,7 +118,7 @@ def launch_setup(context, *args, **kwargs):
 
     # ros2_control using FakeSystem as hardware
     ros2_controllers_path = os.path.join(
-        get_package_share_directory("moveit_resources_panda_moveit_config"),
+        get_package_share_directory("kinova_gen3_6dof_robotiq_2f_85_moveit_config"),
         "config",
         "ros2_controllers.yaml",
     )
@@ -113,14 +126,17 @@ def launch_setup(context, *args, **kwargs):
         package="controller_manager",
         executable="ros2_control_node",
         parameters=[moveit_configs.robot_description, ros2_controllers_path],
+        remappings=[
+            ("/controller_manager/robot_description", "/robot_description"),
+        ],
         output="both",
     )
 
     # Load controllers
     load_controllers = []
     for controller in [
-        "panda_arm_controller",
-        "panda_hand_controller",
+        "joint_trajectory_controller",
+        "robotiq_gripper_controller",
         "joint_state_broadcaster",
     ]:
         load_controllers += [
@@ -157,7 +173,7 @@ def launch_setup(context, *args, **kwargs):
         output='screen',
         parameters=[{
             'robot_prefixes': [""],
-            'robot_names': ["Franka_Emika_Panda"],
+            'robot_names': ["Kinova_Gen3"],
         }]
     )
 
@@ -168,7 +184,7 @@ def launch_setup(context, *args, **kwargs):
     # behaviortree.cpp node
     manymove_cpp_trees_node = Node(
         package='manymove_cpp_trees',
-        executable='bt_client_panda',
+        executable='bt_client_kinova',
         # name='manymove_cpp_tree_node',
         output='screen',
         parameters=[{
@@ -182,6 +198,7 @@ def launch_setup(context, *args, **kwargs):
     )
 
     return [
+        rviz_config_arg,
         ros2_control_hardware_type,
         rviz_node,
         static_tf,
@@ -196,12 +213,12 @@ def launch_setup(context, *args, **kwargs):
 def generate_launch_description():
     return LaunchDescription([
         # DeclareLaunchArguments for planning_group, base_frame, tcp_frame
-        DeclareLaunchArgument('planning_group', default_value='panda_arm', description='MoveIt planning group'),
-        DeclareLaunchArgument('base_frame', default_value='panda_link0', description='Base frame of the robot'),
-        DeclareLaunchArgument('tcp_frame', default_value='panda_link8', description='TCP (end effector) frame of the robot' ),
-        DeclareLaunchArgument('traj_controller', default_value='panda_arm_controller', description='traj_controller action server name of the robot' ),
-        DeclareLaunchArgument('gripper_action_server', default_value='/panda_hand_controller/gripper_cmd', description='Name of the action server to control the gripper'),
-        DeclareLaunchArgument('contact_links', default_value='["panda_leftfinger", "panda_rightfinger", "panda_hand"]', description='List of links to exclude from collision checking'),
+        DeclareLaunchArgument('planning_group', default_value='manipulator', description='MoveIt planning group'),
+        DeclareLaunchArgument('base_frame', default_value='base_link', description='Base frame of the robot'),
+        DeclareLaunchArgument('tcp_frame', default_value='end_effector_link', description='TCP (end effector) frame of the robot' ),
+        DeclareLaunchArgument('traj_controller', default_value='joint_trajectory_controller', description='traj_controller action server name of the robot' ),
+        DeclareLaunchArgument('gripper_action_server', default_value='/robotiq_gripper_controller/gripper_cmd', description='Name of the action server to control the gripper'),
+        DeclareLaunchArgument('contact_links', default_value='["robotiq_85_left_finger_tip_link", "robotiq_85_right_finger_tip_link"]', description='List of links to exclude from collision checking'),
 
         # OpaqueFunction to set up the node
         OpaqueFunction(function=launch_setup)

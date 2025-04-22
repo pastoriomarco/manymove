@@ -83,7 +83,7 @@ These values will be used to start up the following nodes:
 - manymove_hmi_node: the HMI interface
 - manymove_signals: on a real robot, handles the service calls to get/set signals (currently taylored for Ufactory robots)
 
-A little side note: the reference TCP frame here is not actually centered between gripper's fingers, as 'panda_link8' represents the center of the flange. But since it's aligned to the ideal TCP, you can just offset the poses when you need to refer to the TCP, without having to create a new link. For example, the **-0.102** in the following line represents this offset:
+A little side note on Panda and Kinova examples: the reference TCP frame there is not actually centered between gripper's fingers, as 'panda_link8' and 'end_effector_link' represent the center of the respective flange. But since it's aligned to the ideal TCP, you can just offset the poses when you need to refer to the TCP, without having to create a new link. In the Panda example, the **-0.102** in the following line represents this offset:
 
 ```
 blackboard->set("pick_pre_transform_xyz_rpy_1_key", std::vector<double>{-0.102, 0.0, 0.0, 0.0, 1.57, 0.0});
@@ -174,7 +174,7 @@ This repository is composed of several sub-packages, each handling different res
   *After compiling moveit2, remove any previous build of ManyMove and source moveit2 installation before running rosdep or building!*
   *Then you will need to source moveit2 installation to run any of the ManyMove examples.*
 
-  Standalone launchers for MoveItCPP or MoveGroup with Panda robot (you need the moveit2_tutorials package sourced):
+  Standalone launchers for MoveItCPP or MoveGroup with Panda robot:
 
     with BehaviorTree.CPP:
      ```bash
