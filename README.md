@@ -142,15 +142,29 @@ This repository is composed of several sub-packages, each handling different res
 
 ### Launching the Examples
 
-- **Lite 6 manipulator** 
+- **Lite6, uf850 and xarm7 manipulators** 
   with MoveItCPP and BehaviorTree.CPP:
   ```bash
   ros2 launch manymove_bringup lite_moveitcpp_fake_cpp_trees.launch.py
+  ```
+  with MoveItCPP and BehaviorTree.CPP:
+  ```bash
+  ros2 launch manymove_bringup uf850_moveitcpp_fake_cpp_trees.launch.py
+  ```
+  with MoveItCPP and BehaviorTree.CPP:
+  ```bash
+  ros2 launch manymove_bringup xarm7_moveitcpp_fake_cpp_trees.launch.py
   ```
   
   with MoveGroupInterface and BehaviorTree.CPP:
   ```bash
   ros2 launch manymove_bringup lite_movegroup_fake_cpp_trees.launch.py
+  ```
+  ```bash
+  ros2 launch manymove_bringup uf850_movegroup_fake_cpp_trees.launch.py
+  ```
+  ```bash
+  ros2 launch manymove_bringup xarm7_movegroup_fake_cpp_trees.launch.py
   ```
   
   with MoveGroupInterface and py_trees (minimal):
@@ -167,14 +181,14 @@ This repository is composed of several sub-packages, each handling different res
     git clone https://github.com/pastoriomarco/xarm_ros2.git --recursive -b $ROS_DISTRO
     ```
 
-- **Panda Manipulator** 
+- **Panda and Kinova Manipulators** 
 
-  **WARNING:** *currently moveit2_tutorials repo doesn't have a jazzy branch, and there's a mismatch between ros-jazzy-moveit version (2.12.2) and the tutorial's moveit2 version (2.13.2): running the examples with Panda robot requires the installation of [moveit2_tutorials main branch](https://moveit.picknik.ai/main/doc/tutorials/getting_started/getting_started.html#download-source-code-of-moveit-and-the-tutorials), including the removal of the ros-jazzy-moveit* packages from the system.
+  **WARNING:** *currently moveit2_tutorials repo doesn't have a jazzy branch, and there's a mismatch between ros-jazzy-moveit version (2.12.2) and the tutorial's moveit2 version (2.13.2): running the examples with Panda and Kinova robots requires the installation of [moveit2_tutorials main branch](https://moveit.picknik.ai/main/doc/tutorials/getting_started/getting_started.html#download-source-code-of-moveit-and-the-tutorials), including the removal of the ros-jazzy-moveit* packages from the system.
 
   *After compiling moveit2, remove any previous build of ManyMove and source moveit2 installation before running rosdep or building!*
   *Then you will need to source moveit2 installation to run any of the ManyMove examples.*
 
-  Standalone launchers for MoveItCPP or MoveGroup with Panda robot:
+  Standalone launchers for MoveItCPP or MoveGroup with Panda and Kinova robots:
 
     with BehaviorTree.CPP:
      ```bash
@@ -182,6 +196,12 @@ This repository is composed of several sub-packages, each handling different res
      ```
      ```bash
      ros2 launch manymove_bringup panda_movegroup_fake_cpp_trees.launch.py
+     ```
+     ```bash
+     ros2 launch manymove_bringup kinova_robotiq_moveitcpp_fake_cpp_trees.launch.py
+     ```
+     ```bash
+     ros2 launch manymove_bringup kinova_robotiq_movegroup_fake_cpp_trees.launch.py
      ```
     with py_trees:
      ```bash
