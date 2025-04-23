@@ -117,9 +117,25 @@ def launch_setup(context, *args, **kwargs):
             geometry_mesh_tcp_rpy=geometry_mesh_tcp_rpy,
         ).robot_description()
         .planning_scene_monitor(publish_robot_description=True, publish_robot_description_semantic=True)
-        .planning_pipelines(pipelines=["ompl", "isaac_ros_cumotion"])
+        .planning_pipelines(pipelines=["ompl", "chomp", "pilz_industrial_motion_planner"])
         # .moveit_cpp(file_path=get_package_share_directory("manymove_planner") + "/config/moveit_cpp_cumotion.yaml")
     ).to_moveit_configs()
+
+    # Load isaac_ros_cumotion_planning.yaml
+    isaac_config_file_path = os.path.join(
+        get_package_share_directory('isaac_ros_cumotion_moveit'),
+        'config',
+        'isaac_ros_cumotion_planning.yaml'
+    )
+
+    with open(isaac_config_file_path, 'r') as f:
+        isaac_pipeline_config = yaml.safe_load(f)
+
+    # Add isaac pipeline and set as default
+    moveit_configs.planning_pipelines['planning_pipelines'].append('isaac_ros_cumotion')
+    moveit_configs.planning_pipelines['isaac_ros_cumotion'] = isaac_pipeline_config
+    moveit_configs.planning_pipelines['default_planning_pipeline'] = 'isaac_ros_cumotion'
+
     
     #print(moveit_configs)
 
