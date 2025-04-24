@@ -210,7 +210,7 @@ This repository is composed of several sub-packages, each handling different res
 
 These launch files spin up the appropriate environment (fake or real) plus the nodes that handle planning, object management, signals, and optional HMI components. You can then interact with these action servers and send them requests using the provided C++ or Python-based behavior tree clients.
 
-For launchers that use NVIDIA cuMotion planning library, refer to [THIS POST on NVIDIA Developers Forums](https://forums.developer.nvidia.com/t/manymove-repo-on-nvidia-isaac-ros/328650/4).
+For launchers that use **NVIDIA cuMotion** planning library, refer to [THIS POST on NVIDIA Developers Forums](https://forums.developer.nvidia.com/t/manymove-repo-on-nvidia-isaac-ros/328650/4).
 
 ---
 
