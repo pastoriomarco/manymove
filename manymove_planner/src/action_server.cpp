@@ -122,11 +122,16 @@ rclcpp_action::CancelResponse ManipulatorActionServer::handle_move_cancel(
         std::lock_guard<std::mutex> lock(move_state_mutex_);
         if (move_state_ == MoveExecutionState::EXECUTING)
         {
-            // Robot is in motion – so we need to send a soft stop command
-            RCLCPP_INFO(node_->get_logger(), "[MoveManipulator] Cancel while EXECUTING => stopping robot");
+            const double elapsed =
+                (node_->now() - executing_start_time_).seconds();
+
+            RCLCPP_INFO(node_->get_logger(),
+                        "[MoveManipulator] Cancel while EXECUTING → "
+                        "controlled stop (elapsed %.3f s).",
+                        elapsed);
 
             // direct call to your planner's "sendControlledStop"
-            planner_->sendControlledStop(1.0);
+            planner_->sendControlledStop(0.5, executing_traj_, elapsed);
         }
         else
         {
@@ -246,10 +251,14 @@ void ManipulatorActionServer::execute_move(
         return;
     }
 
+    /* Not this is inside executeTrajectoryWithCollisionChecks
     {
         std::lock_guard<std::mutex> lock(move_state_mutex_);
         move_state_ = MoveExecutionState::EXECUTING;
+        executing_start_time_ = node_->now();
+        executing_traj_ = final_traj;
     }
+    */
 
     // 3) Execute the trajectory with real-time collision checking and partial feedback.
     std::string abort_reason;
@@ -770,6 +779,14 @@ bool ManipulatorActionServer::executeTrajectoryWithCollisionChecks(
     }
 
     const rclcpp::Time start_time = node_->now();
+
+    {
+        std::lock_guard<std::mutex> lock(move_state_mutex_);
+        move_state_ = MoveExecutionState::EXECUTING;
+        executing_start_time_ = start_time;
+        executing_traj_ = traj;
+    }
+
     double total_time_s = rclcpp::Duration(traj.joint_trajectory.points.back().time_from_start).seconds();
 
     rclcpp_action::Client<control_msgs::action::FollowJointTrajectory>::SendGoalOptions opts;
@@ -835,7 +852,7 @@ bool ManipulatorActionServer::executeTrajectoryWithCollisionChecks(
 
     // choose a dynamic timeout: 2× trajectory duration, but ≥ 5 s in case of very short motions
     const double safety_factor = 2.0;
-    const double min_timeout_s = 5.0; 
+    const double min_timeout_s = 5.0;
 
     double timeout_s = std::max(total_time_s * safety_factor, min_timeout_s);
 

@@ -80,7 +80,9 @@ public:
      * stop where the robot decelerates smoothly. Increasing the deceleration_time leads to a smoother stop, but also increases
      * the movement required to decelerate.
      */
-    virtual bool sendControlledStop(double deceleration_time = 0.25) = 0;
+    virtual bool sendControlledStop(double decel_time_s,
+                                    const moveit_msgs::msg::RobotTrajectory &running_traj = moveit_msgs::msg::RobotTrajectory(),
+                                    double elapsed_s = 0.0) = 0;
 
     /**
      * @brief Retrieve the action client for FollowJointTrajectory.
