@@ -33,6 +33,8 @@ namespace manymove_cpp_trees
          * string tcp_frame                        # End-effector (TCP) frame for this request
          * float64 linear_precision                # Linear precision for end-point trajectory position check
          * float64 rotational_precision            # Rotational precision for end-point trajectory position check
+         * float64 deceleration_time               # Time to decelerate the robot to arrive at a full stop
+         * bool stop_on_path                       # Set true for stop path, false for spring-back behavior
          *
          * # moveit planner parameters
          * float64 velocity_scaling_factor         # 0.0 to 1.0
