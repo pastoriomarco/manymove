@@ -251,7 +251,7 @@ void ManipulatorActionServer::execute_move(
         return;
     }
 
-    /* Not this is inside executeTrajectoryWithCollisionChecks
+    /* Now this is inside executeTrajectoryWithCollisionChecks
     {
         std::lock_guard<std::mutex> lock(move_state_mutex_);
         move_state_ = MoveExecutionState::EXECUTING;
