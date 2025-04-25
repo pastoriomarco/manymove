@@ -130,7 +130,6 @@ rclcpp_action::CancelResponse ManipulatorActionServer::handle_move_cancel(
                         "controlled stop (elapsed %.3f s).",
                         elapsed);
 
-            // direct call to your planner's "sendControlledStop"
             planner_->sendControlledStop(0.5, executing_traj_, elapsed);
         }
         else
@@ -250,15 +249,6 @@ void ManipulatorActionServer::execute_move(
         }
         return;
     }
-
-    /* Now this is inside executeTrajectoryWithCollisionChecks
-    {
-        std::lock_guard<std::mutex> lock(move_state_mutex_);
-        move_state_ = MoveExecutionState::EXECUTING;
-        executing_start_time_ = node_->now();
-        executing_traj_ = final_traj;
-    }
-    */
 
     // 3) Execute the trajectory with real-time collision checking and partial feedback.
     std::string abort_reason;
@@ -850,11 +840,7 @@ bool ManipulatorActionServer::executeTrajectoryWithCollisionChecks(
     // 8) Wait for and process the result
     auto res_future = follow_joint_traj_client->async_get_result(fjt_goal_handle);
 
-    // choose a dynamic timeout: 2× trajectory duration, but ≥ 5 s in case of very short motions
-    const double safety_factor = 2.0;
-    const double min_timeout_s = 5.0;
-
-    double timeout_s = std::max(total_time_s * safety_factor, min_timeout_s);
+    double timeout_s = std::max(2.0 * total_time_s, 5.0);
 
     if (res_future.wait_for(
             std::chrono::duration<double>(timeout_s)) != std::future_status::ready)
