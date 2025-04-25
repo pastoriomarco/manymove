@@ -776,7 +776,7 @@ bool ManipulatorActionServer::executeTrajectoryWithCollisionChecks(
 
     // Feedback callback: perform collision check on the *future* part of the path
     opts.feedback_callback = [this, &collision_detected, goal_handle, traj = traj.joint_trajectory, start_time, total_time_s](auto /*unused_handle*/,
-                                                                                                                  const std::shared_ptr<const control_msgs::action::FollowJointTrajectory::Feedback> &feedback) mutable
+                                                                                                                              const std::shared_ptr<const control_msgs::action::FollowJointTrajectory::Feedback> &feedback) mutable
     {
         if (!feedback || feedback->actual.positions.empty())
         {
@@ -789,7 +789,7 @@ bool ManipulatorActionServer::executeTrajectoryWithCollisionChecks(
         double elapsed_s = (node_->now() - start_time).seconds();
 
         RCLCPP_DEBUG(node_->get_logger(),
-                    "[executeTrajectoryWithCollisionChecks] Collision check at t=%.3f of %.3f", elapsed_s, total_time_s);
+                     "[executeTrajectoryWithCollisionChecks] Collision check at t=%.3f of %.3f", elapsed_s, total_time_s);
 
         // collision-check the *remaining* trajectory automatically by time
         if (!planner_->isTrajectoryValid(traj,
@@ -832,9 +832,17 @@ bool ManipulatorActionServer::executeTrajectoryWithCollisionChecks(
 
     // 8) Wait for and process the result
     auto res_future = follow_joint_traj_client->async_get_result(fjt_goal_handle);
-    if (res_future.wait_for(std::chrono::seconds(300)) != std::future_status::ready)
+
+    // choose a dynamic timeout: 2× trajectory duration, but ≥ 5 s in case of very short motions
+    const double safety_factor = 2.0;
+    const double min_timeout_s = 5.0; 
+
+    double timeout_s = std::max(total_time_s * safety_factor, min_timeout_s);
+
+    if (res_future.wait_for(
+            std::chrono::duration<double>(timeout_s)) != std::future_status::ready)
     {
-        abort_reason = "Timeout waiting for FollowJointTrajectory result";
+        abort_reason = "Timeout (" + std::to_string(timeout_s) + " s) waiting for FollowJointTrajectory result";
         return false;
     }
 
