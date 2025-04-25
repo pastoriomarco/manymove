@@ -108,15 +108,21 @@ public:
 
     /**
      * @brief Send a controlled stop command to the robot.
-     * @param deceleration_time The duration (in seconds) over which the robot’s velocities should be ramped down to zero.
+     * @param decel_time_s The duration (in seconds) over which the robot’s velocities should be ramped down to zero.
+     * @param running_traj Current traj to stop
+     * @param elapsed_s Elapsed time from the start of the current traj
      * @return True if the stop command was sent and executed successfully, false otherwise.
      *
-     * @details This function sends a single-point trajectory to the robot’s trajectory controller that holds the current
+     * @details If the running_traj is not set, this function sends a single-point trajectory to the robot’s trajectory controller that holds the current
      * joint positions (with zero velocities) and gives the controller a deceleration window. The effect is a “spring-back”
-     * stop where the robot decelerates smoothly. Increasing the deceleration_time leads to a smoother stop, but also increases
+     * stop where the robot decelerates smoothly. 
+     * If running_traj is valid the end point will be the point of the traj where the robot will be at decel_time_s from now.
+     * Increasing the deceleration_time leads to a smoother stop, but also increases
      * the movement required to decelerate.
      */
-    bool sendControlledStop(double deceleration_time = 0.25);
+    bool sendControlledStop(double decel_time_s,
+                            const moveit_msgs::msg::RobotTrajectory &running_traj = moveit_msgs::msg::RobotTrajectory(),
+                            double elapsed_s = 0.0);
 
     /**
      * @brief Retrieve the action client for FollowJointTrajectory.
@@ -150,14 +156,12 @@ public:
     bool isTrajectoryValid(
         const trajectory_msgs::msg::JointTrajectory &joint_traj_msg,
         const moveit_msgs::msg::Constraints &path_constraints,
-        bool verbose,
-        std::vector<std::size_t> *invalid_index) const;
+        const double time_from_start) const;
 
     bool isTrajectoryValid(
         const robot_trajectory::RobotTrajectory &trajectory,
         const moveit_msgs::msg::Constraints &path_constraints,
-        bool verbose,
-        std::vector<std::size_t> *invalid_index) const;
+        const double time_from_start) const;
 
 private:
     /**

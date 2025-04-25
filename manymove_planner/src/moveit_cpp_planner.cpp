@@ -475,7 +475,7 @@ std::pair<bool, moveit_msgs::msg::RobotTrajectory> MoveItCppPlanner::plan(const 
                 // RCLCPP_INFO_STREAM(logger_, "Euclidean distance between trajectory first point and trajectory last point: " << traj_euclidean_distance);
                 // RCLCPP_INFO_STREAM(logger_, "Euclidean distance between theoretical start and calculated trajectory first point: " << starts_euclidean_distance);
 
-                double traj_tolerance = goal_msg.goal.config.linear_precision; 
+                double traj_tolerance = goal_msg.goal.config.linear_precision;
 
                 if (targets_euclidean_distance < traj_tolerance)
                 {
@@ -891,97 +891,105 @@ bool MoveItCppPlanner::executeTrajectory(const moveit_msgs::msg::RobotTrajectory
     return true;
 }
 
-bool MoveItCppPlanner::sendControlledStop(double deceleration_time)
+bool MoveItCppPlanner::sendControlledStop(double decel_time_s,
+                                          const moveit_msgs::msg::RobotTrajectory &running_traj_msg,
+                                          double elapsed_s)
 {
-    RCLCPP_INFO(logger_, "Constructing a short 'controlled stop' trajectory (%.2fs) [SINGLE-POINT].",
-                deceleration_time);
-
-    // 1) Make sure the FollowJointTrajectory action server is up
+    /* -------------------------------------------------------------
+     * 0)  Make sure the server is alive
+     * ------------------------------------------------------------*/
     if (!follow_joint_traj_client_->wait_for_action_server(std::chrono::seconds(2)))
     {
-        RCLCPP_ERROR(logger_, "Cannot send stop trajectory, FollowJointTrajectory server is not available.");
+        RCLCPP_ERROR(logger_, "FollowJointTrajectory server not available – cannot send stop.");
         return false;
     }
 
-    // 2) Get current robot state
-    auto current_state = moveit_cpp_ptr_->getCurrentState();
-    if (!current_state)
+    /* -------------------------------------------------------------
+     * 1)  Decide target joint positions
+     * ------------------------------------------------------------*/
+    std::vector<double> stop_positions;
+    const bool have_traj = !running_traj_msg.joint_trajectory.points.empty();
+
+    if (!have_traj) // ---------- old “in-place” behaviour
     {
-        RCLCPP_ERROR(logger_, "Failed to get current robot state for stop trajectory.");
-        return false;
+        auto current_state = moveit_cpp_ptr_->getCurrentState();
+        const auto *jmg = current_state->getJointModelGroup(planning_group_);
+        current_state->copyJointGroupPositions(jmg, stop_positions);
     }
-    const auto &joint_model_group = current_state->getJointModelGroup(planning_group_);
-    if (!joint_model_group)
+    else // ---------- sample the *running* trajectory
     {
-        RCLCPP_ERROR(logger_, "JointModelGroup '%s' not found.", planning_group_.c_str());
-        return false;
+        /* Convert once – cheap: it re-uses the msg memory internally */
+        auto robot_traj = std::make_shared<robot_trajectory::RobotTrajectory>(
+            moveit_cpp_ptr_->getRobotModel(), planning_group_);
+
+        moveit::core::RobotState dummy(moveit_cpp_ptr_->getRobotModel());
+        robot_traj->setRobotTrajectoryMsg(dummy, running_traj_msg); // O(#points)
+
+        const double total = robot_traj->getDuration();
+        const double stop_at = elapsed_s + decel_time_s;
+
+        // Finish naturally if we’re basically done
+        if (stop_at >= total)
+        {
+            RCLCPP_INFO(logger_,
+                        "Remaining trajectory time (%.3f s) < decel_time (%.3f s) – "
+                        "letting the motion finish.",
+                        total - elapsed_s, decel_time_s);
+            return true;
+        }
+
+        moveit::core::RobotStatePtr future_state(
+            new moveit::core::RobotState(robot_traj->getRobotModel()));
+
+        if (!robot_traj->getStateAtDurationFromStart(stop_at, future_state))
+        {
+            RCLCPP_ERROR(logger_, "Failed to sample running trajectory at %.3f s.", stop_at);
+            return false;
+        }
+        future_state->copyJointGroupPositions(planning_group_, stop_positions);
     }
 
-    // Grab joint names and positions
-    const std::vector<std::string> &joint_names = joint_model_group->getVariableNames();
-    std::vector<double> positions;
-    current_state->copyJointGroupPositions(joint_model_group, positions);
+    /* -------------------------------------------------------------
+     * 2)  Build 1-point stop trajectory
+     * ------------------------------------------------------------*/
+    trajectory_msgs::msg::JointTrajectoryPoint p;
+    p.positions = stop_positions;
+    p.velocities.assign(stop_positions.size(), 0.0);
+    p.accelerations.assign(stop_positions.size(), 0.0);
+    p.time_from_start = rclcpp::Duration::from_seconds(decel_time_s);
 
-    // 3) Build a SINGLE-point trajectory
-    control_msgs::action::FollowJointTrajectory::Goal stop_goal;
-    stop_goal.trajectory.joint_names = joint_names;
+    control_msgs::action::FollowJointTrajectory::Goal goal;
+    goal.trajectory.joint_names =
+        moveit_cpp_ptr_->getRobotModel()
+            ->getJointModelGroup(planning_group_)
+            ->getVariableNames();
+    goal.trajectory.points.push_back(p);
 
-    // We set velocities to zero
-    std::vector<double> velocities(positions.size(), 0.0);
-
-    // Only Point: current position, zero velocity: it will "spring-back" to the position it was when the command is issued.
-    trajectory_msgs::msg::JointTrajectoryPoint p0;
-    p0.positions = positions;
-    p0.velocities = velocities;
-    p0.accelerations.resize(positions.size(), 0.0);
-
-    // Use deceleration_time to define how long we give the controller to ramp to zero velocity.
-    // A larger deceleration_time will produce a smoother (but slower) stop.
-    p0.time_from_start = rclcpp::Duration::from_seconds(deceleration_time);
-
-    stop_goal.trajectory.points.push_back(p0);
-
-    // 4) Send the new "stop" goal
-    RCLCPP_INFO(logger_, "Sending single-point 'stop' trajectory.");
-
-    auto send_goal_future = follow_joint_traj_client_->async_send_goal(stop_goal);
-    if (send_goal_future.wait_for(std::chrono::seconds(5)) != std::future_status::ready)
+    /* -------------------------------------------------------------
+     * 3)  Dispatch + wait
+     * ------------------------------------------------------------*/
+    auto gh_fut = follow_joint_traj_client_->async_send_goal(goal);
+    if (gh_fut.wait_for(std::chrono::seconds(5)) != std::future_status::ready)
     {
-        RCLCPP_ERROR(logger_, "Timeout while sending stop trajectory goal.");
+        RCLCPP_ERROR(logger_, "Timeout while sending stop goal.");
+        return false;
+    }
+    auto gh = gh_fut.get();
+    if (!gh)
+    {
+        RCLCPP_ERROR(logger_, "Stop goal rejected by controller.");
         return false;
     }
 
-    auto goal_handle = send_goal_future.get();
-    if (!goal_handle)
-    {
-        RCLCPP_ERROR(logger_, "Stop trajectory goal was rejected by the joint trajectory server.");
-        return false;
-    }
+    const double timeout_s = std::max(2.0 * decel_time_s, 5.0);
+    auto res_fut = follow_joint_traj_client_->async_get_result(gh);
 
-    // Wait for the result
-    auto result_future = follow_joint_traj_client_->async_get_result(goal_handle);
-    if (result_future.wait_for(std::chrono::seconds(10)) != std::future_status::ready)
+    if (res_fut.wait_for(std::chrono::duration<double>(timeout_s)) != std::future_status::ready)
     {
-        RCLCPP_ERROR(logger_, "Controlled stop goal did not finish before timeout.");
+        RCLCPP_ERROR(logger_, "Stop goal timed-out (%.2f s).", timeout_s);
         return false;
     }
-
-    auto wrapped_result = result_future.get();
-    switch (wrapped_result.code)
-    {
-    case rclcpp_action::ResultCode::SUCCEEDED:
-        RCLCPP_INFO(logger_, "Single-point stop completed successfully.");
-        return true;
-    case rclcpp_action::ResultCode::ABORTED:
-        RCLCPP_ERROR(logger_, "Stop goal was aborted by the controller.");
-        return false;
-    case rclcpp_action::ResultCode::CANCELED:
-        RCLCPP_WARN(logger_, "Stop goal was canceled by the controller.");
-        return false;
-    default:
-        RCLCPP_ERROR(logger_, "Stop goal ended with unknown result code %d.", (int)wrapped_result.code);
-        return false;
-    }
+    return res_fut.get().code == rclcpp_action::ResultCode::SUCCEEDED;
 }
 
 bool MoveItCppPlanner::isStateValid(const moveit::core::RobotState *state,
@@ -1224,9 +1232,37 @@ void MoveItCppPlanner::jointStateCallback(const sensor_msgs::msg::JointState::Sh
 bool MoveItCppPlanner::isTrajectoryValid(
     const robot_trajectory::RobotTrajectory &trajectory,
     const moveit_msgs::msg::Constraints &path_constraints,
-    bool verbose,
-    std::vector<std::size_t> *invalid_index) const
+    const double time_from_start) const
 {
+    robot_trajectory::RobotTrajectory sub_traj(trajectory.getRobotModel(),
+                                               trajectory.getGroupName());
+
+    // If (time_from_start > 0) only check the trajectory after that time from start
+    if (time_from_start > 0.0)
+    {
+        // indices bracketing   time_from_start   in the original trajectory
+        int before = -1, after = -1;
+        double blend = 0.0;
+        trajectory.findWayPointIndicesForDurationAfterStart(
+            time_from_start, before, after, blend);
+
+        if (after < static_cast<int>(trajectory.getWayPointCount()))
+        {
+            // copy way-points [after … end) into  sub_traj
+            for (std::size_t i = static_cast<std::size_t>(after);
+                 i < trajectory.getWayPointCount(); ++i)
+            {
+                sub_traj.addSuffixWayPoint(trajectory.getWayPoint(i),
+                                           trajectory.getWayPointDurationFromPrevious(i));
+            }
+        }
+    }
+    else
+    {
+        // we can use a cheap deep-copy constructor here
+        sub_traj = trajectory;
+    }
+
     // Get a lock on the planning scene through the planning scene monitor.
     planning_scene_monitor::LockedPlanningSceneRO lscene(moveit_cpp_ptr_->getPlanningSceneMonitorNonConst());
     if (!lscene)
@@ -1239,15 +1275,33 @@ bool MoveItCppPlanner::isTrajectoryValid(
     // Note that the isPathValid overload taking a robot_trajectory::RobotTrajectory,
     // constraints, group name, verbosity flag, and an optional invalid index vector
     // iterates over each waypoint and performs collision/constraint checking.
-    return lscene->isPathValid(trajectory, path_constraints, planning_group_, verbose, invalid_index);
+    return lscene->isPathValid(sub_traj, path_constraints, planning_group_, /*verbose*/ false, /*invalid_index*/ nullptr);
 }
 
 bool MoveItCppPlanner::isTrajectoryValid(
     const trajectory_msgs::msg::JointTrajectory &joint_traj_msg,
     const moveit_msgs::msg::Constraints &path_constraints,
-    bool verbose,
-    std::vector<std::size_t> *invalid_index) const
+    const double time_from_start) const
 {
+    trajectory_msgs::msg::JointTrajectory jt = joint_traj_msg;
+
+    // If (time_from_start > 0) only check the trajectory after that time from start
+    if (time_from_start > 0.0)
+    {
+        auto first_after = std::find_if(
+            jt.points.begin(), jt.points.end(),
+            [time_from_start](const auto &pt)
+            {
+                return rclcpp::Duration(pt.time_from_start).seconds() > time_from_start;
+            });
+
+        jt.points.erase(jt.points.begin(), first_after);
+
+        // if nothing is left, there is nothing to validate
+        if (jt.points.empty())
+            return true;
+    }
+
     // Lock the current planning scene via the planning scene monitor.
     planning_scene_monitor::LockedPlanningSceneRO lscene(moveit_cpp_ptr_->getPlanningSceneMonitorNonConst());
     if (!lscene)
@@ -1267,7 +1321,7 @@ bool MoveItCppPlanner::isTrajectoryValid(
 
     // Convert the input JointTrajectory message to a moveit_msgs::msg::RobotTrajectory.
     moveit_msgs::msg::RobotTrajectory rt_msg;
-    rt_msg.joint_trajectory = joint_traj_msg;
+    rt_msg.joint_trajectory = jt;
 
     // Create a RobotTrajectory object from the robot model and planning group.
     robot_trajectory::RobotTrajectoryPtr robot_traj_ptr =
@@ -1277,7 +1331,7 @@ bool MoveItCppPlanner::isTrajectoryValid(
     robot_traj_ptr->setRobotTrajectoryMsg(current_state, rt_msg);
 
     // Delegate the validity check to the PlanningScene's isPathValid overload.
-    bool valid = lscene->isPathValid(*robot_traj_ptr, path_constraints, planning_group_, verbose, invalid_index);
+    bool valid = lscene->isPathValid(*robot_traj_ptr, path_constraints, planning_group_, /*verbose*/ false, /*invalid_index*/ nullptr);
 
     return valid;
 }

@@ -15,6 +15,7 @@
 #include "manymove_msgs/action/load_traj_controller.hpp"
 #include "planner_interface.hpp"
 #include <moveit_msgs/msg/constraints.hpp>
+#include <moveit/robot_trajectory/robot_trajectory.hpp>
 
 enum class MoveExecutionState
 {
@@ -71,6 +72,9 @@ private:
 
     std::mutex move_state_mutex_;
     MoveExecutionState move_state_{MoveExecutionState::IDLE};
+
+    moveit_msgs::msg::RobotTrajectory executing_traj_;
+    rclcpp::Time executing_start_time_;
 
     // MoveManipulator Callbacks
     rclcpp_action::GoalResponse handle_move_goal(const rclcpp_action::GoalUUID &, std::shared_ptr<const MoveManipulator::Goal>);

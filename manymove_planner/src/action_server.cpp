@@ -122,11 +122,16 @@ rclcpp_action::CancelResponse ManipulatorActionServer::handle_move_cancel(
         std::lock_guard<std::mutex> lock(move_state_mutex_);
         if (move_state_ == MoveExecutionState::EXECUTING)
         {
-            // Robot is in motion – so we need to send a soft stop command
-            RCLCPP_INFO(node_->get_logger(), "[MoveManipulator] Cancel while EXECUTING => stopping robot");
+            const double elapsed =
+                (node_->now() - executing_start_time_).seconds();
+
+            RCLCPP_INFO(node_->get_logger(),
+                        "[MoveManipulator] Cancel while EXECUTING → "
+                        "controlled stop (elapsed %.3f s).",
+                        elapsed);
 
             // direct call to your planner's "sendControlledStop"
-            planner_->sendControlledStop(1.0);
+            planner_->sendControlledStop(0.5, executing_traj_, elapsed);
         }
         else
         {
@@ -176,7 +181,7 @@ void ManipulatorActionServer::execute_move(
 
         bool all_ok = true;
         // const auto &pts = goal->existing_trajectory.joint_trajectory.points;
-        if (!planner_->isTrajectoryValid(goal->existing_trajectory.joint_trajectory, moveit_msgs::msg::Constraints(), /*verbose*/ false, nullptr))
+        if (!planner_->isTrajectoryValid(goal->existing_trajectory.joint_trajectory, moveit_msgs::msg::Constraints()))
         {
             RCLCPP_WARN(node_->get_logger(), "[MoveManipulator] existing_trajectory fails.");
             all_ok = false;
@@ -246,10 +251,15 @@ void ManipulatorActionServer::execute_move(
         return;
     }
 
+    /* Now this is inside executeTrajectoryWithCollisionChecks
     {
         std::lock_guard<std::mutex> lock(move_state_mutex_);
         move_state_ = MoveExecutionState::EXECUTING;
+        executing_start_time_ = node_->now();
+        executing_traj_ = final_traj;
     }
+    */
+
 
     // 3) Execute the trajectory with real-time collision checking and partial feedback.
     std::string abort_reason;
@@ -744,9 +754,7 @@ bool ManipulatorActionServer::executeTrajectoryWithCollisionChecks(
 
     // 3) Check the full trajectory validity (collision checking)
     if (!planner_->isTrajectoryValid(traj.joint_trajectory,
-                                     moveit_msgs::msg::Constraints(),
-                                     false, // verbose = false
-                                     nullptr))
+                                     moveit_msgs::msg::Constraints()))
     {
         abort_reason = "Invalid state or collision detected.";
         return false;
@@ -769,70 +777,49 @@ bool ManipulatorActionServer::executeTrajectoryWithCollisionChecks(
         return false;
     }
 
+    const rclcpp::Time start_time = node_->now();
+
+    {
+        std::lock_guard<std::mutex> lock(move_state_mutex_);
+        move_state_ = MoveExecutionState::EXECUTING;
+        executing_start_time_ = start_time;
+        executing_traj_ = traj;
+    }
+
+    double total_time_s = rclcpp::Duration(traj.joint_trajectory.points.back().time_from_start).seconds();
+
     rclcpp_action::Client<control_msgs::action::FollowJointTrajectory>::SendGoalOptions opts;
 
-    // Feedback callback: perform partial collision checks
-    opts.feedback_callback = [this, &collision_detected, goal_handle, points, joint_names = traj.joint_trajectory.joint_names, last_idx = size_t(0)](auto /*unused_handle*/,
-                                                                                                                                                     const std::shared_ptr<const control_msgs::action::FollowJointTrajectory::Feedback> &feedback) mutable
+    // Feedback callback: perform collision check on the *future* part of the path
+    opts.feedback_callback = [this, &collision_detected, goal_handle, traj = traj.joint_trajectory, start_time, total_time_s](auto /*unused_handle*/,
+                                                                                                                              const std::shared_ptr<const control_msgs::action::FollowJointTrajectory::Feedback> &feedback) mutable
     {
         if (!feedback || feedback->actual.positions.empty())
         {
             RCLCPP_ERROR(node_->get_logger(),
-                         "[executeTrajectoryWithCollisionChecks] Feedback is empty => abort");
+                         "[executeTrajectoryWithCollisionChecks] Empty feedback => abort");
             collision_detected.store(true);
-
-            auto fb = std::make_shared<manymove_msgs::action::MoveManipulator::Feedback>();
-            fb->progress = -1.0f;
-            fb->in_collision = true;
-            goal_handle->publish_feedback(fb);
-            return;
         }
 
-        // Determine the best matching waypoint index
-        size_t best_idx = last_idx;
-        double best_dist = std::numeric_limits<double>::infinity();
-        for (size_t i = last_idx; i < points.size(); i++)
+        // elapsed time since start
+        double elapsed_s = (node_->now() - start_time).seconds();
+
+        RCLCPP_DEBUG(node_->get_logger(),
+                     "[executeTrajectoryWithCollisionChecks] Collision check at t=%.3f of %.3f", elapsed_s, total_time_s);
+
+        // collision-check the *remaining* trajectory automatically by time
+        if (!planner_->isTrajectoryValid(traj,
+                                         moveit_msgs::msg::Constraints(),
+                                         elapsed_s))
         {
-            double sum_sq = 0.0;
-            for (size_t j = 0; j < feedback->actual.positions.size() && j < points[i].positions.size(); j++)
-            {
-                double diff = feedback->actual.positions[j] - points[i].positions[j];
-                sum_sq += diff * diff;
-            }
-            double dist = std::sqrt(sum_sq);
-            if (dist <= best_dist)
-            {
-                best_dist = dist;
-                best_idx = i;
-            }
-            else
-            {
-                break;
-            }
-        }
-        last_idx = best_idx;
-
-        // Check the remainder of the trajectory from best_idx+1
-        if (best_idx + 1 < points.size())
-        {
-            trajectory_msgs::msg::JointTrajectory truncated;
-            truncated.joint_names = joint_names;
-            truncated.points.insert(truncated.points.end(), points.begin() + best_idx + 1, points.end());
-
-            if (!planner_->isTrajectoryValid(truncated,
-                                             moveit_msgs::msg::Constraints(), // using empty constraints
-                                             false,
-                                             nullptr))
-            {
-                RCLCPP_WARN(node_->get_logger(),
-                            "[executeTrajectoryWithCollisionChecks] Future trajectory from waypoint %zu is in collision.",
-                            best_idx + 1);
-                collision_detected.store(true);
-            }
+            RCLCPP_WARN(node_->get_logger(),
+                        "[executeTrajectoryWithCollisionChecks] Collision predicted at t=%.3f of %.3f", elapsed_s, total_time_s);
+            collision_detected.store(true);
         }
 
+        // publish progress in [0..1]
         auto fb = std::make_shared<manymove_msgs::action::MoveManipulator::Feedback>();
-        fb->progress = static_cast<float>(best_idx);
+        fb->progress = static_cast<float>(std::min(elapsed_s / total_time_s, 1.0));
         fb->in_collision = collision_detected.load();
         goal_handle->publish_feedback(fb);
     };
@@ -861,16 +848,24 @@ bool ManipulatorActionServer::executeTrajectoryWithCollisionChecks(
 
     // 8) Wait for and process the result
     auto res_future = follow_joint_traj_client->async_get_result(fjt_goal_handle);
-    if (res_future.wait_for(std::chrono::seconds(300)) != std::future_status::ready)
+
+    // choose a dynamic timeout: 2× trajectory duration, but ≥ 5 s in case of very short motions
+    const double safety_factor = 2.0;
+    const double min_timeout_s = 5.0;
+
+    double timeout_s = std::max(total_time_s * safety_factor, min_timeout_s);
+
+    if (res_future.wait_for(
+            std::chrono::duration<double>(timeout_s)) != std::future_status::ready)
     {
-        abort_reason = "Timeout waiting for FollowJointTrajectory result";
+        abort_reason = "Timeout (" + std::to_string(timeout_s) + " s) waiting for FollowJointTrajectory result";
         return false;
     }
 
     bool final_status = result_future.get();
     if (!final_status)
     {
-        abort_reason = "Trajectory execution failed or collision occurred mid-run";
+        abort_reason = "Trajectory execution stopped, failed or collision occurred mid-run";
         return false;
     }
 
