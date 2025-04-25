@@ -680,7 +680,7 @@ bool MoveGroupPlanner::sendControlledStop(double decel_time_s,
     {
         robot_trajectory::RobotTrajectory robot_traj(
             move_group_interface_->getRobotModel(),
-            move_group_interface_->getName()); // stack-alloc
+            move_group_interface_->getName());
 
         moveit::core::RobotState dummy(move_group_interface_->getRobotModel());
         robot_traj.setRobotTrajectoryMsg(dummy, running_traj_msg);
@@ -688,9 +688,9 @@ bool MoveGroupPlanner::sendControlledStop(double decel_time_s,
         const double total = robot_traj.getDuration();
         const double stop_at = elapsed_s + decel_time_s;
 
-        if (stop_at >= total * 0.95) // 5 % slack
+        if (stop_at >= total)
         {
-            RCLCPP_WARN(logger_, "Remaining %.2f s < decel_time %.2f s – letting motion finish.",
+            RCLCPP_WARN(logger_, "Remaining %.3f s < decel_time %.3f s – letting motion finish.",
                         total - elapsed_s, decel_time_s);
             return true;
         }
