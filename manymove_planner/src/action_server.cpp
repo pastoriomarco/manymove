@@ -130,7 +130,16 @@ rclcpp_action::CancelResponse ManipulatorActionServer::handle_move_cancel(
                         "controlled stop (elapsed %.3f s).",
                         elapsed);
 
-            planner_->sendControlledStop(0.5, executing_traj_, elapsed);
+            if (stop_on_path_)
+            {
+                planner_->sendControlledStop(deceleration_time_,
+                                             executing_traj_,
+                                             elapsed);
+            }
+            else
+            {
+                planner_->sendControlledStop(deceleration_time_);
+            }
         }
         else
         {
@@ -773,6 +782,8 @@ bool ManipulatorActionServer::executeTrajectoryWithCollisionChecks(
         move_state_ = MoveExecutionState::EXECUTING;
         executing_start_time_ = start_time;
         executing_traj_ = traj;
+        stop_on_path_ = goal_handle->get_goal()->plan_request.config.stop_on_path;
+        deceleration_time_ = goal_handle->get_goal()->plan_request.config.deceleration_time;
     }
 
     double total_time_s = rclcpp::Duration(traj.joint_trajectory.points.back().time_from_start).seconds();
