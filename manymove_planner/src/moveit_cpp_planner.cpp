@@ -912,7 +912,7 @@ bool MoveItCppPlanner::sendControlledStop(double decel_time_s,
     std::vector<double> stop_positions;
     const bool have_traj = !running_traj_msg.joint_trajectory.points.empty();
 
-    if (!have_traj) // ---------- old “in-place” behaviour
+    if (!have_traj) // ---------- "spring-back" behaviour
     {
         auto current_state = moveit_cpp_ptr_->getCurrentState();
         const auto *jmg = current_state->getJointModelGroup(planning_group_);
@@ -920,7 +920,6 @@ bool MoveItCppPlanner::sendControlledStop(double decel_time_s,
     }
     else // ---------- sample the *running* trajectory
     {
-        /* Convert once – cheap: it re-uses the msg memory internally */
         auto robot_traj = std::make_shared<robot_trajectory::RobotTrajectory>(
             moveit_cpp_ptr_->getRobotModel(), planning_group_);
 
