@@ -63,6 +63,8 @@ namespace manymove_cpp_trees
         max_move_config.acceleration_scaling_factor = 0.75;
         max_move_config.max_cartesian_speed = 0.5;
         max_move_config.linear_precision = 0.001;
+        max_move_config.deceleration_time = 0.5;
+        max_move_config.stop_on_path = true;
         max_move_config.rotational_precision = 0.05;
         max_move_config.step_size = 0.005;
         max_move_config.jump_threshold = 0.0;

@@ -75,6 +75,8 @@ private:
 
     moveit_msgs::msg::RobotTrajectory executing_traj_;
     rclcpp::Time executing_start_time_;
+    double deceleration_time_;
+    bool stop_on_path_;
 
     // MoveManipulator Callbacks
     rclcpp_action::GoalResponse handle_move_goal(const rclcpp_action::GoalUUID &, std::shared_ptr<const MoveManipulator::Goal>);
