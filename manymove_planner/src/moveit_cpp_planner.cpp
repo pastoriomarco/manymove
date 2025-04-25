@@ -1226,9 +1226,37 @@ void MoveItCppPlanner::jointStateCallback(const sensor_msgs::msg::JointState::Sh
 bool MoveItCppPlanner::isTrajectoryValid(
     const robot_trajectory::RobotTrajectory &trajectory,
     const moveit_msgs::msg::Constraints &path_constraints,
-    bool verbose,
-    std::vector<std::size_t> *invalid_index) const
+    const double time_from_start) const
 {
+    robot_trajectory::RobotTrajectory sub_traj(trajectory.getRobotModel(),
+                                               trajectory.getGroupName());
+
+    // If (time_from_start > 0) only check the trajectory after that time from start
+    if (time_from_start > 0.0)
+    {
+        // indices bracketing   time_from_start   in the original trajectory
+        int before = -1, after = -1;
+        double blend = 0.0;
+        trajectory.findWayPointIndicesForDurationAfterStart(
+            time_from_start, before, after, blend);
+
+        if (after < static_cast<int>(trajectory.getWayPointCount()))
+        {
+            // copy way-points [after … end) into  sub_traj
+            for (std::size_t i = static_cast<std::size_t>(after);
+                 i < trajectory.getWayPointCount(); ++i)
+            {
+                sub_traj.addSuffixWayPoint(trajectory.getWayPoint(i),
+                                           trajectory.getWayPointDurationFromPrevious(i));
+            }
+        }
+    }
+    else
+    {
+        // we can use a cheap deep-copy constructor here
+        sub_traj = trajectory;
+    }
+
     // Get a lock on the planning scene through the planning scene monitor.
     planning_scene_monitor::LockedPlanningSceneRO lscene(moveit_cpp_ptr_->getPlanningSceneMonitor());
     if (!lscene)
@@ -1241,15 +1269,33 @@ bool MoveItCppPlanner::isTrajectoryValid(
     // Note that the isPathValid overload taking a robot_trajectory::RobotTrajectory,
     // constraints, group name, verbosity flag, and an optional invalid index vector
     // iterates over each waypoint and performs collision/constraint checking.
-    return lscene->isPathValid(trajectory, path_constraints, planning_group_, verbose, invalid_index);
+    return lscene->isPathValid(sub_traj, path_constraints, planning_group_, /*verbose*/ false, /*invalid_index*/ nullptr);
 }
 
 bool MoveItCppPlanner::isTrajectoryValid(
     const trajectory_msgs::msg::JointTrajectory &joint_traj_msg,
     const moveit_msgs::msg::Constraints &path_constraints,
-    bool verbose,
-    std::vector<std::size_t> *invalid_index) const
+    const double time_from_start) const
 {
+    trajectory_msgs::msg::JointTrajectory jt = joint_traj_msg;
+
+    // If (time_from_start > 0) only check the trajectory after that time from start
+    if (time_from_start > 0.0)
+    {
+        auto first_after = std::find_if(
+            jt.points.begin(), jt.points.end(),
+            [time_from_start](const auto &pt)
+            {
+                return rclcpp::Duration(pt.time_from_start).seconds() > time_from_start;
+            });
+
+        jt.points.erase(jt.points.begin(), first_after);
+
+        // if nothing is left, there is nothing to validate
+        if (jt.points.empty())
+            return true;
+    }
+
     // Lock the current planning scene via the planning scene monitor.
     planning_scene_monitor::LockedPlanningSceneRO lscene(moveit_cpp_ptr_->getPlanningSceneMonitor());
     if (!lscene)
@@ -1269,7 +1315,7 @@ bool MoveItCppPlanner::isTrajectoryValid(
 
     // Convert the input JointTrajectory message to a moveit_msgs::msg::RobotTrajectory.
     moveit_msgs::msg::RobotTrajectory rt_msg;
-    rt_msg.joint_trajectory = joint_traj_msg;
+    rt_msg.joint_trajectory = jt;
 
     // Create a RobotTrajectory object from the robot model and planning group.
     robot_trajectory::RobotTrajectoryPtr robot_traj_ptr =
@@ -1279,7 +1325,7 @@ bool MoveItCppPlanner::isTrajectoryValid(
     robot_traj_ptr->setRobotTrajectoryMsg(current_state, rt_msg);
 
     // Delegate the validity check to the PlanningScene's isPathValid overload.
-    bool valid = lscene->isPathValid(*robot_traj_ptr, path_constraints, planning_group_, verbose, invalid_index);
+    bool valid = lscene->isPathValid(*robot_traj_ptr, path_constraints, planning_group_, /*verbose*/ false, /*invalid_index*/ nullptr);
 
     return valid;
 }

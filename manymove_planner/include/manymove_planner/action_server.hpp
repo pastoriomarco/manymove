@@ -15,6 +15,7 @@
 #include "manymove_msgs/action/load_traj_controller.hpp"
 #include "planner_interface.hpp"
 #include <moveit_msgs/msg/constraints.hpp>
+#include <moveit/robot_trajectory/robot_trajectory.h>
 
 enum class MoveExecutionState
 {

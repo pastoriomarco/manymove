@@ -113,14 +113,12 @@ public:
     virtual bool isTrajectoryValid(
         const trajectory_msgs::msg::JointTrajectory &joint_traj_msg,
         const moveit_msgs::msg::Constraints &path_constraints,
-        bool verbose,
-        std::vector<std::size_t> *invalid_index) const = 0;
+        const double time_from_start = 0) const = 0;
 
     virtual bool isTrajectoryValid(
         const robot_trajectory::RobotTrajectory &trajectory,
         const moveit_msgs::msg::Constraints &path_constraints,
-        bool verbose,
-        std::vector<std::size_t> *invalid_index) const = 0;
+        const double time_from_start = 0) const = 0;
 
 protected:
     /**
