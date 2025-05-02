@@ -77,7 +77,7 @@ WORKDIR ${ISAAC_ROS_WS}
 
 # -- install the runtime ROS libs that were lost when we changed base -------
 RUN apt-get update && apt-get install -y --no-install-recommends \
-        "ros-${ROS_DISTRO}-rclcpp*" \
+        ros-${ROS_DISTRO}-rclcpp \
     && rm -rf /var/lib/apt/lists/*
 
 # -- copy the built overlay --------------------------------------------------
