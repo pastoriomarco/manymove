@@ -1,91 +1,32 @@
-###############################################################################
-# -------- stage 1 : build everything ----------------------------------------
-###############################################################################
-ARG ISAAC_BASE=realsense-image
-ARG ROS_DISTRO=humble
-FROM ${ISAAC_BASE} AS builder
-
-ENV DEBIAN_FRONTEND=noninteractive
-ENV ROS_DISTRO=${ROS_DISTRO}
-ENV ISAAC_ROS_WS=/workspaces/isaac_ros_ws
-
-# ---------------------------------------------------------------------------
-# 0.  Install *all* binary dependencies in one cached layer
-# ---------------------------------------------------------------------------
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    # ─ base toolchain ─────────────────────────────────────────────────────
-        build-essential git curl ninja-build python3-pip \
-        python3-colcon-common-extensions                  \
-    # ─ packages earlier discovered via rosdep ─────────────────────────────
-        ros-${ROS_DISTRO}-nvblox-msgs                     \
-        ros-${ROS_DISTRO}-py-trees                        \
-        ros-${ROS_DISTRO}-py-trees-ros                    \
-        ros-${ROS_DISTRO}-py-trees-ros-interfaces         \
-        ros-${ROS_DISTRO}-isaac-manipulator-ros-python-utils \
-    # ─ XArm / MoveIt helpers you used manually ────────────────────────────
-        ros-${ROS_DISTRO}-moveit-common                   \
-        ros-${ROS_DISTRO}-joint-state-publisher-gui       \
-        ros-${ROS_DISTRO}-xacro                           \
-    && rm -rf /var/lib/apt/lists/*
-
-# ---------------------------------------------------------------------------
-# 1.  Create workspace & clone sources
-# ---------------------------------------------------------------------------
-RUN mkdir -p ${ISAAC_ROS_WS}/src
-WORKDIR ${ISAAC_ROS_WS}
-
-RUN git clone -b release-3.2 \
-      https://github.com/NVIDIA-ISAAC-ROS/isaac_ros_common.git \
-      src/isaac_ros_common && \
-    git clone --recursive -b humble_no_gazebo \
-      https://github.com/pastoriomarco/xarm_ros2.git  src/xarm_ros2 && \
-    git clone --branch=${ROS_DISTRO} \
-      https://github.com/pastoriomarco/manymove.git   src/manymove && \
-    cd src/xarm_ros2 && git submodule update --init --recursive
-
-# meshes / config tweaks
-RUN mkdir -p src/xarm_ros2/xarm_description/meshes/other && \
-    cp -r src/manymove/manymove_object_manager/meshes/custom_end_tools/* \
-          src/xarm_ros2/xarm_description/meshes/other/ && \
-    cp src/manymove/manymove_planner/config/xarm_user_params.yaml \
-       src/xarm_ros2/xarm_api/config/
-
-# ---------------------------------------------------------------------------
-# 2.  Safety‑net rosdep (should be a no‑op if list above is complete)
-# ---------------------------------------------------------------------------
-RUN rosdep update && \
-    rosdep install --from-paths src --ignore-src -y --rosdistro ${ROS_DISTRO}
-
-# ---------------------------------------------------------------------------
-# 3.  Build once
-# ---------------------------------------------------------------------------
-RUN bash -c "source /opt/ros/${ROS_DISTRO}/setup.bash && \
-             colcon build --merge-install \
-               --cmake-args -DCMAKE_BUILD_TYPE=Release"
-
-###############################################################################
-# -------- stage 2 : slim runtime image --------------------------------------
-###############################################################################
-ARG ISAAC_BASE=realsense-image
-ARG ROS_DISTRO=humble
-FROM ${ISAAC_BASE}
-
-ENV DEBIAN_FRONTEND=noninteractive
-ENV ROS_DISTRO=${ROS_DISTRO}
-ENV ISAAC_ROS_WS=/workspaces/isaac_ros_ws
-WORKDIR ${ISAAC_ROS_WS}
-
-# -- install the runtime ROS libs that were lost when we changed base -------
-RUN apt-get update && apt-get install -y --no-install-recommends \
-        ros-${ROS_DISTRO}-rclcpp \
-    && rm -rf /var/lib/apt/lists/*
-
-# -- copy the built overlay --------------------------------------------------
-COPY --from=builder ${ISAAC_ROS_WS}/install  ${ISAAC_ROS_WS}/install
-
-# -- source overlay on entry -------------------------------------------------
-RUN echo "source /opt/ros/${ROS_DISTRO}/setup.bash" >> /ros_entrypoint.sh && \
-    echo "source ${ISAAC_ROS_WS}/install/setup.bash" >> /ros_entrypoint.sh
-
-ENTRYPOINT ["/ros_entrypoint.sh"]
-CMD ["bash"]
+# -*- Dockerfile for ManyMove dev image -*-
+    ARG BASE_IMAGE=ros2_humble-image
+    FROM ${BASE_IMAGE}
+    
+    # where run_dev.sh will mount your host workspace
+    ENV ISAAC_ROS_WS=/workspaces/isaac_ros-dev \
+        ROS_DISTRO=humble \
+        DEBIAN_FRONTEND=noninteractive
+    
+    # 1) install all system & ROS binaries needed before colcon build
+    RUN apt-get update && \
+        apt-get install -y --no-install-recommends \
+          build-essential git curl ninja-build python3-pip \
+          python3-colcon-common-extensions \
+          liburdfdom-headers-dev \
+          ros-${ROS_DISTRO}-rclcpp \
+          ros-${ROS_DISTRO}-nvblox-msgs \
+          ros-${ROS_DISTRO}-py-trees \
+          ros-${ROS_DISTRO}-py-trees-ros \
+          ros-${ROS_DISTRO}-py-trees-ros-interfaces \
+          ros-${ROS_DISTRO}-isaac-manipulator-ros-python-utils \
+          ros-${ROS_DISTRO}-moveit-common \
+          ros-${ROS_DISTRO}-joint-state-publisher-gui \
+          ros-${ROS_DISTRO}-xacro \
+        && rm -rf /var/lib/apt/lists/*
+    
+    # 2) copy your bootstrap into the base image’s entrypoint_additions
+    #    (workspace-entrypoint.sh will run *all* scripts in this folder)
+    COPY scripts/build-manymove.sh \
+         /usr/local/bin/scripts/entrypoint_additions/00-build-manymove.sh
+    RUN chmod +x /usr/local/bin/scripts/entrypoint_additions/00-build-manymove.sh
+    
