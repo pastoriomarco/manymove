@@ -41,7 +41,7 @@ rosdep install --from-paths src --ignore-src -y
 echo "[build-manymove] building via colcon…"
 # source the underlying ROS distro
 source /opt/ros/${ROS_DISTRO}/setup.bash
-source ${INSTALL_SETUP}
 colcon build --merge-install --cmake-args -DCMAKE_BUILD_TYPE=Release
+source ${INSTALL_SETUP}
 
 echo "[build-manymove] build complete — install/ now available"
