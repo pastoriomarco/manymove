@@ -23,3 +23,4 @@ cd ${ISAAC_ROS_WS}/src/manymove && \
 cp ${ISAAC_ROS_WS}/src/manymove/manymove_planner/config/cuMotion/Dockerfile.manymove ${ISAAC_ROS_WS}/src/isaac_ros_common/docker/
 cp ${ISAAC_ROS_WS}/src/manymove/manymove_planner/config/cuMotion/build-manymove.sh ${ISAAC_ROS_WS}/src/isaac_ros_common/docker/scripts
 cp ${ISAAC_ROS_WS}/src/manymove/manymove_planner/config/cuMotion/.isaac_ros_common-config ${ISAAC_ROS_WS}/src/isaac_ros_common/scripts/
+cp ${ISAAC_ROS_WS}/src/manymove/manymove_planner/config/cuMotion/Dockerfile.aarch64 ${ISAAC_ROS_WS}/src/isaac_ros_common/docker/
