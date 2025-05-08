@@ -120,7 +120,7 @@ public:
      * Increasing the deceleration_time leads to a smoother stop, but also increases
      * the movement required to decelerate.
      */
-    bool sendControlledStop(double decel_time_s,
+    bool sendControlledStop(const manymove_msgs::msg::MovementConfig &move_cfg,
                             const moveit_msgs::msg::RobotTrajectory &running_traj = moveit_msgs::msg::RobotTrajectory(),
                             double elapsed_s = 0.0);
 

@@ -891,8 +891,8 @@ bool MoveItCppPlanner::executeTrajectory(const moveit_msgs::msg::RobotTrajectory
     return true;
 }
 
-bool MoveItCppPlanner::sendControlledStop(double decel_time_s,
-                                          const moveit_msgs::msg::RobotTrajectory &running_traj_msg,
+bool MoveItCppPlanner::sendControlledStop(const manymove_msgs::msg::MovementConfig &move_cfg,
+                                          const moveit_msgs::msg::RobotTrajectory &running_traj,
                                           double elapsed_s)
 {
     /* -------------------------------------------------------------
@@ -908,7 +908,7 @@ bool MoveItCppPlanner::sendControlledStop(double decel_time_s,
      * 1)  Decide target joint positions
      * ------------------------------------------------------------*/
     std::vector<double> stop_positions;
-    const bool have_traj = !running_traj_msg.joint_trajectory.points.empty();
+    const bool have_traj = !running_traj.joint_trajectory.points.empty();
 
     if (!have_traj) // ---------- "spring-back" behaviour
     {
@@ -922,10 +922,10 @@ bool MoveItCppPlanner::sendControlledStop(double decel_time_s,
             moveit_cpp_ptr_->getRobotModel(), planning_group_);
 
         moveit::core::RobotState dummy(moveit_cpp_ptr_->getRobotModel());
-        robot_traj->setRobotTrajectoryMsg(dummy, running_traj_msg); // O(#points)
+        robot_traj->setRobotTrajectoryMsg(dummy, running_traj); // O(#points)
 
         const double total = robot_traj->getDuration();
-        const double stop_at = elapsed_s + decel_time_s;
+        const double stop_at = elapsed_s + move_cfg.deceleration_time;
 
         // Finish naturally if we’re basically done
         if (stop_at >= total)
@@ -933,7 +933,7 @@ bool MoveItCppPlanner::sendControlledStop(double decel_time_s,
             RCLCPP_INFO(logger_,
                         "Remaining trajectory time (%.3f s) < decel_time (%.3f s) – "
                         "letting the motion finish.",
-                        total - elapsed_s, decel_time_s);
+                        total - elapsed_s, move_cfg.deceleration_time);
             return true;
         }
 
@@ -955,7 +955,7 @@ bool MoveItCppPlanner::sendControlledStop(double decel_time_s,
     p.positions = stop_positions;
     p.velocities.assign(stop_positions.size(), 0.0);
     p.accelerations.assign(stop_positions.size(), 0.0);
-    p.time_from_start = rclcpp::Duration::from_seconds(decel_time_s);
+    p.time_from_start = rclcpp::Duration::from_seconds(move_cfg.deceleration_time);
 
     control_msgs::action::FollowJointTrajectory::Goal goal;
     goal.trajectory.joint_names =
@@ -980,7 +980,7 @@ bool MoveItCppPlanner::sendControlledStop(double decel_time_s,
         return false;
     }
 
-    const double timeout_s = std::max(2.0 * decel_time_s, 5.0);
+    const double timeout_s = std::max(2.0 * move_cfg.deceleration_time, 5.0);
     auto res_fut = follow_joint_traj_client_->async_get_result(gh);
 
     if (res_fut.wait_for(std::chrono::duration<double>(timeout_s)) != std::future_status::ready)
