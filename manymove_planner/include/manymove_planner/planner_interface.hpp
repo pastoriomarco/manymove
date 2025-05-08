@@ -79,12 +79,12 @@ public:
      *
      * @details If the running_traj is not set, this function sends a single-point trajectory to the robot’s trajectory controller that holds the current
      * joint positions (with zero velocities) and gives the controller a deceleration window. The effect is a “spring-back”
-     * stop where the robot decelerates smoothly. 
+     * stop where the robot decelerates smoothly.
      * If running_traj is valid the end point will be the point of the traj where the robot will be at decel_time_s from now.
      * Increasing the deceleration_time leads to a smoother stop, but also increases
      * the movement required to decelerate.
      */
-    virtual bool sendControlledStop(double decel_time_s,
+    virtual bool sendControlledStop(const manymove_msgs::msg::MovementConfig &move_cfg,
                                     const moveit_msgs::msg::RobotTrajectory &running_traj = moveit_msgs::msg::RobotTrajectory(),
                                     double elapsed_s = 0.0) = 0;
 

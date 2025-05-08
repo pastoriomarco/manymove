@@ -648,11 +648,11 @@ bool MoveGroupPlanner::areSameJointTargets(const std::vector<double> &j1, const 
     return true;
 }
 
-bool MoveGroupPlanner::sendControlledStop(double decel_time_s,
-                                          const moveit_msgs::msg::RobotTrajectory &running_traj_msg,
+bool MoveGroupPlanner::sendControlledStop(const manymove_msgs::msg::MovementConfig &move_cfg,
+                                          const moveit_msgs::msg::RobotTrajectory &running_traj,
                                           double elapsed_s)
 {
-    RCLCPP_INFO(logger_, "Controlled stop: decel=%.2f  elapsed=%.2f.", decel_time_s, elapsed_s);
+    RCLCPP_INFO(logger_, "Controlled stop: decel=%.2f  elapsed=%.2f.", move_cfg.deceleration_time, elapsed_s);
 
     if (!follow_joint_traj_client_->wait_for_action_server(std::chrono::seconds(2)))
     {
@@ -664,7 +664,7 @@ bool MoveGroupPlanner::sendControlledStop(double decel_time_s,
      * 1)  Target joint positions
      * ------------------------------------------------------------*/
     std::vector<double> target_q;
-    const bool have_traj = !running_traj_msg.joint_trajectory.points.empty();
+    const bool have_traj = !running_traj.joint_trajectory.points.empty();
 
     if (!have_traj) // “in-place”
     {
@@ -682,15 +682,15 @@ bool MoveGroupPlanner::sendControlledStop(double decel_time_s,
             move_group_interface_->getName());
 
         moveit::core::RobotState dummy(move_group_interface_->getRobotModel());
-        robot_traj.setRobotTrajectoryMsg(dummy, running_traj_msg);
+        robot_traj.setRobotTrajectoryMsg(dummy, running_traj);
 
         const double total = robot_traj.getDuration();
-        const double stop_at = elapsed_s + decel_time_s;
+        const double stop_at = elapsed_s + move_cfg.deceleration_time;
 
         if (stop_at >= total)
         {
             RCLCPP_WARN(logger_, "Remaining %.3f s < decel_time %.3f s – letting motion finish.",
-                        total - elapsed_s, decel_time_s);
+                        total - elapsed_s, move_cfg.deceleration_time);
             return true;
         }
 
@@ -713,7 +713,7 @@ bool MoveGroupPlanner::sendControlledStop(double decel_time_s,
     p.positions = target_q;
     p.velocities.assign(target_q.size(), 0.0);
     p.accelerations.assign(target_q.size(), 0.0);
-    p.time_from_start = rclcpp::Duration::from_seconds(decel_time_s);
+    p.time_from_start = rclcpp::Duration::from_seconds(move_cfg.deceleration_time);
 
     control_msgs::action::FollowJointTrajectory::Goal stop_goal;
     stop_goal.trajectory.joint_names = move_group_interface_->getJointNames();
@@ -735,7 +735,7 @@ bool MoveGroupPlanner::sendControlledStop(double decel_time_s,
         return false;
     }
 
-    const double timeout_s = std::max(2.0 * decel_time_s, 5.0);
+    const double timeout_s = std::max(2.0 * move_cfg.deceleration_time, 5.0);
     auto res_fut = follow_joint_traj_client_->async_get_result(gh);
 
     if (res_fut.wait_for(std::chrono::duration<double>(timeout_s)) != std::future_status::ready)
