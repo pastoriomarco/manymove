@@ -661,67 +661,66 @@ bool MoveGroupPlanner::sendControlledStop(const manymove_msgs::msg::MovementConf
     }
 
     /* -------------------------------------------------------------
-     * 1)  Target joint positions
+     * 1)  Decide target joint positions
      * ------------------------------------------------------------*/
     std::vector<double> target_q;
-    const bool have_traj = !running_traj.joint_trajectory.points.empty();
 
-    if (!have_traj) // “in-place”
+    target_q = move_group_interface_->getCurrentJointValues();
+    if (target_q.empty())
     {
-        target_q = move_group_interface_->getCurrentJointValues();
-        if (target_q.empty())
-        {
-            RCLCPP_ERROR(logger_, "Failed to read current joint state.");
-            return false;
-        }
-    }
-    else // sample trajectory
-    {
-        robot_trajectory::RobotTrajectory robot_traj(
-            move_group_interface_->getRobotModel(),
-            move_group_interface_->getName());
-
-        moveit::core::RobotState dummy(move_group_interface_->getRobotModel());
-        robot_traj.setRobotTrajectoryMsg(dummy, running_traj);
-
-        const double total = robot_traj.getDuration();
-        const double stop_at = elapsed_s + move_cfg.deceleration_time;
-
-        if (stop_at >= total)
-        {
-            RCLCPP_WARN(logger_, "Remaining %.3f s < decel_time %.3f s – letting motion finish.",
-                        total - elapsed_s, move_cfg.deceleration_time);
-            return true;
-        }
-
-        moveit::core::RobotStatePtr state_at_stop(
-            new moveit::core::RobotState(robot_traj.getRobotModel()));
-
-        if (!robot_traj.getStateAtDurationFromStart(stop_at, state_at_stop))
-        {
-            RCLCPP_ERROR(logger_, "Sampling at %.3f s failed, using last waypoint.", stop_at);
-            state_at_stop.reset(new moveit::core::RobotState(robot_traj.getLastWayPoint()));
-        }
-
-        state_at_stop->copyJointGroupPositions(move_group_interface_->getName(), target_q);
+        RCLCPP_ERROR(logger_, "Failed to read current joint state.");
+        return false;
     }
 
     /* -------------------------------------------------------------
-     * 2)  One-point trajectory
+     * 2)  Check if remaining time in trajectory is lower than deceleration time
+     *     If yes, return success as the motion will stop naturally before deceleration
      * ------------------------------------------------------------*/
-    trajectory_msgs::msg::JointTrajectoryPoint p;
-    p.positions = target_q;
-    p.velocities.assign(target_q.size(), 0.0);
-    p.accelerations.assign(target_q.size(), 0.0);
-    p.time_from_start = rclcpp::Duration::from_seconds(move_cfg.deceleration_time);
+    moveit_msgs::msg::RobotTrajectory truncated_traj = running_traj;
 
+    // Get the last point in the trajectory
+    const auto &last_point = truncated_traj.joint_trajectory.points.back();
+    double remaining_time = rclcpp::Duration(last_point.time_from_start).seconds() - elapsed_s;
+
+    // If remaining time is less than the deceleration time, the motion will stop naturally
+    if (remaining_time < move_cfg.deceleration_time)
+    {
+        RCLCPP_INFO(logger_, "Remaining time in trajectory is less than deceleration time. Stopping motion naturally.");
+        return true; // Do nothing and succeed as the motion will stop naturally
+    }
+
+    /* -------------------------------------------------------------
+     * 3)  Truncate the original trajectory and offset the time_from_start
+     *     for each point (negative time)
+     * ------------------------------------------------------------*/
+    // Remove the past points up to the current time (elapsed_s)
+    auto &points = truncated_traj.joint_trajectory.points;
+    points.erase(std::remove_if(points.begin(), points.end(),
+                                [elapsed_s](const trajectory_msgs::msg::JointTrajectoryPoint &point)
+                                {
+                                    return rclcpp::Duration(point.time_from_start).seconds() >= elapsed_s;
+                                }),
+                 points.end());
+
+    // Offset time_from_start to be negative for all points
+    for (auto &point : points)
+    {
+        point.time_from_start = rclcpp::Duration::from_seconds(rclcpp::Duration(point.time_from_start).seconds() - elapsed_s);
+    }
+
+    // Add the stop point to the trajectory
+    trajectory_msgs::msg::JointTrajectoryPoint stop_point;
+    stop_point.positions = target_q;
+    stop_point.velocities.assign(target_q.size(), 0.0);
+    stop_point.accelerations.assign(target_q.size(), 0.0);
+    stop_point.time_from_start = rclcpp::Duration::from_seconds(move_cfg.deceleration_time);
+    truncated_traj.joint_trajectory.points.push_back(stop_point);
+
+    // Send the modified trajectory
     control_msgs::action::FollowJointTrajectory::Goal stop_goal;
     stop_goal.trajectory.joint_names = move_group_interface_->getJointNames();
-    stop_goal.trajectory.points.push_back(p);
+    stop_goal.trajectory.points = truncated_traj.joint_trajectory.points;
 
-    /* -------------------------------------------------------------
-     * 3)  Send + wait with dynamic timeout
-     * ------------------------------------------------------------*/
     auto gh_fut = follow_joint_traj_client_->async_send_goal(stop_goal);
     if (gh_fut.wait_for(std::chrono::seconds(5)) != std::future_status::ready)
     {

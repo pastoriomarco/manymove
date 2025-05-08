@@ -130,16 +130,9 @@ rclcpp_action::CancelResponse ManipulatorActionServer::handle_move_cancel(
                         "controlled stop (elapsed %.3f s).",
                         elapsed);
 
-            if (move_manipulator_goal_.config.stop_on_path)
-            {
-                planner_->sendControlledStop(move_manipulator_goal_.config,
-                                             executing_traj_,
-                                             elapsed);
-            }
-            else
-            {
-                planner_->sendControlledStop(move_manipulator_goal_.config);
-            }
+            planner_->sendControlledStop(move_manipulator_goal_.config,
+                                         executing_traj_,
+                                         elapsed);
         }
         else
         {

@@ -75,7 +75,6 @@ def define_movement_configs() -> Dict[str, MovementConfig]:
     max_move_config.linear_precision = 0.001
     max_move_config.rotational_precision = 0.05
     max_move_config.deceleration_time = 0.5
-    max_move_config.stop_on_path = True
     max_move_config.step_size = 0.01
     max_move_config.jump_threshold = 0.0
     max_move_config.plan_number_target = 8
@@ -89,7 +88,6 @@ def define_movement_configs() -> Dict[str, MovementConfig]:
     mid_move_config.linear_precision = 0.001
     mid_move_config.rotational_precision = 0.05
     max_move_config.deceleration_time = 0.5
-    max_move_config.stop_on_path = True
     mid_move_config.step_size = 0.01
     mid_move_config.jump_threshold = 0.0
     mid_move_config.plan_number_target = 8
@@ -103,7 +101,6 @@ def define_movement_configs() -> Dict[str, MovementConfig]:
     slow_move_config.linear_precision = 0.001
     slow_move_config.rotational_precision = 0.05
     max_move_config.deceleration_time = 0.5
-    max_move_config.stop_on_path = True
     slow_move_config.step_size = 0.01
     slow_move_config.jump_threshold = 0.0
     slow_move_config.plan_number_target = 8
