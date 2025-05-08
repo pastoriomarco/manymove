@@ -927,7 +927,7 @@ bool MoveItCppPlanner::sendControlledStop(const manymove_msgs::msg::MovementConf
         robot_traj->setRobotTrajectoryMsg(dummy, running_traj); // O(#points)
 
         const double total = robot_traj->getDuration();
-        const double stop_at = elapsed_s + (move_cfg.deceleration_time / 4);
+        const double stop_at = elapsed_s + move_cfg.deceleration_time;
 
         // Finish naturally if we’re basically done
         if (stop_at >= total)
