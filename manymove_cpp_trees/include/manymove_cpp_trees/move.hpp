@@ -34,7 +34,6 @@ namespace manymove_cpp_trees
          * float64 linear_precision                # Linear precision for end-point trajectory position check
          * float64 rotational_precision            # Rotational precisior Rnd-point trajectory position check
          * float64 deceleration_time               # Time to decelerate the robot to arrive at a full stop
-         * bool stop_on_path                       # Set true for stop path, false for spring-back behavior
          *
          * # moveit planner parameters
          * float64 velocity_scaling_factor         # 0.0 to 1.0
@@ -67,7 +66,6 @@ namespace manymove_cpp_trees
         max_move_config.acceleration_scaling_factor = 0.75;
         max_move_config.max_cartesian_speed = 0.5;
         max_move_config.deceleration_time = 0.5;
-        max_move_config.stop_on_path = true;
         max_move_config.plan_number_target = 8;
         max_move_config.plan_number_limit = 16;
         max_move_config.step_size = 0.005;

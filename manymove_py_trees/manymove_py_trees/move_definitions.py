@@ -73,7 +73,6 @@ def define_movement_configs() -> Dict[str, MovementConfig]:
     max_move_config.acceleration_scaling_factor = 1.0
     max_move_config.max_cartesian_speed = 0.5
     max_move_config.deceleration_time = 0.5
-    max_move_config.stop_on_path = True
     max_move_config.step_size = 0.01
     max_move_config.linear_precision = 0.001
     max_move_config.rotational_precision = 0.05
@@ -89,14 +88,12 @@ def define_movement_configs() -> Dict[str, MovementConfig]:
     mid_move_config.acceleration_scaling_factor = 0.5
     mid_move_config.max_cartesian_speed = 0.25
     max_move_config.deceleration_time = 0.5
-    max_move_config.stop_on_path = True
 
     slow_move_config = max_move_config
     slow_move_config.velocity_scaling_factor = 1.0 / 4.0
     slow_move_config.acceleration_scaling_factor = 1.0 / 4.0
     slow_move_config.max_cartesian_speed = 0.1
     max_move_config.deceleration_time = 0.5
-    max_move_config.stop_on_path = True
 
     return {
         "max_move": max_move_config,
