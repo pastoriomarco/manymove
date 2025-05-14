@@ -27,7 +27,7 @@ This **manymove_cpp_trees** package is part of the [**`manymove`**](../README.md
 ## Architecture
 
 1. **Behavior Tree Nodes**  
-   - **`action_nodes_planner.hpp`**: Nodes for planning/executing manipulator motions (`PlanningAction`, `ExecuteTrajectory`, etc.).  
+   - **`action_nodes_planner.hpp`**: Nodes for planning/executing manipulator motions.  
    - **`action_nodes_objects.hpp`**: Nodes for adding/removing collision objects and checking or attaching them.  
    - **`action_nodes_signals.hpp`**: Nodes for sending/reading digital I/O signals and checking robot state.  
    - **`action_nodes_logic.hpp`**: Custom decorator/condition nodes for controlling execution flow (e.g., pausing, aborting, blackboard key checks).
@@ -73,7 +73,7 @@ Parameters (can be set via the command line or a launch file):
 ### Example Features
 
 - **Motion Planning & Execution**  
-  `PlanningAction` and `ExecuteTrajectory` nodes for MoveIt 2-based motion.
+  `MoveManipulatorAction` node for MoveIt 2-based motion.
 
 - **Collision Object Management**  
   `AddCollisionObjectAction`, `RemoveCollisionObjectAction`, `AttachDetachObjectAction`, etc.
