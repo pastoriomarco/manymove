@@ -194,7 +194,7 @@ namespace manymove_cpp_trees
             << "value=\"" << ((value == 0) ? "0" : "1") << "\"";
 
         // If the user wants the success output on blackboard
-        xml << " success=\"{" << io_type << "_" << ionum << "_success" << "}\"";
+        xml << " success=\"{" << robot_prefix << io_type << "_" << ionum << "_success" << "}\"";
 
         xml << "/>";
         return xml.str();
@@ -216,10 +216,7 @@ namespace manymove_cpp_trees
             << "robot_prefix=\"" << robot_prefix << "\" ";
 
         // If user wants the read value on the blackboard
-        xml << " value=\"{" << io_type << "_" << ionum << "}\"";
-
-        // If user wants the success output on the blackboard
-        xml << " success=\"{" << io_type << "_" << ionum << "_success" << "}\"";
+        xml << " value=\"{" << robot_prefix << io_type << "_" << ionum << "}\"";
 
         xml << "/>";
         return xml.str();
@@ -240,10 +237,10 @@ namespace manymove_cpp_trees
         // Build GetInputAction
         std::string check_input_xml = buildGetInputXML(robot_prefix, node_name, io_type, ionum);
 
-        // Build the CheckBlackboardKeyValue node
+        // Build the CheckKeyBoolValue node
         std::ostringstream inner_xml;
-        inner_xml << "<Condition ID=\"CheckBlackboardKeyValue\""
-                  << " key=\"" << io_type << "_" << ionum << "\""
+        inner_xml << "<Condition ID=\"CheckKeyBoolValue\""
+                  << " key=\"" << robot_prefix << io_type << "_" << ionum << "\""
                   << " value=\"" << value_to_check << "\" />";
 
         // Wrap in a Sequence
@@ -278,58 +275,6 @@ namespace manymove_cpp_trees
             << "/>";
         return xml.str();
     }
-
-    // std::string buildWaitForObject(const std::string &robot_prefix,
-    //                                const std::string &node_prefix,
-    //                                const std::string &object_id,
-    //                                bool exists,
-    //                                int timeout_ms)
-    // {
-    //     // Construct a node name
-    //     std::string node_name = robot_prefix + node_prefix + "_WaitForObject";
-
-    //     // Build GetInputAction
-    //     std::string check_obj_xml = buildObjectActionXML(node_name, createCheckObjectExists(object_id));
-
-    //     /// TODO: hardcoded dalay, evaluate if it should be set by user or not:
-    //     int delay_ms = 250;
-
-    //     // Check here for details about <Delay> : https://github.com/BehaviorTree/BehaviorTree.CPP/issues/413
-    //     std::ostringstream delay_and_fail_xml;
-    //     delay_and_fail_xml << "<Delay delay_msec=\"" << delay_ms << "\">\n"
-    //                        << "<AlwaysFailure />" << "\n"
-    //                        << "</Delay>" << "\n";
-
-    //     std::string fallback_check_or_delay_xml = fallbackWrapperXML((node_name + "_Fallback"), {check_obj_xml, delay_and_fail_xml.str()});
-
-    //     std::ostringstream wait_xml;
-
-    //     // Tree modified after finding this issue:
-    //     // https://github.com/BehaviorTree/BehaviorTree.CPP/issues/395
-    //     // wait_xml << "<RetryUntilSuccessful name=\"" << node_name << "_Retry\" max_attempts=\"-1\">\n"
-    //     //       << fallback_check_or_delay << "\n"
-    //     //       << "</RetryUntilSuccessful>";
-
-    //     wait_xml << "<Inverter>\n"
-    //              << "<KeepRunningUntilFailure>\n"
-    //              << (exists ? "<Inverter>\n" : "\n")
-    //              << fallback_check_or_delay_xml << "\n"
-    //              << (exists ? "</Inverter>\n" : "\n")
-    //              << "</KeepRunningUntilFailure>\n"
-    //              << "</Inverter>\n";
-
-    //     if (timeout_ms > 0)
-    //     {
-    //         std::ostringstream timeout_xml;
-    //         timeout_xml << "<Timeout msec=\"" << timeout_ms << "\">\n"
-    //                     << wait_xml.str()
-    //                     << "</Timeout>";
-
-    //         return sequenceWrapperXML(node_name + "_WaitForObjectTimeout", {timeout_xml.str()});
-    //     }
-
-    //     return sequenceWrapperXML(node_name + "_WaitForObject", {wait_xml.str()});
-    // }
 
     std::string buildWaitForObject(const std::string &robot_prefix,
                                    const std::string &node_prefix,

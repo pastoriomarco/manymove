@@ -96,7 +96,6 @@ namespace manymove_cpp_trees
                 BT::InputPort<int>("ionum", "Which IO channel to read"),
                 BT::InputPort<std::string>("robot_prefix", "Optional robot namespace prefix, e.g. 'R_' or 'L_'."),
                 BT::OutputPort<int>("value", "Read value from the input (0 or 1)"),
-                BT::OutputPort<bool>("success", "Whether get_input succeeded"),
             };
         }
 
