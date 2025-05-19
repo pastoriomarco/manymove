@@ -720,15 +720,15 @@ int main(int argc, char **argv)
     std::string wait_for_tube_loaded_1_xml = (rp_1.is_real ? buildWaitForInput(rp_1.prefix, "WaitForTubeLoaded", "controller", 1, 1) : "<Delay delay_msec=\"500\">\n<AlwaysSuccess />\n</Delay>\n");
     std::string wait_for_tube_absent_1_xml = (rp_1.is_real ? buildWaitForInput(rp_1.prefix, "WaitForTubeAbsent", "controller", 1, 0) : "<Delay delay_msec=\"500\">\n  <AlwaysSuccess />\n</Delay>\n");
 
-    std::string signal_machine_start_on_1_xml = (rp_1.is_real ? buildSetOutputXML(rp_1.prefix, "MachineStartON", "controller", 2, 1) : "");
-    std::string signal_machine_start_off_1_xml = (rp_1.is_real ? buildSetOutputXML(rp_1.prefix, "MachineStartOFF", "controller", 2, 0) : "");
-    std::string wait_for_vice_open_1_xml = (rp_1.is_real ? buildWaitForInput(rp_1.prefix, "WaitForViceOpen", "controller", 2, 1) : "<Delay delay_msec=\"100\">\n<AlwaysSuccess />\n</Delay>\n");
-    std::string wait_for_vice_closed_1_xml = (rp_1.is_real ? buildWaitForInput(rp_1.prefix, "WaitForViceClosed", "controller", 2, 0) : "<Delay delay_msec=\"3000\">\n  <AlwaysSuccess />\n</Delay>\n");
+    std::string signal_safety_clear_1_xml = (rp_1.is_real ? buildSetOutputXML(rp_1.prefix, "SafetyClear", "controller", 2, 1) : "");
+    std::string signal_safety_stop_1_xml = (rp_1.is_real ? buildSetOutputXML(rp_1.prefix, "SafetyStop", "controller", 2, 0) : "");
+    std::string wait_for_safety_clear_1_xml = (rp_1.is_real ? buildWaitForInput(rp_1.prefix, "WaitForSafetyClear", "controller", 2, 1) : "<Delay delay_msec=\"100\">\n<AlwaysSuccess />\n</Delay>\n");
+    std::string wait_for_safety_stop_1_xml = (rp_1.is_real ? buildWaitForInput(rp_1.prefix, "WaitForSafetyStop", "controller", 2, 0) : "<Delay delay_msec=\"100\">\n  <AlwaysSuccess />\n</Delay>\n");
 
-    std::string signal_safety_clear_1_xml = (rp_1.is_real ? buildSetOutputXML(rp_1.prefix, "SafetyClear", "controller", 3, 1) : "");
-    std::string signal_safety_stop_1_xml = (rp_1.is_real ? buildSetOutputXML(rp_1.prefix, "SafetyStop", "controller", 3, 0) : "");
-    std::string wait_for_safety_clear_1_xml = (rp_1.is_real ? buildWaitForInput(rp_1.prefix, "WaitForSafetyClear", "controller", 3, 1) : "<Delay delay_msec=\"100\">\n<AlwaysSuccess />\n</Delay>\n");
-    std::string wait_for_safety_stop_1_xml = (rp_1.is_real ? buildWaitForInput(rp_1.prefix, "WaitForSafetyStop", "controller", 3, 0) : "<Delay delay_msec=\"100\">\n  <AlwaysSuccess />\n</Delay>\n");
+    std::string signal_machine_start_on_1_xml = (rp_1.is_real ? buildSetOutputXML(rp_1.prefix, "MachineStartON", "controller", 3, 1) : "");
+    std::string signal_machine_start_off_1_xml = (rp_1.is_real ? buildSetOutputXML(rp_1.prefix, "MachineStartOFF", "controller", 3, 0) : "");
+    std::string wait_for_vice_open_1_xml = (rp_1.is_real ? buildWaitForInput(rp_1.prefix, "WaitForViceOpen", "controller", 3, 1) : "<Delay delay_msec=\"100\">\n<AlwaysSuccess />\n</Delay>\n");
+    std::string wait_for_vice_closed_1_xml = (rp_1.is_real ? buildWaitForInput(rp_1.prefix, "WaitForViceClosed", "controller", 3, 0) : "<Delay delay_msec=\"3000\">\n  <AlwaysSuccess />\n</Delay>\n");
 
     std::string check_robot_state_1_xml = buildCheckRobotStateXML(rp_1.prefix, "CheckRobot", "robot_ready", "error_code", "robot_mode", "robot_state", "robot_msg");
     std::string reset_robot_state_1_xml = buildResetRobotStateXML(rp_1.prefix, "ResetRobot", rp_1.model);
