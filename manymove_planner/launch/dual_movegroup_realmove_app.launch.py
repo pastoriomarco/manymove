@@ -86,10 +86,10 @@ def launch_setup(context, *args, **kwargs):
     add_bio_gripper = LaunchConfiguration('add_bio_gripper', default=False)
     add_bio_gripper_1 = LaunchConfiguration('add_bio_gripper_1', default=add_bio_gripper)
     add_bio_gripper_2 = LaunchConfiguration('add_bio_gripper_2', default=add_bio_gripper)
-    add_realsense_d435i = LaunchConfiguration('add_realsense_d435i', default=True)
+    add_realsense_d435i = LaunchConfiguration('add_realsense_d435i', default=False)
     add_realsense_d435i_1 = LaunchConfiguration('add_realsense_d435i_1', default=add_realsense_d435i)
     add_realsense_d435i_2 = LaunchConfiguration('add_realsense_d435i_2', default=add_realsense_d435i)
-    add_d435i_links = LaunchConfiguration('add_d435i_links', default=True)
+    add_d435i_links = LaunchConfiguration('add_d435i_links', default=False)
     add_d435i_links_1 = LaunchConfiguration('add_d435i_links_1', default=add_d435i_links)
     add_d435i_links_2 = LaunchConfiguration('add_d435i_links_2', default=add_d435i_links)
     add_other_geometry = LaunchConfiguration('add_other_geometry', default=True)
@@ -115,7 +115,7 @@ def launch_setup(context, *args, **kwargs):
     geometry_width_2 = LaunchConfiguration('geometry_width_2', default=geometry_width)
     geometry_mesh_filename = LaunchConfiguration('geometry_mesh_filename', default='pneumatic_lite.stl')
     geometry_mesh_filename_1 = LaunchConfiguration('geometry_mesh_filename_1', default=geometry_mesh_filename)
-    geometry_mesh_filename_2 = LaunchConfiguration('geometry_mesh_filename_2', default=geometry_mesh_filename)
+    geometry_mesh_filename_2 = LaunchConfiguration('geometry_mesh_filename_2', default='tube_holder.stl')
     geometry_mesh_origin_xyz = LaunchConfiguration('geometry_mesh_origin_xyz', default='"0 0 0"')
     geometry_mesh_origin_xyz_1 = LaunchConfiguration('geometry_mesh_origin_xyz_1', default=geometry_mesh_origin_xyz)
     geometry_mesh_origin_xyz_2 = LaunchConfiguration('geometry_mesh_origin_xyz_2', default=geometry_mesh_origin_xyz)
@@ -124,10 +124,10 @@ def launch_setup(context, *args, **kwargs):
     geometry_mesh_origin_rpy_2 = LaunchConfiguration('geometry_mesh_origin_rpy_2', default=geometry_mesh_origin_rpy)
     geometry_mesh_tcp_xyz = LaunchConfiguration('geometry_mesh_tcp_xyz', default='"0.03075 0 0.11885"')
     geometry_mesh_tcp_xyz_1 = LaunchConfiguration('geometry_mesh_tcp_xyz_1', default=geometry_mesh_tcp_xyz)
-    geometry_mesh_tcp_xyz_2 = LaunchConfiguration('geometry_mesh_tcp_xyz_2', default=geometry_mesh_tcp_xyz)
+    geometry_mesh_tcp_xyz_2 = LaunchConfiguration('geometry_mesh_tcp_xyz_2', default='"0 0 0.257"')
     geometry_mesh_tcp_rpy = LaunchConfiguration('geometry_mesh_tcp_rpy', default='"0 0.52 0"')
     geometry_mesh_tcp_rpy_1 = LaunchConfiguration('geometry_mesh_tcp_rpy_1', default=geometry_mesh_tcp_rpy)
-    geometry_mesh_tcp_rpy_2 = LaunchConfiguration('geometry_mesh_tcp_rpy_2', default=geometry_mesh_tcp_rpy)
+    geometry_mesh_tcp_rpy_2 = LaunchConfiguration('geometry_mesh_tcp_rpy_2', default='"0 0 0"')
 
     # ================================================================
     # from: src/manymove_planner/launch/lite_micpp_fake_action_server.launch.py
@@ -254,7 +254,7 @@ def launch_setup(context, *args, **kwargs):
             geometry_mesh_tcp_rpy_2=geometry_mesh_tcp_rpy_2,
         ).planning_scene_monitor(publish_robot_description=True, publish_robot_description_semantic=True)
         .planning_pipelines(pipelines=["ompl", "chomp", "pilz_industrial_motion_planner"])
-        .moveit_cpp(file_path=get_package_share_directory("manymove_planner") + "/config/moveit_cpp.yaml")
+        # .moveit_cpp(file_path=get_package_share_directory("manymove_planner") + "/config/moveit_cpp.yaml")
     ).to_moveit_configs()
 
     # robot state publisher node
@@ -302,7 +302,7 @@ def launch_setup(context, *args, **kwargs):
             moveit_config.to_dict(),
             {
                 'node_prefix': prefix_1.perform(context),
-                'planner_type': 'moveitcpp',
+                'planner_type': 'movegroup',
                 'planner_prefix': prefix_1.perform(context),
                 'planning_group': xarm_type_1, 
                 'base_frame_1': base_frame_1.perform(context), 
@@ -321,7 +321,7 @@ def launch_setup(context, *args, **kwargs):
             moveit_config.to_dict(),
             {
                 'node_prefix': prefix_2.perform(context),
-                'planner_type': 'moveitcpp',
+                'planner_type': 'movegroup',
                 'planner_prefix': prefix_2.perform(context),
                 'planning_group': xarm_type_2, 
                 'base_frame_2': base_frame_2.perform(context), 
