@@ -507,7 +507,7 @@ def launch_setup(context, *args, **kwargs):
     # behaviortree.cpp node
     manymove_cpp_trees_node = Node(
         package='manymove_cpp_trees',
-        executable='bt_client_app_dual',
+        executable='bt_client_app_dual_test',
         # name='manymove_cpp_tree_node',
         output='screen',
         parameters=[{
