@@ -630,34 +630,34 @@ int main(int argc, char **argv)
     // or translate them directly if they are only used once
     std::string move_to_rest_pose_1_xml = buildMoveXML(
         rp_1.prefix, rp_1.prefix + "rest",
-        {{rp_1.prefix, tcp_frame_name_1, "joint", move_configs["max_move"], "", joint_rest_1}},
+        {{rp_1.prefix, tcp_frame_name_1, "joint", move_configs["mid_move"], "", joint_rest_1}},
         blackboard);
 
     std::string move_to_pick_pose_1_xml = buildMoveXML(
         rp_1.prefix, rp_1.prefix + "pick",
-        {{rp_1.prefix, tcp_frame_name_1, "pose", move_configs["max_move"], approach_pick_target_1_key_name},
+        {{rp_1.prefix, tcp_frame_name_1, "pose", move_configs["mid_move"], approach_pick_target_1_key_name},
          {rp_1.prefix, tcp_frame_name_1, "cartesian", move_configs["cartesian_slow_move"], pick_target_1_key_name}},
         blackboard);
 
     std::string move_to_drop_pose_1_xml = buildMoveXML(
         rp_1.prefix, rp_1.prefix + "drop",
-        {{rp_1.prefix, tcp_frame_name_1, "cartesian", move_configs["cartesian_max_move"], drop_target_1_key_name}},
+        {{rp_1.prefix, tcp_frame_name_1, "cartesian", move_configs["cartesian_mid_move"], drop_target_1_key_name}},
         blackboard);
 
     std::string move_to_wait_pose_1_xml = buildMoveXML(
         rp_1.prefix, rp_1.prefix + "wait",
         {{rp_1.prefix, tcp_frame_name_1, "cartesian", move_configs["cartesian_mid_move"], approach_pick_target_1_key_name},
-         {rp_1.prefix, tcp_frame_name_1, "pose", move_configs["max_move"], approach_drop_target_1_key_name}},
+         {rp_1.prefix, tcp_frame_name_1, "pose", move_configs["mid_move"], approach_drop_target_1_key_name}},
         blackboard);
 
     std::string move_to_ready_pose_1_xml = buildMoveXML(
         rp_1.prefix, rp_1.prefix + "ready",
-        {{rp_1.prefix, tcp_frame_name_1, "pose", move_configs["max_move"], approach_drop_target_1_key_name}},
+        {{rp_1.prefix, tcp_frame_name_1, "pose", move_configs["mid_move"], approach_drop_target_1_key_name}},
         blackboard);
 
     std::string move_to_home_pose_1_xml = buildMoveXML(
         rp_1.prefix, rp_1.prefix + "home",
-        {{rp_1.prefix, tcp_frame_name_1, "named", move_configs["max_move"], "", {}, named_home_1}},
+        {{rp_1.prefix, tcp_frame_name_1, "named", move_configs["mid_move"], "", {}, named_home_1}},
         blackboard);
 
     // We can compose sequences together into a xml tree leaf or branch
