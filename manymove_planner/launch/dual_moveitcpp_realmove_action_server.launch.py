@@ -254,7 +254,7 @@ def launch_setup(context, *args, **kwargs):
             geometry_mesh_tcp_rpy_2=geometry_mesh_tcp_rpy_2,
         ).planning_scene_monitor(publish_robot_description=True, publish_robot_description_semantic=True)
         .planning_pipelines(pipelines=["ompl", "chomp", "pilz_industrial_motion_planner"])
-        # .moveit_cpp(file_path=get_package_share_directory("manymove_planner") + "/config/moveit_cpp.yaml")
+        .moveit_cpp(file_path=get_package_share_directory("manymove_planner") + "/config/moveit_cpp.yaml")
     ).to_moveit_configs()
 
     # robot state publisher node
