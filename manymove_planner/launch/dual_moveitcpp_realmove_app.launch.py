@@ -142,7 +142,7 @@ def launch_setup(context, *args, **kwargs):
     # from: xarm_moveit_config/launch/_dual_robot_moveit_fake.launch.py
     # ================================================================
 
-    # no_gui_ctrl = LaunchConfiguration('no_gui_ctrl', default=False)
+    no_gui_ctrl = LaunchConfiguration('no_gui_ctrl', default=False)
     ros_namespace = LaunchConfiguration('ros_namespace', default='').perform(context)
 
     ros2_control_plugin = 'uf_robot_hardware/UFRobotSystemHardware'
@@ -180,7 +180,7 @@ def launch_setup(context, *args, **kwargs):
     moveit_config = (
         DualMoveItConfigsBuilder(
             context=context,
-        controllers_name=controllers_name,
+            controllers_name=controllers_name,
             robot_ip_1=robot_ip_1,
             robot_ip_2=robot_ip_2,
             report_type_1=report_type_1,
@@ -402,6 +402,25 @@ def launch_setup(context, *args, **kwargs):
         parameters=[{'use_sim_time': use_sim_time}],
     )
 
+
+    # joint state publisher node
+    joint_state_publisher_node = Node(
+        package='joint_state_publisher',
+        executable='joint_state_publisher',
+        name='joint_state_publisher',
+        output='screen',
+        parameters=[{
+            'source_list': [
+                '{}{}/joint_states'.format(prefix_1.perform(context), hw_ns.perform(context)),
+                '{}{}/joint_states'.format(prefix_2.perform(context), hw_ns.perform(context))
+            ], 
+        }],
+        remappings=[
+            ('follow_joint_trajectory', '{}{}_traj_controller/follow_joint_trajectory'.format(prefix_1.perform(context), xarm_type_1)),
+            ('follow_joint_trajectory', '{}{}_traj_controller/follow_joint_trajectory'.format(prefix_2.perform(context), xarm_type_2)),
+        ],
+    )
+
     controllers = [
         '{}{}_traj_controller'.format(prefix_1.perform(context), xarm_type_1),
         '{}{}_traj_controller'.format(prefix_2.perform(context), xarm_type_2),
@@ -437,20 +456,6 @@ def launch_setup(context, *args, **kwargs):
             robot_params,
         ],
         output='screen',
-    )
-
-    # ================================================================
-    # from: xarm_moveit_config/launch/_dual_robot_moveit_fake.launch.py
-    # ================================================================
-
-    joint_state_broadcaster = Node(
-        package='controller_manager',
-        executable='spawner',
-        output='screen',
-        arguments=[
-            'joint_state_broadcaster',
-            '--controller-manager', '{}/controller_manager'.format(ros_namespace)
-        ],
     )
 
     # Load controllers
@@ -538,7 +543,7 @@ def launch_setup(context, *args, **kwargs):
         move_group_node,
         static_tf_1, static_tf_2,
         ros2_control_node,
-        joint_state_broadcaster,
+        joint_state_publisher_node,
         spawner_nodes[0],
     ]
 

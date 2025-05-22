@@ -180,7 +180,7 @@ def launch_setup(context, *args, **kwargs):
     moveit_config = (
         DualMoveItConfigsBuilder(
             context=context,
-        controllers_name=controllers_name,
+            controllers_name=controllers_name,
             robot_ip_1=robot_ip_1,
             robot_ip_2=robot_ip_2,
             report_type_1=report_type_1,
