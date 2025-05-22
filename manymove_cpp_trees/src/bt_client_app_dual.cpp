@@ -305,7 +305,7 @@ int main(int argc, char **argv)
 
     // We define the other elements on the scene.
     blackboard->set("machine_id_key", "machine_mesh");
-    blackboard->set("machine_mesh_file_key", "package://manymove_object_manager/meshes/custom_scene/machine.stl");
+    blackboard->set("machine_mesh_file_key", "package://manymove_object_manager/meshes/custom_scene/machine_complete.stl");
 
     blackboard->set("slider_id_key", "slider_mesh");
     blackboard->set("slider_mesh_file_key", "package://manymove_object_manager/meshes/custom_scene/slider.stl");

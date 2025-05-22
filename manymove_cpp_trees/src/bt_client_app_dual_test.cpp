@@ -70,8 +70,47 @@ int main(int argc, char **argv)
     // Neutral/identity scale key
     blackboard->set("identity_scale_key", "[1.0, 1.0, 1.0]");
 
+    // We create the necessary startup elements for fixed objects in the scene:
+    blackboard->set("machine_id_key", "machine_mesh");
+    blackboard->set("machine_mesh_file_key", "package://manymove_object_manager/meshes/custom_scene/machine.stl");
+    blackboard->set("machine_pose_key", createPoseRPY(0.0, 0.0, 0.0, 0.0, 0.0, 0.0));
+    std::string check_machine_mesh_obj_xml = buildObjectActionXML("check_machine_mesh", createCheckObjectExists("machine_id_key"));
+    std::string add_machine_mesh_obj_xml = buildObjectActionXML("add_machine_mesh", createAddObject("machine_id_key", "mesh_shape_key", "", "machine_pose_key", "identity_scale_key", "machine_mesh_file_key"));
+
+    blackboard->set("support_id_key", "support_mesh");
+    blackboard->set("support_mesh_file_key", "package://manymove_object_manager/meshes/custom_scene/support.stl");
+    // We set the support 1mm lower in Z to avoid colliding with the base of the robots.
+    blackboard->set("support_pose_key", createPoseRPY(0.0, 0.0, -0.001, 0.0, 0.0, 0.0));
+    std::string check_support_mesh_obj_xml = buildObjectActionXML("check_support_mesh", createCheckObjectExists("support_id_key"));
+    std::string add_support_mesh_obj_xml = buildObjectActionXML("add_support_mesh", createAddObject("support_id_key", "mesh_shape_key", "", "support_pose_key", "identity_scale_key", "support_mesh_file_key"));
+
+    blackboard->set("base_id_key", "base_mesh");
+    blackboard->set("base_mesh_file_key", "package://manymove_object_manager/meshes/custom_scene/base.stl");
+    blackboard->set("base_pose_key", createPoseRPY(0.0, 0.0, 0.0, 0.0, 0.0, 0.0));
+    std::string check_base_mesh_obj_xml = buildObjectActionXML("check_base_mesh", createCheckObjectExists("base_id_key"));
+    std::string add_base_mesh_obj_xml = buildObjectActionXML("add_base_mesh", createAddObject("base_id_key", "mesh_shape_key", "", "base_pose_key", "identity_scale_key", "base_mesh_file_key"));
+
+    blackboard->set("loader_id_key", "loader_mesh");
+    blackboard->set("loader_mesh_file_key", "package://manymove_object_manager/meshes/custom_scene/loader.stl");
+    blackboard->set("loader_pose_key", createPoseRPY(0.0, 0.0, 0.0, 0.0, 0.0, 0.0));
+    std::string check_loader_mesh_obj_xml = buildObjectActionXML("check_loader_mesh", createCheckObjectExists("loader_id_key"));
+    std::string add_loader_mesh_obj_xml = buildObjectActionXML("add_loader_mesh", createAddObject("loader_id_key", "mesh_shape_key", "", "loader_pose_key", "identity_scale_key", "loader_mesh_file_key"));
+
+    blackboard->set("projector_id_key", "projector_mesh");
+    blackboard->set("projector_mesh_file_key", "package://manymove_object_manager/meshes/custom_scene/projector.stl");
+    blackboard->set("projector_pose_key", createPoseRPY(0.0, 0.0, 0.0, 0.0, 0.0, 0.0));
+    std::string check_projector_mesh_obj_xml = buildObjectActionXML("check_projector_mesh", createCheckObjectExists("projector_id_key"));
+    std::string add_projector_mesh_obj_xml = buildObjectActionXML("add_projector_mesh", createAddObject("projector_id_key", "mesh_shape_key", "", "projector_pose_key", "identity_scale_key", "projector_mesh_file_key"));
+
+    // Compose the check and add sequence for fixed objects
+    std::string init_machine_mesh_obj_xml = fallbackWrapperXML("init_machine_mesh_obj", {check_machine_mesh_obj_xml, add_machine_mesh_obj_xml});
+    std::string init_support_mesh_obj_xml = fallbackWrapperXML("init_support_mesh_obj", {check_support_mesh_obj_xml, add_support_mesh_obj_xml});
+    std::string init_base_mesh_obj_xml = fallbackWrapperXML("init_base_mesh_obj", {check_base_mesh_obj_xml, add_base_mesh_obj_xml});
+    std::string init_projector_mesh_obj_xml = fallbackWrapperXML("init_projector_mesh_obj", {check_projector_mesh_obj_xml, add_projector_mesh_obj_xml});
+    std::string init_loader_mesh_obj_xml = fallbackWrapperXML("init_loader_mesh_obj", {check_loader_mesh_obj_xml, add_loader_mesh_obj_xml});
+
     /**
-     * We'll create all the necessary constructs for each object.
+     * We'll create all the necessary constructs for each mobile or manipulable object.
      * The first object is the one that will be picked by the first robot. Here we assume it is placed in a known position by a mechanical
      * distributor. We will need to have the pose recognized by a vision system in the future, so we already create all the constructs necessary
      * to be able to update the pose dynamically during execution.`
@@ -303,20 +342,13 @@ int main(int argc, char **argv)
     blackboard->set(insert_target_2_key_name, insert_target_2);
     blackboard->set(approach_insert_target_2_key_name, approach_insert_target_2);
 
-    // We define the other elements on the scene.
-    blackboard->set("machine_id_key", "machine_mesh");
-    blackboard->set("machine_mesh_file_key", "package://manymove_object_manager/meshes/custom_scene/machine.stl");
-
+    // We define the other mobile elements on the scene.
     blackboard->set("slider_id_key", "slider_mesh");
     blackboard->set("slider_mesh_file_key", "package://manymove_object_manager/meshes/custom_scene/slider.stl");
 
     blackboard->set("endplate_id_key", "endplate_mesh");
     blackboard->set("endplate_mesh_file_key", "package://manymove_object_manager/meshes/custom_scene/end_plate.stl");
 
-    // We set the machine 1mm lower in Z to avoid colliding with the base of the robots.
-    blackboard->set("machine_pose_key", createPoseRPY(0.0, 0.0, -0.001, 0.0, 0.0, 0.0));
-
-    std::string check_machine_mesh_obj_xml = buildObjectActionXML("check_machine_mesh", createCheckObjectExists("machine_id_key"));
     std::string check_slider_mesh_obj_xml = buildObjectActionXML("check_slider_mesh", createCheckObjectExists("slider_id_key"));
     std::string check_endplate_mesh_obj_xml = buildObjectActionXML("check_endplate_mesh", createCheckObjectExists("endplate_id_key"));
 
@@ -327,17 +359,6 @@ int main(int argc, char **argv)
     std::string remove_endplate_mesh_obj_xml = fallbackWrapperXML("remove_endplate_mesh_always_success",
                                                                   {buildObjectActionXML("remove_endplate_mesh", createRemoveObject("endplate_id_key")),
                                                                    "<AlwaysSuccess />"});
-
-    // Here we add the objects that create the scene. The machine is in a fixed position
-    std::string add_machine_mesh_obj_xml = buildObjectActionXML(
-        "add_machine_mesh",
-        createAddObject(
-            "machine_id_key",
-            "mesh_shape_key",
-            "",
-            "machine_pose_key",
-            "identity_scale_key",
-            "machine_mesh_file_key"));
 
     // The slider is in a variable position. We set a variable key accordingly
     Pose slider_pose = createPoseRPY(((tube_length) + 0.01), 0.0, 0.0, 0.0, 0.0, 0.0);
@@ -375,8 +396,7 @@ int main(int argc, char **argv)
             "identity_scale_key",
             "endplate_mesh_file_key"));
 
-    // Compose the check and add sequence for objects
-    std::string init_machine_mesh_obj_xml = fallbackWrapperXML("init_machine_mesh_obj", {check_machine_mesh_obj_xml, add_machine_mesh_obj_xml});
+    // Compose the check and add sequence for mobile objects
     std::string init_endplate_mesh_obj_xml = fallbackWrapperXML("init_endplate_mesh_obj", {check_endplate_mesh_obj_xml, add_endplate_mesh_obj_xml});
     std::string init_slider_mesh_obj_xml = fallbackWrapperXML("init_slider_mesh_obj", {check_slider_mesh_obj_xml, add_slider_mesh_obj_xml});
 
@@ -741,7 +761,6 @@ int main(int argc, char **argv)
 
     std::string check_reset_robot_2_xml = (rp_2.is_real ? fallbackWrapperXML(rp_2.prefix + "CheckResetFallback", {check_robot_state_2_xml, reset_robot_state_2_xml}) : "<Delay delay_msec=\"100\">\n<AlwaysSuccess />\n</Delay>\n");
 
-
     // blackboard->set("test_key", false);
 
     // std::ostringstream inner_xml;
@@ -763,7 +782,7 @@ int main(int argc, char **argv)
 
     // Let's build the full sequence in logically separated blocks:
     // General
-    std::string spawn_fixed_objects_xml = sequenceWrapperXML("SpawnFixedObjects", {init_machine_mesh_obj_xml}); //, init_endplate_mesh_obj_xml, init_slider_mesh_obj_xml});
+    std::string spawn_fixed_objects_xml = sequenceWrapperXML("SpawnFixedObjects", {init_machine_mesh_obj_xml, init_support_mesh_obj_xml, init_base_mesh_obj_xml, init_projector_mesh_obj_xml, init_loader_mesh_obj_xml});
 
     // Robot 1
     std::string get_grasp_object_poses_1_xml = sequenceWrapperXML("GetGraspPoses", {get_pick_pose_1_xml, get_approach_pose_1_xml});
