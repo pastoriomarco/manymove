@@ -3,21 +3,24 @@
 # ================================================================
 
 import os
-import yaml
+# import yaml
 from ament_index_python import get_package_share_directory
 from launch import LaunchDescription
-from launch.actions import OpaqueFunction, DeclareLaunchArgument #, IncludeLaunchDescription
+from launch.actions import (
+    OpaqueFunction,
+    DeclareLaunchArgument,
+    RegisterEventHandler, 
+)
+from launch.event_handlers import (
+    OnProcessExit,
+    OnProcessStart,
+)
 # from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch.substitutions import LaunchConfiguration #, PathJoinSubstitution
 # from launch_ros.substitutions import FindPackageShare
 from launch_ros.actions import Node
 from uf_ros_lib.moveit_configs_builder import DualMoveItConfigsBuilder
 from uf_ros_lib.uf_robot_utils import generate_dual_ros2_control_params_temp_file
-
-def load_yaml(package_name, file_path):
-    full_path = os.path.join(get_package_share_directory(package_name), file_path)
-    with open(full_path, 'r') as f:
-        return yaml.safe_load(f)
 
 # ================================================================
 # from: xarm_controller/launch/_dual_ros2_control.launch.py
@@ -212,7 +215,7 @@ def launch_setup(context, *args, **kwargs):
             attach_rpy_2 = attach_rpy_2,
             create_attach_link_1 = create_attach_link_1,
             create_attach_link_2 = create_attach_link_2,
-
+            
             ros2_control_plugin=ros2_control_plugin,
             ros2_control_params=ros2_control_params,
             add_gripper_1=add_gripper_1,
@@ -273,57 +276,64 @@ def launch_setup(context, *args, **kwargs):
 
     use_sim_time = LaunchConfiguration('use_sim_time', default=False)
 
+    # Start the actual move_group node
+    move_group_node = Node(
+        package='moveit_ros_move_group',
+        executable='move_group',
+        output='screen',
+        parameters=[
+            moveit_config.to_dict(),
+            {'use_sim_time': use_sim_time},
+        ],
+    )
+
     # ================================================================
     # from: src/manymove_planner/launch/lite_micpp_fake_action_server.launch.py
     # instead of: xarm_moveit_config/launch/_dual_robot_moveit_common2.launch.py
     # ================================================================
 
-    moveit_cpp_left = load_yaml("manymove_planner", "config/moveit_cpp_real_L_ufactory.yaml")
-    moveit_cpp_right = load_yaml("manymove_planner", "config/moveit_cpp_real_R_ufactory.yaml")
-
-    # Start the actual action_server node
-    moveitcpp_action_servers_node_left = Node(
+    # Start the action servers
+    action_server_node_1 = Node(
         package='manymove_planner',
-        executable='moveitcpp_action_server_node',
+        executable='action_server_node',
         # Don't use the "name" parameter, the name will be automatically set with {node_prefix_*}action_server_node to avoid duplicate nodes
         output='screen',
         parameters=[
             moveit_config.to_dict(),
-            moveit_cpp_left,
             {
-                'node_prefixes': [prefix_1.perform(context)],
-                'planner_prefixes': [prefix_1.perform(context)],
-                'planning_groups': [xarm_type_1], 
-                'base_frames': [base_frame_1.perform(context)], 
-                'tcp_frames': [tcp_frame_1.perform(context)], 
-                'traj_controllers': ["{}_traj_controller".format(xarm_type_1)],
+                'node_prefix': prefix_1.perform(context),
+                'planner_type': 'movegroup',
+                'planner_prefix': prefix_1.perform(context),
+                'planning_group': xarm_type_1, 
+                'base_frame_1': base_frame_1.perform(context), 
+                'tcp_frame_1': tcp_frame_1.perform(context), 
+                'traj_controller': "{}_traj_controller".format(xarm_type_1),
             }
         ],
     )
 
-    # Start the actual action_server node
-    moveitcpp_action_servers_node_right = Node(
+    action_server_node_2 = Node(
         package='manymove_planner',
-        executable='moveitcpp_action_server_node',
-        # Don't use the "name" parameter, the name will be automatically set with {node_prefix_*}action_server_node to avoid duplicate nodes
+        executable='action_server_node',
+        # Don't use the "name" parameter, the name will be automatically set with {node_prefix}action_server_node to avoid duplicate nodes
         output='screen',
         parameters=[
             moveit_config.to_dict(),
-            moveit_cpp_right,
             {
-                'node_prefixes': [prefix_2.perform(context)],
-                'planner_prefixes': [prefix_2.perform(context)],
-                'planning_groups': [xarm_type_2], 
-                'base_frames': [base_frame_2.perform(context)], 
-                'tcp_frames': [tcp_frame_2.perform(context)], 
-                'traj_controllers': ["{}_traj_controller".format(xarm_type_2)],
+                'node_prefix': prefix_2.perform(context),
+                'planner_type': 'movegroup',
+                'planner_prefix': prefix_2.perform(context),
+                'planning_group': xarm_type_2, 
+                'base_frame_2': base_frame_2.perform(context), 
+                'tcp_frame_2': tcp_frame_2.perform(context), 
+                'traj_controller': "{}_traj_controller".format(xarm_type_2),
             }
         ],
     )
 
     # Launch RViz
     rviz_config_file = (
-        get_package_share_directory("manymove_planner") + "/config/micpp_demo.rviz"
+        get_package_share_directory("manymove_planner") + "/config/micpp_demo_dual_app.rviz"
     )
 
     rviz_node = Node(
@@ -331,7 +341,11 @@ def launch_setup(context, *args, **kwargs):
         executable='rviz2',
         # name='rviz2',
         output='screen',
-        arguments=['-d', rviz_config_file],
+        arguments=[
+            "-d", rviz_config_file,
+            "--ros-args",
+            "--log-level", "rviz2:=fatal"
+        ],
         parameters=[
             moveit_config.robot_description,
             moveit_config.robot_description_semantic,
@@ -345,8 +359,30 @@ def launch_setup(context, *args, **kwargs):
     # from: xarm_moveit_config/launch/_dual_robot_moveit_common2.launch.py
     # ================================================================
 
-    link_base_1 = '{}link_base'.format(prefix_1.perform(context))
-    link_base_2 = '{}link_base'.format(prefix_2.perform(context))
+    xyz_1 = attach_xyz_1.perform(context).split(' ')
+    rpy_1 = attach_rpy_1.perform(context).split(' ')
+    xyz_2 = attach_xyz_2.perform(context).split(' ')
+    rpy_2 = attach_rpy_2.perform(context).split(' ')
+    args_1 = [
+        '--x', xyz_1[0],
+        '--y', xyz_1[1],
+        '--z', xyz_1[2],
+        '--roll', rpy_1[0],
+        '--pitch', rpy_1[1],
+        '--yaw', rpy_1[2],
+        '--frame-id', attach_to_1.perform(context),
+        '--child-frame-id', f"{prefix_1.perform(context)}link_base"
+    ]
+    args_2 = [
+        '--x', xyz_2[0],
+        '--y', xyz_2[1],
+        '--z', xyz_2[2],
+        '--roll', rpy_2[0],
+        '--pitch', rpy_2[1],
+        '--yaw', rpy_2[2],
+        '--frame-id', attach_to_2.perform(context),
+        '--child-frame-id', f"{prefix_2.perform(context)}link_base"
+    ]
 
     # Static TF
     static_tf_1 = Node(
@@ -354,7 +390,7 @@ def launch_setup(context, *args, **kwargs):
         executable='static_transform_publisher',
         name='{}static_transform_publisher'.format(prefix_1.perform(context)),
         output='screen',
-        arguments=['0.0', '0.0', '0.0', '0.0', '0.0', '0.0', 'world', link_base_1],
+        arguments=args_1,
         parameters=[{'use_sim_time': use_sim_time}],
     )
     static_tf_2 = Node(
@@ -362,7 +398,7 @@ def launch_setup(context, *args, **kwargs):
         executable='static_transform_publisher',
         name='{}static_transform_publisher'.format(prefix_2.perform(context)),
         output='screen',
-        arguments=['0.0', '1.0', '0.0', '0.0', '0.0', '0.0', 'world', link_base_2],
+        arguments=args_2,
         parameters=[{'use_sim_time': use_sim_time}],
     )
 
@@ -450,7 +486,7 @@ def launch_setup(context, *args, **kwargs):
     # HMI node
     manymove_hmi_node = Node(
         package='manymove_hmi',
-        executable='manymove_hmi_executable',
+        executable='manymove_hmi_app_executable',
         # name='manymove_hmi_node',
         output='screen',
         parameters=[{
@@ -460,21 +496,102 @@ def launch_setup(context, *args, **kwargs):
     )
 
     # ================================================================
-    # RETURN
+    # launch manymove_cpp_trees
+    # ================================================================
+
+    # behaviortree.cpp node
+    manymove_cpp_trees_node = Node(
+        package='manymove_cpp_trees',
+        executable='bt_client_app_dual',
+        # name='manymove_cpp_tree_node',
+        output='screen',
+        parameters=[{
+            'robot_model_1': xarm_type_1,
+            'robot_prefix_1': prefix_1.perform(context),
+            'tcp_frame_1': tcp_frame_1,
+            'robot_model_2': xarm_type_2,
+            'robot_prefix_2': prefix_2.perform(context),
+            'tcp_frame_2': tcp_frame_2,
+            'is_robot_real': False,
+        }]
+    )
+
+
+
+    # ================================================================
+    #  EVENT‑DRIVEN START‑UP ORDER
+    # ================================================================
+
+    spawner_nodes = []
+    for ctrl in controllers:
+        spawner_nodes.append(
+            Node(
+                package='controller_manager',
+                executable='spawner',
+                output='screen',
+                arguments=[ctrl, '--controller-manager', f'{ros_namespace}/controller_manager'],
+            )
+        )
+
+    launch_actions = [
+        robot_state_publisher_node,
+        move_group_node,
+        static_tf_1, static_tf_2,
+        ros2_control_node,
+        joint_state_broadcaster,
+        spawner_nodes[0],
+    ]
+
+    handlers = []
+    # chain 1→2, 2→3, … for all spawners
+    for prev, nxt in zip(spawner_nodes, spawner_nodes[1:]):
+        handlers.append(
+            RegisterEventHandler(
+                OnProcessExit(
+                    target_action=prev,
+                    on_exit=[nxt],
+                )
+            )
+        )
+
+    # when the *last* spawner exits, launch both action servers
+    handlers.append(
+        RegisterEventHandler(
+            OnProcessExit(
+                target_action=spawner_nodes[-1],
+                on_exit=[rviz_node, action_server_node_1, action_server_node_2],
+            )
+        )
+    )
+
+    # when action_server_node_1 starts, launch object manager & BT client
+    handlers.append(
+        RegisterEventHandler(
+            OnProcessStart(
+                target_action=action_server_node_1,
+                on_start=[object_manager_node, manymove_cpp_trees_node],
+            )
+        )
+    )
+
+    # when BT client starts, launch HMI
+    handlers.append(
+        RegisterEventHandler(
+            OnProcessStart(
+                target_action=manymove_cpp_trees_node,
+                on_start=[manymove_hmi_node],
+            )
+        )
+    )
+
+    # ================================================================
+    #  RETURN LIST
     # ================================================================
 
     return [
-        robot_state_publisher_node,
-        moveitcpp_action_servers_node_left,
-        moveitcpp_action_servers_node_right,
-        rviz_node,
-        static_tf_1,
-        static_tf_2,
-        joint_state_broadcaster,
-        ros2_control_node,
-        object_manager_node,
-        manymove_hmi_node,
-    ] + controller_nodes
+        *launch_actions,
+        *handlers,
+    ]
 
 
 def generate_launch_description():
