@@ -701,7 +701,7 @@ namespace manymove_cpp_trees
         }
         else
         {
-            RCLCPP_INFO(node_->get_logger(), "GetObjectPoseAction: 'post_transform_xyz_rpy_' = {%.3f, %.3f, %.3f, %.3f, %.3f, %.3f}",
+            RCLCPP_INFO(node_->get_logger(), "GetObjectPoseAction: 'post_transform_xyz_rpy' = {%.3f, %.3f, %.3f, %.3f, %.3f, %.3f}",
                         post_transform_xyz_rpy_[0],
                         post_transform_xyz_rpy_[1],
                         post_transform_xyz_rpy_[2],
