@@ -5,6 +5,8 @@
 #include "manymove_hmi/hmi_gui.hpp"
 #include "manymove_hmi/app_module.hpp"
 #include "manymove_hmi/ros2_worker.hpp"
+#include "manymove_hmi/default_app_hmi.hpp"
+
 #include <rclcpp/rclcpp.hpp>
 #include <thread>
 #include <memory>
@@ -102,7 +104,7 @@ int main(int argc, char *argv[])
         QVBoxLayout *mainLayout = qobject_cast<QVBoxLayout *>(gui.centralWidget()->layout());
         if (mainLayout)
         {
-            AppModule *appModule = new AppModule(&gui);
+            auto *appModule = new DefaultAppModule(&gui);
             mainLayout->addWidget(appModule);
 
             // Connect the AppModule signal to a handler that calls the update_blackboard service.

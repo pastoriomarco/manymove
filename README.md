@@ -187,7 +187,7 @@ This repository is composed of several sub-packages, each handling different res
 
   *After compiling moveit2, remove any previous build of ManyMove and source moveit2 installation before running rosdep or building!*
   *Then you will need to source moveit2 installation to run any of the ManyMove examples.*
-  *This procedure is only needed if manymove hangs in jazzy branch when you try to start the robot cycle.*
+  *This procedure is only needed if manymove hangs in jazzy branch on startup or when you try to start the robot cycle.*
 
   Standalone launchers for MoveItCPP or MoveGroup with Panda and Kinova robots:
 

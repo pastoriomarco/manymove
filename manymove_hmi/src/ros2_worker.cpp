@@ -35,190 +35,145 @@ Ros2Worker::Ros2Worker(const std::string &node_name, HmiGui *gui, const std::str
 
 void Ros2Worker::statusCallback(const std_msgs::msg::String::SharedPtr msg)
 {
-    std::string data = msg->data;
+    const std::string data = msg->data;
 
-    // --- Process the boolean fields used for button updates (unchanged) ---
-    bool stop_execution = (data.find("\"" + robot_prefix_ + "stop_execution\":true") != std::string::npos ||
-                           data.find("\"" + robot_prefix_ + "stop_execution\": true") != std::string::npos);
-    bool reset = (data.find("\"" + robot_prefix_ + "reset\":true") != std::string::npos ||
-                  data.find("\"" + robot_prefix_ + "reset\": true") != std::string::npos);
-    bool collision_detected = (data.find("\"" + robot_prefix_ + "collision_detected\":true") != std::string::npos ||
-                               data.find("\"" + robot_prefix_ + "collision_detected\": true") != std::string::npos);
+    /* ---------- GUI buttons (unchanged) -------------------------- */
+    const bool stop_execution =
+        data.find("\"" + robot_prefix_ + "stop_execution\":true") != std::string::npos ||
+        data.find("\"" + robot_prefix_ + "stop_execution\": true") != std::string::npos;
+    const bool reset =
+        data.find("\"" + robot_prefix_ + "reset\":true") != std::string::npos ||
+        data.find("\"" + robot_prefix_ + "reset\": true") != std::string::npos;
+    const bool collision_detected =
+        data.find("\"" + robot_prefix_ + "collision_detected\":true") != std::string::npos ||
+        data.find("\"" + robot_prefix_ + "collision_detected\": true") != std::string::npos;
 
-    // Update GUI status for buttons.
     QMetaObject::invokeMethod(gui_, "updateStatus", Qt::QueuedConnection,
                               Q_ARG(QString, QString::fromStdString(robot_prefix_)),
                               Q_ARG(bool, stop_execution),
                               Q_ARG(bool, reset),
                               Q_ARG(bool, collision_detected));
 
-    // --- Now process the keys for the AppModule ---
-    // Try to find the AppModule widget as a child of HmiGui.
+    /* ---------- HMI keys ----------------------------------------- */
     AppModule *appModule = gui_->findChild<AppModule *>();
     if (!appModule)
-    {
-        RCLCPP_DEBUG(this->get_logger(), "No AppModule found in the GUI. Blackboard keys not updated.");
         return;
-    }
 
-    // Get the known keys from AppModule.
-    const std::vector<BlackboardKey> &knownKeys = AppModule::getKnownKeys();
+    const auto &knownKeys = appModule->getKnownKeys();
 
-    // For each known key, try to extract its value from the JSON string.
+    auto stripQuotes = [](std::string &s)
+    {
+        if (!s.empty() && s.front() == '"')
+            s.erase(0, 1);
+        if (!s.empty() && s.back() == '"')
+            s.pop_back();
+    };
+
     for (const auto &bk : knownKeys)
     {
-        // Build a pattern from the key. We convert bk.key to std::string for search.
-        std::string pattern = "\"" + bk.key.toStdString() + "\":";
+        /* keys in the JSON are *not* prefixed – keep original pattern */
+        const std::string pattern = "\"" + bk.key.toStdString() + "\":";
         size_t pos = data.find(pattern);
         if (pos == std::string::npos)
         {
-            // Key not found; update with an empty value (which AppModule shows as "N/A").
             QMetaObject::invokeMethod(appModule, "updateField", Qt::QueuedConnection,
-                                      Q_ARG(QString, bk.key),
-                                      Q_ARG(QString, QString()));
+                                      Q_ARG(QString, bk.key), Q_ARG(QString, QString()));
             continue;
         }
-        // Find the beginning of the value (after the colon).
+
+        /* move to the value start */
         size_t valStart = pos + pattern.length();
-        // Skip any whitespace.
         while (valStart < data.size() && std::isspace(data[valStart]))
-        {
             ++valStart;
-        }
 
         std::string valueStr;
+
+        /* ---------------- numeric DOUBLE ------------------------- */
         if (bk.type == "double")
         {
-            // Read until the next comma or closing brace.
             size_t valEnd = data.find_first_of(",}", valStart);
             if (valEnd == std::string::npos)
                 valEnd = data.size();
             valueStr = data.substr(valStart, valEnd - valStart);
-            // Trim whitespace.
-            valueStr.erase(valueStr.begin(),
-                           std::find_if(valueStr.begin(), valueStr.end(),
-                                        [](unsigned char ch)
-                                        { return !std::isspace(ch); }));
-            valueStr.erase(std::find_if(valueStr.rbegin(), valueStr.rend(),
-                                        [](unsigned char ch)
-                                        { return !std::isspace(ch); })
-                               .base(),
-                           valueStr.end());
+            stripQuotes(valueStr);
+
             try
             {
-                double dval = std::stod(valueStr);
-                valueStr = std::to_string(dval);
+                double d = std::stod(valueStr);
+                valueStr = std::to_string(d);
             }
-            catch (const std::exception &)
+            catch (...)
             {
-                valueStr = "";
+                valueStr.clear();
             }
         }
+        /* ---------------- integer INT ---------------------------- */
         else if (bk.type == "int")
         {
             size_t valEnd = data.find_first_of(",}", valStart);
             if (valEnd == std::string::npos)
                 valEnd = data.size();
             valueStr = data.substr(valStart, valEnd - valStart);
-            valueStr.erase(valueStr.begin(),
-                           std::find_if(valueStr.begin(), valueStr.end(),
-                                        [](unsigned char ch)
-                                        { return !std::isspace(ch); }));
-            valueStr.erase(std::find_if(valueStr.rbegin(), valueStr.rend(),
-                                        [](unsigned char ch)
-                                        { return !std::isspace(ch); })
-                               .base(),
-                           valueStr.end());
+            stripQuotes(valueStr);
+
             try
             {
-                int ival = std::stoi(valueStr);
-                valueStr = std::to_string(ival);
+                int i = std::stoi(valueStr);
+                valueStr = std::to_string(i);
             }
-            catch (const std::exception &)
+            catch (...)
             {
-                valueStr = "";
+                valueStr.clear();
             }
         }
+        /* ---------------- double array --------------------------- */
         else if (bk.type == "double_array")
         {
-            // Expecting a JSON array, e.g.: [1.23, 4.56, ...]
-            if (data[valStart] == '[')
-            {
-                size_t bracketEnd = data.find_first_of("]", valStart);
-                if (bracketEnd == std::string::npos)
-                    bracketEnd = data.size();
-                valueStr = data.substr(valStart, bracketEnd - valStart + 1); // include closing ']'
-            }
-            else
-            {
-                size_t valEnd = data.find_first_of(",}", valStart);
-                if (valEnd == std::string::npos)
-                    valEnd = data.size();
-                valueStr = data.substr(valStart, valEnd - valStart);
-            }
-        }
-        else if (bk.type == "pose")
-        {
-            while (valStart < data.size() && std::isspace(data[valStart]))
+            if (data[valStart] == '"')
             {
                 ++valStart;
+            } // skip leading quote
+            if (data[valStart] == '[') // keep the brackets
+            {
+                size_t end = data.find(']', valStart);
+                if (end != std::string::npos)
+                    valueStr = data.substr(valStart, end - valStart + 1);
             }
-            
-            // For a pose, assume the value is a JSON object starting with '{'
+            stripQuotes(valueStr);
+        }
+        /* ---------------- pose (JSON object) --------------------- */
+        else if (bk.type == "pose")
+        {
+            if (data[valStart] == '"')
+                ++valStart; // optional quote
+
             if (data[valStart] == '{')
             {
-                int braceCount = 0;
+                int braces = 0;
                 size_t idx = valStart;
-                while (idx < data.size())
+                do
                 {
                     if (data[idx] == '{')
-                        braceCount++;
-                    else if (data[idx] == '}')
-                        braceCount--;
-                    idx++;
-                    if (braceCount == 0)
-                        break;
-                }
+                        ++braces;
+                    if (data[idx] == '}')
+                        --braces;
+                    ++idx;
+                } while (idx < data.size() && braces);
                 valueStr = data.substr(valStart, idx - valStart);
             }
-            else
-            {
-                size_t valEnd = data.find_first_of(",}", valStart);
-                if (valEnd == std::string::npos)
-                    valEnd = data.size();
-                valueStr = data.substr(valStart, valEnd - valStart);
-            }
+            stripQuotes(valueStr);
         }
-        else if (bk.type == "string")
-        {
-            // For a string, assume it is enclosed in quotes.
-            size_t valEnd = data.find_first_of(",}", valStart);
-            if (valEnd == std::string::npos)
-                valEnd = data.size();
-            valueStr = data.substr(valStart, valEnd - valStart);
-            if (!valueStr.empty() && valueStr.front() == '"')
-            {
-                valueStr.erase(0, 1);
-                if (!valueStr.empty() && valueStr.back() == '"')
-                    valueStr.pop_back();
-            }
-        }
+        /* ---------------- bool / string / default --------------- */
         else
         {
-            // For bool or unknown types, read until comma or brace.
             size_t valEnd = data.find_first_of(",}", valStart);
             if (valEnd == std::string::npos)
                 valEnd = data.size();
             valueStr = data.substr(valStart, valEnd - valStart);
-            if (!valueStr.empty() && valueStr.front() == '"')
-            {
-                valueStr.erase(0, 1);
-                if (!valueStr.empty() && valueStr.back() == '"')
-                    valueStr.pop_back();
-            }
+            stripQuotes(valueStr);
         }
 
-        // Invoke updateField with the extracted value.
+        /* push to GUI -------------------------------------------- */
         QMetaObject::invokeMethod(appModule, "updateField", Qt::QueuedConnection,
                                   Q_ARG(QString, bk.key),
                                   Q_ARG(QString, QString::fromStdString(valueStr)));

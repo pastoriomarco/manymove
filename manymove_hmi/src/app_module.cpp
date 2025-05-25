@@ -1,724 +1,345 @@
 #include "manymove_hmi/app_module.hpp"
+
 #include <QHBoxLayout>
 #include <QVBoxLayout>
 #include <QLabel>
 #include <QLineEdit>
 #include <QPushButton>
-#include <QDebug>
-#include <QEvent>
-#include <QPalette>
-#include <QCheckBox>
 #include <QToolButton>
+#include <QPalette>
+#include <QEvent>
+#include <QDebug>
 
-// Static function returning the known keys.
-// This vector is constructed only once.
-const std::vector<BlackboardKey> &AppModule::getKnownKeys()
+/* ------------------------------------------------------------------ */
+/*  Constructor – build internal state and GUI                        */
+/* ------------------------------------------------------------------ */
+AppModule::AppModule(const std::vector<KeyConfig> &key_cfg,
+                     QWidget *parent)
+    : QWidget(parent),
+      keyConfigs_(key_cfg)
 {
-    static std::vector<BlackboardKey> keys = {
-        {"cycle_on_key", "bool"},
-        {"tube_length_key", "double"},
-        {"tube_diameter_key", "double"},
-        {"grasp_offset_key", "double"},
-        {"tube_scale_key", "double_array"},
-        {"pick_post_transform_xyz_rpy_1_key", "double_array"},
-        {"insert_post_transform_xyz_rpy_2_key", "double_array"},
-        {"load_post_transform_xyz_rpy_2_key", "double_array"},
-        {"tube_spawn_pose_key", "pose"},
-        {"slider_pose_key", "pose"},
-    };
-    return keys;
-}
+    /* 1) build black-board key list once --------------------------- */
+    for (const auto &k : keyConfigs_)
+        bb_keys_.push_back({k.key, k.value_type});
 
-AppModule::AppModule(QWidget *parent) : QWidget(parent)
-{
-    layout_ = new QVBoxLayout(this);
+    /* 2) initialise state maps ------------------------------------- */
+    for (const auto &c : keyConfigs_)
+        currentValues_[c.key] = "N/A";
 
-    // Define key configurations.
-
-    KeyConfig cycleOn;
-    cycleOn.key = "cycle_on_key";
-    cycleOn.value_type = "bool";
-    cycleOn.editable = true;
-    cycleOn.visible = true;
-    cycleOn.computeFunction = [](const QMap<QString, QString> &values) -> QString
-    {
-        return values.value("cycle_on_key", "");
-    };
-
-    // Insert the cycle_on configuration as the first element.
-    keyConfigs_.insert(keyConfigs_.begin(), cycleOn);
-
-    // tube_length: an editable double field.
-    KeyConfig tubeLength;
-    tubeLength.key = "tube_length_key";
-    tubeLength.value_type = "double";
-    tubeLength.editable = true;
-    tubeLength.visible = true;
-    tubeLength.computeFunction = [](const QMap<QString, QString> &values) -> QString
-    {
-        return values.value("tube_length_key", "");
-    };
-
-    // tube_diameter: an editable double field.
-    KeyConfig tubeDiameter;
-    tubeDiameter.key = "tube_diameter_key";
-    tubeDiameter.value_type = "double";
-    tubeDiameter.editable = true;
-    tubeDiameter.visible = true;
-    tubeDiameter.computeFunction = [](const QMap<QString, QString> &values) -> QString
-    {
-        return values.value("tube_diameter_key", "");
-    };
-
-    // tube_diameter: an editable double field.
-    KeyConfig graspOffset;
-    graspOffset.key = "grasp_offset_key";
-    graspOffset.value_type = "double";
-    graspOffset.editable = true;
-    graspOffset.visible = true;
-    graspOffset.computeFunction = [](const QMap<QString, QString> &values) -> QString
-    {
-        return values.value("grasp_offset_key", "");
-    };
-
-    // tube_scale: an editable double_array field.
-    KeyConfig tubeScale;
-    tubeScale.key = "tube_scale_key";
-    tubeScale.value_type = "double_array";
-    tubeScale.editable = false;
-    tubeScale.visible = true;
-    tubeScale.computeFunction = [this](const QMap<QString, QString> &values) -> QString
-    {
-        // Get the tube_length value: check first in the override map, then in currentValues_ as fallback.
-        QString tubeLengthStr = values.value("tube_length_key", "");
-        // Get the tube_diameter value similarly.
-        QString tubeDiameterStr = values.value("tube_diameter_key", "");
-
-        // If either value is still empty, return an empty string so that no computed update overwrites the current value.
-        if (tubeLengthStr.isEmpty() && tubeDiameterStr.isEmpty())
-        {
-            return "";
-        }
-
-        if (tubeLengthStr.isEmpty())
-        {
-            tubeLengthStr = currentValues_.value("tube_length_key", "");
-        }
-        if (tubeDiameterStr.isEmpty())
-        {
-            tubeDiameterStr = currentValues_.value("tube_diameter_key", "");
-        }
-
-        bool ok1 = false, ok2 = false;
-        double tubeLengthVal = tubeLengthStr.toDouble(&ok1);
-        double tubeDiameterVal = tubeDiameterStr.toDouble(&ok2);
-        if (!ok1 || !ok2)
-        {
-            return "";
-        }
-
-        // Construct the computed double array string.
-        // Here, both the first two values are set to the tube_diameter (from input or fallback)
-        // and the third value is set from the tube_length.
-        QString computedArray = QString("[%1, %2, %3]")
-                                    .arg(tubeDiameterVal)
-                                    .arg(tubeDiameterVal)
-                                    .arg(tubeLengthVal);
-        return computedArray;
-    };
-
-    // pick_post_transform_xyz_rpy_1_key: computed from tube_length and grasp_offset_key.
-    KeyConfig pickPostTransform;
-    pickPostTransform.key = "pick_post_transform_xyz_rpy_1_key";
-    pickPostTransform.value_type = "double_array";
-    pickPostTransform.editable = false;
-    pickPostTransform.visible = true;
-    pickPostTransform.computeFunction = [this](const QMap<QString, QString> &values) -> QString
-    {
-        // Retrieve values for tube_length and grasp_offset from the override map.
-        QString tubeLengthStr = values.value("tube_length_key", "");
-        QString graspOffsetStr = values.value("grasp_offset_key", "");
-
-        // If both values are empty, do not update.
-        if (tubeLengthStr.isEmpty() && graspOffsetStr.isEmpty())
-        {
-            return "";
-        }
-
-        // If one value is empty, fall back to the current stored value.
-        if (tubeLengthStr.isEmpty())
-        {
-            tubeLengthStr = currentValues_.value("tube_length_key", "");
-        }
-        if (graspOffsetStr.isEmpty())
-        {
-            graspOffsetStr = currentValues_.value("grasp_offset_key", "");
-        }
-
-        // Convert the retrieved string values to doubles.
-        bool ok1 = false, ok2 = false;
-        double tubeLengthVal = tubeLengthStr.toDouble(&ok1);
-        double graspOffsetVal = graspOffsetStr.toDouble(&ok2);
-        if (!ok1 || !ok2)
-        {
-            return "";
-        }
-
-        // Compute the third element using the given formula.
-        double computedZ = ((-tubeLengthVal) / 2.0) + graspOffsetVal;
-
-        // Construct the computed double array string.
-        QString computedArray = QString("[%1, %2, %3, %4, %5, %6]")
-                                    .arg(0.0)
-                                    .arg(0.0)
-                                    .arg(computedZ)
-                                    .arg(3.14)
-                                    .arg(0.0)
-                                    .arg(0.0);
-        return computedArray;
-    };
-
-    // post_insert_transform_xyz_rpy_2: computed double_array field.
-    KeyConfig insertPostTransform;
-    insertPostTransform.key = "insert_post_transform_xyz_rpy_2_key";
-    insertPostTransform.value_type = "double_array";
-    insertPostTransform.editable = false;
-    insertPostTransform.visible = true;
-    insertPostTransform.computeFunction = [this](const QMap<QString, QString> &values) -> QString
-    {
-        // Retrieve the tube_length value from the override map.
-        QString tubeLengthStr = values.value("tube_length_key", "");
-
-        // If the value is still empty, do not compute an updated value.
-        if (tubeLengthStr.isEmpty())
-        {
-            return "";
-        }
-
-        bool ok = false;
-        double tubeLengthVal = tubeLengthStr.toDouble(&ok);
-        if (!ok)
-        {
-            return "";
-        }
-
-        // Compute the third array element: ((-tube_length) / 2)
-        double computedZ = ((-tubeLengthVal) / 2.0);
-
-        // Construct the computed double array string.
-        QString computedArray = QString("[%1, %2, %3, %4, %5, %6]")
-                                    .arg(0.0)
-                                    .arg(0.0)
-                                    .arg(computedZ)
-                                    .arg(0.0)
-                                    .arg(0.0)
-                                    .arg(-0.785);
-        return computedArray;
-    };
-
-    // load_post_transform_xyz_rpy_2_key: computed double_array field.
-    KeyConfig loadPostTransform;
-    loadPostTransform.key = "load_post_transform_xyz_rpy_2_key";
-    loadPostTransform.value_type = "double_array";
-    loadPostTransform.editable = false;
-    loadPostTransform.visible = true;
-    loadPostTransform.computeFunction = [this](const QMap<QString, QString> &values) -> QString
-    {
-        // Retrieve the tube_length value from the override map.
-        QString tubeLengthStr = values.value("tube_length_key", "");
-
-        // If the value is still empty, do not compute an updated value.
-        if (tubeLengthStr.isEmpty())
-        {
-            return "";
-        }
-
-        bool ok = false;
-        double tubeLengthVal = tubeLengthStr.toDouble(&ok);
-        if (!ok)
-        {
-            return "";
-        }
-
-        // Compute the third array element:
-        double computedZ = (-tubeLengthVal);
-
-        // Construct the computed double array string.
-        QString computedArray = QString("[%1, %2, %3, %4, %5, %6]")
-                                    .arg(0.0)
-                                    .arg(0.0)
-                                    .arg(computedZ)
-                                    .arg(0.0)
-                                    .arg(0.0)
-                                    .arg(0.0);
-        return computedArray;
-    };
-
-    // tube_spawn_pose: computed from tube_length and tube_diameter.
-    KeyConfig tubeSpawnPose;
-    tubeSpawnPose.key = "tube_spawn_pose_key";
-    tubeSpawnPose.value_type = "pose";
-    tubeSpawnPose.editable = false;
-    tubeSpawnPose.visible = true;
-    tubeSpawnPose.computeFunction = [](const QMap<QString, QString> &values) -> QString
-    {
-        // If the user did not override tube_length, return empty.
-        // (Assume that an override means the user has typed a new value)
-        QString tubeLengthOverride = values.value("tube_length_key", "");
-        if (tubeLengthOverride.isEmpty())
-        {
-            // No computed update was triggered: return empty so that the current (ROS) value is used.
-            return "";
-        }
-
-        bool ok = false;
-        double length = tubeLengthOverride.toDouble(&ok);
-        if (!ok)
-            return "";
-
-        // Compute a new pose based on the new tube_length.
-        double x = (length / 2.0) + 0.973 + 0.005;
-        double y = -0.6465;
-        double z = 0.8055;
-        double roll = 1.57;
-        double pitch = 2.05;
-        double yaw = 1.57;
-        QString poseJson = QString("{\"x\":%1,\"y\":%2,\"z\":%3,\"roll\":%4,\"pitch\":%5,\"yaw\":%6}")
-                               .arg(x)
-                               .arg(y)
-                               .arg(z)
-                               .arg(roll)
-                               .arg(pitch)
-                               .arg(yaw);
-        return poseJson;
-    };
-
-    // slider_pose_key: computed from tube_length.
-    KeyConfig sliderPose;
-    sliderPose.key = "slider_pose_key";
-    sliderPose.value_type = "pose";
-    sliderPose.editable = false;
-    sliderPose.visible = true;
-    sliderPose.computeFunction = [](const QMap<QString, QString> &values) -> QString
-    {
-        // If the user did not override tube_length, return empty.
-        // (Assume that an override means the user has typed a new value)
-        QString tubeLengthOverride = values.value("tube_length_key", "");
-        if (tubeLengthOverride.isEmpty())
-        {
-            // No computed update was triggered: return empty so that the current (ROS) value is used.
-            return "";
-        }
-
-        bool ok = false;
-        double length = tubeLengthOverride.toDouble(&ok);
-        if (!ok)
-            return "";
-
-        // Compute a new pose based on the new tube_length.
-        double x = length + 0.01;
-        double y = 0.0;
-        double z = 0.0;
-        double roll = 0.0;
-        double pitch = 0.0;
-        double yaw = 0.0;
-        QString poseJson = QString("{\"x\":%1,\"y\":%2,\"z\":%3,\"roll\":%4,\"pitch\":%5,\"yaw\":%6}")
-                               .arg(x)
-                               .arg(y)
-                               .arg(z)
-                               .arg(roll)
-                               .arg(pitch)
-                               .arg(yaw);
-        return poseJson;
-    };
-
-    keyConfigs_.push_back(tubeLength);
-    keyConfigs_.push_back(tubeDiameter);
-    keyConfigs_.push_back(graspOffset);
-    keyConfigs_.push_back(tubeScale);
-    keyConfigs_.push_back(pickPostTransform);
-    keyConfigs_.push_back(insertPostTransform);
-    keyConfigs_.push_back(loadPostTransform);
-    keyConfigs_.push_back(tubeSpawnPose);
-    keyConfigs_.push_back(sliderPose);
-
-    // Initialize maps for each key.
-    for (const auto &config : keyConfigs_)
-    {
-        currentValues_[config.key] = "N/A"; // Initially, the current value is "N/A"
-        userOverrides_[config.key] = "";    // No user override yet.
-        editableValues_[config.key] = "";   // Legacy storage remains.
-    }
-
+    /* 3) build the visual layout ----------------------------------- */
     setupUI();
 }
 
-AppModule::~AppModule()
-{
-}
-
+/* ------------------------------------------------------------------ */
+/*  Private helpers                                                   */
+/* ------------------------------------------------------------------ */
 void AppModule::setupUI()
 {
-    // Create UI elements based on each key configuration.
-    for (const auto &config : keyConfigs_)
+    layout_ = new QVBoxLayout(this);
+
+    for (const auto &cfg : keyConfigs_)
     {
-        // Create a container row widget.
         QWidget *rowWidget = new QWidget(this);
-        QHBoxLayout *rowLayout = new QHBoxLayout(rowWidget);
-        rowLayout->setContentsMargins(0, 0, 0, 0);
+        QHBoxLayout *row = new QHBoxLayout(rowWidget);
+        row->setContentsMargins(0, 0, 0, 0);
 
-        // Create and add a label.
-        QLabel *label = new QLabel(config.key, rowWidget);
+        QLabel *label = new QLabel(cfg.key, rowWidget);
         label->setFixedWidth(250);
-        rowLayout->addWidget(label);
+        row->addWidget(label);
 
-        if (config.value_type == "bool")
+        /* ---------------------------------------------------------- */
+        if (cfg.value_type == "bool") /* TOGGLE  */
         {
-            // Use a checkable QToolButton as a toggle.
-            QToolButton *toggle = new QToolButton(rowWidget);
-            toggle->setCheckable(true);
-            toggle->setChecked(false);          // start off as false
-            toggle->setText("ROBOT CYCLE OFF"); // initial text
-            toggle->setFixedWidth(750);
-            toggle->setFixedHeight(70);
+            QToolButton *t = new QToolButton(rowWidget);
+            t->setCheckable(true);
+            t->setFixedSize(750, 70);
+            t->setText("ROBOT CYCLE OFF");
+            t->setStyleSheet(
+                "QToolButton { background-color: darkred; }"
+                "QToolButton:checked { background-color: green; }");
 
-            // Set a stylesheet to change background colors based on state.
-            toggle->setStyleSheet(
-                "QToolButton {"
-                "   background-color: darkred;" // Off state color
-                "   border: 1px solid gray;"
-                "   padding: 5px;"
-                "}"
-                "QToolButton:checked {"
-                "   background-color: green;" // On state color
-                "}");
-
-            rowLayout->addWidget(toggle);
-            keyWidgets_[config.key] = toggle;
-            // Connect the toggled signal.
-            connect(toggle, &QToolButton::toggled, this, [this, config, toggle](bool checked)
+            connect(t, &QToolButton::toggled, this,
+                    [this, cfg, t](bool on)
                     {
-        // Update the toggle’s text to reflect its state.
-        toggle->setText(checked ? "ROBOT CYCLE ON" : "ROBOT CYCLE OFF");
-        // Convert the state to a string.
-        QString value = (checked ? "true" : "false");
-        userOverrides_[config.key] = value;
-        editableValues_[config.key] = value;
-        updateComputedFields();
-        updateSendButtonState();
+                        t->setText(on ? "ROBOT CYCLE ON" : "ROBOT CYCLE OFF");
+                        const QString v = on ? "true" : "false";
+                        userOverrides_[cfg.key] = v;
+                        editableValues_[cfg.key] = v;
+                        updateComputedFields();
+                        updateSendButtonState();
+                        if (cfg.key == "cycle_on_key")
+                            emit keyUpdateRequested(cfg.key, cfg.value_type, v);
+                    });
 
-        // For "cycle_on_key", send its update immediately.
-        if (config.key == "cycle_on_key")
-        {
-            emit keyUpdateRequested(config.key, config.value_type, value);
-        } });
+            row->addWidget(t);
+            keyWidgets_[cfg.key] = t;
         }
-        else if (config.editable)
+        else if (cfg.editable) /* LINE EDIT */
         {
-            // Existing logic for editable QLineEdit fields.
-            QLineEdit *lineEdit = new QLineEdit(rowWidget);
-            lineEdit->setAlignment(Qt::AlignRight);
-            lineEdit->setFixedWidth(750);
-            lineEdit->setText("N/A");
-            QPalette pal = lineEdit->palette();
+            QLineEdit *le = new QLineEdit("N/A", rowWidget);
+            le->setAlignment(Qt::AlignRight);
+            le->setFixedWidth(750);
+            QPalette pal = le->palette();
             pal.setColor(QPalette::Text, Qt::gray);
-            lineEdit->setPalette(pal);
-            connect(lineEdit, &QLineEdit::textChanged, this, &AppModule::onEditableFieldChanged);
-            rowLayout->addWidget(lineEdit);
-            keyWidgets_[config.key] = lineEdit;
-            lineEdit->installEventFilter(this);
+            le->setPalette(pal);
+
+            connect(le, &QLineEdit::textChanged,
+                    this, &AppModule::onEditableChanged);
+
+            le->installEventFilter(this);
+            row->addWidget(le);
+            keyWidgets_[cfg.key] = le;
         }
-        else
+        else /* COMPUTED  */
         {
-            // For computed fields, use a QLabel.
-            QLabel *valueLabel = new QLabel("N/A", rowWidget);
-            valueLabel->setAlignment(Qt::AlignRight);
-            valueLabel->setFixedWidth(750);
-            rowLayout->addWidget(valueLabel);
-            keyWidgets_[config.key] = valueLabel;
+            QLabel *v = new QLabel("N/A", rowWidget);
+            v->setAlignment(Qt::AlignRight);
+            v->setFixedWidth(750);
+            row->addWidget(v);
+            keyWidgets_[cfg.key] = v;
         }
+
         layout_->addWidget(rowWidget);
-        keyRowWidgets_[config.key] = rowWidget;
-        rowWidget->setVisible(config.visible);
+        keyRowWidgets_[cfg.key] = rowWidget;
+        rowWidget->setVisible(cfg.visible);
     }
 
-    // Create the Send button.
     sendButton_ = new QPushButton("Send", this);
     layout_->addWidget(sendButton_);
-    connect(sendButton_, &QPushButton::clicked, this, &AppModule::onSendButtonClicked);
+    connect(sendButton_, &QPushButton::clicked,
+            this, &AppModule::onSendClicked);
 
-    // Check the initial Send button state.
     updateSendButtonState();
 }
 
-void AppModule::onEditableFieldChanged(const QString &text)
+/* ------------------------------------------------------------------ */
+void AppModule::onEditableChanged(const QString &)
 {
-    // Identify which QLineEdit sent the signal.
-    QLineEdit *lineEdit = qobject_cast<QLineEdit *>(sender());
-    if (!lineEdit)
+    auto *le = qobject_cast<QLineEdit *>(sender());
+    if (!le)
         return;
 
-    // Find the key associated with this QLineEdit.
+    /* which key? */
     QString key;
     for (auto it = keyWidgets_.cbegin(); it != keyWidgets_.cend(); ++it)
-    {
-        if (it.value() == lineEdit)
+        if (it.value() == le)
         {
             key = it.key();
             break;
         }
-    }
+
     if (key.isEmpty())
         return;
 
-    // If the user input equals the current value, treat it as empty.
-    if (text == currentValues_[key])
+    const QString txt = le->text();
+    if (txt == currentValues_[key])
     {
         userOverrides_[key].clear();
         editableValues_[key].clear();
     }
     else
     {
-        userOverrides_[key] = text;
-        editableValues_[key] = text;
+        userOverrides_[key] = txt;
+        editableValues_[key] = txt;
     }
 
-    // Validate immediately and update text color:
-    bool valid = isFieldValid(key, text);
-    QPalette pal = lineEdit->palette();
-    if (!text.isEmpty() && text != "N/A" && !valid)
-    {
-        pal.setColor(QPalette::Text, Qt::red);
-    }
-    else
-    {
-        pal.setColor(QPalette::Text, Qt::white);
-    }
-    lineEdit->setPalette(pal);
+    /* colouring ---------------------------------------------------- */
+    QPalette pal = le->palette();
+    bool ok = isFieldValid(key, txt);
+    pal.setColor(QPalette::Text,
+                 (!txt.isEmpty() && txt != "N/A" && !ok) ? Qt::red : Qt::white);
+    le->setPalette(pal);
 
     updateComputedFields();
     updateSendButtonState();
 }
 
+/* ------------------------------------------------------------------ */
 void AppModule::updateComputedFields()
 {
-    // For each computed (noneditable) key, update the label text.
-    for (const auto &config : keyConfigs_)
-    {
-        if (!config.editable)
-        {
-            QLabel *label = qobject_cast<QLabel *>(keyWidgets_.value(config.key));
-            if (!label)
-                continue;
+    /* Build a map that already contains fall-backs to current values */
+    QMap<QString, QString> merged = editableValues_;
+    for (const auto &c : keyConfigs_)
+        if (merged.value(c.key).isEmpty())
+            merged[c.key] = currentValues_[c.key];
 
-            // Call the compute function.
-            QString computedValue = config.computeFunction(editableValues_);
-            QPalette pal = label->palette();
-            if (!computedValue.isEmpty())
-            {
-                // A computed value is available. Use it and set text color to white.
-                currentValues_[config.key] = computedValue;
-                label->setText(computedValue);
-                pal.setColor(QPalette::WindowText, Qt::white);
-                label->setPalette(pal);
-            }
-            else
-            {
-                // No computed value; fall back to the current (ROS-provided) value.
-                label->setText(currentValues_.value(config.key, "N/A"));
-                pal.setColor(QPalette::WindowText, Qt::gray);
-                label->setPalette(pal);
-            }
+    for (const auto &cfg : keyConfigs_)
+    {
+        if (cfg.editable)
+            continue;
+        QLabel *lbl = qobject_cast<QLabel *>(keyWidgets_.value(cfg.key));
+        if (!lbl)
+            continue;
+
+        QString val = cfg.computeFunction ? cfg.computeFunction(merged) : "";
+        QPalette pal = lbl->palette();
+        if (!val.isEmpty())
+        {
+            currentValues_[cfg.key] = val;
+            lbl->setText(val);
+            pal.setColor(QPalette::WindowText, Qt::white);
         }
+        else
+        {
+            lbl->setText(currentValues_.value(cfg.key, "N/A"));
+            pal.setColor(QPalette::WindowText, Qt::gray);
+        }
+        lbl->setPalette(pal);
     }
 }
 
+/* ------------------------------------------------------------------ */
 void AppModule::updateSendButtonState()
 {
-
-    // Make sure the cycle_on_key toggle is off.
-    if (auto toggle = qobject_cast<QAbstractButton *>(keyWidgets_.value("cycle_on_key")))
-    {
-        if (toggle->isChecked())
-        { // if toggle is On, do not enable Send.
+    /* 1) ‘cycle_on_key’ must be off -------------------------------- */
+    if (auto *btn = qobject_cast<QAbstractButton *>(keyWidgets_.value("cycle_on_key")))
+        if (btn->isChecked())
+        {
             sendButton_->setEnabled(false);
             return;
         }
-    }
 
-    bool atLeastOneValid = false;
-    bool hasInvalid = false;
-
-    // Check all editable fields, as before.
-    for (const auto &config : keyConfigs_)
+    /* 2) at least one valid edit & no invalid ones ----------------- */
+    bool good = false, bad = false;
+    for (const auto &cfg : keyConfigs_)
     {
-        if (!config.editable)
+        if (!cfg.editable)
             continue;
-        QString text = userOverrides_.value(config.key);
-        if (text.isEmpty() || text == currentValues_[config.key])
+        const QString txt = userOverrides_.value(cfg.key);
+        if (txt.isEmpty() || txt == currentValues_[cfg.key])
             continue;
-        if (isFieldValid(config.key, text))
-            atLeastOneValid = true;
+        if (isFieldValid(cfg.key, txt))
+            good = true;
         else
         {
-            hasInvalid = true;
+            bad = true;
             break;
         }
     }
-
-    // Finally, only if at least one valid field is present and none are invalid.
-    sendButton_->setEnabled(!hasInvalid && atLeastOneValid);
+    sendButton_->setEnabled(good && !bad);
 }
 
-bool AppModule::isFieldValid(const QString &key, const QString &text) const
+/* ------------------------------------------------------------------ */
+bool AppModule::isFieldValid(const QString &key, const QString &txt) const
 {
-    // Treat empty, "N/A", or a value equal to the current value as not valid (i.e. no change).
-    if (text.isEmpty() || text == "N/A" || text == currentValues_.value(key))
+    if (txt.isEmpty() || txt == "N/A" || txt == currentValues_.value(key))
         return false;
 
-    for (const auto &config : keyConfigs_)
-    {
-        if (config.key == key)
+    for (const auto &c : keyConfigs_)
+        if (c.key == key && c.value_type == "double")
         {
-            if (config.value_type == "double")
-            {
-                bool ok = false;
-                text.toDouble(&ok);
-                return ok;
-            }
-            // Additional type validations can be added here.
+            bool ok = false;
+            txt.toDouble(&ok);
+            return ok;
         }
-    }
     return true;
 }
 
-void AppModule::onSendButtonClicked()
+/* ------------------------------------------------------------------ */
+void AppModule::onSendClicked()
 {
-    // For each key, compute and emit the final value if valid.
-    for (const auto &config : keyConfigs_)
+    for (const auto &cfg : keyConfigs_)
     {
-        QString finalValue;
-        if (config.editable)
+        QString final;
+        if (cfg.editable)
         {
-            QString rawValue = userOverrides_.value(config.key);
-            // Only send if override is non-empty and different from current.
-            if (rawValue.isEmpty() || rawValue == currentValues_[config.key] || !isFieldValid(config.key, rawValue))
+            QString raw = userOverrides_.value(cfg.key);
+            if (raw.isEmpty() || raw == currentValues_[cfg.key] || !isFieldValid(cfg.key, raw))
                 continue;
-            finalValue = config.computeFunction(editableValues_);
-            if (finalValue.isEmpty())
-                continue;
+            final = cfg.computeFunction ? cfg.computeFunction(editableValues_) : raw;
         }
         else
         {
-            QLabel *label = qobject_cast<QLabel *>(keyWidgets_.value(config.key));
-            if (label)
-            {
-                finalValue = label->text();
-                if (finalValue == "N/A" || finalValue.isEmpty())
-                    continue;
-            }
+            auto *lbl = qobject_cast<QLabel *>(keyWidgets_.value(cfg.key));
+            if (!lbl)
+                continue;
+            final = lbl->text();
+            if (final == "N/A" || final.isEmpty())
+                continue;
         }
-        emit keyUpdateRequested(config.key, config.value_type, finalValue);
-        qDebug() << "Sending key:" << config.key
-                 << "Type:" << config.value_type
-                 << "Value:" << finalValue;
+        emit keyUpdateRequested(cfg.key, cfg.value_type, final);
     }
-    // Once Send is pressed, clear all user overrides so that the latest current values are shown.
-    for (const auto &config : keyConfigs_)
-    {
-        if (config.editable)
+
+    /* clear overrides --------------------------------------------- */
+    for (const auto &cfg : keyConfigs_)
+        if (cfg.editable)
         {
-            userOverrides_[config.key].clear();
-            // Reset the field to the current value (displayed in grey).
-            if (QLineEdit *lineEdit = qobject_cast<QLineEdit *>(keyWidgets_[config.key]))
+            userOverrides_[cfg.key].clear();
+            if (auto *le = qobject_cast<QLineEdit *>(keyWidgets_[cfg.key]))
             {
-                lineEdit->setText(currentValues_[config.key]);
-                QPalette pal = lineEdit->palette();
+                le->setText(currentValues_[cfg.key]);
+                QPalette pal = le->palette();
                 pal.setColor(QPalette::Text, Qt::gray);
-                lineEdit->setPalette(pal);
+                le->setPalette(pal);
             }
         }
-    }
     updateComputedFields();
     updateSendButtonState();
 }
 
-void AppModule::setKeyVisibility(const QString &key, bool visible)
+/* ------------------------------------------------------------------ */
+void AppModule::setKeyVisibility(const QString &key, bool v)
 {
     if (keyRowWidgets_.contains(key))
-        keyRowWidgets_[key]->setVisible(visible);
+        keyRowWidgets_[key]->setVisible(v);
 }
 
-// This function is called externally to update the "current" (blackboard) value.
-// It will update the field only if the user is not currently overriding it.
-void AppModule::updateField(const QString &key, const QString &newValue)
+/* ------------------------------------------------------------------ */
+void AppModule::updateField(const QString &key, const QString &newVal)
 {
     if (!keyWidgets_.contains(key))
         return;
+    currentValues_[key] = newVal.isEmpty() ? "N/A" : newVal;
 
-    QWidget *widget = keyWidgets_[key];
-    // Update the stored current value.
-    currentValues_[key] = newValue.isEmpty() ? "N/A" : newValue;
-
-    if (QLineEdit *lineEdit = qobject_cast<QLineEdit *>(widget))
+    if (auto *le = qobject_cast<QLineEdit *>(keyWidgets_[key]))
     {
-        // If the field has focus or a user override exists (non-empty and different from current), do not update.
-        if (lineEdit->hasFocus() || (!userOverrides_[key].isEmpty() && userOverrides_[key] != currentValues_[key]))
-        {
+        if (le->hasFocus() || (!userOverrides_[key].isEmpty() && userOverrides_[key] != currentValues_[key]))
             return;
-        }
-        // Otherwise, update the field with the current value (in grey).
-        lineEdit->setText(currentValues_[key]);
-        QPalette pal = lineEdit->palette();
+        le->setText(currentValues_[key]);
+        QPalette pal = le->palette();
         pal.setColor(QPalette::Text, Qt::gray);
-        lineEdit->setPalette(pal);
+        le->setPalette(pal);
     }
-    else if (QLabel *label = qobject_cast<QLabel *>(widget))
-    {
-        label->setText(currentValues_[key]);
-    }
+    else if (auto *lbl = qobject_cast<QLabel *>(keyWidgets_[key]))
+        lbl->setText(currentValues_[key]);
+
     updateComputedFields();
     updateSendButtonState();
 }
 
-bool AppModule::eventFilter(QObject *obj, QEvent *event)
+/* ------------------------------------------------------------------ */
+bool AppModule::eventFilter(QObject *o, QEvent *e)
 {
-    if (QLineEdit *lineEdit = qobject_cast<QLineEdit *>(obj))
+    if (auto *le = qobject_cast<QLineEdit *>(o))
     {
-        // Identify the key for this QLineEdit.
         QString key;
         for (auto it = keyWidgets_.cbegin(); it != keyWidgets_.cend(); ++it)
-        {
-            if (it.value() == lineEdit)
+            if (it.value() == le)
             {
                 key = it.key();
                 break;
             }
-        }
-        if (event->type() == QEvent::FocusIn)
+
+        if (e->type() == QEvent::FocusIn)
         {
-            // On focus in, if the field's text equals the current value, clear it.
-            if (lineEdit->text() == currentValues_[key])
-                lineEdit->clear();
-            QPalette pal = lineEdit->palette();
-            pal.setColor(QPalette::Text, Qt::white);
-            lineEdit->setPalette(pal);
+            if (le->text() == currentValues_[key])
+                le->clear();
+            QPalette p = le->palette();
+            p.setColor(QPalette::Text, Qt::white);
+            le->setPalette(p);
         }
-        else if (event->type() == QEvent::FocusOut)
+        else if (e->type() == QEvent::FocusOut)
         {
-            // On focus out, if the field is empty, restore the current value.
-            if (lineEdit->text().isEmpty())
+            if (le->text().isEmpty())
             {
-                lineEdit->setText(currentValues_[key]);
-                QPalette pal = lineEdit->palette();
-                pal.setColor(QPalette::Text, Qt::gray);
-                lineEdit->setPalette(pal);
-                // Also clear the override.
+                le->setText(currentValues_[key]);
+                QPalette p = le->palette();
+                p.setColor(QPalette::Text, Qt::gray);
+                le->setPalette(p);
                 userOverrides_[key].clear();
             }
-            // Otherwise, leave the user's input intact.
             updateSendButtonState();
         }
     }
-    return QWidget::eventFilter(obj, event);
+    return QWidget::eventFilter(o, e);
 }
