@@ -259,9 +259,9 @@ namespace manymove_cpp_trees
                                         const std::string &node_prefix,
                                         const std::string &robot_model = "");
 
-    std::string buildStopMotionXML(const std::string &robot_prefix,
-                                   const std::string &node_prefix,
-                                   double deceleration_time);
+    // std::string buildStopMotionXML(const std::string &robot_prefix,
+    //                                const std::string &node_prefix,
+    //                                double deceleration_time);
 
     // ----------------------------------------------------------------------------
     // Wrappers
@@ -306,8 +306,8 @@ namespace manymove_cpp_trees
      * @return A string containing the generated XML snippet.
      */
     std::string repeatSequenceWrapperXML(const std::string &sequence_name,
-                                 const std::vector<std::string> &branches,
-                                 const int num_cycles = -1);
+                                         const std::vector<std::string> &branches,
+                                         const int num_cycles = -1);
 
     /**
      * @brief Wrap multiple snippets in a <RepeatNode> node with a given name.
@@ -321,8 +321,8 @@ namespace manymove_cpp_trees
      * @return A string containing the generated XML snippet.
      */
     std::string repeatFallbackWrapperXML(const std::string &sequence_name,
-                                 const std::vector<std::string> &branches,
-                                 const int num_cycles = -1);
+                                         const std::vector<std::string> &branches,
+                                         const int num_cycles = -1);
 
     /**
      * @brief Wrap multiple snippets in a <retryNode> node with a given name.
@@ -336,8 +336,8 @@ namespace manymove_cpp_trees
      * @return A string containing the generated XML snippet.
      */
     std::string retrySequenceWrapperXML(const std::string &sequence_name,
-                                const std::vector<std::string> &branches,
-                                const int num_cycles = -1);
+                                        const std::vector<std::string> &branches,
+                                        const int num_cycles = -1);
 
     /**
      * @brief Wrap multiple snippets in a <Fallback> with a given name.

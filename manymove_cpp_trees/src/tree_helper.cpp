@@ -401,30 +401,30 @@ namespace manymove_cpp_trees
 
         return sequenceWrapperXML(
             node_name + "_WaitTimeout",
-            {xml.str(), buildStopMotionXML(robot_prefix, node_prefix, 0.25)});
+            {xml.str(), buildSetKeyBool(robot_prefix, node_prefix, robot_prefix + "stop_execution", true)});
 
         return xml.str();
     }
 
-    std::string buildStopMotionXML(const std::string &robot_prefix,
-                                   const std::string &node_prefix,
-                                   double deceleration_time)
-    {
-        // Construct a node name
-        std::string node_name = node_prefix + "_StopMotion";
+    // std::string buildStopMotionXML(const std::string &robot_prefix,
+    //                                const std::string &node_prefix,
+    //                                double deceleration_time)
+    // {
+    //     // Construct a node name
+    //     std::string node_name = node_prefix + "_StopMotion";
 
-        std::ostringstream xml;
-        xml << "<StopMotionAction "
-            << "name=\"" << node_name << "\" "
-            << "robot_prefix=\"" << robot_prefix << "\" "
-            << "deceleration_time=\"" << deceleration_time << "\" ";
+    //     std::ostringstream xml;
+    //     xml << "<StopMotionAction "
+    //         << "name=\"" << node_name << "\" "
+    //         << "robot_prefix=\"" << robot_prefix << "\" "
+    //         << "deceleration_time=\"" << deceleration_time << "\" ";
 
-        // Output
-        // xml << " success=\"{" << "stop_motion_success" << "}\"";
+    //     // Output
+    //     // xml << " success=\"{" << "stop_motion_success" << "}\"";
 
-        xml << "/>";
-        return xml.str();
-    }
+    //     xml << "/>";
+    //     return xml.str();
+    // }
 
     // ----------------------------------------------------------------------------
     // Wrappers
