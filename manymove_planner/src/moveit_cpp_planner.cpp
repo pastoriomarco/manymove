@@ -481,9 +481,7 @@ std::pair<bool, moveit_msgs::msg::RobotTrajectory> MoveItCppPlanner::plan(const 
                 // RCLCPP_INFO_STREAM(logger_, "Euclidean distance between trajectory first point and trajectory last point: " << traj_euclidean_distance);
                 // RCLCPP_INFO_STREAM(logger_, "Euclidean distance between theoretical start and calculated trajectory first point: " << starts_euclidean_distance);
 
-                double traj_tolerance = goal_msg.goal.config.linear_precision;
-
-                if (targets_euclidean_distance < traj_tolerance)
+                if (targets_euclidean_distance < goal_msg.goal.config.linear_precision)
                 {
                     // Proceeding only if the traj is valid
 
@@ -514,7 +512,7 @@ std::pair<bool, moveit_msgs::msg::RobotTrajectory> MoveItCppPlanner::plan(const 
                 {
                     RCLCPP_WARN_STREAM(logger_, "Euclidean distance between theoretical target and calculated trajectory last point: " << targets_euclidean_distance);
 
-                    RCLCPP_WARN_STREAM(logger_, "The planner was not able to calculate trajectory with end point within tolerance." << targets_euclidean_distance);
+                    RCLCPP_WARN_STREAM(logger_, "The planner was not able to calculate trajectory with end point within tolerance. Difference:" << (targets_euclidean_distance - goal_msg.goal.config.linear_precision));
                     RCLCPP_WARN(logger_, "%s target planning attempt %d failed: trajectory is empty.",
                                 goal_msg.goal.movement_type.c_str(), attempts + 1);
                 }
