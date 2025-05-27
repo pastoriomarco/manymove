@@ -79,7 +79,7 @@ namespace manymove_cpp_trees
         MovementConfig mid_move_config = max_move_config;
         mid_move_config.velocity_scaling_factor /= 2.0;
         mid_move_config.acceleration_scaling_factor /= 2.0;
-        mid_move_config.max_cartesian_speed = 0.1;
+        mid_move_config.max_cartesian_speed = 0.2;
 
         MovementConfig slow_move_config = max_move_config;
         slow_move_config.step_size = 0.002;
