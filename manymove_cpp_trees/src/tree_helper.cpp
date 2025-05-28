@@ -547,6 +547,23 @@ namespace manymove_cpp_trees
         return xml.str();
     }
 
+    std::string buildGetLinkPoseXML(const std::string &node_prefix,
+                                    const std::string &link_name_key,
+                                    const std::string &pose_key,
+                                    const std::string &ref_frame_key,
+                                    const std::string &pre_key,
+                                    const std::string &post_key)
+    {
+        std::ostringstream xml;
+        xml << "<GetLinkPoseNode name=\"" << node_prefix << "_GetLinkPose\" "
+            << "link_name=\"{" << link_name_key << "}\" "
+            << "reference_frame=\"{" << ref_frame_key << "}\" "
+            << "pre_transform_xyz_rpy=\"{" << pre_key << "}\" "
+            << "post_transform_xyz_rpy=\"{" << post_key << "}\" "
+            << "pose_key=\"" << pose_key << "\"/>";
+        return xml.str();
+    }
+
     // ----------------------------------------------------------------------------
     // Helper functions
     // ----------------------------------------------------------------------------

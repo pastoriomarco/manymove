@@ -294,4 +294,152 @@ namespace manymove_cpp_trees
         condition_met_ = false;
     }
 
+    // ===========================================================================
+    // GetLinkPoseNode implementation
+    // ===========================================================================
+    namespace
+    {
+        constexpr double TF_TIMEOUT_SEC = 0.1;
+    } // 100 ms
+
+    GetLinkPoseNode::GetLinkPoseNode(const std::string &name,
+                                     const BT::NodeConfiguration &cfg)
+        : BT::SyncActionNode(name, cfg)
+    {
+        if (!cfg.blackboard || !cfg.blackboard->get("node", node_))
+        {
+            throw BT::RuntimeError("GetLinkPoseNode: cannot retrieve rclcpp::Node "
+                                   "from blackboard (key 'node').");
+        }
+
+        tf_buffer_ = std::make_unique<tf2_ros::Buffer>(node_->get_clock());
+        tf_listener_ = std::make_unique<tf2_ros::TransformListener>(*tf_buffer_);
+    }
+
+    BT::NodeStatus GetLinkPoseNode::tick()
+    {
+        /* ── read mandatory / optional ports ─────────────────────────────── */
+        std::string link_name;
+        if (!getInput("link_name", link_name) || link_name.empty())
+        {
+            RCLCPP_ERROR(node_->get_logger(), "[%s] 'link_name' missing", name().c_str());
+            return BT::NodeStatus::FAILURE;
+        }
+
+        std::string ref_frame;
+        getInput("reference_frame", ref_frame);
+        std::vector<double> pre, post;
+        getInput("pre_transform_xyz_rpy", pre);
+        getInput("post_transform_xyz_rpy", post);
+
+        if ((!pre.empty() && pre.size() != 6) ||
+            (!post.empty() && post.size() != 6))
+        {
+            RCLCPP_ERROR(node_->get_logger(),
+                         "[%s] pre/post vectors must contain exactly 6 elements", name().c_str());
+            return BT::NodeStatus::FAILURE;
+        }
+
+        /* ── look-up TF transform link → ref_frame ───────────────────────── */
+        geometry_msgs::msg::TransformStamped tf_link_to_ref;
+        try
+        {
+            tf_link_to_ref = tf_buffer_->lookupTransform(
+                ref_frame.empty() ? "world" : ref_frame, // target
+                link_name,                               // source
+                tf2::TimePointZero,
+                tf2::durationFromSec(TF_TIMEOUT_SEC));
+        }
+        catch (const tf2::TransformException &ex)
+        {
+            RCLCPP_ERROR(node_->get_logger(), "[%s] TF error: %s", name().c_str(), ex.what());
+            return BT::NodeStatus::FAILURE;
+        }
+
+        RCLCPP_INFO(node_->get_logger(),
+                    "[%s] RAW tf: {%.3f, %.3f, %.3f, %.3f, %.3f, %.3f, %.3f}",
+                    name().c_str(),
+                    tf_link_to_ref.transform.translation.x,
+                    tf_link_to_ref.transform.translation.y,
+                    tf_link_to_ref.transform.translation.z,
+                    tf_link_to_ref.transform.rotation.x,
+                    tf_link_to_ref.transform.rotation.y,
+                    tf_link_to_ref.transform.rotation.z,
+                    tf_link_to_ref.transform.rotation.w);
+
+        /* ── build the 8-step combined transform ─────────────────────────── */
+        tf2::Transform combined;
+        combined.setIdentity();
+
+        if (!pre.empty())
+        {
+            tf2::Quaternion q_pre;
+            q_pre.setRPY(pre[3], pre[4], pre[5]);
+            combined = tf2::Transform(q_pre) *
+                       tf2::Transform(tf2::Quaternion::getIdentity(),
+                                      tf2::Vector3(pre[0], pre[1], pre[2])) *
+                       combined;
+        }
+
+        if (!post.empty())
+        {
+            tf2::Quaternion q_post;
+            q_post.setRPY(post[3], post[4], post[5]);
+            combined = tf2::Transform(q_post) *
+                       tf2::Transform(tf2::Quaternion::getIdentity(),
+                                      tf2::Vector3(post[0], post[1], post[2])) *
+                       combined;
+        }
+
+        /* link orientation + translation */
+        const auto &tr = tf_link_to_ref.transform;
+        tf2::Quaternion q_link(tr.rotation.x, tr.rotation.y, tr.rotation.z, tr.rotation.w);
+        combined = tf2::Transform(tf2::Quaternion::getIdentity(),
+                                  tf2::Vector3(tr.translation.x,
+                                               tr.translation.y,
+                                               tr.translation.z)) *
+                   tf2::Transform(q_link) *
+                   combined;
+
+        /* ── extract final pose ──────────────────────────────────────────── */
+        geometry_msgs::msg::Pose final_pose;
+        final_pose.position.x = combined.getOrigin().x();
+        final_pose.position.y = combined.getOrigin().y();
+        final_pose.position.z = combined.getOrigin().z();
+
+        tf2::Quaternion q_final = combined.getRotation();
+        q_final.normalize();
+        final_pose.orientation.x = q_final.x();
+        final_pose.orientation.y = q_final.y();
+        final_pose.orientation.z = q_final.z();
+        final_pose.orientation.w = q_final.w();
+
+        RCLCPP_INFO(node_->get_logger(), "GetLinkPoseNode final pose = {%.3f, %.3f, %.3f, %.3f, %.3f, %.3f, %.3f}",
+                    final_pose.position.x,
+                    final_pose.position.y,
+                    final_pose.position.z,
+                    final_pose.orientation.x,
+                    final_pose.orientation.y,
+                    final_pose.orientation.z,
+                    final_pose.orientation.w);
+
+        /* ── write to output & optionally to blackboard ──────────────────── */
+        setOutput("pose", final_pose);
+
+        std::string pose_key;
+        if (getInput("pose_key", pose_key) && !pose_key.empty())
+        {
+            config().blackboard->set(pose_key, final_pose);
+            RCLCPP_INFO(node_->get_logger(),
+                        "GetLinkPoseNode pose written to = %s", pose_key.c_str());
+        }
+        else
+        {
+            RCLCPP_DEBUG(node_->get_logger(),
+                         "GetLinkPoseNode: no pose_key provided, skipping BB write");
+        }
+
+        return BT::NodeStatus::SUCCESS;
+    }
+
 } // namespace manymove_cpp_trees

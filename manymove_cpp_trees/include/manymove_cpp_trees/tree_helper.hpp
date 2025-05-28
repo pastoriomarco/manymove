@@ -47,6 +47,8 @@ namespace manymove_cpp_trees
         factory.registerNodeType<WaitForKeyBool>("WaitForKeyBool");
         factory.registerNodeType<BT::RetryNode>("RetryNode");
         factory.registerNodeType<RetryPauseResetNode>("RetryPauseResetNode");
+        factory.registerNodeType<GetLinkPoseNode>("GetLinkPoseNode");
+
         factory.registerNodeType<GripperCommandAction>("GripperCommandAction");
         factory.registerNodeType<manymove_cpp_trees::GripperTrajAction>("GripperTrajAction");
     }
@@ -358,6 +360,25 @@ namespace manymove_cpp_trees
      */
     std::string mainTreeWrapperXML(const std::string &tree_id,
                                    const std::string &content);
+
+    /**
+     * @brief Build an XML snippet for a single <GetLinkPoseAction> node.
+     *
+     * @param robot_prefix    Prefix used for the robot's action servers (e.g. "R_").
+     * @param node_prefix     Used to make the node name unique inside the tree.
+     * @param link_name_key   The name (or black-board key) of the link whose pose you want.
+     * @param pose_key        Blackboard key where the resulting geometry_msgs::Pose will be stored.
+     * @param ref_frame_key   Reference frame for the returned pose.
+     * @param pre_key         First transform for the final pose derived from the link's pose.
+     * @param post_key        Second transform for the final pose derived from the link's pose.
+     * @return XML snippet as std::string.
+     */
+    std::string buildGetLinkPoseXML(const std::string &node_prefix,
+                                    const std::string &link_name_key,
+                                    const std::string &pose_key,
+                                    const std::string &ref_frame_key,
+                                    const std::string &pre_key,
+                                    const std::string &post_key);
 
     // ----------------------------------------------------------------------------
     // Helper functions
