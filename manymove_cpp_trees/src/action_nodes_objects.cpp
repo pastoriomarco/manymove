@@ -791,7 +791,7 @@ namespace manymove_cpp_trees
             }
             else
             {
-                RCLCPP_ERROR(node_->get_logger(), "GetObjectPoseAction: Failed to retrieve pose. Message: %s", action_result_.message.c_str());
+                RCLCPP_ERROR(node_->get_logger(), "GetObjectPoseAction: Failed to retrieve pose for object '%s'. Message: %s", object_id_.c_str(), action_result_.message.c_str());
                 return BT::NodeStatus::FAILURE;
             }
         }
