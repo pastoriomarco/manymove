@@ -468,13 +468,13 @@ int main(int argc, char **argv)
     std::string wait_for_renamed_drop_obj_xml = buildWaitForObject(
         rp_2.prefix,
         "renamed_drop_exists",
-        object_to_manipulate_2,
+        object_to_manipulate_2_key_name,
         true);
 
     std::string wait_for_renamed_obj_removed_xml = buildWaitForObject(
         rp_2.prefix,
         "renamed_drop_removed",
-        object_to_manipulate_2,
+        object_to_manipulate_2_key_name,
         false);
 
     //

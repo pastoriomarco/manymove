@@ -278,7 +278,7 @@ namespace manymove_cpp_trees
 
     std::string buildWaitForObject(const std::string &robot_prefix,
                                    const std::string &node_prefix,
-                                   const std::string &object_id,
+                                   const std::string &object_id_key,
                                    const bool exists,
                                    const int timeout_ms,
                                    const int poll_rate_ms)
@@ -289,7 +289,7 @@ namespace manymove_cpp_trees
         std::ostringstream xml;
         xml << "<WaitForObjectAction"
             << " name=\"" << node_name << "\""
-            << " object_id=\"" << object_id << "\""
+            << " object_id=\"{" << object_id_key << "}\""
             << " exists=\"" << (exists ? "true" : "false") << "\""
             << " timeout=\"" << ((timeout_ms > 0) ? (static_cast<double>(timeout_ms) / 1000.0) : 0.0) << "\""
             << " poll_rate=\"" << ((poll_rate_ms > 0) ? (static_cast<double>(poll_rate_ms) / 1000.0) : 0.0) << "\""
@@ -400,29 +400,48 @@ namespace manymove_cpp_trees
         xml << "/>";
 
         return sequenceWrapperXML(
+
             node_name + "_WaitTimeout",
-            {xml.str(), buildStopMotionXML(robot_prefix, node_prefix, 0.25)});
+
+            {xml.str(), buildSetKeyBool(robot_prefix, node_prefix, robot_prefix + "stop_execution", true)});
 
         return xml.str();
     }
 
-    std::string buildStopMotionXML(const std::string &robot_prefix,
-                                   const std::string &node_prefix,
-                                   double deceleration_time)
+    // std::string buildStopMotionXML(const std::string &robot_prefix,
+    //                                const std::string &node_prefix,
+    //                                double deceleration_time)
+    // {
+    //     // Construct a node name
+    //     std::string node_name = node_prefix + "_StopMotion";
+
+    //     std::ostringstream xml;
+    //     xml << "<StopMotionAction "
+    //         << "name=\"" << node_name << "\" "
+    //         << "robot_prefix=\"" << robot_prefix << "\" "
+    //         << "deceleration_time=\"" << deceleration_time << "\" ";
+
+    //     // Output
+    //     // xml << " success=\"{" << "stop_motion_success" << "}\"";
+
+    //     xml << "/>";
+    //     return xml.str();
+    // }
+
+    std::string buildGetLinkPoseXML(const std::string &node_prefix,
+                                    const std::string &link_name_key,
+                                    const std::string &pose_key,
+                                    const std::string &ref_frame_key,
+                                    const std::string &pre_key,
+                                    const std::string &post_key)
     {
-        // Construct a node name
-        std::string node_name = node_prefix + "_StopMotion";
-
         std::ostringstream xml;
-        xml << "<StopMotionAction "
-            << "name=\"" << node_name << "\" "
-            << "robot_prefix=\"" << robot_prefix << "\" "
-            << "deceleration_time=\"" << deceleration_time << "\" ";
-
-        // Output
-        // xml << " success=\"{" << "stop_motion_success" << "}\"";
-
-        xml << "/>";
+        xml << "<GetLinkPoseNode name=\"" << node_prefix << "_GetLinkPose\" "
+            << "link_name=\"{" << link_name_key << "}\" "
+            << "reference_frame=\"{" << ref_frame_key << "}\" "
+            << "pre_transform_xyz_rpy=\"{" << pre_key << "}\" "
+            << "post_transform_xyz_rpy=\"{" << post_key << "}\" "
+            << "pose_key=\"" << pose_key << "\"/>";
         return xml.str();
     }
 

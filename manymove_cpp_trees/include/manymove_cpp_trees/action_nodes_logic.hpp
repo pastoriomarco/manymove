@@ -6,6 +6,11 @@
 #include <behaviortree_cpp_v3/condition_node.h>
 #include <behaviortree_cpp_v3/action_node.h>
 
+#include <tf2_ros/transform_listener.h>
+#include <tf2_ros/buffer.h>
+#include <tf2_geometry_msgs/tf2_geometry_msgs.hpp>
+#include <chrono>
+
 namespace manymove_cpp_trees
 {
     /**
@@ -46,7 +51,7 @@ namespace manymove_cpp_trees
          * @param config The node's configuration (ports, blackboard, etc.)
          */
         CheckKeyBoolValue(const std::string &name,
-                                const BT::NodeConfiguration &config);
+                          const BT::NodeConfiguration &config);
 
         /**
          * @brief Required BT ports: "key" (the blackboard key) and "value" (the expected value).
@@ -112,7 +117,7 @@ namespace manymove_cpp_trees
     {
     public:
         WaitForKeyBool(const std::string &name,
-                         const BT::NodeConfiguration &config);
+                       const BT::NodeConfiguration &config);
 
         static BT::PortsList providedPorts()
         {
@@ -141,6 +146,48 @@ namespace manymove_cpp_trees
         rclcpp::Time next_check_time_;
 
         bool condition_met_;
+    };
+
+    // ---------------------------------------------------------------------------
+    // GetLinkPoseNode  (sync action – returns the current pose of a link)
+    // ---------------------------------------------------------------------------
+
+    /**
+     * @brief Retrieve the current pose of a link (frame) relative to a reference
+     *        frame using TF2.
+     *
+     *  INPUT PORTS
+     *    - link_name        (string, *required*)  Source frame (e.g. "link_tcp")
+     *    - reference_frame  (string, default="world")  Target frame
+     *    - pose_key         (string, default="")  If non-empty, store pose to this
+     *                                             blackboard key as well.
+     *
+     *  OUTPUT PORTS
+     *    - pose             (geometry_msgs::msg::Pose)  Resulting pose
+     */
+    class GetLinkPoseNode : public BT::SyncActionNode
+    {
+    public:
+        GetLinkPoseNode(const std::string &name,
+                        const BT::NodeConfiguration &cfg);
+
+        static BT::PortsList providedPorts()
+        {
+            return {
+                BT::InputPort<std::string>("link_name", "Source link / frame"),
+                BT::InputPort<std::string>("reference_frame", "", "Target frame (default world)"),
+                BT::InputPort<std::vector<double>>("pre_transform_xyz_rpy", "6-tuple applied FIRST"),
+                BT::InputPort<std::vector<double>>("post_transform_xyz_rpy", "6-tuple applied AFTER link pose"),
+                BT::InputPort<std::string>("pose_key", "", "If set, store pose in blackboard"),
+                BT::OutputPort<geometry_msgs::msg::Pose>("pose", "Final pose")};
+        }
+
+        BT::NodeStatus tick() override;
+
+    private:
+        rclcpp::Node::SharedPtr node_;
+        std::unique_ptr<tf2_ros::Buffer> tf_buffer_;
+        std::unique_ptr<tf2_ros::TransformListener> tf_listener_;
     };
 
 } // namespace manymove_cpp_trees

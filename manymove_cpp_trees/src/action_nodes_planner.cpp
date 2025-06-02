@@ -109,7 +109,7 @@ namespace manymove_cpp_trees
         if (!getInput<bool>("invalidate_traj_on_exec", invalidate_traj_on_exec))
         {
             RCLCPP_ERROR(node_->get_logger(),
-                         "StopMotionAction [%s]: missing InputPort [invalidate_traj_on_exec].",
+                         "MoveManipulatorAction [%s]: missing InputPort [invalidate_traj_on_exec].",
                          name().c_str());
             return BT::NodeStatus::FAILURE;
         }

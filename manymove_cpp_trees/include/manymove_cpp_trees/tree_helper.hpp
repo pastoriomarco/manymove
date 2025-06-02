@@ -41,6 +41,7 @@ namespace manymove_cpp_trees
         factory.registerNodeType<WaitForInputAction>("WaitForInputAction");
         factory.registerNodeType<CheckRobotStateAction>("CheckRobotStateAction");
         factory.registerNodeType<ResetRobotStateAction>("ResetRobotStateAction");
+        factory.registerNodeType<GetLinkPoseNode>("GetLinkPoseNode");
 
         factory.registerNodeType<CheckKeyBoolValue>("CheckKeyBoolValue");
         factory.registerNodeType<SetKeyBoolValue>("SetKeyBoolValue");
@@ -182,17 +183,17 @@ namespace manymove_cpp_trees
      *       poll_rate="0.25"
      *       />
      *
-     * @param robot_prefix Typically "R_" or "L_"; used in the node's "name" attribute
-     * @param node_prefix  A user label for uniqueness in the node name
-     * @param object_id    The object to check
-     * @param exists       If true => succeed once the object is found
-     *                     If false => succeed once the object is not found
-     * @param timeout_ms   How long to wait (ms). If 0 => infinite wait
+     * @param robot_prefix  Typically "R_" or "L_"; used in the node's "name" attribute
+     * @param node_prefix   A user label for uniqueness in the node name
+     * @param object_id_key The object to check
+     * @param exists        If true => succeed once the object is found
+     *                      If false => succeed once the object is not found
+     * @param timeout_ms    How long to wait (ms). If 0 => infinite wait
      * @return The generated XML snippet
      */
     std::string buildWaitForObject(const std::string &robot_prefix,
                                    const std::string &node_prefix,
-                                   const std::string &object_id,
+                                   const std::string &object_id_key,
                                    const bool exists = true,
                                    const int timeout_ms = 0,
                                    const int poll_rate_ms = 100);
@@ -259,9 +260,28 @@ namespace manymove_cpp_trees
                                         const std::string &node_prefix,
                                         const std::string &robot_model = "");
 
-    std::string buildStopMotionXML(const std::string &robot_prefix,
-                                   const std::string &node_prefix,
-                                   double deceleration_time);
+    // std::string buildStopMotionXML(const std::string &robot_prefix,
+    //                                const std::string &node_prefix,
+    //                                double deceleration_time);
+
+    /**
+     * @brief Build an XML snippet for a single <GetLinkPoseAction> node.
+     *
+     * @param robot_prefix    Prefix used for the robot's action servers (e.g. "R_").
+     * @param node_prefix     Used to make the node name unique inside the tree.
+     * @param link_name_key   The name (or black-board key) of the link whose pose you want.
+     * @param pose_key        Blackboard key where the resulting geometry_msgs::Pose will be stored.
+     * @param ref_frame_key   Reference frame for the returned pose.
+     * @param pre_key         First transform for the final pose derived from the link's pose.
+     * @param post_key        Second transform for the final pose derived from the link's pose.
+     * @return XML snippet as std::string.
+     */
+    std::string buildGetLinkPoseXML(const std::string &node_prefix,
+                                    const std::string &link_name_key,
+                                    const std::string &pose_key,
+                                    const std::string &ref_frame_key,
+                                    const std::string &pre_key,
+                                    const std::string &post_key);
 
     // ----------------------------------------------------------------------------
     // Wrappers
@@ -306,8 +326,8 @@ namespace manymove_cpp_trees
      * @return A string containing the generated XML snippet.
      */
     std::string repeatSequenceWrapperXML(const std::string &sequence_name,
-                                 const std::vector<std::string> &branches,
-                                 const int num_cycles = -1);
+                                         const std::vector<std::string> &branches,
+                                         const int num_cycles = -1);
 
     /**
      * @brief Wrap multiple snippets in a <RepeatNode> node with a given name.
@@ -321,8 +341,8 @@ namespace manymove_cpp_trees
      * @return A string containing the generated XML snippet.
      */
     std::string repeatFallbackWrapperXML(const std::string &sequence_name,
-                                 const std::vector<std::string> &branches,
-                                 const int num_cycles = -1);
+                                         const std::vector<std::string> &branches,
+                                         const int num_cycles = -1);
 
     /**
      * @brief Wrap multiple snippets in a <retryNode> node with a given name.
@@ -336,8 +356,8 @@ namespace manymove_cpp_trees
      * @return A string containing the generated XML snippet.
      */
     std::string retrySequenceWrapperXML(const std::string &sequence_name,
-                                const std::vector<std::string> &branches,
-                                const int num_cycles = -1);
+                                        const std::vector<std::string> &branches,
+                                        const int num_cycles = -1);
 
     /**
      * @brief Wrap multiple snippets in a <Fallback> with a given name.
