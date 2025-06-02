@@ -278,7 +278,7 @@ namespace manymove_cpp_trees
 
     std::string buildWaitForObject(const std::string &robot_prefix,
                                    const std::string &node_prefix,
-                                   const std::string &object_id,
+                                   const std::string &object_id_key,
                                    const bool exists,
                                    const int timeout_ms,
                                    const int poll_rate_ms)
@@ -289,7 +289,7 @@ namespace manymove_cpp_trees
         std::ostringstream xml;
         xml << "<WaitForObjectAction"
             << " name=\"" << node_name << "\""
-            << " object_id=\"" << object_id << "\""
+            << " object_id=\"{" << object_id_key << "}\""
             << " exists=\"" << (exists ? "true" : "false") << "\""
             << " timeout=\"" << ((timeout_ms > 0) ? (static_cast<double>(timeout_ms) / 1000.0) : 0.0) << "\""
             << " poll_rate=\"" << ((poll_rate_ms > 0) ? (static_cast<double>(poll_rate_ms) / 1000.0) : 0.0) << "\""

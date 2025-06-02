@@ -184,17 +184,17 @@ namespace manymove_cpp_trees
      *       poll_rate="0.25"
      *       />
      *
-     * @param robot_prefix Typically "R_" or "L_"; used in the node's "name" attribute
-     * @param node_prefix  A user label for uniqueness in the node name
-     * @param object_id    The object to check
-     * @param exists       If true => succeed once the object is found
-     *                     If false => succeed once the object is not found
-     * @param timeout_ms   How long to wait (ms). If 0 => infinite wait
+     * @param robot_prefix  Typically "R_" or "L_"; used in the node's "name" attribute
+     * @param node_prefix   A user label for uniqueness in the node name
+     * @param object_id_key The object to check
+     * @param exists        If true => succeed once the object is found
+     *                      If false => succeed once the object is not found
+     * @param timeout_ms    How long to wait (ms). If 0 => infinite wait
      * @return The generated XML snippet
      */
     std::string buildWaitForObject(const std::string &robot_prefix,
                                    const std::string &node_prefix,
-                                   const std::string &object_id,
+                                   const std::string &object_id_key,
                                    const bool exists = true,
                                    const int timeout_ms = 0,
                                    const int poll_rate_ms = 100);
