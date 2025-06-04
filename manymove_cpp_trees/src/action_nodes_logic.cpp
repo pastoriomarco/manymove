@@ -295,20 +295,20 @@ namespace manymove_cpp_trees
     }
 
     // ===========================================================================
-    // GetLinkPoseNode implementation
+    // GetLinkPoseAction implementation
     // ===========================================================================
     namespace
     {
         constexpr double TF_TIMEOUT_SEC = 0.1;
     } // 100 ms
 
-    GetLinkPoseNode::GetLinkPoseNode(const std::string &name,
+    GetLinkPoseAction::GetLinkPoseAction(const std::string &name,
                                      const BT::NodeConfiguration &cfg)
         : BT::SyncActionNode(name, cfg)
     {
         if (!cfg.blackboard || !cfg.blackboard->get("node", node_))
         {
-            throw BT::RuntimeError("GetLinkPoseNode: cannot retrieve rclcpp::Node "
+            throw BT::RuntimeError("GetLinkPoseAction: cannot retrieve rclcpp::Node "
                                    "from blackboard (key 'node').");
         }
 
@@ -316,7 +316,7 @@ namespace manymove_cpp_trees
         tf_listener_ = std::make_unique<tf2_ros::TransformListener>(*tf_buffer_);
     }
 
-    BT::NodeStatus GetLinkPoseNode::tick()
+    BT::NodeStatus GetLinkPoseAction::tick()
     {
         /* ── read mandatory / optional ports ─────────────────────────────── */
         std::string link_name;
@@ -414,7 +414,7 @@ namespace manymove_cpp_trees
         final_pose.orientation.z = q_final.z();
         final_pose.orientation.w = q_final.w();
 
-        RCLCPP_INFO(node_->get_logger(), "GetLinkPoseNode final pose = {%.3f, %.3f, %.3f, %.3f, %.3f, %.3f, %.3f}",
+        RCLCPP_INFO(node_->get_logger(), "GetLinkPoseAction final pose = {%.3f, %.3f, %.3f, %.3f, %.3f, %.3f, %.3f}",
                     final_pose.position.x,
                     final_pose.position.y,
                     final_pose.position.z,
@@ -431,12 +431,12 @@ namespace manymove_cpp_trees
         {
             config().blackboard->set(pose_key, final_pose);
             RCLCPP_INFO(node_->get_logger(),
-                        "GetLinkPoseNode pose written to = %s", pose_key.c_str());
+                        "GetLinkPoseAction pose written to = %s", pose_key.c_str());
         }
         else
         {
             RCLCPP_DEBUG(node_->get_logger(),
-                         "GetLinkPoseNode: no pose_key provided, skipping BB write");
+                         "GetLinkPoseAction: no pose_key provided, skipping BB write");
         }
 
         return BT::NodeStatus::SUCCESS;

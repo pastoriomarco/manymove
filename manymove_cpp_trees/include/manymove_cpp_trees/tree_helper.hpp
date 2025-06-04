@@ -41,7 +41,7 @@ namespace manymove_cpp_trees
         factory.registerNodeType<WaitForInputAction>("WaitForInputAction");
         factory.registerNodeType<CheckRobotStateAction>("CheckRobotStateAction");
         factory.registerNodeType<ResetRobotStateAction>("ResetRobotStateAction");
-        factory.registerNodeType<GetLinkPoseNode>("GetLinkPoseNode");
+        factory.registerNodeType<GetLinkPoseAction>("GetLinkPoseAction");
 
         factory.registerNodeType<CheckKeyBoolValue>("CheckKeyBoolValue");
         factory.registerNodeType<SetKeyBoolValue>("SetKeyBoolValue");
