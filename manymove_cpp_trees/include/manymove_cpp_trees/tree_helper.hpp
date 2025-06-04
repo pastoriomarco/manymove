@@ -47,7 +47,7 @@ namespace manymove_cpp_trees
         factory.registerNodeType<WaitForKeyBool>("WaitForKeyBool");
         factory.registerNodeType<BT::RetryNode>("RetryNode");
         factory.registerNodeType<RetryPauseResetNode>("RetryPauseResetNode");
-        factory.registerNodeType<GetLinkPoseNode>("GetLinkPoseNode");
+        factory.registerNodeType<GetLinkPoseAction>("GetLinkPoseAction");
 
         factory.registerNodeType<GripperCommandAction>("GripperCommandAction");
         factory.registerNodeType<manymove_cpp_trees::GripperTrajAction>("GripperTrajAction");

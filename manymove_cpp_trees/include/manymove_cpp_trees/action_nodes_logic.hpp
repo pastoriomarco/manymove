@@ -149,7 +149,7 @@ namespace manymove_cpp_trees
     };
 
     // ---------------------------------------------------------------------------
-    // GetLinkPoseNode  (sync action – returns the current pose of a link)
+    // GetLinkPoseAction  (sync action – returns the current pose of a link)
     // ---------------------------------------------------------------------------
 
     /**
@@ -165,10 +165,10 @@ namespace manymove_cpp_trees
      *  OUTPUT PORTS
      *    - pose             (geometry_msgs::msg::Pose)  Resulting pose
      */
-    class GetLinkPoseNode : public BT::SyncActionNode
+    class GetLinkPoseAction : public BT::SyncActionNode
     {
     public:
-        GetLinkPoseNode(const std::string &name,
+        GetLinkPoseAction(const std::string &name,
                         const BT::NodeConfiguration &cfg);
 
         static BT::PortsList providedPorts()

@@ -555,7 +555,7 @@ namespace manymove_cpp_trees
                                     const std::string &post_key)
     {
         std::ostringstream xml;
-        xml << "<GetLinkPoseNode name=\"" << node_prefix << "_GetLinkPose\" "
+        xml << "<GetLinkPoseAction name=\"" << node_prefix << "_GetLinkPose\" "
             << "link_name=\"{" << link_name_key << "}\" "
             << "reference_frame=\"{" << ref_frame_key << "}\" "
             << "pre_transform_xyz_rpy=\"{" << pre_key << "}\" "
