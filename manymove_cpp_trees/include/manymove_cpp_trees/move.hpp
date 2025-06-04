@@ -62,7 +62,7 @@ namespace manymove_cpp_trees
         MovementConfig max_move_config;
         max_move_config.velocity_scaling_factor = 1.0;
         max_move_config.acceleration_scaling_factor = 0.75;
-        max_move_config.max_cartesian_speed = 0.4;
+        max_move_config.max_cartesian_speed = 0.45;
         max_move_config.linear_precision = 0.001;
         max_move_config.deceleration_time = 0.5;
         max_move_config.rotational_precision = 0.05;
@@ -79,7 +79,7 @@ namespace manymove_cpp_trees
         MovementConfig mid_move_config = max_move_config;
         mid_move_config.velocity_scaling_factor /= 2.0;
         mid_move_config.acceleration_scaling_factor /= 2.0;
-        mid_move_config.max_cartesian_speed = 0.2;
+        mid_move_config.max_cartesian_speed = 0.25;
 
         MovementConfig slow_move_config = max_move_config;
         slow_move_config.step_size = 0.002;
