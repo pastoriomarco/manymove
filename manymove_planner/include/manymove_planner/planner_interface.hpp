@@ -40,13 +40,6 @@ public:
     virtual std::pair<bool, moveit_msgs::msg::RobotTrajectory> plan(const manymove_msgs::action::PlanManipulator::Goal &goal) = 0;
 
     /**
-     * @brief Execute a given trajectory on the manipulator.
-     * @param trajectory The trajectory to execute.
-     * @return True if execution was successful, false otherwise.
-     */
-    virtual bool executeTrajectory(const moveit_msgs::msg::RobotTrajectory &trajectory) = 0;
-
-    /**
      * @brief Apply time parameterization to a trajectory.
      * @param input_traj The raw robot trajectory message (without time stamps) produced by the planner.
      * @param config The movement configuration that specifies velocity and acceleration scaling factors,
