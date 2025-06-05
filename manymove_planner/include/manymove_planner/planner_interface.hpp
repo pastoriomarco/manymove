@@ -40,13 +40,6 @@ public:
     virtual std::pair<bool, moveit_msgs::msg::RobotTrajectory> plan(const manymove_msgs::action::PlanManipulator::Goal &goal) = 0;
 
     /**
-     * @brief Execute a given trajectory on the manipulator.
-     * @param trajectory The trajectory to execute.
-     * @return True if execution was successful, false otherwise.
-     */
-    virtual bool executeTrajectory(const moveit_msgs::msg::RobotTrajectory &trajectory) = 0;
-
-    /**
      * @brief Apply time parameterization to a trajectory.
      * @param input_traj The raw robot trajectory message (without time stamps) produced by the planner.
      * @param config The movement configuration that specifies velocity and acceleration scaling factors,
@@ -79,7 +72,7 @@ public:
      *
      * @details If the running_traj is not set, this function sends a single-point trajectory to the robot’s trajectory controller that holds the current
      * joint positions (with zero velocities) and gives the controller a deceleration window. The effect is a “spring-back”
-     * stop where the robot decelerates smoothly. 
+     * stop where the robot decelerates smoothly.
      * If running_traj is valid the end point will be the point of the traj where the robot will be at decel_time_s from now.
      * Increasing the deceleration_time leads to a smoother stop, but also increases
      * the movement required to decelerate.

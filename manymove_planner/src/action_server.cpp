@@ -786,6 +786,9 @@ bool ManipulatorActionServer::executeTrajectoryWithCollisionChecks(
     opts.feedback_callback = [this, &collision_detected, goal_handle, traj = traj.joint_trajectory, start_time, total_time_s](auto /*unused_handle*/,
                                                                                                                               const std::shared_ptr<const control_msgs::action::FollowJointTrajectory::Feedback> &feedback) mutable
     {
+        RCLCPP_DEBUG(node_->get_logger(), "[executeTrajectoryWithCollisionChecks] Partial execution, time_from_start: %.3f",
+                     rclcpp::Duration(feedback->actual.time_from_start).seconds());
+
         if (!feedback || feedback->actual.positions.empty())
         {
             RCLCPP_ERROR(node_->get_logger(),

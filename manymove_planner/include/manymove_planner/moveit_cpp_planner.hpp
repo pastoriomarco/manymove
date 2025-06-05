@@ -92,21 +92,6 @@ public:
         const manymove_msgs::msg::MovementConfig &config);
 
     /**
-     * @brief Execute a planned trajectory on the robot.
-     * @param trajectory The trajectory to execute.
-     * @return True if execution succeeded, false otherwise.
-     *
-     * @details This function doesn't use the internal functionalities of its implementation (MoveGroup or MoveItCPP):
-     * instead, it uses a standard MoveIt functionality as the controller's trajectory execution action server, which
-     * in this context is usually <robot_name>_traj_controller/follow_joint_trajectory. Older versions of this package
-     * did use the specific functions of its implementation, for example the execute() and asyncExecute() funcions, but
-     * this created differences in if and how parallel planning and execution would be handled dependin on which implementation
-     * is used. Using the traj_controller separates the concerns of planning and execution and makes the implementation more
-     * consistant.
-     */
-    bool executeTrajectory(const moveit_msgs::msg::RobotTrajectory &trajectory) override;
-
-    /**
      * @brief Send a controlled stop command to the robot.
      * @param decel_time_s The duration (in seconds) over which the robot’s velocities should be ramped down to zero.
      * @param running_traj Current traj to stop
@@ -115,7 +100,7 @@ public:
      *
      * @details If the running_traj is not set, this function sends a single-point trajectory to the robot’s trajectory controller that holds the current
      * joint positions (with zero velocities) and gives the controller a deceleration window. The effect is a “spring-back”
-     * stop where the robot decelerates smoothly. 
+     * stop where the robot decelerates smoothly.
      * If running_traj is valid the end point will be the point of the traj where the robot will be at decel_time_s from now.
      * Increasing the deceleration_time leads to a smoother stop, but also increases
      * the movement required to decelerate.
