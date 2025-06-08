@@ -14,6 +14,7 @@
 #include "manymove_cpp_trees/action_nodes_logic.hpp"
 #include "manymove_cpp_trees/action_nodes_gripper.hpp"
 #include "manymove_cpp_trees/bt_converters.hpp"
+#include "manymove_cpp_trees/blackboard_utils.hpp"
 
 #include <string>
 #include <vector>
@@ -52,6 +53,37 @@ namespace manymove_cpp_trees
         factory.registerNodeType<GripperCommandAction>("GripperCommandAction");
         factory.registerNodeType<manymove_cpp_trees::GripperTrajAction>("GripperTrajAction");
     }
+
+    // --------------------------------------------------------------------------
+    // High level helpers for object creation
+    // --------------------------------------------------------------------------
+
+    struct ObjectSnippets
+    {
+        std::string check_xml;  ///< Check if object exists
+        std::string add_xml;    ///< Add object to the scene
+        std::string init_xml;   ///< Fallback check/add
+        std::string remove_xml; ///< Remove object (empty for fixed)
+        std::string attach_xml; ///< Attach object (only attachable)
+        std::string detach_xml; ///< Detach object (only attachable)
+    };
+
+    /**
+     * @brief Helper to create all the XML snippets to handle an object.
+     * 
+     * If another object with the same name already exists on the
+     * blackboard, this function throws a BT::RuntimeError.
+     */
+    ObjectSnippets createObjectSnippets(BT::Blackboard::Ptr blackboard,
+                                        std::vector<manymove_cpp_trees::BlackboardEntry> &keys,
+                                        const std::string &name,
+                                        const std::string &shape_key,
+                                        const geometry_msgs::msg::Pose &pose,
+                                        const std::vector<double> &dimensions = {},
+                                        const std::string &mesh_file = "",
+                                        const std::vector<double> &scale = {1.0, 1.0, 1.0},
+                                        const std::string &link_name_key = "",
+                                        const std::string &touch_links_key = "");
 
     // ----------------------------------------------------------------------------
     // Builder functions to build xml tree snippets programmatically
