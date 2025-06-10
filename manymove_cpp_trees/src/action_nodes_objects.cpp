@@ -470,8 +470,9 @@ namespace manymove_cpp_trees
             break;
         case rclcpp_action::ResultCode::ABORTED:
             RCLCPP_ERROR(node_->get_logger(), "AttachDetachObjectAction: Goal was aborted.");
-            action_result_.success = false;
-            action_result_.message = "Action aborted.";
+            action_result_ = *(wrapped_result.result);
+            // action_result_.success = false;
+            // action_result_.message = "Action aborted.";
             break;
         case rclcpp_action::ResultCode::CANCELED:
             RCLCPP_WARN(node_->get_logger(), "AttachDetachObjectAction: Goal was canceled.");
@@ -564,7 +565,7 @@ namespace manymove_cpp_trees
             }
             else
             {
-                RCLCPP_WARN(node_->get_logger(), "CheckObjectExistsAction: Object '%s' does not exist.", object_id_.c_str());
+                RCLCPP_INFO(node_->get_logger(), "CheckObjectExistsAction: Object '%s' does not exist.", object_id_.c_str());
                 return BT::NodeStatus::FAILURE;
             }
         }
