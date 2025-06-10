@@ -339,22 +339,6 @@ namespace manymove_object_manager
     {
         RCLCPP_INFO(this->get_logger(), "Received request to remove object: %s", goal->id.c_str());
 
-        // Check if the object is attached before trying to remove
-        if (attachedObjectExists(goal->id))
-        {
-            RCLCPP_WARN(this->get_logger(), "Object '%s' is attached to link '%s', detach it before removing it.",
-                        goal->id.c_str(),
-                        getAttachedObjectLinkById(goal->id)->c_str());
-            return rclcpp_action::GoalResponse::REJECT;
-        }
-
-        // Check if the object exists before trying to remove
-        if ((!objectExists(goal->id)) && (!attachedObjectExists(goal->id)))
-        {
-            RCLCPP_WARN(this->get_logger(), "Object '%s' does not exist.", goal->id.c_str());
-            return rclcpp_action::GoalResponse::REJECT;
-        }
-
         return rclcpp_action::GoalResponse::ACCEPT_AND_EXECUTE;
     }
 
@@ -369,8 +353,26 @@ namespace manymove_object_manager
     void ObjectManagerNode::handleRemoveExecute(
         const std::shared_ptr<RemoveGoalHandle> goal_handle)
     {
+
         auto goal = goal_handle->get_goal();
         auto result = std::make_shared<RemoveCollisionObject::Result>();
+
+        // Check if the object is attached before trying to remove
+        if (attachedObjectExists(goal->id))
+        {
+            result->success = false;
+            result->message = "Object attached, unable to remove.";
+            goal_handle->abort(result);
+        }
+
+        // Check if the object exists before trying to remove
+        if ((!objectExists(goal->id)) && (!attachedObjectExists(goal->id)))
+        {
+            result->success = true;
+            result->message = "Object not found in the scene.";
+            goal_handle->succeed(result);
+            return;
+        }
 
         // Create a CollisionObject message with REMOVE
         moveit_msgs::msg::CollisionObject collision_object;
@@ -432,9 +434,6 @@ namespace manymove_object_manager
         [[maybe_unused]] const rclcpp_action::GoalUUID &uuid,
         std::shared_ptr<const AttachDetachObject::Goal> goal)
     {
-        // I call once the search functions to avoid dalays
-        auto attached_object_exists = attachedObjectExists(goal->object_id);
-        auto collision_object_exists = objectExists(goal->object_id);
 
         RCLCPP_INFO(this->get_logger(),
                     "Received request to %s object: %s to link: %s",
@@ -447,44 +446,6 @@ namespace manymove_object_manager
         {
             RCLCPP_WARN(this->get_logger(),
                         "Invalid object_id or link_name in the request.");
-            return rclcpp_action::GoalResponse::REJECT;
-        }
-
-        // Check if object exists at all, if not it wouldn't make sense to continue either for attaching or detaching
-        if ((!attached_object_exists && !collision_object_exists))
-        {
-            RCLCPP_WARN(this->get_logger(),
-                        "Object '%s' does not exist in the planning scene.",
-                        goal->object_id.c_str());
-            return rclcpp_action::GoalResponse::REJECT;
-        }
-
-        // Check if the object exists for attach operation
-        if (goal->attach && (attached_object_exists))
-        {
-            RCLCPP_WARN(this->get_logger(),
-                        "Cannot attach. Object '%s' already attached to link %s.",
-                        goal->object_id.c_str(),
-                        getAttachedObjectLinkById(goal->object_id)->c_str());
-            return rclcpp_action::GoalResponse::REJECT;
-        }
-
-        // Check if the object is already attached somewhere
-        if (goal->attach && (!collision_object_exists || attached_object_exists))
-        {
-            RCLCPP_WARN(this->get_logger(),
-                        "Cannot attach. Object '%s' already attached .",
-                        goal->object_id.c_str());
-            return rclcpp_action::GoalResponse::REJECT;
-        }
-
-        // Check if the object is attached for detach operation
-        if (!goal->attach && !attached_object_exists)
-        {
-            RCLCPP_WARN(this->get_logger(),
-                        "Cannot detach. Object '%s' is not attached to link '%s'.",
-                        goal->object_id.c_str(),
-                        goal->link_name.c_str());
             return rclcpp_action::GoalResponse::REJECT;
         }
 
@@ -504,6 +465,48 @@ namespace manymove_object_manager
         auto goal = goal_handle->get_goal();
         auto result = std::make_shared<AttachDetachObject::Result>();
 
+        // I call once the search functions to avoid dalays
+        auto attached_object_exists = attachedObjectExists(goal->object_id);
+        auto collision_object_exists = objectExists(goal->object_id);
+
+        // Check if object exists at all, if not it wouldn't make sense to continue either for attaching or detaching
+        if ((!attached_object_exists && !collision_object_exists))
+        {
+            result->success = false;
+            result->message = std::string("'") + goal->object_id + "' does not exist in the planning scene.";
+            goal_handle->abort(result);
+            return;
+        }
+
+        // Check if the object is already attached
+        if (goal->attach && (attached_object_exists))
+        {
+
+            if (goal->link_name == getAttachedObjectLinkById(goal->object_id))
+            {
+                result->success = true;
+                result->message = std::string("'") + goal->object_id + "' already attached to " + getAttachedObjectLinkById(goal->object_id)->c_str() + ".";
+                goal_handle->succeed(result);
+                return;
+            }
+            else
+            {
+                result->success = false;
+                result->message = std::string("'") + goal->object_id + "' already attached to " + getAttachedObjectLinkById(goal->object_id)->c_str() + ".";
+                goal_handle->abort(result);
+                return;
+            }
+        }
+
+        // Check if the object is attached for detach operation
+        if (!goal->attach && !attached_object_exists)
+        {
+            result->success = false;
+            result->message = std::string("'") + goal->object_id + "' not attached to " + getAttachedObjectLinkById(goal->object_id)->c_str() + ".";
+            goal_handle->abort(result);
+            return;
+        }
+
         // Create a CollisionObject message for attaching/detaching
         moveit_msgs::msg::AttachedCollisionObject attached_object;
         attached_object.object.id = goal->object_id;
@@ -516,7 +519,7 @@ namespace manymove_object_manager
         {
             attached_object.object.operation = moveit_msgs::msg::CollisionObject::ADD;
             attached_object.detach_posture = trajectory_msgs::msg::JointTrajectory();
-         
+
             if (!goal->touch_links.empty())
             {
                 attached_object.touch_links = goal->touch_links;
@@ -977,7 +980,7 @@ namespace manymove_object_manager
             RCLCPP_ERROR(this->get_logger(), "Timeout while waiting for /get_planning_scene response.");
         }
 
-        RCLCPP_WARN(this->get_logger(), "Object '%s' is not attached to link '%s'.", id.c_str(), link_name.empty() ? "any link" : link_name.c_str());
+        RCLCPP_INFO(this->get_logger(), "Object '%s' is not attached to link '%s'.", id.c_str(), link_name.empty() ? "any link" : link_name.c_str());
         return false;
     }
 
