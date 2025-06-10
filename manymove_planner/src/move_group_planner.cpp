@@ -333,7 +333,7 @@ std::pair<bool, moveit_msgs::msg::RobotTrajectory> MoveGroupPlanner::applyTimePa
         else
         {
             // Need to reduce velocity scaling factor
-            RCLCPP_WARN(logger_, "Adjusting cartesian speed from %.2f to <= %.2f. Reducing velocity scale...",
+            RCLCPP_INFO(logger_, "Adjusting cartesian speed from %.2f to <= %.2f. Reducing velocity scale...",
                         max_speed, config.max_cartesian_speed);
 
             double scale = (config.max_cartesian_speed * 0.99) / max_speed;
