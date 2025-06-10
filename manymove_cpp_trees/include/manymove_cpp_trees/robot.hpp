@@ -5,7 +5,7 @@
 #include <vector>
 #include <rclcpp/rclcpp.hpp>
 #include <behaviortree_cpp_v3/blackboard.h>
-#include "manymove_cpp_trees/hmi_service_node.hpp"
+#include "manymove_cpp_trees/blackboard_utils.hpp"
 
 namespace manymove_cpp_trees
 {

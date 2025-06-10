@@ -7,6 +7,80 @@ static int g_global_move_id = 0;
 
 namespace manymove_cpp_trees
 {
+    // --------------------------------------------------------------------------
+    // High level helper for objects
+    // --------------------------------------------------------------------------
+
+    ObjectSnippets createObjectSnippets(BT::Blackboard::Ptr blackboard,
+                                        std::vector<manymove_cpp_trees::BlackboardEntry> &keys,
+                                        const std::string &name,
+                                        const std::string &shape,
+                                        const geometry_msgs::msg::Pose &pose,
+                                        const std::vector<double> &dimensions,
+                                        const std::string &mesh_file,
+                                        const std::vector<double> &scale,
+                                        const std::string &link_name_key,
+                                        const std::string &touch_links_key)
+    {
+        ObjectSnippets snip;
+
+        std::string id_key = name + "_key";
+        std::string shape_key = name + "_shape_key";
+        std::string pose_key = name + "_pose_key";
+        std::string dim_key = name + "_dimension_key";
+        std::string scale_key = name + "_scale_key";
+        std::string mesh_key = name + "_file_key";
+
+        // Fail if the object was already defined
+        std::string tmp;
+        if (blackboard->get(id_key, tmp))
+        {
+            throw BT::RuntimeError("Object '" + name + "' already exists");
+        }
+
+        blackboard->set(id_key, name);
+        blackboard->set(shape_key, shape);
+
+        blackboard->set(pose_key, pose);
+        keys.push_back({pose_key, "pose"});
+
+        if (!dimensions.empty())
+        {
+            blackboard->set(dim_key, dimensions);
+        }
+
+        if (!mesh_file.empty())
+        {
+            blackboard->set(mesh_key, mesh_file);
+        }
+
+        blackboard->set(scale_key, scale);
+        keys.push_back({scale_key, "double_array"});
+
+        snip.check_xml = buildObjectActionXML("check_" + name, createCheckObjectExists(id_key));
+        snip.add_xml = buildObjectActionXML("add_" + name,
+                                            createAddObject(id_key,
+                                                            shape_key,
+                                                            dimensions.empty() ? "" : dim_key,
+                                                            pose_key,
+                                                            scale_key,
+                                                            mesh_file.empty() ? "" : mesh_key));
+        snip.init_xml = fallbackWrapperXML("init_" + name + "_obj", {snip.check_xml, snip.add_xml});
+        snip.remove_xml = fallbackWrapperXML("remove_" + name + "_obj_always_success",
+                                             {buildObjectActionXML("remove_" + name,
+                                                                   createRemoveObject(id_key)),
+                                              "<AlwaysSuccess />"});
+
+        snip.attach_xml = buildObjectActionXML("attach_" + name,
+                                               createAttachObject(id_key, link_name_key, touch_links_key));
+        snip.detach_xml = fallbackWrapperXML("detach_" + name + "_always_success",
+                                             {buildObjectActionXML("detach_" + name,
+                                                                   createDetachObject(id_key, link_name_key)),
+                                              "<AlwaysSuccess />"});
+
+        return snip;
+    }
+
     // ----------------------------------------------------------------------------
     // Builder functions to build xml tree snippets programmatically
     // ----------------------------------------------------------------------------
@@ -407,26 +481,6 @@ namespace manymove_cpp_trees
 
         return xml.str();
     }
-
-    // std::string buildStopMotionXML(const std::string &robot_prefix,
-    //                                const std::string &node_prefix,
-    //                                double deceleration_time)
-    // {
-    //     // Construct a node name
-    //     std::string node_name = node_prefix + "_StopMotion";
-
-    //     std::ostringstream xml;
-    //     xml << "<StopMotionAction "
-    //         << "name=\"" << node_name << "\" "
-    //         << "robot_prefix=\"" << robot_prefix << "\" "
-    //         << "deceleration_time=\"" << deceleration_time << "\" ";
-
-    //     // Output
-    //     // xml << " success=\"{" << "stop_motion_success" << "}\"";
-
-    //     xml << "/>";
-    //     return xml.str();
-    // }
 
     std::string buildGetLinkPoseXML(const std::string &node_prefix,
                                     const std::string &link_name_key,
