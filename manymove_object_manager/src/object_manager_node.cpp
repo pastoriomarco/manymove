@@ -362,6 +362,7 @@ namespace manymove_object_manager
             result->success = false;
             result->message = "Object attached, unable to remove.";
             goal_handle->abort(result);
+            return;
         }
 
         // Check if the object exists before trying to remove
