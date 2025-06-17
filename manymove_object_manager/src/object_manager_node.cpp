@@ -360,8 +360,6 @@ namespace manymove_object_manager
         // Check if the object is attached before trying to remove
         if (attachedObjectExists(goal->id))
         {
-            RCLCPP_INFO(this->get_logger(),
-                        "Trying to REMOVE attached object '%s'.", goal->id.c_str());
             result->success = false;
             result->message = "Object attached, unable to remove.";
             goal_handle->abort(result);
