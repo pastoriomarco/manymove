@@ -73,6 +73,7 @@ bt_client_exec(bt_client_panda_cumotion)
 bt_client_exec(bt_client_uf850)
 bt_client_exec(bt_client_xarm7)
 bt_client_exec(collision_test)
+bt_client_exec(tutorial_01)
 
 #--------------------------------------------------------------------
 # Installation & export
@@ -95,6 +96,7 @@ install(TARGETS
   bt_client_uf850
   bt_client_xarm7
   collision_test
+  tutorial_01
   DESTINATION lib/${PROJECT_NAME}
 )
 
