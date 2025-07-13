@@ -186,6 +186,10 @@ namespace manymove_cpp_trees
             {
                 config().blackboard->set("trajectory_" + move_id_, moveit_msgs::msg::RobotTrajectory());
                 RCLCPP_ERROR(node_->get_logger(), "[MoveManipulatorAction] failed => returning FAILURE");
+
+                // stop the execution
+                config().blackboard->set(robot_prefix_ + "stop_execution", true);
+                
                 return BT::NodeStatus::FAILURE;
             }
         }
