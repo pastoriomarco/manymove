@@ -481,25 +481,35 @@ namespace manymove_cpp_trees
         return xml.str();
     }
 
-    // std::string buildStopMotionXML(const std::string &robot_prefix,
-    //                                const std::string &node_prefix,
-    //                                double deceleration_time)
-    // {
-    //     // Construct a node name
-    //     std::string node_name = node_prefix + "_StopMotion";
+    std::string buildGetLinkPoseXML(const std::string &node_prefix,
+                                    const std::string &link_name_key,
+                                    const std::string &pose_key,
+                                    const std::string &ref_frame_key,
+                                    const std::string &pre_key,
+                                    const std::string &post_key)
+    {
+        std::ostringstream xml;
+        xml << "<GetLinkPoseAction name=\"" << node_prefix << "_GetLinkPose\" "
+            << "link_name=\"{" << link_name_key << "}\" "
+            << "reference_frame=\"{" << ref_frame_key << "}\" "
+            << "pre_transform_xyz_rpy=\"{" << pre_key << "}\" "
+            << "post_transform_xyz_rpy=\"{" << post_key << "}\" "
+            << "pose_key=\"" << pose_key << "\"/>";
+        return xml.str();
+    }
 
-    //     std::ostringstream xml;
-    //     xml << "<StopMotionAction "
-    //         << "name=\"" << node_name << "\" "
-    //         << "robot_prefix=\"" << robot_prefix << "\" "
-    //         << "deceleration_time=\"" << deceleration_time << "\" ";
-
-    //     // Output
-    //     // xml << " success=\"{" << "stop_motion_success" << "}\"";
-
-    //     xml << "/>";
-    //     return xml.str();
-    // }
+    std::string buildCheckPoseDistanceXML(const std::string &node_prefix,
+                                          const std::string &reference_pose_key,
+                                          const std::string &target_pose_key,
+                                          double tolerance)
+    {
+        std::ostringstream xml;
+        xml << "<CheckPoseDistance name=\"" << node_prefix << "_CheckPoseDistance\" "
+            << "reference_pose_key=\"" << reference_pose_key << "\" "
+            << "target_pose_key=\"" << target_pose_key << "\" "
+            << "tolerance=\"" << tolerance << "\"/>";
+        return xml.str();
+    }
 
     // ----------------------------------------------------------------------------
     // Wrappers
@@ -619,23 +629,6 @@ namespace manymove_cpp_trees
         xml << content << "\n";
         xml << "  </BehaviorTree>\n";
         xml << "</root>\n";
-        return xml.str();
-    }
-
-    std::string buildGetLinkPoseXML(const std::string &node_prefix,
-                                    const std::string &link_name_key,
-                                    const std::string &pose_key,
-                                    const std::string &ref_frame_key,
-                                    const std::string &pre_key,
-                                    const std::string &post_key)
-    {
-        std::ostringstream xml;
-        xml << "<GetLinkPoseAction name=\"" << node_prefix << "_GetLinkPose\" "
-            << "link_name=\"{" << link_name_key << "}\" "
-            << "reference_frame=\"{" << ref_frame_key << "}\" "
-            << "pre_transform_xyz_rpy=\"{" << pre_key << "}\" "
-            << "post_transform_xyz_rpy=\"{" << post_key << "}\" "
-            << "pose_key=\"" << pose_key << "\"/>";
         return xml.str();
     }
 

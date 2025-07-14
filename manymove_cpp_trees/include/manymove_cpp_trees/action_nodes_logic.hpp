@@ -10,6 +10,7 @@
 #include <tf2_ros/buffer.h>
 #include <tf2_geometry_msgs/tf2_geometry_msgs.hpp>
 #include <chrono>
+#include <cmath>
 
 namespace manymove_cpp_trees
 {
@@ -169,7 +170,7 @@ namespace manymove_cpp_trees
     {
     public:
         GetLinkPoseAction(const std::string &name,
-                        const BT::NodeConfiguration &cfg);
+                          const BT::NodeConfiguration &cfg);
 
         static BT::PortsList providedPorts()
         {
@@ -188,6 +189,35 @@ namespace manymove_cpp_trees
         rclcpp::Node::SharedPtr node_;
         std::unique_ptr<tf2_ros::Buffer> tf_buffer_;
         std::unique_ptr<tf2_ros::TransformListener> tf_listener_;
+    };
+
+    /**
+     * @brief Condition node that compares two poses stored on the blackboard.
+     *        It succeeds if the Euclidean distance between them is below a
+     *        specified tolerance, otherwise it fails.
+     *
+     * INPUT PORTS
+     *   - reference_pose_key (string, *required*)  Blackboard key for the reference pose
+     *   - target_pose_key  (string, *required*)  Blackboard key for the target pose
+     *   - tolerance        (double, default=0.01) Distance tolerance in meters
+     */
+    class CheckPoseDistance : public BT::ConditionNode
+    {
+    public:
+        CheckPoseDistance(const std::string &name, const BT::NodeConfiguration &cfg);
+
+        static BT::PortsList providedPorts()
+        {
+            return {
+                BT::InputPort<std::string>("reference_pose_key", "Blackboard key for reference pose"),
+                BT::InputPort<std::string>("target_pose_key", "Blackboard key for target pose"),
+                BT::InputPort<double>("tolerance", 0.01, "Distance tolerance")};
+        }
+
+        BT::NodeStatus tick() override;
+
+    private:
+        rclcpp::Node::SharedPtr node_;
     };
 
 } // namespace manymove_cpp_trees
