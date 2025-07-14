@@ -43,6 +43,7 @@ namespace manymove_cpp_trees
         factory.registerNodeType<CheckRobotStateAction>("CheckRobotStateAction");
         factory.registerNodeType<ResetRobotStateAction>("ResetRobotStateAction");
         factory.registerNodeType<GetLinkPoseAction>("GetLinkPoseAction");
+        factory.registerNodeType<CheckPoseDistance>("CheckPoseDistance");
 
         factory.registerNodeType<CheckKeyBoolValue>("CheckKeyBoolValue");
         factory.registerNodeType<SetKeyBoolValue>("SetKeyBoolValue");
@@ -292,10 +293,6 @@ namespace manymove_cpp_trees
                                         const std::string &node_prefix,
                                         const std::string &robot_model = "");
 
-    // std::string buildStopMotionXML(const std::string &robot_prefix,
-    //                                const std::string &node_prefix,
-    //                                double deceleration_time);
-
     /**
      * @brief Build an XML snippet for a single <GetLinkPoseAction> node.
      *
@@ -314,6 +311,19 @@ namespace manymove_cpp_trees
                                     const std::string &ref_frame_key,
                                     const std::string &pre_key,
                                     const std::string &post_key);
+
+    /**
+     * @brief Build an XML snippet for a <CheckPoseDistance> condition node.
+     * @param node_prefix        Unique name within the tree.
+     * @param reference_pose_key Blackboard key for the current pose.
+     * @param target_pose_key    Blackboard key for the target pose.
+     * @param tolerance          Distance tolerance in meters.
+     */
+
+    std::string buildCheckPoseDistanceXML(const std::string &node_prefix,
+                                          const std::string &reference_pose_key,
+                                          const std::string &target_pose_key,
+                                          double tolerance);
 
     // ----------------------------------------------------------------------------
     // Wrappers

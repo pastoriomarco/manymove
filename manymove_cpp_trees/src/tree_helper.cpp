@@ -499,6 +499,21 @@ namespace manymove_cpp_trees
         return xml.str();
     }
 
+    std::string buildCheckPoseDistanceXML(const std::string &node_prefix,
+                                          const std::string &reference_pose_key,
+                                          const std::string &target_pose_key,
+                                          double tolerance)
+    {
+        std::ostringstream xml;
+
+        xml << "<CheckPoseDistance name=\"" << node_prefix << "_CheckPoseDistance\" "
+            << "reference_pose_key=\"" << reference_pose_key << "\" "
+            << "target_pose_key=\"" << target_pose_key << "\" "
+            << "tolerance=\"" << tolerance << "\"/>";
+
+        return xml.str();
+    }
+
     // ----------------------------------------------------------------------------
     // Wrappers
     // ----------------------------------------------------------------------------

@@ -303,7 +303,7 @@ namespace manymove_cpp_trees
     } // 100 ms
 
     GetLinkPoseAction::GetLinkPoseAction(const std::string &name,
-                                     const BT::NodeConfiguration &cfg)
+                                         const BT::NodeConfiguration &cfg)
         : BT::SyncActionNode(name, cfg)
     {
         if (!cfg.blackboard || !cfg.blackboard->get("node", node_))
@@ -440,6 +440,67 @@ namespace manymove_cpp_trees
         }
 
         return BT::NodeStatus::SUCCESS;
+    }
+
+    // =========================================================================
+    // CheckPoseDistance implementation
+    // =========================================================================
+
+    CheckPoseDistance::CheckPoseDistance(const std::string &name,
+                                         const BT::NodeConfiguration &cfg)
+        : BT::ConditionNode(name, cfg)
+    {
+        if (!cfg.blackboard)
+        {
+            throw BT::RuntimeError("CheckPoseDistance: no blackboard provided.");
+        }
+        cfg.blackboard->get("node", node_);
+    }
+
+    BT::NodeStatus CheckPoseDistance::tick()
+    {
+        std::string reference_key, target_key;
+        
+        if (!getInput("reference_pose_key", reference_key))
+        {
+            throw BT::RuntimeError("CheckPoseDistance: missing input 'reference_pose_key'");
+        }
+
+        if (!getInput("target_pose_key", target_key))
+        {
+            throw BT::RuntimeError("CheckPoseDistance: missing input 'target_pose_key'");
+        }
+
+        double tol = 0.01;
+        getInput("tolerance", tol);
+
+        geometry_msgs::msg::Pose reference_pose, target_pose;
+        if (!config().blackboard->get(reference_key, reference_pose))
+        {
+            RCLCPP_ERROR(node_ ? node_->get_logger() : rclcpp::get_logger("CheckPoseDistance"),
+                         "[%s] key '%s' not found", name().c_str(), reference_key.c_str());
+            return BT::NodeStatus::FAILURE;
+        }
+        if (!config().blackboard->get(target_key, target_pose))
+        {
+            RCLCPP_ERROR(node_ ? node_->get_logger() : rclcpp::get_logger("CheckPoseDistance"),
+                         "[%s] key '%s' not found", name().c_str(), target_key.c_str());
+            return BT::NodeStatus::FAILURE;
+        }
+
+        double dx = target_pose.position.x - reference_pose.position.x;
+        double dy = target_pose.position.y - reference_pose.position.y;
+        double dz = target_pose.position.z - reference_pose.position.z;
+        double dist = std::sqrt(dx * dx + dy * dy + dz * dz);
+
+        RCLCPP_INFO(node_ ? node_->get_logger() : rclcpp::get_logger("CheckPoseDistance"),
+                    "[%s] distance=%.4f, tol=%.4f", name().c_str(), dist, tol);
+
+        if (dist <= tol)
+        {
+            return BT::NodeStatus::SUCCESS;
+        }
+        return BT::NodeStatus::FAILURE;
     }
 
 } // namespace manymove_cpp_trees
