@@ -102,6 +102,7 @@ namespace manymove_cpp_trees
         {
             throw BT::RuntimeError("CheckKeyBoolValue: no blackboard provided.");
         }
+
         // If you needed an rclcpp node for logging, you could do:
         // config.blackboard->get("node", node_);
         // but this condition node typically doesn't require a ROS node.
@@ -128,6 +129,8 @@ namespace manymove_cpp_trees
             // Key not found => we fail
             return BT::NodeStatus::FAILURE;
         }
+
+        RCLCPP_INFO(rclcpp::get_logger("CheckKeyBoolValue"), "Key: %s; Expected value: %s; Actual value: %s", key.c_str(), expected_value.c_str(), (actual_value ? "true" : "false"));
 
         // 3) Compare the blackboard value to the expected value
         if ((actual_value ? "true" : "false") == expected_value)
@@ -208,7 +211,7 @@ namespace manymove_cpp_trees
         // Mark timestamps
         if (!node_)
         {
-            // fallback if no node in blackboard => we cannot do fancy timing
+            // fallback if no node in blackboard => we cannot do usual timing
             RCLCPP_WARN(rclcpp::get_logger("WaitForKeyBool"),
                         "[%s] No rclcpp::Node found. We'll set times to 0 => single pass only.",
                         name().c_str());
@@ -492,7 +495,7 @@ namespace manymove_cpp_trees
         double dist = std::sqrt(dx * dx + dy * dy + dz * dz);
 
         RCLCPP_INFO(node_ ? node_->get_logger() : rclcpp::get_logger("CheckPoseDistance"),
-                     "[%s] distance=%.4f, tol=%.4f", name().c_str(), dist, tol);
+                    "[%s] distance=%.4f, tol=%.4f", name().c_str(), dist, tol);
 
         if (dist <= tol)
         {

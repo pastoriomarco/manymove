@@ -233,6 +233,19 @@ namespace manymove_cpp_trees
                                    const int poll_rate_ms = 100);
 
     /**
+     * @brief Build an XML snippet for SetKeyBool.
+     *
+     * @param node_prefix     Used to construct a unique name attribute for the node.
+     * @param key             The name of the blackboard key to check.
+     * @param value           The value to compare the blackboard key to.
+     * @return A string with the generated XML snippet for the SetKeyValue node.
+     */
+    std::string buildCheckKeyBool(const std::string &node_prefix,
+                                const std::string &key,
+                                const bool &value);
+
+
+    /**
      * @brief Build an XML snippet for a single <WaitForKeyBool> node.
      * @param robot_prefix    e.g. "R_"
      * @param node_prefix     used in the 'name' attribute

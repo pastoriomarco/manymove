@@ -363,7 +363,7 @@ namespace manymove_cpp_trees
 
         // Build the CheckKeyBoolValue node
         std::ostringstream inner_xml;
-        inner_xml << "<Condition ID=\"CheckKeyBoolValue\""
+        inner_xml << "<CheckKeyBoolValue"
                   << " key=\"" << robot_prefix << io_type << "_" << ionum << "\""
                   << " value=\"" << value_to_check << "\" />";
 
@@ -418,6 +418,22 @@ namespace manymove_cpp_trees
             << " timeout=\"" << ((timeout_ms > 0) ? (static_cast<double>(timeout_ms) / 1000.0) : 0.0) << "\""
             << " poll_rate=\"" << ((poll_rate_ms > 0) ? (static_cast<double>(poll_rate_ms) / 1000.0) : 0.0) << "\""
             << "/>";
+
+        return xml.str();
+    }
+
+    std::string buildCheckKeyBool(const std::string &node_prefix,
+                                  const std::string &key,
+                                  const bool &value)
+    {
+        // Construct a node name
+        std::string node_name = node_prefix + "_CheckKey";
+
+        // Build the CheckKeyBoolValue node
+        std::ostringstream xml;
+        xml << "<CheckKeyBoolValue"
+            << " key=\"" << key << "\""
+            << " value=\"" << (value ? "true" : "false") << "\" />";
 
         return xml.str();
     }

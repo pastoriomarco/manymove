@@ -62,7 +62,6 @@ namespace manymove_cpp_trees
             return {
                 BT::InputPort<std::string>("key", "Name of the blackboard key to check"),
                 BT::InputPort<bool>("value", "Expected value"),
-                BT::InputPort<std::string>("robot_prefix", "Optional robot namespace prefix, e.g. 'R_' or 'L_'."),
             };
         }
 
