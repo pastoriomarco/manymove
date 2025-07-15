@@ -38,6 +38,55 @@ namespace manymove_cpp_trees
             throw BT::RuntimeError("Object '" + name + "' already exists");
         }
 
+                // Input validation
+        if (shape == "box" || shape == "cylinder" || shape == "sphere")
+        {
+            if (dimensions.empty())
+            {
+                throw BT::RuntimeError("createObjectSnippets: missing dimensions for primitive '" + shape + "'");
+            }
+
+            bool size_ok = (shape == "box" && dimensions.size() == 3) ||
+                           (shape == "cylinder" && dimensions.size() == 2) ||
+                           (shape == "sphere" && dimensions.size() == 1);
+
+            if (!size_ok)
+            {
+                throw BT::RuntimeError("createObjectSnippets: wrong number of dimensions for '" + shape + "'");
+            }
+
+            for (double d : dimensions)
+            {
+                if (d <= 0.0)
+                {
+                    throw BT::RuntimeError("createObjectSnippets: dimension values must be positive");
+                }
+            }
+        }
+        else if (shape == "mesh")
+        {
+            if (mesh_file.empty())
+            {
+                throw BT::RuntimeError("createObjectSnippets: mesh_file must be provided for mesh shape");
+            }
+        }
+        else
+        {
+            throw BT::RuntimeError("createObjectSnippets: unsupported shape '" + shape + "'");
+        }
+
+        if (scale.size() != 3)
+        {
+            throw BT::RuntimeError("createObjectSnippets: scale vector must contain 3 elements");
+        }
+        for (double s : scale)
+        {
+            if (s < 0.0)
+            {
+                throw BT::RuntimeError("createObjectSnippets: scale values must be non-negative");
+            }
+        }
+
         blackboard->set(id_key, name);
         blackboard->set(shape_key, shape);
 
