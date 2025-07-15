@@ -250,7 +250,7 @@ namespace manymove_cpp_trees
      * @param robot_prefix    e.g. "R_"
      * @param node_prefix     used in the 'name' attribute
      * @param key_id          blackboard key
-     * @param expected_value  desired string
+     * @param expected_value  desired boolean value
      * @param timeout_ms      0 => infinite
      * @param poll_rate_ms    how often to check
      * @return XML snippet

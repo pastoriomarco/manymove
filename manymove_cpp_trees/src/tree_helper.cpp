@@ -356,7 +356,7 @@ namespace manymove_cpp_trees
         std::string node_name = robot_prefix + node_prefix + "_CheckInput";
 
         // The value can be 0 or 1, so we trim anything different from 0 or 1. If it's not 0, then it is 1.
-        int value_to_check = (value == 0 ? 0 : 1);
+        bool value_to_check = (value != 0);
 
         // Build GetInputAction
         std::string check_input_xml = buildGetInputXML(robot_prefix, node_name, io_type, ionum);
@@ -365,7 +365,7 @@ namespace manymove_cpp_trees
         std::ostringstream inner_xml;
         inner_xml << "<CheckKeyBoolValue"
                   << " key=\"" << robot_prefix << io_type << "_" << ionum << "\""
-                  << " value=\"" << value_to_check << "\" />";
+                  << " value=\"" << (value_to_check ? "true" : "false") << "\" />";
 
         // Wrap in a Sequence
         std::ostringstream sequence_xml;
@@ -428,6 +428,9 @@ namespace manymove_cpp_trees
     {
         // Construct a node name
         std::string node_name = node_prefix + "_CheckKey";
+
+        // The value can be 0 or 1, so we trim anything different from 0 or 1. If it's not 0, then it is 1.
+        int value_to_check = (value == 0 ? 0 : 1);
 
         // Build the CheckKeyBoolValue node
         std::ostringstream xml;

@@ -102,22 +102,18 @@ namespace manymove_cpp_trees
         {
             throw BT::RuntimeError("CheckKeyBoolValue: no blackboard provided.");
         }
-
-        // If you needed an rclcpp node for logging, you could do:
-        // config.blackboard->get("node", node_);
-        // but this condition node typically doesn't require a ROS node.
     }
 
     BT::NodeStatus CheckKeyBoolValue::tick()
     {
         // 1) Extract input ports "key" and "value"
         std::string key;
-        std::string expected_value;
+        bool expected_value;
         if (!getInput<std::string>("key", key))
         {
             throw BT::RuntimeError("CheckKeyBoolValue: Missing required input [key]");
         }
-        if (!getInput<std::string>("value", expected_value))
+        if (!getInput<bool>("value", expected_value))
         {
             throw BT::RuntimeError("CheckKeyBoolValue: Missing required input [value]");
         }
@@ -130,10 +126,10 @@ namespace manymove_cpp_trees
             return BT::NodeStatus::FAILURE;
         }
 
-        RCLCPP_INFO(rclcpp::get_logger("CheckKeyBoolValue"), "Key: %s; Expected value: %s; Actual value: %s", key.c_str(), expected_value.c_str(), (actual_value ? "true" : "false"));
+        RCLCPP_INFO(rclcpp::get_logger("CheckKeyBoolValue"), "Key: %s; Expected value: %s; Actual value: %s", key.c_str(), (expected_value ? "true" : "false"), (actual_value ? "true" : "false"));
 
         // 3) Compare the blackboard value to the expected value
-        if ((actual_value ? "true" : "false") == expected_value)
+        if (actual_value == expected_value)
         {
             // Condition satisfied => SUCCESS
             return BT::NodeStatus::SUCCESS;
