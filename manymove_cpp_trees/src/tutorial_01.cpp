@@ -78,8 +78,8 @@ int main(int argc, char **argv)
 
     ObjectSnippets graspable = createObjectSnippets(
         blackboard, keys, "graspable", "box",
-        createPoseRPY(0.15, -0.15, 0.1, 0.0, 0.0, 0.0), {0.1, 0.005, 0.005},
-        "", {}, "tcp_frame_name_key");
+        createPoseRPY(0.15, -0.25, 0.1, 0.0, 0.0, 0.0), {0.1, 0.005, 0.005},
+        "", {1.0, 1.0, 1.0}, "tcp_frame_name_key");
 
     // ----------------------------------------------------------------------------
     // Add GetObjectPoseAction Node and nodes to attach/detach objects
