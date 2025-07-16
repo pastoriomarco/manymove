@@ -221,7 +221,7 @@ namespace manymove_cpp_trees
         }
 
         RCLCPP_INFO(node_ ? node_->get_logger() : rclcpp::get_logger("WaitForKeyBool"),
-                    "[%s] WaitForKeyBool: key='%s', expected='%s', timeout=%.2f, poll_rate=%.2f",
+                    "[%s] WaitForKeyBool starting: key='%s', expected='%s', timeout=%.2f, poll_rate=%.2f",
                     name().c_str(), key_.c_str(), (expected_value_ ? "true" : "false"), timeout_, poll_rate_);
 
         return BT::NodeStatus::RUNNING;
@@ -257,8 +257,8 @@ namespace manymove_cpp_trees
             throw BT::RuntimeError("WaitForKeyBool: no [key] input provided.");
         }
 
-        RCLCPP_DEBUG(node_ ? node_->get_logger() : rclcpp::get_logger("WaitForKeyBool"),
-                     "[%s] WaitForKeyBool: key='%s', expected='%s', actual='%s' timeout=%.2f, poll_rate=%.2f",
+        RCLCPP_INFO(node_ ? node_->get_logger() : rclcpp::get_logger("WaitForKeyBool"),
+                     "[%s] WaitForKeyBool polling: key='%s', expected='%s', actual='%s' timeout=%.2f, poll_rate=%.2f",
                      name().c_str(), key_.c_str(), (expected_value_ ? "true" : "false"), (actual_value ? "true" : "false"), timeout_, poll_rate_);
 
         if (actual_value == expected_value_)
