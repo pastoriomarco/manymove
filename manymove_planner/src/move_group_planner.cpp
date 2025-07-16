@@ -576,9 +576,9 @@ bool MoveGroupPlanner::sendControlledStop(const manymove_msgs::msg::MovementConf
     double remaining_time = rclcpp::Duration(last_point.time_from_start).seconds() - elapsed_s;
 
     // If remaining time is less than the deceleration_time and min_stop_time, the motion will stop naturally
-    if ((remaining_time < move_cfg.deceleration_time) && (remaining_time < move_cfg.min_stop_time))
+    if (remaining_time < move_cfg.min_stop_time)
     {
-        RCLCPP_INFO(logger_, "Remaining time in trajectory is less than deceleration time. Stopping motion naturally.");
+        RCLCPP_INFO(logger_, "Remaining time (%.3f) in trajectory is less than min_stop_time (%.3f). Stopping motion naturally.", remaining_time, move_cfg.min_stop_time);
         return true; // Do nothing and succeed as the motion will stop naturally
     }
 

@@ -811,10 +811,9 @@ bool MoveItCppPlanner::sendControlledStop(const manymove_msgs::msg::MovementConf
     const auto &last_point = truncated_traj.joint_trajectory.points.back();
     double remaining_time = rclcpp::Duration(last_point.time_from_start).seconds() - elapsed_s;
 
-    if ((remaining_time < move_cfg.deceleration_time) && (remaining_time < move_cfg.min_stop_time))
+    if (remaining_time < move_cfg.min_stop_time)
     {
-        // If the remaining time is less than deceleration time, do nothing but succeed
-        RCLCPP_INFO(logger_, "Remaining time is less than deceleration time. Stopping motion naturally.");
+        RCLCPP_INFO(logger_, "Remaining time (%.3f) in trajectory is less than min_stop_time (%.3f). Stopping motion naturally.", remaining_time, move_cfg.min_stop_time);
         return true;
     }
 
