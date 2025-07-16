@@ -826,7 +826,7 @@ namespace manymove_cpp_trees
         next_check_time_ = start_time_; // immediate first check
 
         RCLCPP_INFO(node_->get_logger(),
-                    "[%s] WaitForInput: checking IO '%s' (ch=%d) for value=%d, poll=%.2fs, timeout=%.2fs",
+                    "[%s] WaitForInput starting: checking IO '%s' (ch=%d) for value=%d, poll=%.2fs, timeout=%.2fs",
                     name().c_str(), io_type_.c_str(), ionum_, desired_value_, poll_rate_, timeout_);
 
         return BT::NodeStatus::RUNNING;
@@ -909,6 +909,10 @@ namespace manymove_cpp_trees
             std::bind(&WaitForInputAction::goalResponseCallback, this, std::placeholders::_1);
         opts.result_callback =
             std::bind(&WaitForInputAction::resultCallback, this, std::placeholders::_1);
+
+        RCLCPP_INFO(node_->get_logger(),
+                    "[%s] WaitForInput polling: checking IO '%s' (ch=%d) for value=%d, poll=%.2fs, timeout=%.2fs",
+                    name().c_str(), io_type_.c_str(), ionum_, desired_value_, poll_rate_, timeout_);
 
         action_client_->async_send_goal(goal_msg, opts);
 
