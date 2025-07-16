@@ -429,9 +429,6 @@ namespace manymove_cpp_trees
         // Construct a node name
         std::string node_name = node_prefix + "_CheckKey";
 
-        // The value can be 0 or 1, so we trim anything different from 0 or 1. If it's not 0, then it is 1.
-        int value_to_check = (value == 0 ? 0 : 1);
-
         // Build the CheckKeyBoolValue node
         std::ostringstream xml;
         xml << "<CheckKeyBoolValue"
