@@ -396,7 +396,7 @@ namespace manymove_signals
         [[maybe_unused]] const rclcpp_action::GoalUUID &uuid,
         std::shared_ptr<const GetInput::Goal> goal)
     {
-        RCLCPP_INFO(this->get_logger(), "Received GetInput goal: io_type=%s, ionum=%d",
+        RCLCPP_DEBUG(this->get_logger(), "Received GetInput goal: io_type=%s, ionum=%d",
                     goal->io_type.c_str(), goal->ionum);
         // Validate io_type
         if (goal->io_type != "tool" && goal->io_type != "controller")
@@ -418,7 +418,7 @@ namespace manymove_signals
     void SignalsNode::execute_get_input(
         const std::shared_ptr<rclcpp_action::ServerGoalHandle<GetInput>> goal_handle)
     {
-        RCLCPP_INFO(this->get_logger(), "Executing GetInput goal");
+        RCLCPP_DEBUG(this->get_logger(), "Executing GetInput goal");
         auto goal = goal_handle->get_goal();
         auto result = std::make_shared<GetInput::Result>();
 

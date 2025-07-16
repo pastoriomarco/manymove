@@ -567,7 +567,7 @@ bool MoveGroupPlanner::sendControlledStop(const manymove_msgs::msg::MovementConf
     }
 
     /* -------------------------------------------------------------
-     * 2)  Check if remaining time in trajectory is lower than deceleration time
+     * 2)  Check if remaining time in trajectory is lower than deceleration_time and min_stop_time
      *     If yes, return success as the motion will stop naturally before deceleration
      * ------------------------------------------------------------*/
     moveit_msgs::msg::RobotTrajectory truncated_traj = running_traj;
@@ -576,10 +576,10 @@ bool MoveGroupPlanner::sendControlledStop(const manymove_msgs::msg::MovementConf
     const auto &last_point = truncated_traj.joint_trajectory.points.back();
     double remaining_time = rclcpp::Duration(last_point.time_from_start).seconds() - elapsed_s;
 
-    // If remaining time is less than the deceleration time, the motion will stop naturally
-    if (remaining_time < move_cfg.deceleration_time)
+    // If remaining time is less than the deceleration_time and min_stop_time, the motion will stop naturally
+    if (remaining_time < move_cfg.min_stop_time)
     {
-        RCLCPP_INFO(logger_, "Remaining time in trajectory is less than deceleration time. Stopping motion naturally.");
+        RCLCPP_INFO(logger_, "Remaining time (%.3f) in trajectory is less than min_stop_time (%.3f). Stopping motion naturally.", remaining_time, move_cfg.min_stop_time);
         return true; // Do nothing and succeed as the motion will stop naturally
     }
 
@@ -602,12 +602,15 @@ bool MoveGroupPlanner::sendControlledStop(const manymove_msgs::msg::MovementConf
         point.time_from_start = rclcpp::Duration::from_seconds(rclcpp::Duration(point.time_from_start).seconds() - elapsed_s);
     }
 
+    // Taking the higher between deceleration_time and min_stop_time: if deceleration_time is smaller we use min_stop_time
+    double stop_time = ((move_cfg.deceleration_time > move_cfg.min_stop_time) ? move_cfg.deceleration_time : move_cfg.min_stop_time);
+
     // Add the stop point to the trajectory
     trajectory_msgs::msg::JointTrajectoryPoint stop_point;
     stop_point.positions = target_q;
     stop_point.velocities.assign(target_q.size(), 0.0);
     stop_point.accelerations.assign(target_q.size(), 0.0);
-    stop_point.time_from_start = rclcpp::Duration::from_seconds(move_cfg.deceleration_time);
+    stop_point.time_from_start = rclcpp::Duration::from_seconds(stop_time);
     truncated_traj.joint_trajectory.points.push_back(stop_point);
 
     // Send the modified trajectory
@@ -628,7 +631,7 @@ bool MoveGroupPlanner::sendControlledStop(const manymove_msgs::msg::MovementConf
         return false;
     }
 
-    const double timeout_s = std::max(2.0 * move_cfg.deceleration_time, 5.0);
+    const double timeout_s = std::max(0.5 + 2.0 * stop_time, 5.0);
     auto res_fut = follow_joint_traj_client_->async_get_result(gh);
 
     if (res_fut.wait_for(std::chrono::duration<double>(timeout_s)) != std::future_status::ready)

@@ -41,7 +41,7 @@ namespace manymove_cpp_trees
     /**
      * @class CheckKeyBoolValue
      * @brief A simple condition node that checks if a blackboard key
-     *        matches an expected string value.
+     *        matches an expected bool value.
      */
     class CheckKeyBoolValue : public BT::ConditionNode
     {
@@ -61,8 +61,7 @@ namespace manymove_cpp_trees
         {
             return {
                 BT::InputPort<std::string>("key", "Name of the blackboard key to check"),
-                BT::InputPort<bool>("value", "Expected value"),
-                BT::InputPort<std::string>("robot_prefix", "Optional robot namespace prefix, e.g. 'R_' or 'L_'."),
+                BT::InputPort<bool>("value", "Expected bool value"),
             };
         }
 
@@ -76,7 +75,7 @@ namespace manymove_cpp_trees
 
     /**
      * @class SetKeyBoolValue
-     * @brief A node that sets a blackboard key to a given string value.
+     * @brief A node that sets a blackboard key to a given bool value.
      *
      * Usage example in XML:
      *   <SetKeyBoolValue name="SetKeyExample" key="some_key" value="foo"/>
@@ -95,7 +94,7 @@ namespace manymove_cpp_trees
         {
             return {
                 BT::InputPort<std::string>("key", "Blackboard key to set"),
-                BT::InputPort<bool>("value", "Value to set (as a string)")};
+                BT::InputPort<bool>("value", "Value to set (as a bool)")};
         }
 
         // The main tick function; sets the blackboard key to the specified string
@@ -104,7 +103,7 @@ namespace manymove_cpp_trees
 
     /**
      * @class WaitForKeyBool
-     * @brief Periodically checks a blackboard key for a string value = expected_value.
+     * @brief Periodically checks a blackboard key for a bool value = expected_value.
      *        If it matches => SUCCESS, if timeout is reached => FAILURE.
      *        Timeout=0 => infinite wait. Poll_rate => how often to re-check.
      *
@@ -124,7 +123,7 @@ namespace manymove_cpp_trees
         {
             return {
                 BT::InputPort<std::string>("key", "Blackboard key to read"),
-                BT::InputPort<bool>("expected_value", "Desired string value"),
+                BT::InputPort<bool>("expected_value", "Desired bool value"),
                 BT::InputPort<double>("timeout", 10.0, "Seconds before giving up (0 => infinite)"),
                 BT::InputPort<double>("poll_rate", 0.25, "Check frequency (seconds)")};
         }

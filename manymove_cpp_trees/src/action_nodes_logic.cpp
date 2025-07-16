@@ -102,21 +102,18 @@ namespace manymove_cpp_trees
         {
             throw BT::RuntimeError("CheckKeyBoolValue: no blackboard provided.");
         }
-        // If you needed an rclcpp node for logging, you could do:
-        // config.blackboard->get("node", node_);
-        // but this condition node typically doesn't require a ROS node.
     }
 
     BT::NodeStatus CheckKeyBoolValue::tick()
     {
         // 1) Extract input ports "key" and "value"
         std::string key;
-        std::string expected_value;
+        bool expected_value;
         if (!getInput<std::string>("key", key))
         {
             throw BT::RuntimeError("CheckKeyBoolValue: Missing required input [key]");
         }
-        if (!getInput<std::string>("value", expected_value))
+        if (!getInput<bool>("value", expected_value))
         {
             throw BT::RuntimeError("CheckKeyBoolValue: Missing required input [value]");
         }
@@ -129,8 +126,10 @@ namespace manymove_cpp_trees
             return BT::NodeStatus::FAILURE;
         }
 
+        RCLCPP_INFO(rclcpp::get_logger("CheckKeyBoolValue"), "Key: %s; Expected value: %s; Actual value: %s", key.c_str(), (expected_value ? "true" : "false"), (actual_value ? "true" : "false"));
+
         // 3) Compare the blackboard value to the expected value
-        if ((actual_value ? "true" : "false") == expected_value)
+        if (actual_value == expected_value)
         {
             // Condition satisfied => SUCCESS
             return BT::NodeStatus::SUCCESS;
@@ -208,7 +207,7 @@ namespace manymove_cpp_trees
         // Mark timestamps
         if (!node_)
         {
-            // fallback if no node in blackboard => we cannot do fancy timing
+            // fallback if no node in blackboard => we cannot do usual timing
             RCLCPP_WARN(rclcpp::get_logger("WaitForKeyBool"),
                         "[%s] No rclcpp::Node found. We'll set times to 0 => single pass only.",
                         name().c_str());
@@ -222,7 +221,7 @@ namespace manymove_cpp_trees
         }
 
         RCLCPP_INFO(node_ ? node_->get_logger() : rclcpp::get_logger("WaitForKeyBool"),
-                    "[%s] WaitForKeyBool: key='%s', expected='%s', timeout=%.2f, poll_rate=%.2f",
+                    "[%s] WaitForKeyBool starting: key='%s', expected='%s', timeout=%.2f, poll_rate=%.2f",
                     name().c_str(), key_.c_str(), (expected_value_ ? "true" : "false"), timeout_, poll_rate_);
 
         return BT::NodeStatus::RUNNING;
@@ -258,9 +257,9 @@ namespace manymove_cpp_trees
             throw BT::RuntimeError("WaitForKeyBool: no [key] input provided.");
         }
 
-        RCLCPP_DEBUG(node_ ? node_->get_logger() : rclcpp::get_logger("WaitForKeyBool"),
-                     "[%s] WaitForKeyBool: key='%s', expected='%s', actual='%s' timeout=%.2f, poll_rate=%.2f",
-                     name().c_str(), key_.c_str(), (expected_value_ ? "true" : "false"), (actual_value ? "true" : "false"), timeout_, poll_rate_);
+        RCLCPP_INFO(node_ ? node_->get_logger() : rclcpp::get_logger("WaitForKeyBool"),
+                    "[%s] WaitForKeyBool polling: key='%s', expected='%s', actual='%s' timeout=%.2f, poll_rate=%.2f",
+                    name().c_str(), key_.c_str(), (expected_value_ ? "true" : "false"), (actual_value ? "true" : "false"), timeout_, poll_rate_);
 
         if (actual_value == expected_value_)
         {
@@ -460,7 +459,7 @@ namespace manymove_cpp_trees
     BT::NodeStatus CheckPoseDistance::tick()
     {
         std::string reference_key, target_key;
-        
+
         if (!getInput("reference_pose_key", reference_key))
         {
             throw BT::RuntimeError("CheckPoseDistance: missing input 'reference_pose_key'");
