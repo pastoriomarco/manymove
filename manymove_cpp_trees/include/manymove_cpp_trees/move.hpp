@@ -65,6 +65,7 @@ namespace manymove_cpp_trees
         max_move_config.max_cartesian_speed = 0.45;
         max_move_config.linear_precision = 0.001;
         max_move_config.deceleration_time = 0.5;
+        max_move_config.min_stop_time = 0.5;
         max_move_config.rotational_precision = 0.05;
         max_move_config.step_size = 0.005;
         max_move_config.jump_threshold = 0.0;
@@ -86,6 +87,7 @@ namespace manymove_cpp_trees
         slow_move_config.velocity_scaling_factor /= 4.0;
         slow_move_config.acceleration_scaling_factor /= 4.0;
         slow_move_config.max_cartesian_speed = 0.05;
+        slow_move_config.min_stop_time = 0.05; // need more stop precision on slow moves for input searches
 
         // Cartesian path shouldn't need more than one plan to reach optimal traj, since it's a straight line.
         MovementConfig cartesian_max_move_config = max_move_config;
@@ -128,6 +130,7 @@ namespace manymove_cpp_trees
         MovementConfig LIN_slow_move_config = LIN_max_move_config;
         LIN_slow_move_config.velocity_scaling_factor = 0.1;
         LIN_slow_move_config.acceleration_scaling_factor = 0.1;
+        LIN_slow_move_config.min_stop_time = 0.05; // need more stop precision on slow moves for input searches
 
         MovementConfig CHOMP_max_move_config = max_move_config;
         CHOMP_max_move_config.planning_pipeline = "chomp";
