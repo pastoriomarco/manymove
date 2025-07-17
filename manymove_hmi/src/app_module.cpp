@@ -202,9 +202,30 @@ void AppModule::onEditableChanged(const QString &)
 
     /* colouring ---------------------------------------------------- */
     QPalette pal = le->palette();
-    bool ok = isFieldValid(key, in_m);
-    pal.setColor(QPalette::Text,
-                 (!txt.isEmpty() && txt != "N/A" && !ok) ? Qt::red : Qt::white);
+    FieldStatus st = validateField(key, in_m);
+    if (!txt.isEmpty() && txt != "N/A")
+    {
+        switch (st)
+        {
+        case FieldStatus::Invalid:
+            pal.setColor(QPalette::Text, Qt::red);
+            break;
+        case FieldStatus::BelowLimit:
+            pal.setColor(QPalette::Text, Qt::cyan);
+            break;
+        case FieldStatus::AboveLimit:
+            pal.setColor(QPalette::Text, Qt::magenta);
+            break;
+        case FieldStatus::Valid:
+        default:
+            pal.setColor(QPalette::Text, Qt::white);
+            break;
+        }
+    }
+    else
+    {
+        pal.setColor(QPalette::Text, Qt::white);
+    }
     le->setPalette(pal);
 
     updateComputedFields();
@@ -278,19 +299,33 @@ void AppModule::updateSendButtonState()
 }
 
 /* ------------------------------------------------------------------ */
-bool AppModule::isFieldValid(const QString &key, const QString &txt) const
+FieldStatus AppModule::validateField(const QString &key, const QString &txt) const
 {
     if (txt.isEmpty() || txt == "N/A" || txt == currentValues_.value(key))
-        return false;
+        return FieldStatus::Invalid;
 
     for (const auto &c : keyConfigs_)
         if (c.key == key && c.value_type == "double")
         {
             bool ok = false;
-            txt.toDouble(&ok);
-            return ok;
+            double v = txt.toDouble(&ok);
+            if (!ok)
+                return FieldStatus::Invalid;
+
+            if (!std::isnan(c.lower_limit) && v < c.lower_limit)
+                return FieldStatus::BelowLimit;
+            if (!std::isnan(c.upper_limit) && v > c.upper_limit)
+                return FieldStatus::AboveLimit;
+            return FieldStatus::Valid;
         }
-    return true;
+
+    return txt.isEmpty() ? FieldStatus::Invalid : FieldStatus::Valid;
+}
+
+/* ------------------------------------------------------------------ */
+bool AppModule::isFieldValid(const QString &key, const QString &txt) const
+{
+    return validateField(key, txt) == FieldStatus::Valid;
 }
 
 /* ------------------------------------------------------------------ */
