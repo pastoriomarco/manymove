@@ -25,6 +25,23 @@ struct KeyConfig // how one line of the HMI behaves
     bool editable = false; // user can type?
     bool visible = true;   // row shown?
     std::function<QString(const QMap<QString, QString> &)> computeFunction;
+    double display_scale = 1.0; // multiply by this for GUI
+    QString unit;               // unit label shown in GUI
+    bool show_label = true;     // display the key label?
+    int widget_width = 500;     // width of the input/control widget
+
+    KeyConfig(const QString &k,
+              const QString &type,
+              bool ed,
+              bool vis,
+              std::function<QString(const QMap<QString, QString> &)> fn = {},
+              double scale = 1.0,
+              const QString &u = QString(),
+              bool show_lbl = true,
+              int width = 500)
+        : key(k), value_type(type), editable(ed), visible(vis), computeFunction(std::move(fn)), display_scale(scale), unit(u), show_label(show_lbl), widget_width(width)
+    {
+    }
 };
 
 struct BlackboardKey // minimal info used by Ros2Worker
@@ -69,6 +86,8 @@ private:
     void updateComputedFields();
     void updateSendButtonState();
     bool isFieldValid(const QString &key, const QString &text) const;
+    QString toDisplay(const QString &key, const QString &val) const;
+    QString toInternal(const QString &key, const QString &val) const;
 
     /* QWidget override --------------------------------------------- */
     bool eventFilter(QObject *obj, QEvent *event) override;
