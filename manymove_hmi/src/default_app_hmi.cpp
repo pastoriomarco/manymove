@@ -14,13 +14,13 @@ std::vector<KeyConfig> DefaultAppModule::buildKeys()
     /* editable ----------------------------------------------------- */
     ks.push_back({"tube_length_key","double",true,true,
                   [](auto& v){return v.value("tube_length_key","");}});
-    ks.push_back({"tube_diameter_key","double",true,true,
+    ks.push_back({"tube_diameter_key","double",true,false,
                   [](auto& v){return v.value("tube_diameter_key","");}});
-    ks.push_back({"grasp_offset_key","double",true,true,
+    ks.push_back({"grasp_offset_key","double",true,false,
                   [](auto& v){return v.value("grasp_offset_key","");}});
 
     /* computed: tube_scale_key ------------------------------------ */
-    ks.push_back({"tube_scale_key","double_array",false,true,
+    ks.push_back({"tube_scale_key","double_array",false,false,
                  [](const QMap<QString,QString>& v)
     {
         const double L = v.value("tube_length_key").toDouble();
@@ -30,7 +30,7 @@ std::vector<KeyConfig> DefaultAppModule::buildKeys()
     }});
 
     /* pick_post_transform_xyz_rpy_1_key --------------------------- */
-    ks.push_back({"pick_post_transform_xyz_rpy_1_key","double_array",false,true,
+    ks.push_back({"pick_post_transform_xyz_rpy_1_key","double_array",false,false,
                  [](const QMap<QString,QString>& v)
     {
         double L = v.value("tube_length_key").toDouble();
@@ -41,7 +41,7 @@ std::vector<KeyConfig> DefaultAppModule::buildKeys()
     }});
 
     /* insert_post_transform_xyz_rpy_2_key ------------------------- */
-    ks.push_back({"insert_post_transform_xyz_rpy_2_key","double_array",false,true,
+    ks.push_back({"insert_post_transform_xyz_rpy_2_key","double_array",false,false,
                  [](const QMap<QString,QString>& v)
     {
         double L=v.value("tube_length_key").toDouble(); if(L==0.0) return QString();
@@ -50,7 +50,7 @@ std::vector<KeyConfig> DefaultAppModule::buildKeys()
     }});
 
     /* load_post_transform_xyz_rpy_2_key --------------------------- */
-    ks.push_back({"load_post_transform_xyz_rpy_2_key","double_array",false,true,
+    ks.push_back({"load_post_transform_xyz_rpy_2_key","double_array",false,false,
                  [](const QMap<QString,QString>& v)
     {
         double L=v.value("tube_length_key").toDouble(); if(L==0.0) return QString();
@@ -59,7 +59,7 @@ std::vector<KeyConfig> DefaultAppModule::buildKeys()
     }});
 
     /* tube_spawn_pose_key ----------------------------------------- */
-    ks.push_back({"tube_spawn_pose_key","pose",false,true,
+    ks.push_back({"tube_spawn_pose_key","pose",false,false,
                  [](const QMap<QString,QString>& v)
     {
         bool ok=false; double L=v.value("tube_length_key").toDouble(&ok);
@@ -70,7 +70,7 @@ std::vector<KeyConfig> DefaultAppModule::buildKeys()
     }});
 
     /* slider_pose_key --------------------------------------------- */
-    ks.push_back({"slider_pose_key","pose",false,true,
+    ks.push_back({"slider_pose_key","pose",false,false,
                  [](const QMap<QString,QString>& v)
     {
         bool ok=false; double L=v.value("tube_length_key").toDouble(&ok);
