@@ -349,14 +349,34 @@ void AppModule::updateField(const QString &key, const QString &newVal)
 {
     if (!keyWidgets_.contains(key))
         return;
-    currentValues_[key] = newVal.isEmpty() ? "N/A" : newVal;
+
+    // Normalize numeric values so that comparisons with user edits are stable
+    QString normalized = newVal;
+    if (!normalized.isEmpty())
+    {
+        for (const auto &cfg : keyConfigs_)
+            if (cfg.key == key && cfg.value_type == "double")
+            {
+                bool ok = false;
+                double d = newVal.toDouble(&ok);
+                if (ok)
+                    normalized = QString::number(d);
+                break;
+            }
+    }
+
+    currentValues_[key] = normalized.isEmpty() ? "N/A" : normalized;
 
     if (auto *le = qobject_cast<QLineEdit *>(keyWidgets_[key]))
     {
         if (le->hasFocus() || (!userOverrides_[key].isEmpty() && userOverrides_[key] != currentValues_[key]))
             return;
         QString displayVal = toDisplay(key, currentValues_[key]);
+
+        le->blockSignals(true);
         le->setText(displayVal);
+        le->blockSignals(false);
+
         QPalette pal = le->palette();
         pal.setColor(QPalette::Text, Qt::gray);
         le->setPalette(pal);
