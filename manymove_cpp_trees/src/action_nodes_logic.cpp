@@ -258,8 +258,8 @@ namespace manymove_cpp_trees
         }
 
         RCLCPP_INFO(node_ ? node_->get_logger() : rclcpp::get_logger("WaitForKeyBool"),
-                     "[%s] WaitForKeyBool polling: key='%s', expected='%s', actual='%s' timeout=%.2f, poll_rate=%.2f",
-                     name().c_str(), key_.c_str(), (expected_value_ ? "true" : "false"), (actual_value ? "true" : "false"), timeout_, poll_rate_);
+                    "[%s] WaitForKeyBool polling: key='%s', expected='%s', actual='%s' timeout=%.2f, poll_rate=%.2f",
+                    name().c_str(), key_.c_str(), (expected_value_ ? "true" : "false"), (actual_value ? "true" : "false"), timeout_, poll_rate_);
 
         if (actual_value == expected_value_)
         {
@@ -356,7 +356,7 @@ namespace manymove_cpp_trees
         }
 
         RCLCPP_INFO(node_->get_logger(),
-                    "[%s] RAW tf: {%.3f, %.3f, %.3f, %.3f, %.3f, %.3f, %.3f}",
+                    "GetLinkPoseAction - [%s] - RAW tf: {%.3f, %.3f, %.3f, %.3f, %.3f, %.3f, %.3f}",
                     name().c_str(),
                     tf_link_to_ref.transform.translation.x,
                     tf_link_to_ref.transform.translation.y,
@@ -413,7 +413,7 @@ namespace manymove_cpp_trees
         final_pose.orientation.z = q_final.z();
         final_pose.orientation.w = q_final.w();
 
-        RCLCPP_INFO(node_->get_logger(), "GetLinkPoseAction final pose = {%.3f, %.3f, %.3f, %.3f, %.3f, %.3f, %.3f}",
+        RCLCPP_INFO(node_->get_logger(), "GetLinkPoseAction - [%s] - Final pose = {%.3f, %.3f, %.3f, %.3f, %.3f, %.3f, %.3f}",
                     final_pose.position.x,
                     final_pose.position.y,
                     final_pose.position.z,
@@ -430,12 +430,12 @@ namespace manymove_cpp_trees
         {
             config().blackboard->set(pose_key, final_pose);
             RCLCPP_INFO(node_->get_logger(),
-                        "GetLinkPoseAction pose written to = %s", pose_key.c_str());
+                        "GetLinkPoseAction - [%s] - Pose written to %s", name().c_str(), pose_key.c_str());
         }
         else
         {
             RCLCPP_DEBUG(node_->get_logger(),
-                         "GetLinkPoseAction: no pose_key provided, skipping BB write");
+                         "GetLinkPoseAction - [%s] - No pose_key provided, skipping BB write", name().c_str());
         }
 
         return BT::NodeStatus::SUCCESS;
