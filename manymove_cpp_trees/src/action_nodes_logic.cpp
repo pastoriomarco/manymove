@@ -414,6 +414,7 @@ namespace manymove_cpp_trees
         final_pose.orientation.w = q_final.w();
 
         RCLCPP_INFO(node_->get_logger(), "GetLinkPoseAction - [%s] - Final pose = {%.3f, %.3f, %.3f, %.3f, %.3f, %.3f, %.3f}",
+                    name().c_str(),
                     final_pose.position.x,
                     final_pose.position.y,
                     final_pose.position.z,
