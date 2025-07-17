@@ -34,6 +34,7 @@ namespace manymove_cpp_trees
          * float64 linear_precision                # Linear precision for end-point trajectory position check
          * float64 rotational_precision            # Rotational precision for end-point trajectory position check
          * float64 deceleration_time               # Time to decelerate the robot to arrive at a full stop
+         * float64 min_stop_time                   # Minimum time to perform a controlled stop, if less time remains the traj will just end
          *
          * # moveit planner parameters
          * float64 velocity_scaling_factor         # 0.0 to 1.0
