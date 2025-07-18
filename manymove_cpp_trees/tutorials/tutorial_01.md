@@ -342,6 +342,9 @@ When we create the scene, the fixed object will need to get created just once. W
         scale_mesh="{wall_scale_key}" pose="{wall_pose_key}" />
 </Fallback>
 ```
+If you use Groot to visualize the tree, this part of the tree will look like this:  
+
+<img src="./media/init_ground_obj.png" alt="Init Ground Object" width="640"/>
 
 As you can see, the snippet automatically generated already contains a Fallback node with 2 child nodes. We need to create all the fixed objects at the beginning of the program, so let's combine their snippets:
 
@@ -371,8 +374,6 @@ The resulting xml snippet will look like this:
     
 </Sequence>
 ```
-
-![init_ground_object snippet](./media/init_ground_obj.png)
 
 
 
