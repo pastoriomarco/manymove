@@ -115,10 +115,6 @@ int main(int argc, char **argv)
     // Named target, as defined in the robot's SRDF
     std::string named_home = "home";
 
-    // We define the joint targets we need for the joint moves as vectors of doubles.
-    // Be careful that the number of values must match the number of DOF of the robot (here, 6 DOF)
-    std::vector<double> joint_rest = {0.0, -0.785, 0.785, 0.0, 1.57, 0.0};
-
     // Populate the blackboard with the poses, one unique key for each pose we want to use.
     // Be careful not to use names that may conflict with the keys automatically created for the moves. (Usually move_{move_id})
 
@@ -135,6 +131,10 @@ int main(int argc, char **argv)
     Pose approach_drop_target = drop_target;
     approach_drop_target.position.z += 0.02;
     blackboard->set("approach_drop_target_key", approach_drop_target);
+
+    // We define the joint targets we need for the joint moves as vectors of doubles.
+    // Be careful that the number of values must match the number of DOF of the robot (here, 6 DOF)
+    std::vector<double> joint_rest = {0.0, -0.785, 0.785, 0.0, 1.57, 0.0};
 
     // Compose the TCP name:
     std::string tcp_frame_name = rp.prefix + rp.tcp_frame;
@@ -160,25 +160,9 @@ int main(int argc, char **argv)
         {rp.prefix, tcp_frame_name, "named", move_configs["max_move"], "", {}, named_home},
     };
 
-    /*
-     * Build move sequence blocks
-     * The buildMoveXML creates the xml tree branch that manages the planning and execution of each move with the given
-     * parameters. Unless the reset_trajs is set to true, each move that will plan and execute successfully will store the
-     * trajectory in the blackboard, thus avoiding recalculating it the next cycle. This allow to save cycle time on all but
-     * the first logic cycle, unless the scene changes. If a previously planned trajectory fails on execution it gets reset,
-     * and a new one is planned. The manymove_planner checks for collisions before sending the traj, but also during the execution.
-     *
-     * Notice that on any string representing an XML snippet I use _xml at the end of the name to give better sense of
-     * what's in that variable: if it ends with _xml, it could potentially be directly inserted as a tree branch or leaf.
-     */
-    std::string to_rest_reset_xml = buildMoveXML(
-        rp.prefix, rp.prefix + "toRest", rest_position, blackboard, true); // this will run only on prep sequence, so we reset it afterwards
-
+    // Build move sequence blocks
     std::string to_rest_xml = buildMoveXML(
         rp.prefix, rp.prefix + "toRest", rest_position, blackboard);
-
-    // std::string scan_around_xml = buildMoveXML(
-    //     rp.prefix, rp.prefix + "scanAround", scan_surroundings, blackboard);
 
     std::string pick_object_xml = buildMoveXML(
         rp.prefix, rp.prefix + "pick", pick_sequence, blackboard);
@@ -188,25 +172,6 @@ int main(int argc, char **argv)
 
     std::string to_home_xml = buildMoveXML(
         rp.prefix, rp.prefix + "home", home_position, blackboard);
-
-    /**
-     * We can further combine the move sequence blocks in logic sequences.
-     * This allows reusing and combining moves or sequences that are used more than once in the scene,
-     * or that are used in different contexts, without risking to reuse the wrong trajectory.
-     * When we call buildMoveXML() we create a new move with its own unique ID. If that move is used in more than one leaf,
-     * we need to decide if we always want to try to reuse the previously successfull trajectory or not.
-     * The manymove_planner logic checks for the start point of the traj to be valid and within tolerance, so we shouldn't
-     * worry too much of undefined behavior, but it helps me reason on the moves sequence structure. Keeping the Move vectors at
-     * minimum, using only the moves logically interconnected, makes the sequences easier to understand and debug.
-     * It's also important if we want to combine sequences that retain their previously successful trajectory with sequences that don't:
-     * if we need to repeat the prep sequence at some point we may be in a unkown position, so we don't want the traj to be reused.
-     */
-
-    // Translate it to xml tree leaf or branch
-    std::string prep_sequence_xml = sequenceWrapperXML(
-        rp.prefix + "ComposedPrepSequence", {to_rest_reset_xml}); //, scan_around_xml});
-    std::string home_sequence_xml = sequenceWrapperXML(
-        rp.prefix + "ComposedHomeSequence", {to_home_xml, to_rest_xml});
 
     // ----------------------------------------------------------------------------
     // Combine the objects and moves in a sequences that can run a number of times:
@@ -223,11 +188,15 @@ int main(int argc, char **argv)
     // Set up a sequence to reset the scene:
     std::string reset_graspable_objects_xml = sequenceWrapperXML("reset_graspable_objects", {open_gripper_xml, graspable.remove_xml});
 
+    // We can further combine the move sequence blocks in logic sequences.
+    std::string home_sequence_xml = sequenceWrapperXML(
+        rp.prefix + "ComposedHomeSequence", {to_home_xml, to_rest_xml});
+
     std::string startup_sequence_xml = sequenceWrapperXML(
         "StartUpSequence",
         {spawn_fixed_objects_xml,
          reset_graspable_objects_xml,
-         prep_sequence_xml});
+         to_rest_xml});
 
     // Repeat node must have only one children, so it also wrap a Sequence child that wraps the other children
     std::string repeat_forever_wrapper_xml = repeatSequenceWrapperXML(
