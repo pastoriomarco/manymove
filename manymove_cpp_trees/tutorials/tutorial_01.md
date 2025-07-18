@@ -372,7 +372,7 @@ The resulting xml snippet will look like this:
 </Sequence>
 ```
 
-![init_ground_object snippet](src/manymove/manymove_cpp_trees/tutorials/media/init_ground_obj.png)
+![init_ground_object snippet](./media/init_ground_obj.png)
 
 
 
