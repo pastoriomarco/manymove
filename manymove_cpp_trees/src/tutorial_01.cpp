@@ -179,11 +179,17 @@ int main(int argc, char **argv)
 
     // Let's build the full sequence in logically separated blocks:
     std::string spawn_fixed_objects_xml = sequenceWrapperXML("SpawnFixedObjects", {ground.init_xml, wall.init_xml});
-    std::string spawn_graspable_objects_xml = sequenceWrapperXML("SpawnGraspableObjects", {graspable.init_xml});
-    std::string get_grasp_object_poses_xml = sequenceWrapperXML("GetGraspPoses", {get_pick_pose_xml, get_approach_pose_xml});
-    std::string go_to_pick_pose_xml = sequenceWrapperXML("GoToPickPose", {pick_object_xml});
+
+    // Create the combined snippets to spawn the graspable object and the poses related to it
+    std::string spawn_graspable_objects_xml = sequenceWrapperXML("SpawnGraspableObjects", {graspable.init_xml, get_pick_pose_xml, get_approach_pose_xml});
+
+    // Define some semantically relevant sequences for gripper actions
     std::string close_gripper_xml = sequenceWrapperXML("CloseGripper", {graspable.attach_xml});
     std::string open_gripper_xml = sequenceWrapperXML("OpenGripper", {graspable.detach_xml});
+
+    // Let's combine the moves and the gripper actions to pick up and drop down the object
+    std::string pick_sequence_xml = sequenceWrapperXML("PickSequence", {pick_object_xml, close_gripper_xml});
+    std::string drop_sequence_xml = sequenceWrapperXML("DropSequence", {drop_object_xml, open_gripper_xml});
 
     // Set up a sequence to reset the scene:
     std::string reset_graspable_objects_xml = sequenceWrapperXML("reset_graspable_objects", {open_gripper_xml, graspable.remove_xml});
@@ -200,22 +206,18 @@ int main(int argc, char **argv)
 
     // Repeat node must have only one children, so it also wrap a Sequence child that wraps the other children
     std::string repeat_forever_wrapper_xml = repeatSequenceWrapperXML(
-        "RepeatForever",
-        {spawn_graspable_objects_xml, //< We add all the objects to the scene
-         get_grasp_object_poses_xml,  //< We get the updated poses relative to the objects
-         go_to_pick_pose_xml,         //< Prep sequence and pick sequence
-         close_gripper_xml,           //< We attach the object
-         drop_object_xml,             //< Drop sequence
-         open_gripper_xml,            //< We detach the object
+        "RobotCycle",
+        {spawn_graspable_objects_xml, //< Add the graspable object to the scene and update the relative poses
+         pick_sequence_xml,           //< Pick sequence
+         drop_sequence_xml,           //< Drop sequence
          home_sequence_xml,           //< Homing sequence
-         graspable.remove_xml},       //< We delete the object for it to be added on the next cycle in the original position
+         graspable.remove_xml},       //< Delete the object for it to be added on the next cycle in the original position
         -1);                          //< num_cycles=-1 for infinite
 
-    std::string retry_forever_wrapper_xml = retrySequenceWrapperXML("RetryForever", {startup_sequence_xml, repeat_forever_wrapper_xml}, -1);
+    std::string retry_forever_wrapper_xml = retrySequenceWrapperXML("ResetHandler", {startup_sequence_xml, repeat_forever_wrapper_xml}, -1);
 
     // GlobalMasterSequence with RepeatForever as child to set BehaviorTree ID and root main_tree_to_execute in the XML
-    std::vector<std::string> master_branches_xml = {retry_forever_wrapper_xml};
-    std::string master_body = sequenceWrapperXML("GlobalMasterSequence", master_branches_xml);
+    std::string master_body = sequenceWrapperXML("GlobalMasterSequence", {retry_forever_wrapper_xml});
 
     // ----------------------------------------------------------------------------
     // Wrap everything into a top-level <root> with <BehaviorTree ID="MasterTree">

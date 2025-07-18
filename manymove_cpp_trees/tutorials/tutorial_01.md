@@ -1,4 +1,4 @@
-# ManyMove: tutorial 01 - Building the first Pick & Place application
+# Tutorial 01 - Building your first Pick & Place application with ManyMove
 
 ## Introduction
 
@@ -7,7 +7,7 @@ This tutorial serves as a base to understand how to start using ManyMove with a 
 
 ## Prerequisites
 
-You will need to have installed ROS2 Humble or Jazzy, Moveit2 and xarm_ros2 repositories. Follow the instructions in ManyMove's github repo and in xarm_ros2 repo and you should be able to have it all up and running.  
+You will need to have installed ROS2 Humble or Jazzy, Moveit2 and xarm_ros2 repositories for the corresponding distro. Follow the instructions in ManyMove's github repo and in xarm_ros2 repo and you should be able to have it all up and running.  
 You would also be nice for you to have some knowledge about ROS2, MoveIt2 and BehaviorTree.CPP, as they are the founding blocks of ManyMove. If you don't know much about Moveit and BehaviorTrees you may still try and follow this tutorial, as it will be very practical and as abstract as possible.
 
 ## 0. Prologue
@@ -317,9 +317,9 @@ Turns out that this is very easy thanks to the `buildMoveXML()` function:
 
 As you can see, you just specify the robot prefix for the sequence, its name (I use the robot prefix here too for clarity), the sequence and the blackboard: the `buildMoveXML()` function will automatically build the xml snippets to use on the behavior tree, and also initialize all the necessary blackboard keys.
 
-## 4. Build the tree
+## 4. Build higher level snippets
 
-Time to use the building blocks we created to assemble a functioning behavior tree!  
+Time to use the building blocks we created to assemble some more meaningful behavior tree constructs!  
 You may have noticed that some of the variables I defined end with `_xml`: these are the ones that contain a usable xml snippet that represents a part of the tree.
 To ease the process of combining the snippets we created until now, we can leverage some builder functions; for example:
 * `sequenceWrapperXML()`: forms a sequentially executed group of nodes, consisting of one or more child nodes; it succeeds only if all of its nodes succeed
@@ -346,11 +346,16 @@ If you use Groot to visualize the tree, this part of the tree will look like thi
 
 <img src="./media/init_ground_obj.png" alt="Init Ground Object" width="640"/>
 
-As you can see, the snippet automatically generated already contains a Fallback node with 2 child nodes. We need to create all the fixed objects at the beginning of the program, so let's combine their snippets:
+---
+
+The snippet automatically generated already contains a Fallback node with 2 child nodes.  
+Since we need to create all the fixed objects at the beginning of the program, let's combine all of their snippets:
 
 ```cpp
     std::string spawn_fixed_objects_xml = sequenceWrapperXML("SpawnFixedObjects", {ground.init_xml, wall.init_xml});
 ```
+
+As you can see, to use the `sequenceWrapperXML` you just need a name for the node and a sequence of xml snippets that you need to execute sequentially. The result itself is another xml snippet that you can combine further.  
 
 The resulting xml snippet will look like this:
 
@@ -375,8 +380,56 @@ The resulting xml snippet will look like this:
 </Sequence>
 ```
 
+And here's the an image on how it looks on Groot:
 
+<img src="./media/SpawnFixedObjects.png" alt="SpawnFixedObjects" width="640"/>
 
+---
+
+Since we only have one graspable object, we could use its init_xml directly, but remember that we must update the poses of the graspable object before executing the moves to pick it up!  
+To avoid mistakes, we create the sequence to init the graspable object and read both poses:
+
+```cpp
+    std::string spawn_graspable_objects_xml = sequenceWrapperXML(
+        "SpawnGraspableObjects",
+        {
+            graspable.init_xml,
+            get_pick_pose_xml,
+            get_approach_pose_xml
+        });
+```
+
+---
+
+At the end of the cycle we'll need to remove the graspable object, and we have no other actions related to it: we'll just use the remove_xml snippet directly.
+
+We can also create some sequences to enhance the comprehension of what an action represents: right now we are just simulating the gripper opening and closing by directly attaching and detaching the object. In a real scenario we would probably execute the attach/detach nodes only if the object is actually attached/detached, maybe reading some sensor.  
+We want to keep the original name of the snippet that is automatically generated to use in the real application where we'll need it, but here we can define a couple of wrappers to give more meaning to the snippets:
+
+```cpp
+    std::string close_gripper_xml = sequenceWrapperXML("CloseGripper", {graspable.attach_xml});
+    std::string open_gripper_xml = sequenceWrapperXML("OpenGripper", {graspable.detach_xml});
+```
+
+Using these snippets is much clearer, even though it actually adds a `Sequence` note that is not strictly needed. On the real application we might want to reduce the redundant nodes as much as possible, for clarity and efficiency. Here, being a very simple application, we can accept a bit more of complexity to have a better understanding of the snippets.  
+
+We'll use these new snippets right away: when we move to the pick position we'll want to close the gripper, and when we move to the drop position we'll want to open the gripper.
+
+```cpp
+
+    std::string pick_sequence_xml = sequenceWrapperXML("PickSequence", {pick_object_xml, close_gripper_xml});
+    std::string drop_sequence_xml = sequenceWrapperXML("DropSequence", {drop_object_xml, open_gripper_xml});
+```
+
+---
+
+ManyMove lets you reset the cycle when needed: to put it simply, using the Reset button will trigger a blackboard key the will force the failure of the current branch. If this happens, and the cycle will restart, we want the graspable object to be gone. We'll open the gripper and remove the object. Let's create a snippet to reset the graspable object in the scene:
+
+```cpp
+    std::string reset_graspable_objects_xml = sequenceWrapperXML("reset_graspable_objects", {open_gripper_xml, graspable.remove_xml});
+```
+
+---
 
 We can also further combine the move sequence blocks in logic sequences. In this tutorial, after the first homing move, the `home_position` move will always be followed by `rest_position` move, so we can combine them sequentially:
 
@@ -385,5 +438,62 @@ We can also further combine the move sequence blocks in logic sequences. In this
         rp.prefix + "ComposedHomeSequence", {to_home_xml, to_rest_xml});
 ```
 
-As you can see, to use the `sequenceWrapperXML` you just need a name for the node and a sequence of xml snippets that you need to execute sequentially. The result itself is another xml snippet that you can combine further.  
-The move snippets are quite complex, and I'll leave the details to the documentation an to future tutorials. 
+The move snippets are quite complex, and I'll leave the details to the documentation and to future tutorials.
+
+## 5. Assembling the tree
+
+Great, now we have all the required components to build our tree!
+In this section we'll create the 3 components of the `GlobalMasterSequence`:
+* Startup Sequence
+* Robot Cycle
+* Reset Handler
+
+The **Startup Sequence** combines together all the required snippets to spawn the fixed objects, reset the graspable object and move the robot to rest position:
+
+```cpp
+    std::string startup_sequence_xml = sequenceWrapperXML(
+        "StartUpSequence",
+        {spawn_fixed_objects_xml,
+         reset_graspable_objects_xml,
+         to_rest_xml});
+```
+
+If we never reset the cycle, this will run just once at the beginning.
+
+---
+
+The **Robot Cycle** is the sequence that runs perpetually (or until something goes wrong!), so this time we use the `repeatSequenceWrapperXML()`. This is almost identical to the `sequenceWrapperXML()`, but you can set it to repeat a number of times when successful. We want it to continue forever, so we set the repetitions to `-1`.  
+The comments beside the sequence elements are quite self explanatory: we reap the benefits of building the snippets with a clear logic in mind. 
+
+```cpp
+    std::string repeat_forever_wrapper_xml = repeatSequenceWrapperXML(
+        "RobotCycle",
+        {spawn_graspable_objects_xml, //< Add the graspable object to the scene and update the relative poses
+         pick_sequence_xml,           //< Pick sequence: move to position and close gripper
+         drop_sequence_xml,           //< Drop sequence: move to position and open gripper
+         home_sequence_xml,           //< Homing sequence: go home positionand then to rest pose
+         graspable.remove_xml},       //< Delete the object for it to be added on the next cycle in the original position
+        -1);                          //< num_cycles=-1 for infinite
+```
+
+---
+
+If we only put these two nodes in sequence, when we reset the robot cycle the tree would just fail and the execution would end.  
+We need to handle the reset more gracefully. To do this, we wrap both of the startup and the cycle nodes in a Retry node. Here we use the `retrySequenceWrapperXML()` function, which lets us determine how many time we want to retry. We want to be able to reset as many times as we need, so we set the retries to `-1`.  
+When the cycle resets, `StartUpSequence` will be executed again, resetting the scene before the `RobotCycle` starts:
+
+```cpp
+    std::string retry_forever_wrapper_xml = retrySequenceWrapperXML("ResetHandler", {startup_sequence_xml, repeat_forever_wrapper_xml}, -1);
+```
+
+---
+
+Finally, we create ths `GlobalMasterSequence` using the `retry_forever_wrapper_xml` as only child node, and then use the `GlobalMasterSequence` to instantiate the `MasterTree`:
+
+```cpp
+    std::string master_body = sequenceWrapperXML("GlobalMasterSequence", {retry_forever_wrapper_xml});
+    std::string final_tree_xml = mainTreeWrapperXML("MasterTree", master_body);
+```
+
+---
+
