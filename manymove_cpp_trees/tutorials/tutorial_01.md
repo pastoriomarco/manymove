@@ -5,6 +5,10 @@
 As you may have noticed, all of the executable in ManyMove are structured as a sort of tutorial: all sections follow a certain logic, which may vary from executable to executable to highlight different possible trains of thought. They contain lots of useful information, but there's lots that is given for granted.  
 This tutorial serves as a base to understand how to start using ManyMove with a focus on obtaining a basic series of actions; I won't be talking about the implementation details, but I'll cover the overall high-level logic to go straight to the goal of performing an action with a manipulator.
 
+At the end of the tutorial you'll get an understanding on how to create this kind of application:
+
+<img src="./media/tutorial_01.gif" alt="Tutorial_01" width="640"/>
+
 ## Prerequisites
 
 You will need to have installed ROS2 Humble or Jazzy, Moveit2 and xarm_ros2 repositories for the corresponding distro. Follow the instructions in ManyMove's github repo and in xarm_ros2 repo and you should be able to have it all up and running.  
@@ -22,9 +26,28 @@ We'll develop a simple pick and place application with a Ufactory Lite6, a littl
 
 Since I want to focus on how ManyMove works, in the first tutorial we'll use a launcher that already brings up all the required nodes, including the robot, Rviz, MoveIt, and so on.
 
+The file we'll edit is `manymove_cpp_trees/src/tutorial_01.cpp`.  
+You will copy the code shown in each section to the corrisponding section of the file. I suggest you to type it in, instead of just copy-paste it: this will help you notice every detail of code used, and to get used to editing it for your future projects!
+
+If you get stuck, you find the whole complete code for the tutorial in `manymove_cpp_trees/src/tutorial_01_complete.cpp`.
+
+For now, you can ignore section `0` and section `6` of the tutorial, as you only rarely need to touch it. We'll cover it in the documentation or in some future tutorial, if there's request for it.
+
+After you install all the required packages and source the workspace, you can use this command to execute the tutorial:
+
+```bash
+ros2 launch manymove_bringup tutorial_01.launch.py
+```
+
+At the beginning the scene is empty, and pressing the buttons does nothing:
+
+<img src="./media/empty_scene.png" alt="Tutorial_01 empty scene" width="640"/>
+
+---
+
 ## 1. Create the scene
 
-One of the advantages of ROS and MoveIt is being able to plan dynamically while considering the objects in the scene. Here we'll create the tutorial scene to leverage these functionalities, so it will contain 3 boxes:
+One of the advantages of ROS and MoveIt is being able to plan dynamically while considering the objects in the scene. Here we'll create the tutorial scene to leverage these functionalities, so it will contain 3 box objects:
 * a box representing the ground or the table the robot is fixed to
 * a box representing an obstacle wall
 * a box representing an object to grasp
@@ -496,4 +519,9 @@ Finally, we create ths `GlobalMasterSequence` using the `retry_forever_wrapper_x
 ```
 
 ---
+
+Here we go, the tree is now complete!  
+As you see, after preparing the snippets correctly you can handle the logic of the tree with a very limited number of lines of code. The resulting tree looks like this:
+
+![CompleteTree](./media/complete_tree_tutorial_01.png)
 
