@@ -459,6 +459,9 @@ The move snippets are quite complex, and I'll leave the details to the documenta
 ## 5. Assembling the tree
 
 Great, now we have all the required components to build our tree!
+
+Before continuing, remove the line that defines `retry_forever_wrapper_xml`, as it will be replaced by new code in this section.
+
 In this section we'll create the 3 components of the `GlobalMasterSequence`:
 * Startup Sequence
 * Robot Cycle
@@ -504,17 +507,16 @@ When the cycle resets, `StartUpSequence` will be executed again, resetting the s
 
 ---
 
-Finally, we create ths `GlobalMasterSequence` using the `retry_forever_wrapper_xml` as only child node, and then use the `GlobalMasterSequence` to instantiate the `MasterTree`:
-
-```cpp
-    std::string master_body = sequenceWrapperXML("GlobalMasterSequence", {retry_forever_wrapper_xml});
-    std::string final_tree_xml = mainTreeWrapperXML("MasterTree", master_body);
-```
+Finally, you can see in the tutorial's code that we create ths `GlobalMasterSequence` using the `retry_forever_wrapper_xml` as only child node, and then use the `GlobalMasterSequence` to instantiate the `MasterTree`.
 
 ---
 
-Here we go, the tree is now complete!  
-You can run the launch command again and see the scene load. Pressing `START`, `STOP` and `RESET` buttons now have the intended behavior.  
+The tree is now complete!  
+You can **build manymove_cpp_trees** again and run the launch command to see the complete scene. Pressing `START`, `STOP` and `RESET` buttons now have the intended behavior.  
+
+```bash
+ros2 launch manymove_bringup tutorial_01.launch.py
+```
 
 As you see, after preparing the snippets correctly you can handle the logic of the tree with a very limited number of lines of code. The resulting tree looks like this:
 
