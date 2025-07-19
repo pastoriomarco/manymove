@@ -113,7 +113,7 @@ The last object is the graspable box:
     ObjectSnippets graspable = createObjectSnippets(
         blackboard, keys, "graspable", "box",
         createPoseRPY(0.25, -0.25, 0.1, 0.0, 0.0, 0.0), {0.1, 0.005, 0.005},
-    "", {}, "tcp_frame_name_key");
+    "", {1.0, 1.0, 1.0}, "tcp_frame_name_key");
 ```
 
 It's placed within reach of the Lite6 and it's shape and size already match the gripper orientation relative to the robot's TCP.  
@@ -121,11 +121,7 @@ But beware: the graspable object's Z axis is facing up, while the robot's TCP's 
 
 Later, we'll also see how this snippets are used in the logic tree.
 
-Before moving on, please notice that the `tcp_frame_name_key` field was added as input: without a blackboard key that refers to the robot's tcp, the attach_xml snippet will give you an error at runtime, as it won't know to what link you want to attach the object to. Here's how we define the `tcp_frame_name_key`:
-
-```cpp
-std::string tcp_frame_name = rp.prefix + rp.tcp_frame;
-```
+Before moving on, please notice that the `tcp_frame_name_key` field was added as input: without a blackboard key that refers to the robot's tcp, the attach_xml snippet will give you an error at runtime, as it won't know to what link you want to attach the object to. Here `tcp_frame_name_key` is just a string, there's no key associated yet: we'll see in the next section how to create it.
 
 The variable `rp` contains al the data of the robot. We'll talk about it in the future, but for now let's just use a couple of its fields:
 * `prefix` is an optional field, here is empty. It stores the prefix for the robot, to differentiate the various topics, services and action servers
@@ -168,11 +164,7 @@ Let's see what each component does:
 * `"identity_transform_key"` and `"approach_pre_transform_xyz_rpy_1_key"`: here's the key that references the first tranform to adapt the pose of the object to the one of the TCP.
 * `"post_transform_xyz_rpy_1_key"`: the key to the second transform to apply to the pose of the object, we'll see later why this is useful
 
-We should spend some words on the transforms. We created the graspable object with this pose:
-
-```cpp
-createPoseRPY(0.25, -0.25, 0.1, 0.0, 0.0, 0.0)
-```
+We should spend some words on the transforms. We created the graspable object with this pose: `createPoseRPY(0.25, -0.25, 0.1, 0.0, 0.0, 0.0)`.
 
 If we just get this pose, the approach_pick target and the pick target will be the same. We need to move up the approach target to correctly approach this object. The pick target can be represented by the identity transform key we created as utility. We can reuse this key every time we need a neutral transform. The approach_pick target must move up by about 5 cm in the world's Z+ direction compared to the original pose of the object, but we wont the gripper to approach the object from above. The TCP frame in the Lite6 robot (as in many other) have the Z+ axis exiting from the flange, so it will be pointing downward when aligned above the object.  
 Imagine you want to align the object with the TCP, and the object is stuck with the Z+ axis going upwards: then the TCP will have to approach from below, and if we want to get some distance we need to move towards Z-. Thus, we get this transform:
@@ -188,8 +180,8 @@ As we already said, we want to approach from above, so we flip the pose 180 degr
 ```
 
 You may wonder: couldn't we use just one tranform?  
-This is a simple scenario, so yes, we could. But using a single tranform may get confusing easily.  
-In other scenarios, like those in the other executables, the transforms are a bit more complicated and we benefit from separating them in two transforms.  
+This is a simple scenario, so yes, we could. But using a single tranform may get confusing quicly.  
+In more complex scenarios, like those in the other executables, the transforms are a bit more complicated and we benefit from separating them in two transforms.  
 For example: if I were to rotate in the X axis of 45 degrees, but then I needed to rotate in the original Z axis, I would need a different approach as it wouldn't be as easy as inputting the required values. When I rotate the X axis, the Z axis is not vertical anymore, so I'd need a composite transform among the 3 axes. Splitting the transforms makes it much simpler: the second transform is aligned with the original Z axis.
 
 ## 3. Define the moves
@@ -277,7 +269,8 @@ If you used some proprietary robot programming language (eg.: RAPID or KRL), thi
 
 We define the `named_home` move using the robot's prefix, the `tcp_frame_name` we defined earlier, the move type `"named"`, one of the default `move_configs`, and the `named_home` string. We also need to input an empty string for the pose key and an empty vector for the joint target before the named target. Even if we put a valid value there, it would just be ignored.
 
-Since we are using the `move_position` sequence to home the robot after opening the gripper, we add an exit move to the sequence:
+Since we are using the `move_position` sequence to home the robot after opening the gripper, we add an exit move to the sequence.  
+**Modify the previously defined vector of moves adding one line before the named one**:
 
 ```cpp
     std::vector<Move> home_position = {
