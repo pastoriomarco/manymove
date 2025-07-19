@@ -93,7 +93,7 @@ When you go through the code, you'll notice I explain what each section does and
 
 ---
 
-  ## Project Structure
+## Project Structure
   
 ![ManyMove structure](media/manymove_structure.png)
 
@@ -136,6 +136,14 @@ This repository is composed of several sub-packages, each handling different res
    - Contains the launchers for the complete multi-package examples listed below (and more).
 
 ---
+
+## Tutorials
+
+The first tutorial is now available [`HERE: tutorial_01`](./manymove_cpp_trees/tutorials/tutorial_01.md).
+
+Starting from an empty scene, you'll delop a pick and place application with ManyMove:
+
+<img src="./manymove_cpp_trees/tutorials/media/tutorial_01.gif" alt="Tutorial_01" width="640"/>
 
 ## Examples
 
