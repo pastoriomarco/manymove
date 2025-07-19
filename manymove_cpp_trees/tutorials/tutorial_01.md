@@ -514,6 +514,8 @@ Finally, we create ths `GlobalMasterSequence` using the `retry_forever_wrapper_x
 ---
 
 Here we go, the tree is now complete!  
+You can run the launch command again and see the scene load. Pressing `START`, `STOP` and `RESET` buttons now have the intended behavior.  
+
 As you see, after preparing the snippets correctly you can handle the logic of the tree with a very limited number of lines of code. The resulting tree looks like this:
 
 ![CompleteTree](./media/complete_tree_tutorial_01.png)
