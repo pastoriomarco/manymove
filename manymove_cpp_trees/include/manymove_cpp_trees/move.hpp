@@ -88,7 +88,8 @@ namespace manymove_cpp_trees
         slow_move_config.velocity_scaling_factor /= 4.0;
         slow_move_config.acceleration_scaling_factor /= 4.0;
         slow_move_config.max_cartesian_speed = 0.05;
-        slow_move_config.min_stop_time = 0.05; // need more stop precision on slow moves for input searches
+        slow_move_config.deceleration_time = 0.25;
+        slow_move_config.min_stop_time = 0.2;
 
         // Cartesian path shouldn't need more than one plan to reach optimal traj, since it's a straight line.
         MovementConfig cartesian_max_move_config = max_move_config;
@@ -100,6 +101,23 @@ namespace manymove_cpp_trees
         MovementConfig cartesian_slow_move_config = slow_move_config;
         cartesian_slow_move_config.plan_number_target = 1;
 
+        // Moves to perform search/interrupt: using cartesian as base since seaching on a probabilistic path would't make much sense...
+        MovementConfig search_mid_move_config = cartesian_max_move_config;
+        search_mid_move_config.velocity_scaling_factor /= 2.0;
+        search_mid_move_config.acceleration_scaling_factor /= 2.0;
+        search_mid_move_config.deceleration_time = 0.25;
+        search_mid_move_config.max_cartesian_speed = 0.15;
+        search_mid_move_config.min_stop_time = 0.05; // need more stop precision on slow moves for input searches
+
+        MovementConfig search_slow_move_config = cartesian_max_move_config;
+        search_slow_move_config.step_size = 0.001;
+        search_slow_move_config.velocity_scaling_factor /= 4.0;
+        search_slow_move_config.acceleration_scaling_factor /= 4.0;
+        search_slow_move_config.deceleration_time = 0.1;
+        search_slow_move_config.max_cartesian_speed = 0.025;
+        search_slow_move_config.min_stop_time = 0.025; // need more stop precision on slow moves for input searches
+
+        // isaac_ros_cumotion test move
         MovementConfig cumotion_max_move_config = max_move_config;
         cumotion_max_move_config.planning_pipeline = "isaac_ros_cumotion";
         cumotion_max_move_config.planner_id = "cuMotion";
@@ -107,6 +125,7 @@ namespace manymove_cpp_trees
         cumotion_max_move_config.planning_attempts = 1;
         cumotion_max_move_config.plan_number_target = 1;
 
+        // Pilz PTP move
         MovementConfig PTP_max_move_config = max_move_config;
         PTP_max_move_config.planning_pipeline = "pilz_industrial_motion_planner";
         PTP_max_move_config.planner_id = "PTP";
@@ -115,6 +134,7 @@ namespace manymove_cpp_trees
         PTP_max_move_config.plan_number_target = 1;
         PTP_max_move_config.velocity_scaling_factor = 1.0; ///< This scales the max_rot_vel in pilz_cartesian_limits.yaml
 
+        // Pilz LIN moves
         MovementConfig LIN_max_move_config = max_move_config;
         LIN_max_move_config.planning_pipeline = "pilz_industrial_motion_planner";
         LIN_max_move_config.planner_id = "LIN";
@@ -133,6 +153,7 @@ namespace manymove_cpp_trees
         LIN_slow_move_config.acceleration_scaling_factor = 0.1;
         LIN_slow_move_config.min_stop_time = 0.05; // need more stop precision on slow moves for input searches
 
+        // Chomp move
         MovementConfig CHOMP_max_move_config = max_move_config;
         CHOMP_max_move_config.planning_pipeline = "chomp";
         CHOMP_max_move_config.planner_id = "CHOMP";
@@ -151,6 +172,10 @@ namespace manymove_cpp_trees
             {"cartesian_mid_move", cartesian_mid_move_config},
             {"cartesian_slow_move", cartesian_slow_move_config},
 
+            // Moves for search/interrupt movements
+            {"search_mid_move", search_mid_move_config},
+            {"search_slow_move", search_slow_move_config},
+
             // Params for pilz_industrial_planner planning library
             {"PTP_max_move", PTP_max_move_config},
             {"LIN_max_move", LIN_max_move_config},
@@ -161,7 +186,8 @@ namespace manymove_cpp_trees
             {"CHOMP_max_move", CHOMP_max_move_config},
 
             // Test for moves with cuMotion planning library
-            {"cumotion_max_move", cumotion_max_move_config}};
+            {"cumotion_max_move", cumotion_max_move_config},
+        };
     }
 
     /**
