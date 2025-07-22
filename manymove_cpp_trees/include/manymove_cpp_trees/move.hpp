@@ -105,16 +105,16 @@ namespace manymove_cpp_trees
         MovementConfig search_mid_move_config = cartesian_max_move_config;
         search_mid_move_config.velocity_scaling_factor /= 2.0;
         search_mid_move_config.acceleration_scaling_factor /= 2.0;
-        search_mid_move_config.deceleration_time = 0.25;
         search_mid_move_config.max_cartesian_speed = 0.15;
+        search_mid_move_config.deceleration_time = 0.25;
         search_mid_move_config.min_stop_time = 0.05; // need more stop precision on slow moves for input searches
 
         MovementConfig search_slow_move_config = cartesian_max_move_config;
         search_slow_move_config.step_size = 0.001;
         search_slow_move_config.velocity_scaling_factor /= 4.0;
         search_slow_move_config.acceleration_scaling_factor /= 4.0;
-        search_slow_move_config.deceleration_time = 0.1;
         search_slow_move_config.max_cartesian_speed = 0.025;
+        search_slow_move_config.deceleration_time = 0.1;
         search_slow_move_config.min_stop_time = 0.025; // need more stop precision on slow moves for input searches
 
         // isaac_ros_cumotion test move
