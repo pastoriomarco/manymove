@@ -492,6 +492,12 @@ namespace manymove_cpp_trees
         double dist = std::sqrt(dx * dx + dy * dy + dz * dz);
 
         RCLCPP_INFO(node_ ? node_->get_logger() : rclcpp::get_logger("CheckPoseDistance"),
+                    "[%s] Target pose: [%3f, %3f, %3f]", name().c_str(),target_pose.position.x, target_pose.position.y, target_pose.position.z);
+
+        RCLCPP_INFO(node_ ? node_->get_logger() : rclcpp::get_logger("CheckPoseDistance"),
+                    "[%s] Reference pose: [%3f, %3f, %3f]", name().c_str(),reference_pose.position.x, reference_pose.position.y, reference_pose.position.z);
+
+        RCLCPP_INFO(node_ ? node_->get_logger() : rclcpp::get_logger("CheckPoseDistance"),
                     "[%s] distance=%.4f, tol=%.4f", name().c_str(), dist, tol);
 
         if (dist <= tol)
