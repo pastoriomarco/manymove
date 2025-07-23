@@ -855,10 +855,23 @@ bool ManipulatorActionServer::executeTrajectoryWithCollisionChecks(
         return false;
     }
 
+    auto wrapped_result = res_future.get();
     bool final_status = result_future.get();
     if (!final_status)
     {
-        abort_reason = "Trajectory execution stopped, failed or collision occurred mid-run";
+        if (collision_detected.load())
+        {
+            abort_reason = "Collision detected during trajectory execution";
+        }
+        else
+        {
+            abort_reason = "FollowJointTrajectory failed (" +
+                           std::to_string(wrapped_result.result->error_code) + ")";
+            if (!wrapped_result.result->error_string.empty())
+            {
+                abort_reason += ": " + wrapped_result.result->error_string;
+            }
+        }
         return false;
     }
 
