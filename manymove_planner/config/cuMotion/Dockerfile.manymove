@@ -7,7 +7,7 @@
         ROS_DISTRO=humble \
         DEBIAN_FRONTEND=noninteractive
 
-    curl -sSL https://raw.githubusercontent.com/ros/rosdistro/master/ros.key -o /usr/share/keyrings/ros-archive-keyring.gpg
+    RUN curl -sSL https://raw.githubusercontent.com/ros/rosdistro/master/ros.key -o /usr/share/keyrings/ros-archive-keyring.gpg
     
     # 1) install all system & ROS binaries needed before colcon build
     RUN apt-get update && \
