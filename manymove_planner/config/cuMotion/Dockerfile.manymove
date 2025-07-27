@@ -23,6 +23,7 @@
           ros-${ROS_DISTRO}-joint-state-publisher-gui \
           ros-${ROS_DISTRO}-xacro \
           ros-${ROS_DISTRO}-tf-transformations \
+          ros-${ROS_DISTRO}-find-object-2d \
         && rm -rf /var/lib/apt/lists/*
     
     # 2) copy your bootstrap into the base image’s entrypoint_additions
