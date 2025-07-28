@@ -7,9 +7,9 @@
         ROS_DISTRO=humble \
         DEBIAN_FRONTEND=noninteractive
 
+    # 0) Update ros keyring (currently the keyring in the image is expired)
     RUN sudo rm /usr/share/keyrings/ros-archive-keyring.gpg && \
         sudo curl -sSL https://raw.githubusercontent.com/ros/rosdistro/master/ros.key -o /usr/share/keyrings/ros-archive-keyring.gpg
-
     
     # 1) install all system & ROS binaries needed before colcon build
     RUN apt-get update && \
@@ -30,7 +30,7 @@
           ros-${ROS_DISTRO}-find-object-2d \
         && rm -rf /var/lib/apt/lists/*
     
-    # 2) copy your bootstrap into the base image’s entrypoint_additions
+    # 2) copy bootstrap into the base image’s entrypoint_additions
     #    (workspace-entrypoint.sh will run *all* scripts in this folder)
     COPY scripts/build-manymove.sh \
          /usr/local/bin/scripts/entrypoint_additions/00-build-manymove.sh
