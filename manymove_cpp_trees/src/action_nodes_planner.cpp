@@ -10,7 +10,9 @@ namespace manymove_cpp_trees
     MoveManipulatorAction::MoveManipulatorAction(const std::string &name, const BT::NodeConfiguration &config)
         : BT::StatefulActionNode(name, config),
           goal_sent_(false),
-          result_received_(false)
+          result_received_(false),
+          max_tries_(-1),
+          current_try_(0)
     {
         // Get the ROS node from the blackboard.
         if (!config.blackboard)
@@ -48,11 +50,12 @@ namespace manymove_cpp_trees
         goal_sent_ = false;
         result_received_ = false;
         action_result_ = MoveManipulator::Result();
+        current_try_ = 0;
 
         // Read the robot_prefix
         if (!getInput<std::string>("robot_prefix", robot_prefix_))
         {
-            throw BT::RuntimeError("MoveManipulatorAction: 'robot_prefix' not found in blackboard.");
+            throw BT::RuntimeError("MoveManipulatorAction: 'robot_prefix' key not found in blackboard.");
         }
 
         // this should never be true on start, but let's leave it here for safety
@@ -79,6 +82,9 @@ namespace manymove_cpp_trees
             RCLCPP_ERROR(node_->get_logger(), "[MoveManipulatorAction] No move_id inputPort");
             return BT::NodeStatus::FAILURE;
         }
+
+                // Read number of allowed retries (-1 => infinite)
+        getInput<int>("max_tries", max_tries_);
 
         bool stop_execution;
         if (!getInput<bool>("stop_execution", stop_execution))
@@ -185,12 +191,29 @@ namespace manymove_cpp_trees
             else
             {
                 config().blackboard->set("trajectory_" + move_id_, moveit_msgs::msg::RobotTrajectory());
-                RCLCPP_ERROR(node_->get_logger(), "[MoveManipulatorAction] failed => returning FAILURE");
 
-                // stop the execution
-                config().blackboard->set(robot_prefix_ + "stop_execution", true);
+                current_try_++;
 
-                return BT::NodeStatus::FAILURE;
+                if (max_tries_ != -1 && current_try_ >= max_tries_)
+                {
+                    RCLCPP_ERROR(node_->get_logger(),
+                                 "[MoveManipulatorAction] failed after %d attempts => returning FAILURE",
+                                 current_try_);
+
+                    // stop the execution
+                    config().blackboard->set(robot_prefix_ + "stop_execution", true);
+
+                    return BT::NodeStatus::FAILURE;
+                }
+                else
+                {
+                    RCLCPP_ERROR(node_->get_logger(),
+                                "[MoveManipulatorAction] attempt %d failed, retrying...",
+                                current_try_);
+                    // prepare for a new attempt
+                    goal_sent_ = false;
+                    result_received_ = false;
+                }
             }
         }
         return BT::NodeStatus::RUNNING;

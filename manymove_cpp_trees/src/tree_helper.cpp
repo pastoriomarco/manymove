@@ -139,7 +139,8 @@ namespace manymove_cpp_trees
                              const std::string &node_prefix,
                              const std::vector<Move> &moves,
                              BT::Blackboard::Ptr blackboard,
-                             bool reset_trajs)
+                             bool reset_trajs,
+                             int max_tries)
     {
         std::ostringstream xml;
 
@@ -152,7 +153,6 @@ namespace manymove_cpp_trees
 
         // Build a Sequence node that will run each move in order
         std::ostringstream execution_seq;
-        execution_seq << "    <Sequence name=\"ExecutionSequence_" << node_prefix << "_" << blockStartID << "\">\n";
 
         for (const auto &move : moves)
         {
@@ -177,30 +177,31 @@ namespace manymove_cpp_trees
 
             // Build a RetryPauseAbort node that wraps a single MoveManipulatorAction.
             // This node is expected to either execute an existing trajectory or trigger a re–plan.
-            execution_seq << "    <RetryPauseResetNode name=\"StopSafe_Retry_" << this_move_id << "\""
-                          << " collision_detected=\"{" << robot_prefix << "collision_detected}\""
-                          << " stop_execution=\"{" << robot_prefix << "stop_execution}\""
-                          << " reset=\"{" << robot_prefix << "reset}\""
-                          << " robot_prefix=\"" << robot_prefix << "\">\n"
-                          << "    <Sequence>\n"
-                          << "      <MoveManipulatorAction"
-                          << " name=\"MoveManip_" << this_move_id << "\""
-                          << " robot_prefix=\"" << robot_prefix << "\""
-                          << " move_id=\"" << this_move_id << "\""
-                          << " trajectory=\"{trajectory_" << this_move_id << "}\""
-                          << " pose_key=\"" << move.pose_key << "\""
-                          << " collision_detected=\"{" << robot_prefix << "collision_detected}\""
-                          << " invalidate_traj_on_exec=\"" << (reset_trajs ? "true" : "false") << "\" "
-                          << " stop_execution=\"{" << robot_prefix << "stop_execution}\""
+            execution_seq << "<RetryPauseResetNode name=\"StopSafe_Retry_" << this_move_id << "\""
+                          << "  collision_detected=\"{" << robot_prefix << "collision_detected}\""
+                          << "  stop_execution=\"{" << robot_prefix << "stop_execution}\""
+                          << "  reset=\"{" << robot_prefix << "reset}\""
+                          << "  robot_prefix=\"" << robot_prefix << "\">\n"
+                          << "  <Sequence>\n"
+                          << "    <MoveManipulatorAction"
+                          << "    name=\"MoveManip_" << this_move_id << "\""
+                          << "    robot_prefix=\"" << robot_prefix << "\""
+                          << "    move_id=\"" << this_move_id << "\""
+                          << "    max_tries=\"" << max_tries << "\""
+                          << "    trajectory=\"{trajectory_" << this_move_id << "}\""
+                          << "    pose_key=\"" << move.pose_key << "\""
+                          << "    collision_detected=\"{" << robot_prefix << "collision_detected}\""
+                          << "    invalidate_traj_on_exec=\"" << (reset_trajs ? "true" : "false") << "\" "
+                          << "    stop_execution=\"{" << robot_prefix << "stop_execution}\""
                           << "/>\n"
-                          << "    </Sequence>\n"
-                          << "    </RetryPauseResetNode>\n";
+                          << "  </Sequence>\n"
+                          << "</RetryPauseResetNode>\n";
 
             // Increment the global ID for the next move.
             g_global_move_id++;
         }
 
-        execution_seq << "    </Sequence>\n";
+        int blockEndID = g_global_move_id;
 
         // Append a ResetTrajectories node if reset_trajs is true.
         if (reset_trajs)
@@ -215,7 +216,11 @@ namespace manymove_cpp_trees
             execution_seq << "\"/>\n";
         }
 
-        return execution_seq.str();
+        std::ostringstream final_sequence_name;
+        final_sequence_name << "ExecutionSequence_" << node_prefix << "_" << blockStartID << "-" << blockEndID;
+        std::string final_sequence_xml = sequenceWrapperXML(final_sequence_name.str(), {execution_seq.str()});
+
+        return final_sequence_xml;
     }
 
     std::string buildObjectActionXML(const std::string &node_prefix, const ObjectAction &action)
@@ -660,7 +665,7 @@ namespace manymove_cpp_trees
                                         const int num_cycles)
     {
         std::ostringstream xml;
-        xml << "  <RetryNode name=\"" << sequence_name << "\" num_attempts=\"" << num_cycles << "\">\n";
+        xml << "  <RetryNode name=\"" << "Retry_" << sequence_name << "\" num_attempts=\"" << num_cycles << "\">\n";
         xml << "    <Sequence name=\"" << sequence_name << "_sequence\">\n";
         for (const auto &b : branches)
         {

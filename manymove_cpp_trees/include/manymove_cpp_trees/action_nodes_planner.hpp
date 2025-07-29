@@ -48,6 +48,7 @@ namespace manymove_cpp_trees
                 BT::InputPort<bool>("collision_detected", "If a collision is detected, the execution fails"),
                 BT::InputPort<bool>("invalidate_traj_on_exec", "Flag to indicate if the trajectory should be invalidated on exec even if successful"),
                 BT::InputPort<bool>("stop_execution", "Flag to indicate that the execution is stopped"),
+                BT::InputPort<int>("max_tries", "Number of times to try the execution"),
             };
         }
 
@@ -61,6 +62,9 @@ namespace manymove_cpp_trees
         void feedbackCallback(std::shared_ptr<GoalHandleMoveManipulator>,
                               const std::shared_ptr<const MoveManipulator::Feedback> feedback);
         void resultCallback(const GoalHandleMoveManipulator::WrappedResult &result);
+
+        int max_tries_;
+        int current_try_;
 
         rclcpp::Node::SharedPtr node_;
         rclcpp_action::Client<MoveManipulator>::SharedPtr action_client_;

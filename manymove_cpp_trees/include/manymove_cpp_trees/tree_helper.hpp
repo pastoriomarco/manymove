@@ -117,13 +117,15 @@ namespace manymove_cpp_trees
      * @param moves       The vector of Move that we plan/execute in this parallel block
      * @param blackboard  The blackboard to populate with move IDs
      * @param reset_trajs This condition generates the ResetTrajectories leaf node to reset all the sequence's trajs before planning and executing
+     * @param max_tries   The max number of tries to execute the move
      * @return A string with the generated XML snippet
      */
     std::string buildMoveXML(const std::string &robot_prefix,
                              const std::string &node_prefix,
                              const std::vector<Move> &moves,
                              BT::Blackboard::Ptr blackboard,
-                             bool reset_trajs = false);
+                             bool reset_trajs = false,
+                             int max_tries = 1);
 
     /**
      * @brief Builds an XML snippet for a single object action node based on the provided ObjectAction.
@@ -241,9 +243,8 @@ namespace manymove_cpp_trees
      * @return A string with the generated XML snippet for the SetKeyValue node.
      */
     std::string buildCheckKeyBool(const std::string &node_prefix,
-                                const std::string &key,
-                                const bool &value);
-
+                                  const std::string &key,
+                                  const bool &value);
 
     /**
      * @brief Build an XML snippet for a single <WaitForKeyBool> node.

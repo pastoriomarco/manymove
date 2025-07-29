@@ -11,7 +11,7 @@ namespace manymove_cpp_trees
 
     BT::NodeStatus RetryPauseResetNode::tick()
     {
-        // Read the two controlling blackboard keys:
+        // Read the controlling blackboard keys:
         bool collision_detected = false;
         bool reset = false;
         bool stop_execution = false;
