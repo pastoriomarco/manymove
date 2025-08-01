@@ -476,12 +476,10 @@ namespace manymove_cpp_trees
      */
     std::string serializePose(const geometry_msgs::msg::Pose &pose);
 
-    /**
-     * @brief Helper function to serialize a std::vector<double> into a comma-separated string.
-     * @param vec The vector to serialize.
-     * @return A string representation of the vector.
-     */
-    std::string serializeVector(const std::vector<double> &vec);
+    void setHmiMessage(BT::Blackboard::Ptr blackboard,
+                       const std::string prefix,
+                       const std::string message,
+                       const std::string color);
 
 } // namespace manymove_cpp_trees
 

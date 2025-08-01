@@ -781,18 +781,13 @@ namespace manymove_cpp_trees
         return oss.str();
     }
 
-    std::string serializeVector(const std::vector<double> &vec)
+    void setHmiMessage(BT::Blackboard::Ptr blackboard,
+                       const std::string prefix,
+                       const std::string message,
+                       const std::string color)
     {
-        std::ostringstream oss;
-        oss << "[";
-        for (size_t i = 0; i < vec.size(); ++i)
-        {
-            oss << vec[i];
-            if (i != vec.size() - 1)
-                oss << ",";
-        }
-        oss << "]";
-        return oss.str();
+        blackboard->set(prefix + "message", message);
+        blackboard->set(prefix + "message_color", color);
     }
 
 } // namespace manymove_cpp_trees
