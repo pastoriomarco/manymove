@@ -62,13 +62,17 @@ namespace manymove_cpp_trees
         bool collision_detected;
         if (!getInput<bool>("collision_detected", collision_detected))
         {
-            RCLCPP_DEBUG(node_->get_logger(),
+            RCLCPP_ERROR(node_->get_logger(),
                          "[MoveManipulatorAction] [%s]: 'collision_detected' not set => failing",
                          name().c_str());
             return BT::NodeStatus::FAILURE;
         }
         if (collision_detected)
         {
+            // HMI message
+            config().blackboard->set(robot_prefix_ + "message", "COLLISION DETECTED");
+            config().blackboard->set(robot_prefix_ + "message_color", "red");
+
             // reset the collision_detected value
             config().blackboard->set(robot_prefix_ + "collision_detected", false);
             config().blackboard->set(robot_prefix_ + "stop_execution", true);
@@ -79,12 +83,14 @@ namespace manymove_cpp_trees
         // Read move_id.
         if (!getInput<std::string>("move_id", move_id_))
         {
-            RCLCPP_ERROR(node_->get_logger(), "[MoveManipulatorAction] No move_id inputPort");
-            return BT::NodeStatus::FAILURE;
+            throw BT::RuntimeError("[MoveManipulatorAction] No move_id inputPort");
         }
 
-                // Read number of allowed retries (-1 => infinite)
-        getInput<int>("max_tries", max_tries_);
+        // Read number of allowed retries (-1 => infinite)
+        if (!getInput<int>("max_tries", max_tries_))
+        {
+            throw BT::RuntimeError("[MoveManipulatorAction] No max_tries inputPort");
+        }
 
         bool stop_execution;
         if (!getInput<bool>("stop_execution", stop_execution))
@@ -93,6 +99,10 @@ namespace manymove_cpp_trees
         }
         if (stop_execution)
         {
+            // HMI message
+            config().blackboard->set(robot_prefix_ + "message", "WAITING FOR EXECUTION START");
+            config().blackboard->set(robot_prefix_ + "message_color", "yellow");
+
             return BT::NodeStatus::FAILURE;
         }
 
@@ -114,10 +124,7 @@ namespace manymove_cpp_trees
         bool invalidate_traj_on_exec;
         if (!getInput<bool>("invalidate_traj_on_exec", invalidate_traj_on_exec))
         {
-            RCLCPP_ERROR(node_->get_logger(),
-                         "MoveManipulatorAction [%s]: missing InputPort [invalidate_traj_on_exec].",
-                         name().c_str());
-            return BT::NodeStatus::FAILURE;
+            throw BT::RuntimeError("MoveManipulatorAction [%s]: missing InputPort [invalidate_traj_on_exec].");
         }
 
         if (!goal_sent_)
@@ -148,10 +155,7 @@ namespace manymove_cpp_trees
             moveit_msgs::msg::RobotTrajectory existing_trajectory;
             if (!getInput<moveit_msgs::msg::RobotTrajectory>("trajectory", existing_trajectory))
             {
-                RCLCPP_ERROR(node_->get_logger(),
-                             "[MoveManipulatorAction] [%s]: missing InputPort [trajectory].",
-                             name().c_str());
-                return BT::NodeStatus::FAILURE;
+                throw BT::RuntimeError("[MoveManipulatorAction] [%s]: missing InputPort [trajectory].");
             }
 
             // Build the goal.
@@ -185,6 +189,11 @@ namespace manymove_cpp_trees
                 {
                     config().blackboard->set("trajectory_" + move_id_, action_result_.final_trajectory);
                 }
+
+                // HMI message
+                config().blackboard->set(robot_prefix_ + "message", "");
+                config().blackboard->set(robot_prefix_ + "message_color", "grey");
+
                 RCLCPP_INFO(node_->get_logger(), "[MoveManipulatorAction] success => returning SUCCESS");
                 return BT::NodeStatus::SUCCESS;
             }
@@ -203,19 +212,28 @@ namespace manymove_cpp_trees
                     // stop the execution
                     config().blackboard->set(robot_prefix_ + "stop_execution", true);
 
+                    // HMI message
+                    config().blackboard->set(robot_prefix_ + "message", "MOTION FAILED: " + action_result_.message);
+                    config().blackboard->set(robot_prefix_ + "message_color", "red");
+
                     return BT::NodeStatus::FAILURE;
                 }
                 else
                 {
                     RCLCPP_ERROR(node_->get_logger(),
-                                "[MoveManipulatorAction] attempt %d failed, retrying...",
-                                current_try_);
+                                 "[MoveManipulatorAction] attempt %d failed, retrying...",
+                                 current_try_);
                     // prepare for a new attempt
                     goal_sent_ = false;
                     result_received_ = false;
                 }
             }
         }
+
+        // HMI message
+        config().blackboard->set(robot_prefix_ + "message", "EXECUTING MOVE");
+        config().blackboard->set(robot_prefix_ + "message_color", "green");
+
         return BT::NodeStatus::RUNNING;
     }
 
@@ -231,6 +249,10 @@ namespace manymove_cpp_trees
 
         // Invalidate trajectory on halt
         config().blackboard->set("trajectory_" + move_id_, moveit_msgs::msg::RobotTrajectory());
+
+        // HMI message
+        config().blackboard->set(robot_prefix_ + "message", "MOTION HALTED");
+        config().blackboard->set(robot_prefix_ + "message_color", "red");
     }
 
     void MoveManipulatorAction::goalResponseCallback(std::shared_ptr<GoalHandleMoveManipulator> goal_handle)

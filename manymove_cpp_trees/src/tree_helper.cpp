@@ -422,6 +422,7 @@ namespace manymove_cpp_trees
             << " exists=\"" << (exists ? "true" : "false") << "\""
             << " timeout=\"" << ((timeout_ms > 0) ? (static_cast<double>(timeout_ms) / 1000.0) : 0.0) << "\""
             << " poll_rate=\"" << ((poll_rate_ms > 0) ? (static_cast<double>(poll_rate_ms) / 1000.0) : 0.0) << "\""
+            << " prefix=\"" << robot_prefix << "\""
             << "/>";
 
         return xml.str();
@@ -462,6 +463,7 @@ namespace manymove_cpp_trees
             << " expected_value=\"" << (expected_value ? "true" : "false") << "\""
             << " timeout=\"" << timeout_sec << "\""
             << " poll_rate=\"" << poll_sec << "\""
+            << " prefix=\"" << robot_prefix << "\""
             << "/>";
         return xml.str();
     }
