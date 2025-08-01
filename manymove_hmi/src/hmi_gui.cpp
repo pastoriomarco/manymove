@@ -3,6 +3,8 @@
 #include <QHBoxLayout>
 #include <QDebug>
 #include <QMetaType>
+#include <QPalette>
+#include <QColor>
 #include <sstream>
 
 HmiGui::HmiGui(const std::vector<std::string> &robotPrefixes, std::vector<std::string> &robotNames, QWidget *parent)
@@ -17,15 +19,16 @@ HmiGui::HmiGui(const std::vector<std::string> &robotPrefixes, std::vector<std::s
     QVBoxLayout *mainLayout = new QVBoxLayout(centralWidget_);
 
     // For each robot prefix, create one row of controls
-    for (size_t i {0}; i < robotPrefixes.size(); i++)
+    for (size_t i{0}; i < robotPrefixes.size(); i++)
     {
         std::string prefix = robotPrefixes[i];
         std::string name = robotNames[i];
 
+        QVBoxLayout *robotLayout = new QVBoxLayout();
+
         // A label to display the prefix name
         QLabel *prefixLabel = new QLabel(QString::fromStdString("ROBOT: " + prefix + name), this);
-        // rowLayout->addWidget(prefixLabel);
-        mainLayout->addWidget(prefixLabel);
+        robotLayout->addWidget(prefixLabel);
 
         QHBoxLayout *rowLayout = new QHBoxLayout();
 
@@ -47,8 +50,18 @@ HmiGui::HmiGui(const std::vector<std::string> &robotPrefixes, std::vector<std::s
         resetButton->setEnabled(true);
         rowLayout->addWidget(resetButton);
 
-        // Add the row to the main layout
-        mainLayout->addLayout(rowLayout);
+        // Add the row to the robot layout
+        robotLayout->addLayout(rowLayout);
+
+        QLabel *msgLbl = new QLabel(this);
+        msgLbl->setFixedHeight(30);
+        QFont msgFont = msgLbl->font();
+        msgFont.setPointSize(14);
+        msgLbl->setFont(msgFont);
+        robotLayout->addWidget(msgLbl);
+
+        // Add the robot layout to the main layout
+        mainLayout->addLayout(robotLayout);
 
         // Store references in the RobotInterface struct
         RobotInterface ri;
@@ -57,6 +70,7 @@ HmiGui::HmiGui(const std::vector<std::string> &robotPrefixes, std::vector<std::s
         ri.startButton = startButton;
         ri.stopButton = stopButton;
         ri.resetButton = resetButton;
+        ri.messageLabel = msgLbl;
         robotInterfaces_.push_back(ri);
 
         // Wire each button's click to a signal with the robot prefix
@@ -130,6 +144,28 @@ void HmiGui::updateStatus(const QString &robotPrefix,
     {
         clientSocket_->write(lastStatusJson_.toUtf8());
         clientSocket_->flush();
+    }
+}
+
+void HmiGui::updateRobotMessage(const QString &robotPrefix,
+                                const QString &message,
+                                const QString &color)
+{
+    for (auto &ri : robotInterfaces_)
+    {
+        if (ri.prefix == robotPrefix.toStdString())
+        {
+            ri.messageLabel->setText(message);
+            if (!color.isEmpty())
+            {
+                ri.messageLabel->setStyleSheet(QString("color: %1; border: 2px solid %1; padding:2px;").arg(color));
+            }
+            else
+            {
+                ri.messageLabel->setStyleSheet("");
+            }
+            break;
+        }
     }
 }
 

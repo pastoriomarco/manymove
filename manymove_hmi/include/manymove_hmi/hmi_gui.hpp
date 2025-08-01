@@ -25,7 +25,12 @@ public slots:
                       bool reset,
                       bool collision_detected);
 
-    // TCP server slots (unchanged)
+    /// Update a textual message for a given robot.
+    void updateRobotMessage(const QString &robotPrefix,
+                            const QString &message,
+                            const QString &color);
+
+    // TCP server slots
     void onNewConnection();
     void onSocketDisconnected();
 
@@ -48,6 +53,7 @@ private:
         QPushButton *startButton;
         QPushButton *stopButton;
         QPushButton *resetButton;
+        QLabel *messageLabel;
     };
 
     std::vector<RobotInterface> robotInterfaces_;
