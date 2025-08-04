@@ -508,7 +508,7 @@ std::pair<bool, moveit_msgs::msg::RobotTrajectory> MoveItCppPlanner::plan(const 
                 {
                     RCLCPP_WARN_STREAM(logger_, "Euclidean distance between theoretical target and calculated trajectory last point: " << targets_euclidean_distance);
 
-                    RCLCPP_WARN_STREAM(logger_, "The planner was not able to calculate trajectory with end point within tolerance." << targets_euclidean_distance);
+                    RCLCPP_WARN_STREAM(logger_, "The planner was not able to calculate trajectory with end point within the tolerance of " << traj_tolerance);
                     RCLCPP_WARN(logger_, "%s target planning attempt %d failed: trajectory is empty.",
                                 goal_msg.goal.movement_type.c_str(), attempts + 1);
                 }
