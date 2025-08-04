@@ -115,7 +115,7 @@ int main(int argc, char **argv)
 
     std::vector<Move> drop_sequence = {
         {rp.prefix, tcp_frame_name, "cartesian", move_configs["cartesian_mid_move"], "approach_pick_target_key"},
-        {rp.prefix, tcp_frame_name, "pose", move_configs["STOMP_max_move"], "approach_drop_target_key"},
+        {rp.prefix, tcp_frame_name, "pose", move_configs["max_move"], "approach_drop_target_key"},
         {rp.prefix, tcp_frame_name, "pose", move_configs["LIN_slow_move"], "drop_target_key"},
     };
 
