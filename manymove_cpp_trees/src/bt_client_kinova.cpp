@@ -303,7 +303,7 @@ int main(int argc, char **argv)
          remove_obj_xml},             //< We delete the object for it to be added on the next cycle in the original position
         -1);                          //< num_cycles=-1 for infinite
 
-    std::string retry_forever_wrapper_xml = retrySequenceWrapperXML("RetryForever", {startup_sequence_xml, repeat_forever_wrapper_xml}, -1);
+    std::string retry_forever_wrapper_xml = retrySequenceWrapperXML("CycleForever", {startup_sequence_xml, repeat_forever_wrapper_xml}, -1);
 
     // GlobalMasterSequence with RepeatForever as child to set BehaviorTree ID and root main_tree_to_execute in the XML
     std::vector<std::string> master_branches_xml = {retry_forever_wrapper_xml};

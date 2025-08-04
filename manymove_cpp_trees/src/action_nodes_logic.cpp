@@ -11,7 +11,7 @@ namespace manymove_cpp_trees
 
     BT::NodeStatus RetryPauseResetNode::tick()
     {
-        // Read the two controlling blackboard keys:
+        // Read the controlling blackboard keys:
         bool collision_detected = false;
         bool reset = false;
         bool stop_execution = false;
@@ -35,6 +35,11 @@ namespace manymove_cpp_trees
             config().blackboard->set(robot_prefix + "reset", false);
             if (child_node_ && child_node_->status() == BT::NodeStatus::RUNNING)
                 child_node_->halt();
+
+            // HMI message
+            config().blackboard->set(robot_prefix + "message", "RESET STATE");
+            config().blackboard->set(robot_prefix + "message_color", "red");
+
             return BT::NodeStatus::FAILURE;
         }
 
@@ -43,6 +48,11 @@ namespace manymove_cpp_trees
         {
             if (child_node_ && child_node_->status() == BT::NodeStatus::RUNNING)
                 child_node_->halt();
+
+            // HMI message
+            config().blackboard->set(robot_prefix + "message", "WAITING FOR EXECUTION START");
+            config().blackboard->set(robot_prefix + "message_color", "YELLOW");
+
             return BT::NodeStatus::RUNNING;
         }
 
@@ -52,6 +62,10 @@ namespace manymove_cpp_trees
             // halt the child_node_ if running to stop movement, but keep going
             if (child_node_ && child_node_->status() == BT::NodeStatus::RUNNING)
                 child_node_->halt();
+
+            // HMI message
+            config().blackboard->set(robot_prefix + "message", "COLLISION DETECTED");
+            config().blackboard->set(robot_prefix + "message_color", "red");
             /**
              * If we get here there have been a collision detected. With the above call we make the
              * execution halt so the StopMotion will be called. Then the ExecuteTrajectory node will
@@ -204,6 +218,11 @@ namespace manymove_cpp_trees
         getInput<double>("timeout", timeout_);
         getInput<double>("poll_rate", poll_rate_);
 
+        if (!getInput<std::string>("prefix", prefix_) || (prefix_ == ""))
+        {
+            prefix_ = "hmi_";
+        }
+
         // Mark timestamps
         if (!node_)
         {
@@ -223,6 +242,13 @@ namespace manymove_cpp_trees
         RCLCPP_INFO(node_ ? node_->get_logger() : rclcpp::get_logger("WaitForKeyBool"),
                     "[%s] WaitForKeyBool starting: key='%s', expected='%s', timeout=%.2f, poll_rate=%.2f",
                     name().c_str(), key_.c_str(), (expected_value_ ? "true" : "false"), timeout_, poll_rate_);
+
+        RCLCPP_INFO_STREAM(node_->get_logger(), prefix_ << "message: WAITING FOR KEY " << key_);
+        RCLCPP_INFO_STREAM(node_->get_logger(), prefix_ << "message_color: yellow");
+
+        // HMI message
+        config().blackboard->set(prefix_ + "message", "WAITING FOR KEY " + key_);
+        config().blackboard->set(prefix_ + "message_color", "yellow");
 
         return BT::NodeStatus::RUNNING;
     }
@@ -250,19 +276,22 @@ namespace manymove_cpp_trees
 
         // do the actual check: read from blackboard
         bool actual_value;
-        bool found = config().blackboard->get(key_, actual_value);
-        if (!found)
+        if (!config().blackboard->get(key_, actual_value))
         {
             // key not found => no match
             throw BT::RuntimeError("WaitForKeyBool: no [key] input provided.");
         }
 
-        RCLCPP_INFO(node_ ? node_->get_logger() : rclcpp::get_logger("WaitForKeyBool"),
-                    "[%s] WaitForKeyBool polling: key='%s', expected='%s', actual='%s' timeout=%.2f, poll_rate=%.2f",
-                    name().c_str(), key_.c_str(), (expected_value_ ? "true" : "false"), (actual_value ? "true" : "false"), timeout_, poll_rate_);
+        RCLCPP_DEBUG(node_ ? node_->get_logger() : rclcpp::get_logger("WaitForKeyBool"),
+                     "[%s] WaitForKeyBool polling: key='%s', expected='%s', actual='%s' timeout=%.2f, poll_rate=%.2f",
+                     name().c_str(), key_.c_str(), (expected_value_ ? "true" : "false"), (actual_value ? "true" : "false"), timeout_, poll_rate_);
 
         if (actual_value == expected_value_)
         {
+            // HMI message
+            config().blackboard->set(prefix_ + "message", "");
+            config().blackboard->set(prefix_ + "message_color", "grey");
+
             condition_met_ = true;
             return BT::NodeStatus::SUCCESS;
         }
@@ -279,6 +308,10 @@ namespace manymove_cpp_trees
                 return BT::NodeStatus::FAILURE;
             }
         }
+
+        // HMI message
+        config().blackboard->set(prefix_ + "message", "WAITING FOR KEY " + key_);
+        config().blackboard->set(prefix_ + "message_color", "yellow");
 
         // Otherwise schedule the next check in poll_rate_ s
         next_check_time_ = now + rclcpp::Duration::from_seconds(poll_rate_);
@@ -356,7 +389,7 @@ namespace manymove_cpp_trees
         }
 
         RCLCPP_INFO(node_->get_logger(),
-                    "[%s] RAW tf: {%.3f, %.3f, %.3f, %.3f, %.3f, %.3f, %.3f}",
+                    "GetLinkPoseAction - [%s] - RAW tf: {%.3f, %.3f, %.3f, %.3f, %.3f, %.3f, %.3f}",
                     name().c_str(),
                     tf_link_to_ref.transform.translation.x,
                     tf_link_to_ref.transform.translation.y,
@@ -413,7 +446,8 @@ namespace manymove_cpp_trees
         final_pose.orientation.z = q_final.z();
         final_pose.orientation.w = q_final.w();
 
-        RCLCPP_INFO(node_->get_logger(), "GetLinkPoseAction final pose = {%.3f, %.3f, %.3f, %.3f, %.3f, %.3f, %.3f}",
+        RCLCPP_INFO(node_->get_logger(), "GetLinkPoseAction - [%s] - Final pose = {%.3f, %.3f, %.3f, %.3f, %.3f, %.3f, %.3f}",
+                    name().c_str(),
                     final_pose.position.x,
                     final_pose.position.y,
                     final_pose.position.z,
@@ -430,12 +464,12 @@ namespace manymove_cpp_trees
         {
             config().blackboard->set(pose_key, final_pose);
             RCLCPP_INFO(node_->get_logger(),
-                        "GetLinkPoseAction pose written to = %s", pose_key.c_str());
+                        "GetLinkPoseAction - [%s] - Pose written to %s", name().c_str(), pose_key.c_str());
         }
         else
         {
             RCLCPP_DEBUG(node_->get_logger(),
-                         "GetLinkPoseAction: no pose_key provided, skipping BB write");
+                         "GetLinkPoseAction - [%s] - No pose_key provided, skipping BB write", name().c_str());
         }
 
         return BT::NodeStatus::SUCCESS;
@@ -459,12 +493,10 @@ namespace manymove_cpp_trees
     BT::NodeStatus CheckPoseDistance::tick()
     {
         std::string reference_key, target_key;
-
         if (!getInput("reference_pose_key", reference_key))
         {
             throw BT::RuntimeError("CheckPoseDistance: missing input 'reference_pose_key'");
         }
-
         if (!getInput("target_pose_key", target_key))
         {
             throw BT::RuntimeError("CheckPoseDistance: missing input 'target_pose_key'");
@@ -491,6 +523,12 @@ namespace manymove_cpp_trees
         double dy = target_pose.position.y - reference_pose.position.y;
         double dz = target_pose.position.z - reference_pose.position.z;
         double dist = std::sqrt(dx * dx + dy * dy + dz * dz);
+
+        RCLCPP_INFO(node_ ? node_->get_logger() : rclcpp::get_logger("CheckPoseDistance"),
+                    "[%s] Target pose: [%3f, %3f, %3f]", name().c_str(), target_pose.position.x, target_pose.position.y, target_pose.position.z);
+
+        RCLCPP_INFO(node_ ? node_->get_logger() : rclcpp::get_logger("CheckPoseDistance"),
+                    "[%s] Reference pose: [%3f, %3f, %3f]", name().c_str(), reference_pose.position.x, reference_pose.position.y, reference_pose.position.z);
 
         RCLCPP_INFO(node_ ? node_->get_logger() : rclcpp::get_logger("CheckPoseDistance"),
                     "[%s] distance=%.4f, tol=%.4f", name().c_str(), dist, tol);

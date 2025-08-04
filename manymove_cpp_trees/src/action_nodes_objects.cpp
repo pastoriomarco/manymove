@@ -702,7 +702,7 @@ namespace manymove_cpp_trees
         }
         else
         {
-            RCLCPP_INFO(node_->get_logger(), "GetObjectPoseAction: 'post_transform_xyz_rpy_' = {%.3f, %.3f, %.3f, %.3f, %.3f, %.3f}",
+            RCLCPP_INFO(node_->get_logger(), "GetObjectPoseAction: 'post_transform_xyz_rpy' = {%.3f, %.3f, %.3f, %.3f, %.3f, %.3f}",
                         post_transform_xyz_rpy_[0],
                         post_transform_xyz_rpy_[1],
                         post_transform_xyz_rpy_[2],
@@ -909,6 +909,11 @@ namespace manymove_cpp_trees
         getInput<double>("timeout", timeout_);
         getInput<double>("poll_rate", poll_rate_);
 
+        if (!getInput<std::string>("prefix", prefix_) || (prefix_ == ""))
+        {
+            prefix_ = "hmi_";
+        }
+
         // Record the start time
         start_time_ = node_->now();
         next_check_time_ = start_time_; // first check immediately
@@ -938,6 +943,10 @@ namespace manymove_cpp_trees
                 setOutput("is_attached", last_is_attached_);
                 setOutput("link_name", last_link_name_);
 
+                // HMI message
+                config().blackboard->set(prefix_ + "message", "");
+                config().blackboard->set(prefix_ + "message_color", "grey");
+
                 RCLCPP_INFO(node_->get_logger(),
                             "WaitForObjectAction: Condition met: object '%s' => exists=%s -> SUCCESS.",
                             object_id_.c_str(), (last_exists_ ? "true" : "false"));
@@ -950,6 +959,11 @@ namespace manymove_cpp_trees
                 double elapsed = (now - start_time_).seconds();
                 if (elapsed >= timeout_)
                 {
+
+                    // HMI message
+                    config().blackboard->set(prefix_ + "message", "WAITING FOR OBJECT " + object_id_ + " TIMED OUT");
+                    config().blackboard->set(prefix_ + "message_color", "red");
+
                     RCLCPP_WARN(node_->get_logger(),
                                 "WaitForObjectAction: Timeout (%.1f s) reached for object '%s' -> FAILURE.",
                                 timeout_, object_id_.c_str());
@@ -978,6 +992,10 @@ namespace manymove_cpp_trees
         {
             sendCheckRequest();
         }
+
+        // HMI message
+        config().blackboard->set(prefix_ + "message", "WAITING FOR OBJECT: " + object_id_);
+        config().blackboard->set(prefix_ + "message_color", "yellow");
 
         return BT::NodeStatus::RUNNING;
     }

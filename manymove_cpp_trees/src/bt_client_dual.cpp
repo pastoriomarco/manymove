@@ -398,7 +398,7 @@ int main(int argc, char **argv)
     // Runningh both robot sequences in parallel:
     std::string parallel_repeat_forever_sequences_xml = parallelWrapperXML("PARALLEL_MOTION_SEQUENCES", {repeat_forever_wrapper_1_xml, repeat_forever_wrapper_2_xml}, 2, 1);
 
-    std::string retry_forever_wrapper_xml = retrySequenceWrapperXML("RetryForever", {startup_sequence_xml, parallel_repeat_forever_sequences_xml}, -1);
+    std::string retry_forever_wrapper_xml = retrySequenceWrapperXML("CycleForever", {startup_sequence_xml, parallel_repeat_forever_sequences_xml}, -1);
 
     // MasterSequence with startup sequence and RepeatForever as child to set BehaviorTree ID and root main_tree_to_execute in the XML
     std::vector<std::string> master_branches_xml = {retry_forever_wrapper_xml};

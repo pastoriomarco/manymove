@@ -42,14 +42,15 @@ namespace manymove_cpp_trees
         factory.registerNodeType<WaitForInputAction>("WaitForInputAction");
         factory.registerNodeType<CheckRobotStateAction>("CheckRobotStateAction");
         factory.registerNodeType<ResetRobotStateAction>("ResetRobotStateAction");
-        factory.registerNodeType<GetLinkPoseAction>("GetLinkPoseAction");
-        factory.registerNodeType<CheckPoseDistance>("CheckPoseDistance");
 
         factory.registerNodeType<CheckKeyBoolValue>("CheckKeyBoolValue");
         factory.registerNodeType<SetKeyBoolValue>("SetKeyBoolValue");
         factory.registerNodeType<WaitForKeyBool>("WaitForKeyBool");
         factory.registerNodeType<BT::RetryNode>("RetryNode");
         factory.registerNodeType<RetryPauseResetNode>("RetryPauseResetNode");
+        factory.registerNodeType<GetLinkPoseAction>("GetLinkPoseAction");
+        factory.registerNodeType<CheckPoseDistance>("CheckPoseDistance");
+
         factory.registerNodeType<GripperCommandAction>("GripperCommandAction");
         factory.registerNodeType<manymove_cpp_trees::GripperTrajAction>("GripperTrajAction");
     }
@@ -116,13 +117,15 @@ namespace manymove_cpp_trees
      * @param moves       The vector of Move that we plan/execute in this parallel block
      * @param blackboard  The blackboard to populate with move IDs
      * @param reset_trajs This condition generates the ResetTrajectories leaf node to reset all the sequence's trajs before planning and executing
+     * @param max_tries   The max number of tries to execute the move
      * @return A string with the generated XML snippet
      */
     std::string buildMoveXML(const std::string &robot_prefix,
                              const std::string &node_prefix,
                              const std::vector<Move> &moves,
                              BT::Blackboard::Ptr blackboard,
-                             bool reset_trajs = false);
+                             bool reset_trajs = false,
+                             int max_tries = 1);
 
     /**
      * @brief Builds an XML snippet for a single object action node based on the provided ObjectAction.
@@ -248,7 +251,7 @@ namespace manymove_cpp_trees
      * @param robot_prefix    e.g. "R_"
      * @param node_prefix     used in the 'name' attribute
      * @param key_id          blackboard key
-     * @param expected_value  desired bool
+     * @param expected_value  desired boolean value
      * @param timeout_ms      0 => infinite
      * @param poll_rate_ms    how often to check
      * @return XML snippet
@@ -331,7 +334,6 @@ namespace manymove_cpp_trees
      * @param target_pose_key    Blackboard key for the target pose.
      * @param tolerance          Distance tolerance in meters.
      */
-
     std::string buildCheckPoseDistanceXML(const std::string &node_prefix,
                                           const std::string &reference_pose_key,
                                           const std::string &target_pose_key,
@@ -474,12 +476,10 @@ namespace manymove_cpp_trees
      */
     std::string serializePose(const geometry_msgs::msg::Pose &pose);
 
-    /**
-     * @brief Helper function to serialize a std::vector<double> into a comma-separated string.
-     * @param vec The vector to serialize.
-     * @return A string representation of the vector.
-     */
-    std::string serializeVector(const std::vector<double> &vec);
+    void setHmiMessage(BT::Blackboard::Ptr blackboard,
+                       const std::string prefix,
+                       const std::string message,
+                       const std::string color);
 
 } // namespace manymove_cpp_trees
 

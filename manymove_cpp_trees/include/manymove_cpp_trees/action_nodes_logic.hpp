@@ -41,7 +41,7 @@ namespace manymove_cpp_trees
     /**
      * @class CheckKeyBoolValue
      * @brief A simple condition node that checks if a blackboard key
-     *        matches an expected bool value.
+     *        matches an expected string value.
      */
     class CheckKeyBoolValue : public BT::ConditionNode
     {
@@ -61,7 +61,7 @@ namespace manymove_cpp_trees
         {
             return {
                 BT::InputPort<std::string>("key", "Name of the blackboard key to check"),
-                BT::InputPort<bool>("value", "Expected bool value"),
+                BT::InputPort<bool>("value", "Expected value"),
             };
         }
 
@@ -125,7 +125,8 @@ namespace manymove_cpp_trees
                 BT::InputPort<std::string>("key", "Blackboard key to read"),
                 BT::InputPort<bool>("expected_value", "Desired bool value"),
                 BT::InputPort<double>("timeout", 10.0, "Seconds before giving up (0 => infinite)"),
-                BT::InputPort<double>("poll_rate", 0.25, "Check frequency (seconds)")};
+                BT::InputPort<double>("poll_rate", 0.25, "Check frequency (seconds)"),
+                BT::InputPort<std::string>("prefix", "Prefix for HMI messages, optional")};
         }
 
     protected:
@@ -139,6 +140,7 @@ namespace manymove_cpp_trees
         bool expected_value_;
         double timeout_;
         double poll_rate_;
+        std::string prefix_;
 
         // time management
         rclcpp::Node::SharedPtr node_;

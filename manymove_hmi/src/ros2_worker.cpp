@@ -178,6 +178,41 @@ void Ros2Worker::statusCallback(const std_msgs::msg::String::SharedPtr msg)
                                   Q_ARG(QString, bk.key),
                                   Q_ARG(QString, QString::fromStdString(valueStr)));
     }
+
+    /* ---------- per-robot message -------------------------------- */
+    auto findString = [&](const std::string &key) -> std::string
+    {
+        std::string pattern = "\"" + key + "\":";
+        size_t pos = data.find(pattern);
+        if (pos == std::string::npos)
+            return std::string();
+        pos += pattern.size();
+        while (pos < data.size() && std::isspace(data[pos]))
+            ++pos;
+        if (pos >= data.size() || data[pos] != '"')
+            return std::string();
+        ++pos;
+        size_t end = data.find('"', pos);
+        if (end == std::string::npos)
+            return std::string();
+        return data.substr(pos, end - pos);
+    };
+
+    const std::string msgKey = robot_prefix_ + "message";
+    const std::string colorKey = robot_prefix_ + "message_color";
+    std::string msgText = findString(msgKey);
+    std::string msgColor = findString(colorKey);
+    QMetaObject::invokeMethod(gui_, "updateRobotMessage", Qt::QueuedConnection,
+                              Q_ARG(QString, QString::fromStdString(robot_prefix_)),
+                              Q_ARG(QString, QString::fromStdString(msgText)),
+                              Q_ARG(QString, QString::fromStdString(msgColor)));
+
+    /* ---------- general message ---------------------------------- */
+    std::string genMsg = findString("hmi_message");
+    std::string genColor = findString("hmi_message_color");
+    QMetaObject::invokeMethod(appModule, "updateGeneralMessage", Qt::QueuedConnection,
+                              Q_ARG(QString, QString::fromStdString(genMsg)),
+                              Q_ARG(QString, QString::fromStdString(genColor)));
 }
 
 void Ros2Worker::callStartExecution()

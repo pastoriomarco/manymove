@@ -391,6 +391,7 @@ namespace manymove_cpp_trees
                 BT::InputPort<bool>("exists", true, "Wait for object to exist (true) or not exist (false)"),
                 BT::InputPort<double>("timeout", 10.0, "Time (seconds) before giving up (0 => infinite)"),
                 BT::InputPort<double>("poll_rate", 0.25, "Check frequency (seconds)"),
+                BT::InputPort<std::string>("prefix", "Prefix for HMI messages, optional"),
                 BT::OutputPort<bool>("exists", "Final check: was the object found?"),
                 BT::OutputPort<bool>("is_attached", "Is the object attached?"),
                 BT::OutputPort<std::string>("link_name", "Link name if attached")};
@@ -422,6 +423,7 @@ namespace manymove_cpp_trees
         bool desired_exists_;   ///< If true => succeed when object found, false => succeed when object not found
         double timeout_;        ///< Seconds to wait before giving up (0 => infinite)
         double poll_rate_;      ///< How often to re-check (seconds)
+        std::string prefix_;    ///< Prefix for HMI messages
 
         // Internal timestamps
         rclcpp::Time start_time_;

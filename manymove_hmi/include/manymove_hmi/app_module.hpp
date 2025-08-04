@@ -87,6 +87,8 @@ public slots:
     void setKeyVisibility(const QString &key, bool visible);
     void updateField(const QString &key,
                      const QString &newValue = QString());
+    void updateGeneralMessage(const QString &message,
+                              const QString &color);
 
 signals:
     void keyUpdateRequested(const QString &key,
@@ -123,6 +125,7 @@ protected:
 
     QPushButton *sendButton_{nullptr};
     QVBoxLayout *layout_{nullptr};
+    QLabel *generalMessage_{nullptr};
 };
 
 #endif /* APP_MODULE_HPP */

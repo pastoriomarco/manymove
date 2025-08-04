@@ -7,6 +7,7 @@ static int g_global_move_id = 0;
 
 namespace manymove_cpp_trees
 {
+
     // --------------------------------------------------------------------------
     // High level helper for objects
     // --------------------------------------------------------------------------
@@ -138,7 +139,8 @@ namespace manymove_cpp_trees
                              const std::string &node_prefix,
                              const std::vector<Move> &moves,
                              BT::Blackboard::Ptr blackboard,
-                             bool reset_trajs)
+                             bool reset_trajs,
+                             int max_tries)
     {
         std::ostringstream xml;
 
@@ -151,7 +153,6 @@ namespace manymove_cpp_trees
 
         // Build a Sequence node that will run each move in order
         std::ostringstream execution_seq;
-        execution_seq << "    <Sequence name=\"ExecutionSequence_" << node_prefix << "_" << blockStartID << "\">\n";
 
         for (const auto &move : moves)
         {
@@ -176,30 +177,31 @@ namespace manymove_cpp_trees
 
             // Build a RetryPauseAbort node that wraps a single MoveManipulatorAction.
             // This node is expected to either execute an existing trajectory or trigger a re–plan.
-            execution_seq << "    <RetryPauseResetNode name=\"StopSafe_Retry_" << this_move_id << "\""
-                          << " collision_detected=\"{" << robot_prefix << "collision_detected}\""
-                          << " stop_execution=\"{" << robot_prefix << "stop_execution}\""
-                          << " reset=\"{" << robot_prefix << "reset}\""
-                          << " robot_prefix=\"" << robot_prefix << "\">\n"
-                          << "    <Sequence>\n"
-                          << "      <MoveManipulatorAction"
-                          << " name=\"MoveManip_" << this_move_id << "\""
-                          << " robot_prefix=\"" << robot_prefix << "\""
-                          << " move_id=\"" << this_move_id << "\""
-                          << " trajectory=\"{trajectory_" << this_move_id << "}\""
-                          << " pose_key=\"" << move.pose_key << "\""
-                          << " collision_detected=\"{" << robot_prefix << "collision_detected}\""
-                          << " invalidate_traj_on_exec=\"" << (reset_trajs ? "true" : "false") << "\" "
-                          << " stop_execution=\"{" << robot_prefix << "stop_execution}\""
+            execution_seq << "<RetryPauseResetNode name=\"StopSafe_Retry_" << this_move_id << "\""
+                          << "  collision_detected=\"{" << robot_prefix << "collision_detected}\""
+                          << "  stop_execution=\"{" << robot_prefix << "stop_execution}\""
+                          << "  reset=\"{" << robot_prefix << "reset}\""
+                          << "  robot_prefix=\"" << robot_prefix << "\">\n"
+                          << "  <Sequence>\n"
+                          << "    <MoveManipulatorAction"
+                          << "    name=\"MoveManip_" << this_move_id << "\""
+                          << "    robot_prefix=\"" << robot_prefix << "\""
+                          << "    move_id=\"" << this_move_id << "\""
+                          << "    max_tries=\"" << max_tries << "\""
+                          << "    trajectory=\"{trajectory_" << this_move_id << "}\""
+                          << "    pose_key=\"" << move.pose_key << "\""
+                          << "    collision_detected=\"{" << robot_prefix << "collision_detected}\""
+                          << "    invalidate_traj_on_exec=\"" << (reset_trajs ? "true" : "false") << "\" "
+                          << "    stop_execution=\"{" << robot_prefix << "stop_execution}\""
                           << "/>\n"
-                          << "    </Sequence>\n"
-                          << "    </RetryPauseResetNode>\n";
+                          << "  </Sequence>\n"
+                          << "</RetryPauseResetNode>\n";
 
             // Increment the global ID for the next move.
             g_global_move_id++;
         }
 
-        execution_seq << "    </Sequence>\n";
+        int blockEndID = g_global_move_id;
 
         // Append a ResetTrajectories node if reset_trajs is true.
         if (reset_trajs)
@@ -214,7 +216,11 @@ namespace manymove_cpp_trees
             execution_seq << "\"/>\n";
         }
 
-        return execution_seq.str();
+        std::ostringstream final_sequence_name;
+        final_sequence_name << "ExecutionSequence_" << node_prefix << "_" << blockStartID << "-" << blockEndID;
+        std::string final_sequence_xml = sequenceWrapperXML(final_sequence_name.str(), {execution_seq.str()});
+
+        return final_sequence_xml;
     }
 
     std::string buildObjectActionXML(const std::string &node_prefix, const ObjectAction &action)
@@ -355,7 +361,7 @@ namespace manymove_cpp_trees
         std::string node_name = robot_prefix + node_prefix + "_CheckInput";
 
         // The value can be 0 or 1, so we trim anything different from 0 or 1. If it's not 0, then it is 1.
-        int value_to_check = (value == 0 ? 0 : 1);
+        bool value_to_check = (value != 0);
 
         // Build GetInputAction
         std::string check_input_xml = buildGetInputXML(robot_prefix, node_name, io_type, ionum);
@@ -364,7 +370,7 @@ namespace manymove_cpp_trees
         std::ostringstream inner_xml;
         inner_xml << "<CheckKeyBoolValue"
                   << " key=\"" << robot_prefix << io_type << "_" << ionum << "\""
-                  << " value=\"" << value_to_check << "\" />";
+                  << " value=\"" << (value_to_check ? "true" : "false") << "\" />";
 
         // Wrap in a Sequence
         std::ostringstream sequence_xml;
@@ -416,6 +422,7 @@ namespace manymove_cpp_trees
             << " exists=\"" << (exists ? "true" : "false") << "\""
             << " timeout=\"" << ((timeout_ms > 0) ? (static_cast<double>(timeout_ms) / 1000.0) : 0.0) << "\""
             << " poll_rate=\"" << ((poll_rate_ms > 0) ? (static_cast<double>(poll_rate_ms) / 1000.0) : 0.0) << "\""
+            << " prefix=\"" << robot_prefix << "\""
             << "/>";
 
         return xml.str();
@@ -430,7 +437,6 @@ namespace manymove_cpp_trees
 
         // Build the CheckKeyBoolValue node
         std::ostringstream xml;
-
         xml << "<CheckKeyBoolValue"
             << " key=\"" << key << "\""
             << " value=\"" << (value ? "true" : "false") << "\" />";
@@ -457,6 +463,7 @@ namespace manymove_cpp_trees
             << " expected_value=\"" << (expected_value ? "true" : "false") << "\""
             << " timeout=\"" << timeout_sec << "\""
             << " poll_rate=\"" << poll_sec << "\""
+            << " prefix=\"" << robot_prefix << "\""
             << "/>";
         return xml.str();
     }
@@ -540,9 +547,7 @@ namespace manymove_cpp_trees
         xml << "/>";
 
         return sequenceWrapperXML(
-
             node_name + "_WaitTimeout",
-
             {xml.str(), buildSetKeyBool(robot_prefix, node_prefix, robot_prefix + "stop_execution", true)});
 
         return xml.str();
@@ -571,12 +576,10 @@ namespace manymove_cpp_trees
                                           double tolerance)
     {
         std::ostringstream xml;
-
         xml << "<CheckPoseDistance name=\"" << node_prefix << "_CheckPoseDistance\" "
             << "reference_pose_key=\"" << reference_pose_key << "\" "
             << "target_pose_key=\"" << target_pose_key << "\" "
             << "tolerance=\"" << tolerance << "\"/>";
-
         return xml.str();
     }
 
@@ -664,7 +667,7 @@ namespace manymove_cpp_trees
                                         const int num_cycles)
     {
         std::ostringstream xml;
-        xml << "  <RetryNode name=\"" << sequence_name << "\" num_attempts=\"" << num_cycles << "\">\n";
+        xml << "  <RetryNode name=\"" << "Retry_" << sequence_name << "\" num_attempts=\"" << num_cycles << "\">\n";
         xml << "    <Sequence name=\"" << sequence_name << "_sequence\">\n";
         for (const auto &b : branches)
         {
@@ -780,18 +783,13 @@ namespace manymove_cpp_trees
         return oss.str();
     }
 
-    std::string serializeVector(const std::vector<double> &vec)
+    void setHmiMessage(BT::Blackboard::Ptr blackboard,
+                       const std::string prefix,
+                       const std::string message,
+                       const std::string color)
     {
-        std::ostringstream oss;
-        oss << "[";
-        for (size_t i = 0; i < vec.size(); ++i)
-        {
-            oss << vec[i];
-            if (i != vec.size() - 1)
-                oss << ",";
-        }
-        oss << "]";
-        return oss.str();
+        blackboard->set(prefix + "message", message);
+        blackboard->set(prefix + "message_color", color);
     }
 
 } // namespace manymove_cpp_trees

@@ -7,6 +7,7 @@
 #include <QPushButton>
 #include <QToolButton>
 #include <QPalette>
+#include <QColor>
 #include <QEvent>
 #include <QDebug>
 #include <QFont>
@@ -165,7 +166,30 @@ void AppModule::setupUI()
     connect(sendButton_, &QPushButton::clicked,
             this, &AppModule::onSendClicked);
 
+    generalMessage_ = new QLabel(this);
+    generalMessage_->setFixedHeight(30);
+    QFont genFont = generalMessage_->font();
+    genFont.setPointSize(14);
+    generalMessage_->setFont(genFont);
+    layout_->addWidget(generalMessage_);
+
     updateSendButtonState();
+}
+
+/* ------------------------------------------------------------------ */
+void AppModule::updateGeneralMessage(const QString &message, const QString &color)
+{
+    if (!generalMessage_)
+        return;
+    generalMessage_->setText(message);
+    if (!color.isEmpty())
+    {
+        generalMessage_->setStyleSheet(QString("color: %1; border: 2px solid %1; padding:2px;").arg(color));
+    }
+    else
+    {
+        generalMessage_->setStyleSheet("");
+    }
 }
 
 /* ------------------------------------------------------------------ */
