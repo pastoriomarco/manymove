@@ -237,14 +237,17 @@ namespace manymove_cpp_trees
     /**
      * @brief Build an XML snippet for SetKeyBool.
      *
+     * @param robot_prefix    Only to assign the message to a specific robot or to general HMI
      * @param node_prefix     Used to construct a unique name attribute for the node.
      * @param key             The name of the blackboard key to check.
      * @param value           The value to compare the blackboard key to.
      * @return A string with the generated XML snippet for the SetKeyValue node.
      */
-    std::string buildCheckKeyBool(const std::string &node_prefix,
+    std::string buildCheckKeyBool(const std::string &robot_prefix,
+                                  const std::string &node_prefix,
                                   const std::string &key,
-                                  const bool &value);
+                                  const bool &value,
+                                  const bool &hmi_message_logic = true);
 
     /**
      * @brief Build an XML snippet for a single <WaitForKeyBool> node.
@@ -266,8 +269,7 @@ namespace manymove_cpp_trees
     /**
      * @brief Build an XML snippet for SetKeyBool.
      *
-     * @param robot_prefix    A prefix for the robot's action servers (not strictly needed,
-     *                        but we keep consistency with other build* functions).
+     * @param robot_prefix    A prefix for the robot's prefix or hmi
      * @param node_prefix     Used to construct a unique name attribute for the node.
      * @param key             The name of the blackboard key to set.
      * @param value           The value to store in the blackboard key.

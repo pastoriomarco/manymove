@@ -17,15 +17,15 @@ std::vector<KeyConfig> DefaultAppModule::buildKeys()
     ks.push_back({"tube_length_key", "double", true, true,
                   [](auto &v)
                   { return v.value("tube_length_key", ""); },
-                  1000.0, "mm", true, 500, 47.0, 150.0});
+                  1000.0, "mm", true, 1000, 47.0, 150.0});
     ks.push_back({"tube_diameter_key", "double", true, true,
                   [](auto &v)
                   { return v.value("tube_diameter_key", ""); },
-                  1000.0, "mm", true, 500, 10.0, 16.0});
+                  1000.0, "mm", true, 1000, 10.0, 16.0});
     ks.push_back({"grasp_offset_key", "double", true, true,
                   [](auto &v)
                   { return v.value("grasp_offset_key", ""); },
-                  1000.0, "mm", true, 500, 20.0, 30.0});
+                  1000.0, "mm", true, 1000, 20.0, 30.0});
 
     /* computed: tube_scale_key ------------------------------------ */
     ks.push_back({"tube_scale_key", "double_array", false, false,

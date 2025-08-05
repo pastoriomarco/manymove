@@ -51,7 +51,7 @@ namespace manymove_cpp_trees
 
             // HMI message
             config().blackboard->set(robot_prefix + "message", "WAITING FOR EXECUTION START");
-            config().blackboard->set(robot_prefix + "message_color", "YELLOW");
+            config().blackboard->set(robot_prefix + "message_color", "yellow");
 
             return BT::NodeStatus::RUNNING;
         }
@@ -66,16 +66,9 @@ namespace manymove_cpp_trees
             // HMI message
             config().blackboard->set(robot_prefix + "message", "COLLISION DETECTED");
             config().blackboard->set(robot_prefix + "message_color", "red");
-            /**
-             * If we get here there have been a collision detected. With the above call we make the
-             * execution halt so the StopMotion will be called. Then the ExecuteTrajectory node will
-             * start and immediately fail: this is required because we can then jump to the planning node
-             * of the Fallback child. If we reset the collision_detected here, the ExecuteTrajectory
-             * node would wait forever for a valid trajectory, but there wouldn't be any PlanningAction
-             * node running in parallel since we already did at least one execution and the planning chain must
-             * at least be further than the current execution node (otherwise the execution node would still)
-             * be waiting for a valid traj)
-             */
+            
+            // reset the collision_detected value
+            config().blackboard->set("collision_detected", false);
         }
 
         BT::NodeStatus child_status = child_node_->executeTick();
@@ -121,8 +114,14 @@ namespace manymove_cpp_trees
     BT::NodeStatus CheckKeyBoolValue::tick()
     {
         // 1) Extract input ports "key" and "value"
+        std::string robot_prefix;
         std::string key;
         bool expected_value;
+        bool hmi_message_logic;
+        if (!getInput<std::string>("robot_prefix", robot_prefix))
+        {
+            throw BT::RuntimeError("CheckKeyBoolValue: Missing required input [robot_prefix]");
+        }
         if (!getInput<std::string>("key", key))
         {
             throw BT::RuntimeError("CheckKeyBoolValue: Missing required input [key]");
@@ -130,6 +129,10 @@ namespace manymove_cpp_trees
         if (!getInput<bool>("value", expected_value))
         {
             throw BT::RuntimeError("CheckKeyBoolValue: Missing required input [value]");
+        }
+        if (!getInput<bool>("hmi_message_logic", hmi_message_logic))
+        {
+            throw BT::RuntimeError("CheckKeyBoolValue: Missing required input [hmi_message_logic]");
         }
 
         // 2) Read the blackboard
@@ -140,16 +143,29 @@ namespace manymove_cpp_trees
             return BT::NodeStatus::FAILURE;
         }
 
-        RCLCPP_INFO(rclcpp::get_logger("CheckKeyBoolValue"), "Key: %s; Expected value: %s; Actual value: %s", key.c_str(), (expected_value ? "true" : "false"), (actual_value ? "true" : "false"));
+        RCLCPP_DEBUG(rclcpp::get_logger("CheckKeyBoolValue"), "Key: %s; Expected value: %s; Actual value: %s", key.c_str(), (expected_value ? "true" : "false"), (actual_value ? "true" : "false"));
 
         // 3) Compare the blackboard value to the expected value
         if (actual_value == expected_value)
         {
+            // HMI message
+            if (hmi_message_logic)
+            {
+                config().blackboard->set(robot_prefix + "message", "KEY VALUE CHECK SUCCEEDED: " + key);
+                config().blackboard->set(robot_prefix + "message_color", "green");
+            }
+
             // Condition satisfied => SUCCESS
             return BT::NodeStatus::SUCCESS;
         }
         else
         {
+            // HMI message
+            if (!hmi_message_logic)
+            {
+                config().blackboard->set(robot_prefix + "message", "KEY VALUE CHECK FAILED: " + key);
+                config().blackboard->set(robot_prefix + "message_color", "red");
+            }
             // Condition not satisfied => FAILURE
             return BT::NodeStatus::FAILURE;
         }
@@ -161,24 +177,34 @@ namespace manymove_cpp_trees
 
     BT::NodeStatus SetKeyBoolValue::tick()
     {
-        // 1) Read the "key" port
+        std::string robot_prefix;
+        if (!getInput<std::string>("robot_prefix", robot_prefix))
+        {
+            throw BT::RuntimeError("SetKeyBoolValue: Missing required input port [robot_prefix]");
+        }
+
+        // Read the "key" port
         std::string key;
         if (!getInput<std::string>("key", key))
         {
             throw BT::RuntimeError("SetKeyBoolValue: Missing required input port [key]");
         }
 
-        // 2) Read the "value" port
+        // Read the "value" port
         bool value;
         if (!getInput<bool>("value", value))
         {
             throw BT::RuntimeError("SetKeyBoolValue: Missing required input port [value]");
         }
 
-        // 3) Set the key in the blackboard to the string
+        // Set the key in the blackboard to the string
         config().blackboard->set(key, value);
 
-        // 4) Return SUCCESS to indicate we’ve completed setting the key
+        // HMI message
+        config().blackboard->set(robot_prefix + "message", "KEY " + key + " SET TO " + (value ? "true" : "false"));
+        config().blackboard->set(robot_prefix + "message_color", "green");
+
+        // Return SUCCESS to indicate we’ve completed setting the key
         return BT::NodeStatus::SUCCESS;
     }
 
@@ -217,7 +243,7 @@ namespace manymove_cpp_trees
         }
         getInput<double>("timeout", timeout_);
         getInput<double>("poll_rate", poll_rate_);
-        
+
         if (!getInput<std::string>("prefix", prefix_) || (prefix_ == ""))
         {
             prefix_ = "hmi_";
@@ -243,11 +269,8 @@ namespace manymove_cpp_trees
                     "[%s] WaitForKeyBool starting: key='%s', expected='%s', timeout=%.2f, poll_rate=%.2f",
                     name().c_str(), key_.c_str(), (expected_value_ ? "true" : "false"), timeout_, poll_rate_);
 
-        RCLCPP_INFO_STREAM(node_->get_logger(), prefix_ << "message: WAITING FOR KEY " << key_);
-        RCLCPP_INFO_STREAM(node_->get_logger(), prefix_ << "message_color: yellow");
-
         // HMI message
-        config().blackboard->set(prefix_ + "message", "WAITING FOR KEY " + key_);
+        config().blackboard->set(prefix_ + "message", "[" + name() + "]" + "WAITING FOR KEY " + key_);
         config().blackboard->set(prefix_ + "message_color", "yellow");
 
         return BT::NodeStatus::RUNNING;
@@ -310,7 +333,7 @@ namespace manymove_cpp_trees
         }
 
         // HMI message
-        config().blackboard->set(prefix_ + "message", "WAITING FOR KEY " + key_);
+        config().blackboard->set(prefix_ + "message", "[" + name() + "]: " + "WAITING FOR " + key_);
         config().blackboard->set(prefix_ + "message_color", "yellow");
 
         // Otherwise schedule the next check in poll_rate_ s
