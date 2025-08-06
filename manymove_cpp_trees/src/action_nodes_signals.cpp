@@ -226,16 +226,16 @@ namespace manymove_cpp_trees
         if (!getInput<std::string>("io_type", io_type_))
         {
             RCLCPP_ERROR(node_->get_logger(),
-                         "GetInputAction [%s]: missing 'io_type'",
+                         "GetInputAction [%s]: missing input port 'io_type'",
                          name().c_str());
-            return BT::NodeStatus::FAILURE;
+            throw BT::RuntimeError("GetInputAction [" + name() + "] missing input port 'io_type'.");
         }
         if (!getInput<int>("ionum", ionum_))
         {
             RCLCPP_ERROR(node_->get_logger(),
-                         "GetInputAction [%s]: missing 'ionum'",
+                         "GetInputAction [%s]: missing input port 'ionum'",
                          name().c_str());
-            return BT::NodeStatus::FAILURE;
+            throw BT::RuntimeError("GetInputAction [" + name() + "] missing input port 'ionum'.");
         }
 
         // Build the goal

@@ -366,19 +366,25 @@ namespace manymove_cpp_trees
         // Build GetInputAction
         std::string check_input_xml = buildGetInputXML(robot_prefix, node_name, io_type, ionum);
 
-        // Build the CheckKeyBoolValue node
-        std::ostringstream inner_xml;
-        inner_xml << "<CheckKeyBoolValue"
-                  << " key=\"" << robot_prefix << io_type << "_" << ionum << "\""
-                  << " value=\"" << (value_to_check ? "true" : "false") << "\""
-                  << " robot_prefix=\"" << robot_prefix << "\""
-                  << " hmi_message_logic=\"" << (value_to_check ? "true" : "false") << "\" />";
+        std::string key_to_check = robot_prefix + io_type + "_" + std::to_string(ionum);
 
-        // Wrap in a Sequence
-        std::ostringstream sequence_xml;
-        sequence_xml << sequenceWrapperXML(node_name + "_Sequence", {check_input_xml, inner_xml.str()});
+        std::string check_key_bool_xml = buildCheckKeyBool(robot_prefix, node_name, key_to_check, value, !value_to_check);
 
-        return sequence_xml.str();
+        // // Build the CheckKeyBoolValue node
+        // std::ostringstream inner_xml;
+        // inner_xml << "<CheckKeyBoolValue"
+        //           << " key=\"" << robot_prefix << io_type << "_" << ionum << "\""
+        //           << " value=\"" << (value_to_check ? "true" : "false") << "\""
+        //           << " robot_prefix=\"" << robot_prefix << "\""
+        //           << " hmi_message_logic=\"" << (value_to_check ? "true" : "false") << "\" />";
+
+        // // Wrap in a Sequence
+        // std::ostringstream sequence_xml;
+        // sequence_xml << sequenceWrapperXML(node_name + "_Sequence", {check_input_xml, inner_xml.str()});
+
+        // return sequence_xml.str();
+
+        return sequenceWrapperXML(node_name + "_Sequence", {check_input_xml, check_key_bool_xml});
     }
 
     std::string buildWaitForInput(const std::string &robot_prefix,
