@@ -371,7 +371,8 @@ namespace manymove_cpp_trees
         inner_xml << "<CheckKeyBoolValue"
                   << " key=\"" << robot_prefix << io_type << "_" << ionum << "\""
                   << " value=\"" << (value_to_check ? "true" : "false") << "\""
-                  << " robot_prefix=\"" << robot_prefix << "\" />";
+                  << " robot_prefix=\"" << robot_prefix << "\""
+                  << " hmi_message_logic=\"" << (value_to_check ? "true" : "false") << "\" />";
 
         // Wrap in a Sequence
         std::ostringstream sequence_xml;
