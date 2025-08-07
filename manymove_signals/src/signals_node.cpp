@@ -462,7 +462,7 @@ namespace manymove_signals
                                            // Inversion logic: 0 -> 1 (ON), else 0 (OFF)
                                            value = (raw_value == 0) ? 1 : 0;
 
-                                           RCLCPP_INFO(this->get_logger(), "GetInput succeeded: io_type=%s, ionum=%d, value=%d",
+                                           RCLCPP_DEBUG(this->get_logger(), "GetInput succeeded: io_type=%s, ionum=%d, value=%d",
                                                        goal->io_type.c_str(), goal->ionum, value);
                                            result->success = true;
                                            result->value = value;

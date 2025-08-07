@@ -326,7 +326,7 @@ namespace manymove_cpp_trees
         }
         else
         {
-            RCLCPP_INFO(node_->get_logger(),
+            RCLCPP_DEBUG(node_->get_logger(),
                         "GetInputAction [%s]: Goal ACCEPTED.",
                         name().c_str());
         }
