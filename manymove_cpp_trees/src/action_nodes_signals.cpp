@@ -1,4 +1,5 @@
 #include "manymove_cpp_trees/action_nodes_signals.hpp"
+#include "manymove_cpp_trees/hmi_utils.hpp"
 #include <behaviortree_cpp_v3/blackboard.h>
 
 #include <memory>
@@ -115,9 +116,8 @@ namespace manymove_cpp_trees
                          "SetOutputAction [%s]: IO type='%s', ionum=%d => SUCCESS",
                          name().c_str(), io_type_.c_str(), ionum_);
 
-            // // HMI message
-            // config().blackboard->set(prefix_ + "message", "OUTPUT " + std::to_string(ionum_) + " OF " + io_type_ + " SET TO " + std::to_string(value_));
-            // config().blackboard->set(prefix_ + "message_color", "green");
+            // HMI message
+            setHMIMessage(config().blackboard, prefix_, "OUTPUT " + std::to_string(ionum_) + " OF " + io_type_ + " SET TO " + std::to_string(value_), "green");
 
             return BT::NodeStatus::SUCCESS;
         }
@@ -129,8 +129,7 @@ namespace manymove_cpp_trees
                          action_result_.message.c_str());
 
             // HMI message
-            config().blackboard->set(prefix_ + "message", "SETTING OUTPUT " + std::to_string(ionum_) + " OF " + io_type_ + " FAILED!");
-            config().blackboard->set(prefix_ + "message_color", "red");
+            setHMIMessage(config().blackboard, prefix_, "SETTING OUTPUT " + std::to_string(ionum_) + " OF " + io_type_ + " FAILED!", "red");
 
             return BT::NodeStatus::FAILURE;
         }
@@ -280,9 +279,8 @@ namespace manymove_cpp_trees
                          "GetInputAction [%s]: read IO type='%s', ionum=%d => value=%d",
                          name().c_str(), io_type_.c_str(), ionum_, action_result_.value);
 
-            // // HMI message
-            // config().blackboard->set(prefix_ + "message", "INPUT " + std::to_string(ionum_) + " OF " + io_type_ + " HAS VALUE " + std::to_string(action_result_.value));
-            // config().blackboard->set(prefix_ + "message_color", "green");
+            // HMI message
+            setHMIMessage(config().blackboard, prefix_, "INPUT " + std::to_string(ionum_) + " OF " + io_type_ + " HAS VALUE " + std::to_string(action_result_.value), "green");
 
             return BT::NodeStatus::SUCCESS;
         }
@@ -293,8 +291,7 @@ namespace manymove_cpp_trees
                          name().c_str(), action_result_.message.c_str());
 
             // HMI message
-            config().blackboard->set(prefix_ + "message", "READING INPUT " + std::to_string(ionum_) + " OF " + io_type_ + " FAILED!");
-            config().blackboard->set(prefix_ + "message_color", "green");
+            setHMIMessage(config().blackboard, prefix_, "READING INPUT " + std::to_string(ionum_) + " OF " + io_type_ + " FAILED!", "green");
 
             return BT::NodeStatus::FAILURE;
         }
@@ -327,8 +324,8 @@ namespace manymove_cpp_trees
         else
         {
             RCLCPP_DEBUG(node_->get_logger(),
-                        "GetInputAction [%s]: Goal ACCEPTED.",
-                        name().c_str());
+                         "GetInputAction [%s]: Goal ACCEPTED.",
+                         name().c_str());
         }
     }
 
@@ -846,8 +843,7 @@ namespace manymove_cpp_trees
                      name().c_str(), io_type_.c_str(), ionum_, desired_value_, poll_rate_, timeout_);
 
         // HMI message
-        config().blackboard->set(prefix_ + "message", "WAITING FOR INPUT " + std::to_string(ionum_) + " OF " + io_type_ + " TO HAVE VALUE " + std::to_string(desired_value_));
-        config().blackboard->set(prefix_ + "message_color", "yellow");
+        setHMIMessage(config().blackboard, prefix_, "WAITING FOR INPUT " + std::to_string(ionum_) + " OF " + io_type_ + " TO HAVE VALUE " + std::to_string(desired_value_), "yellow");
 
         return BT::NodeStatus::RUNNING;
     }
@@ -868,8 +864,7 @@ namespace manymove_cpp_trees
                              name().c_str(), last_value_);
 
                 // HMI message
-                config().blackboard->set(prefix_ + "message", "INPUT " + std::to_string(ionum_) + " OF " + io_type_ + " HAS VALUE " + std::to_string(desired_value_));
-                config().blackboard->set(prefix_ + "message_color", "green");
+                setHMIMessage(config().blackboard, prefix_, "INPUT " + std::to_string(ionum_) + " OF " + io_type_ + " HAS VALUE " + std::to_string(desired_value_), "green");
 
                 return BT::NodeStatus::SUCCESS;
             }
@@ -885,8 +880,7 @@ namespace manymove_cpp_trees
                                 name().c_str(), last_value_);
 
                     // HMI message
-                    config().blackboard->set(prefix_ + "message", "WAIT INPUT " + std::to_string(ionum_) + " OF " + io_type_ + " TIMED OUT");
-                    config().blackboard->set(prefix_ + "message_color", "red");
+                    setHMIMessage(config().blackboard, prefix_, "WAIT INPUT " + std::to_string(ionum_) + " OF " + io_type_ + " TIMED OUT", "red");
 
                     return BT::NodeStatus::FAILURE;
                 }
@@ -944,9 +938,8 @@ namespace manymove_cpp_trees
                      "[%s] WaitForInput polling: checking IO '%s' (ch=%d) for value=%d, poll=%.2fs, timeout=%.2fs",
                      name().c_str(), io_type_.c_str(), ionum_, desired_value_, poll_rate_, timeout_);
 
-        // // HMI message
-        // config().blackboard->set(prefix_ + "message", "WAITING FOR INPUT " + std::to_string(ionum_) + " OF " + io_type_ + " TO HAVE VALUE " + std::to_string(desired_value_));
-        // config().blackboard->set(prefix_ + "message_color", "yellow");
+        // HMI message
+        setHMIMessage(config().blackboard, prefix_, "WAITING FOR INPUT " + std::to_string(ionum_) + " OF " + io_type_ + " TO HAVE VALUE " + std::to_string(desired_value_), "yellow");
 
         action_client_->async_send_goal(goal_msg, opts);
 

@@ -1,4 +1,5 @@
 #include "manymove_cpp_trees/action_nodes_logic.hpp"
+#include "manymove_cpp_trees/hmi_utils.hpp"
 #include <behaviortree_cpp_v3/blackboard.h>
 
 namespace manymove_cpp_trees
@@ -37,8 +38,7 @@ namespace manymove_cpp_trees
                 child_node_->halt();
 
             // HMI message
-            config().blackboard->set(robot_prefix + "message", "RESET STATE");
-            config().blackboard->set(robot_prefix + "message_color", "red");
+            setHMIMessage(config().blackboard, robot_prefix, "RESET STATE", "red");
 
             return BT::NodeStatus::FAILURE;
         }
@@ -50,8 +50,7 @@ namespace manymove_cpp_trees
                 child_node_->halt();
 
             // HMI message
-            config().blackboard->set(robot_prefix + "message", "WAITING FOR EXECUTION START");
-            config().blackboard->set(robot_prefix + "message_color", "yellow");
+            setHMIMessage(config().blackboard, robot_prefix, "WAITING FOR EXECUTION START", "yellow");
 
             return BT::NodeStatus::RUNNING;
         }
@@ -64,9 +63,8 @@ namespace manymove_cpp_trees
                 child_node_->halt();
 
             // HMI message
-            config().blackboard->set(robot_prefix + "message", "COLLISION DETECTED");
-            config().blackboard->set(robot_prefix + "message_color", "red");
-            
+            setHMIMessage(config().blackboard, robot_prefix, "COLLISION DETECTED", "red");
+
             // reset the collision_detected value
             config().blackboard->set("collision_detected", false);
         }
@@ -148,12 +146,11 @@ namespace manymove_cpp_trees
         // 3) Compare the blackboard value to the expected value
         if (actual_value == expected_value)
         {
-            // // HMI message
-            // if (hmi_message_logic)
-            // {
-            //     config().blackboard->set(robot_prefix + "message", "KEY VALUE CHECK SUCCEEDED: " + key);
-            //     config().blackboard->set(robot_prefix + "message_color", "green");
-            // }
+            // HMI message
+            if (hmi_message_logic)
+            {
+                setHMIMessage(config().blackboard, robot_prefix, "KEY VALUE CHECK SUCCEEDED: " + key, "green");
+            }
 
             // Condition satisfied => SUCCESS
             return BT::NodeStatus::SUCCESS;
@@ -163,8 +160,7 @@ namespace manymove_cpp_trees
             // HMI message
             if (!hmi_message_logic)
             {
-                config().blackboard->set(robot_prefix + "message", "KEY VALUE CHECK FAILED: " + key);
-                config().blackboard->set(robot_prefix + "message_color", "red");
+                setHMIMessage(config().blackboard, robot_prefix, "KEY VALUE CHECK FAILED: " + key, "red");
             }
 
             // Condition not satisfied => FAILURE
@@ -201,9 +197,8 @@ namespace manymove_cpp_trees
         // Set the key in the blackboard to the string
         config().blackboard->set(key, value);
 
-        // // HMI message
-        // config().blackboard->set(robot_prefix + "message", "KEY " + key + " SET TO " + (value ? "true" : "false"));
-        // config().blackboard->set(robot_prefix + "message_color", "green");
+        // HMI message
+        setHMIMessage(config().blackboard, robot_prefix, "KEY " + key + " SET TO " + (value ? "true" : "false"), "green");
 
         // Return SUCCESS to indicate we’ve completed setting the key
         return BT::NodeStatus::SUCCESS;
@@ -271,8 +266,7 @@ namespace manymove_cpp_trees
                     name().c_str(), key_.c_str(), (expected_value_ ? "true" : "false"), timeout_, poll_rate_);
 
         // HMI message
-        config().blackboard->set(prefix_ + "message", "[" + name() + "]" + "WAITING FOR KEY " + key_);
-        config().blackboard->set(prefix_ + "message_color", "yellow");
+        setHMIMessage(config().blackboard, prefix_, "[" + name() + "]" + "WAITING FOR KEY " + key_, "yellow");
 
         return BT::NodeStatus::RUNNING;
     }
@@ -313,8 +307,7 @@ namespace manymove_cpp_trees
         if (actual_value == expected_value_)
         {
             // HMI message
-            config().blackboard->set(prefix_ + "message", "");
-            config().blackboard->set(prefix_ + "message_color", "grey");
+            setHMIMessage(config().blackboard, prefix_, "", "grey");
 
             condition_met_ = true;
             return BT::NodeStatus::SUCCESS;
@@ -334,8 +327,7 @@ namespace manymove_cpp_trees
         }
 
         // HMI message
-        config().blackboard->set(prefix_ + "message", "[" + name() + "]: " + "WAITING FOR " + key_);
-        config().blackboard->set(prefix_ + "message_color", "yellow");
+        setHMIMessage(config().blackboard, prefix_, "[" + name() + "]: " + "WAITING FOR " + key_, "yellow");
 
         // Otherwise schedule the next check in poll_rate_ s
         next_check_time_ = now + rclcpp::Duration::from_seconds(poll_rate_);
