@@ -27,13 +27,12 @@ namespace manymove_cpp_trees
             throw BT::RuntimeError("SetOutputAction: 'node' not found in blackboard.");
         }
 
-        std::string prefix;
-        if (!getInput<std::string>("robot_prefix", prefix))
+        if (!getInput<std::string>("robot_prefix", prefix_))
         {
-            prefix = ""; // default if not provided
+            prefix_ = ""; // default if not provided
         }
 
-        std::string server_name = prefix + "set_output";
+        std::string server_name = prefix_ + "set_output";
 
         // Create the action client
         action_client_ = rclcpp_action::create_client<SetOutput>(node_, server_name);
@@ -44,8 +43,7 @@ namespace manymove_cpp_trees
 
         if (!action_client_->wait_for_action_server(std::chrono::seconds(5)))
         {
-            throw BT::RuntimeError(
-                "SetOutputAction: server '" + server_name + "' not available after 5s.");
+            throw BT::RuntimeError("SetOutputAction: server '" + server_name + "' not available after 5s.");
         }
     }
 
@@ -65,21 +63,21 @@ namespace manymove_cpp_trees
             RCLCPP_ERROR(node_->get_logger(),
                          "SetOutputAction [%s]: missing 'io_type'.",
                          name().c_str());
-            return BT::NodeStatus::FAILURE;
+            throw BT::RuntimeError("SetOutputAction [" + name() + "]: missing 'io_type'.");
         }
         if (!getInput<int>("ionum", ionum_))
         {
             RCLCPP_ERROR(node_->get_logger(),
                          "SetOutputAction [%s]: missing 'ionum'.",
                          name().c_str());
-            return BT::NodeStatus::FAILURE;
+            throw BT::RuntimeError("SetOutputAction [" + name() + "]: missing 'ionum'.");
         }
         if (!getInput<int>("value", value_))
         {
             RCLCPP_ERROR(node_->get_logger(),
                          "SetOutputAction [%s]: missing 'value'.",
                          name().c_str());
-            return BT::NodeStatus::FAILURE;
+            throw BT::RuntimeError("SetOutputAction [" + name() + "]: missing 'value'.");
         }
 
         // Build and send goal
@@ -113,9 +111,14 @@ namespace manymove_cpp_trees
 
         if (action_result_.success)
         {
-            RCLCPP_INFO(node_->get_logger(),
-                        "SetOutputAction [%s]: IO type='%s', ionum=%d => SUCCESS",
-                        name().c_str(), io_type_.c_str(), ionum_);
+            RCLCPP_DEBUG(node_->get_logger(),
+                         "SetOutputAction [%s]: IO type='%s', ionum=%d => SUCCESS",
+                         name().c_str(), io_type_.c_str(), ionum_);
+
+            // HMI message
+            config().blackboard->set(prefix_ + "message", "OUTPUT " + std::to_string(ionum_) + " OF " + io_type_ + " SET TO " + std::to_string(value_));
+            config().blackboard->set(prefix_ + "message_color", "green");
+
             return BT::NodeStatus::SUCCESS;
         }
         else
@@ -124,6 +127,11 @@ namespace manymove_cpp_trees
                          "SetOutputAction [%s]: IO type='%s', ionum=%d => FAIL: %s",
                          name().c_str(), io_type_.c_str(), ionum_,
                          action_result_.message.c_str());
+
+            // HMI message
+            config().blackboard->set(prefix_ + "message", "SETTING OUTPUT " + std::to_string(ionum_) + " OF " + io_type_ + " FAILED!");
+            config().blackboard->set(prefix_ + "message_color", "red");
+
             return BT::NodeStatus::FAILURE;
         }
     }
@@ -193,12 +201,11 @@ namespace manymove_cpp_trees
             throw BT::RuntimeError("GetInputAction: 'node' not found in blackboard.");
         }
 
-        std::string prefix;
-        if (!getInput<std::string>("robot_prefix", prefix))
+        if (!getInput<std::string>("robot_prefix", prefix_))
         {
-            prefix = "";
+            prefix_ = "";
         }
-        std::string server_name = prefix + "get_input";
+        std::string server_name = prefix_ + "get_input";
 
         // Create action client
         action_client_ = rclcpp_action::create_client<GetInput>(node_, server_name);
@@ -269,9 +276,14 @@ namespace manymove_cpp_trees
 
         if (action_result_.success)
         {
-            RCLCPP_INFO(node_->get_logger(),
-                        "GetInputAction [%s]: read IO type='%s', ionum=%d => value=%d",
-                        name().c_str(), io_type_.c_str(), ionum_, action_result_.value);
+            RCLCPP_DEBUG(node_->get_logger(),
+                         "GetInputAction [%s]: read IO type='%s', ionum=%d => value=%d",
+                         name().c_str(), io_type_.c_str(), ionum_, action_result_.value);
+
+            // HMI message
+            config().blackboard->set(prefix_ + "message", "INPUT " + std::to_string(ionum_) + " OF " + io_type_ + " HAS VALUE " + std::to_string(action_result_.value));
+            config().blackboard->set(prefix_ + "message_color", "green");
+
             return BT::NodeStatus::SUCCESS;
         }
         else
@@ -279,6 +291,11 @@ namespace manymove_cpp_trees
             RCLCPP_ERROR(node_->get_logger(),
                          "GetInputAction [%s]: FAILED => %s",
                          name().c_str(), action_result_.message.c_str());
+
+            // HMI message
+            config().blackboard->set(prefix_ + "message", "READING INPUT " + std::to_string(ionum_) + " OF " + io_type_ + " FAILED!");
+            config().blackboard->set(prefix_ + "message_color", "green");
+
             return BT::NodeStatus::FAILURE;
         }
     }
@@ -784,25 +801,24 @@ namespace manymove_cpp_trees
         if (!getInput<std::string>("io_type", io_type_))
         {
             RCLCPP_ERROR(node_->get_logger(), "[%s] Missing 'io_type'", name().c_str());
-            return BT::NodeStatus::FAILURE;
+            throw BT::RuntimeError("GetInputAction [" + name() + "] missing input port 'io_type'.");
         }
         if (!getInput<int>("ionum", ionum_))
         {
             RCLCPP_ERROR(node_->get_logger(), "[%s] Missing 'ionum'", name().c_str());
-            return BT::NodeStatus::FAILURE;
+            throw BT::RuntimeError("GetInputAction [" + name() + "] missing input port 'ionum'.");
         }
         if (!getInput<int>("desired_value", desired_value_))
         {
             RCLCPP_ERROR(node_->get_logger(), "[%s] Missing 'desired_value'", name().c_str());
-            return BT::NodeStatus::FAILURE;
+            throw BT::RuntimeError("GetInputAction [" + name() + "] missing input port 'desired_value'.");
         }
         getInput<double>("timeout", timeout_);
         getInput<double>("poll_rate", poll_rate_);
 
         // Build the action server name
-        std::string prefix;
-        getInput<std::string>("robot_prefix", prefix);
-        std::string server_name = prefix + "get_input";
+        getInput<std::string>("robot_prefix", prefix_);
+        std::string server_name = prefix_ + "get_input";
 
         // If we never created the client or want to ensure it's valid:
         if (!action_client_)
@@ -825,9 +841,13 @@ namespace manymove_cpp_trees
         start_time_ = node_->now();
         next_check_time_ = start_time_; // immediate first check
 
-        RCLCPP_INFO(node_->get_logger(),
-                    "[%s] WaitForInput starting: checking IO '%s' (ch=%d) for value=%d, poll=%.2fs, timeout=%.2fs",
-                    name().c_str(), io_type_.c_str(), ionum_, desired_value_, poll_rate_, timeout_);
+        RCLCPP_DEBUG(node_->get_logger(),
+                     "[%s] WaitForInput starting: checking IO '%s' (ch=%d) for value=%d, poll=%.2fs, timeout=%.2fs",
+                     name().c_str(), io_type_.c_str(), ionum_, desired_value_, poll_rate_, timeout_);
+
+        // HMI message
+        config().blackboard->set(prefix_ + "message", "WAITING FOR INPUT " + std::to_string(ionum_) + " OF " + io_type_ + " TO HAVE VALUE " + std::to_string(desired_value_));
+        config().blackboard->set(prefix_ + "message_color", "yellow");
 
         return BT::NodeStatus::RUNNING;
     }
@@ -843,9 +863,14 @@ namespace manymove_cpp_trees
             {
                 // Condition satisfied => SUCCESS
                 setOutput("value", last_value_);
-                RCLCPP_INFO(node_->get_logger(),
-                            "[%s] read=%d => DESIRED => SUCCESS",
-                            name().c_str(), last_value_);
+                RCLCPP_DEBUG(node_->get_logger(),
+                             "[%s] read=%d => DESIRED => SUCCESS",
+                             name().c_str(), last_value_);
+
+                // HMI message
+                config().blackboard->set(prefix_ + "message", "INPUT " + std::to_string(ionum_) + " OF " + io_type_ + " HAS VALUE " + std::to_string(desired_value_));
+                config().blackboard->set(prefix_ + "message_color", "green");
+
                 return BT::NodeStatus::SUCCESS;
             }
 
@@ -858,6 +883,11 @@ namespace manymove_cpp_trees
                     RCLCPP_WARN(node_->get_logger(),
                                 "[%s] Timeout => FAILURE (read=%d)",
                                 name().c_str(), last_value_);
+
+                    // HMI message
+                    config().blackboard->set(prefix_ + "message", "WAIT INPUT " + std::to_string(ionum_) + " OF " + io_type_ + " TIMED OUT");
+                    config().blackboard->set(prefix_ + "message_color", "red");
+
                     return BT::NodeStatus::FAILURE;
                 }
             }
@@ -910,9 +940,13 @@ namespace manymove_cpp_trees
         opts.result_callback =
             std::bind(&WaitForInputAction::resultCallback, this, std::placeholders::_1);
 
-        RCLCPP_INFO(node_->get_logger(),
-                    "[%s] WaitForInput polling: checking IO '%s' (ch=%d) for value=%d, poll=%.2fs, timeout=%.2fs",
-                    name().c_str(), io_type_.c_str(), ionum_, desired_value_, poll_rate_, timeout_);
+        RCLCPP_DEBUG(node_->get_logger(),
+                     "[%s] WaitForInput polling: checking IO '%s' (ch=%d) for value=%d, poll=%.2fs, timeout=%.2fs",
+                     name().c_str(), io_type_.c_str(), ionum_, desired_value_, poll_rate_, timeout_);
+
+        // HMI message
+        config().blackboard->set(prefix_ + "message", "WAITING FOR INPUT " + std::to_string(ionum_) + " OF " + io_type_ + " TO HAVE VALUE " + std::to_string(desired_value_));
+        config().blackboard->set(prefix_ + "message_color", "yellow");
 
         action_client_->async_send_goal(goal_msg, opts);
 
