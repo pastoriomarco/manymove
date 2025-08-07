@@ -475,9 +475,7 @@ std::pair<bool, moveit_msgs::msg::RobotTrajectory> MoveItCppPlanner::plan(const 
                 // RCLCPP_INFO_STREAM(logger_, "Euclidean distance between trajectory first point and trajectory last point: " << traj_euclidean_distance);
                 // RCLCPP_INFO_STREAM(logger_, "Euclidean distance between theoretical start and calculated trajectory first point: " << starts_euclidean_distance);
 
-                double traj_tolerance = goal_msg.goal.config.linear_precision;
-
-                if (targets_euclidean_distance < traj_tolerance)
+                if (targets_euclidean_distance < goal_msg.goal.config.linear_precision)
                 {
                     // Proceeding only if the traj is valid
 
@@ -508,7 +506,7 @@ std::pair<bool, moveit_msgs::msg::RobotTrajectory> MoveItCppPlanner::plan(const 
                 {
                     RCLCPP_WARN_STREAM(logger_, "Euclidean distance between theoretical target and calculated trajectory last point: " << targets_euclidean_distance);
 
-                    RCLCPP_WARN_STREAM(logger_, "The planner was not able to calculate trajectory with end point within the tolerance of " << traj_tolerance);
+                    RCLCPP_WARN_STREAM(logger_, "The planner was not able to calculate trajectory with end point within tolerance. Difference:" << (targets_euclidean_distance - goal_msg.goal.config.linear_precision));
                     RCLCPP_WARN(logger_, "%s target planning attempt %d failed: trajectory is empty.",
                                 goal_msg.goal.movement_type.c_str(), attempts + 1);
                 }
@@ -530,8 +528,8 @@ std::pair<bool, moveit_msgs::msg::RobotTrajectory> MoveItCppPlanner::plan(const 
         while (attempts < goal_msg.goal.config.plan_number_limit &&
                static_cast<int>(trajectories.size()) < goal_msg.goal.config.plan_number_target)
         {
-            RCLCPP_DEBUG(logger_, "Cartesian path planning attempt %d with step size %.3f",
-                         attempts + 1, goal_msg.goal.config.step_size);
+            RCLCPP_DEBUG(logger_, "Cartesian path planning attempt %d with step size %.3f, jump threshold %.3f",
+                         attempts + 1, goal_msg.goal.config.step_size, goal_msg.goal.config.jump_threshold);
 
             // Handle start state
             if (!goal_msg.goal.start_joint_values.empty())
@@ -832,6 +830,7 @@ bool MoveItCppPlanner::sendControlledStop(const manymove_msgs::msg::MovementConf
         point.time_from_start = rclcpp::Duration::from_seconds(rclcpp::Duration(point.time_from_start).seconds() - elapsed_s);
     }
 
+    // Taking the higher between deceleration_time and min_stop_time: if deceleration_time is smaller we use min_stop_time
     double stop_time = ((move_cfg.deceleration_time > move_cfg.min_stop_time) ? move_cfg.deceleration_time : move_cfg.min_stop_time);
 
     // Add the stop point to the trajectory
