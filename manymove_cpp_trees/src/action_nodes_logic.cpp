@@ -148,12 +148,12 @@ namespace manymove_cpp_trees
         // 3) Compare the blackboard value to the expected value
         if (actual_value == expected_value)
         {
-            // HMI message
-            if (hmi_message_logic)
-            {
-                config().blackboard->set(robot_prefix + "message", "KEY VALUE CHECK SUCCEEDED: " + key);
-                config().blackboard->set(robot_prefix + "message_color", "green");
-            }
+            // // HMI message
+            // if (hmi_message_logic)
+            // {
+            //     config().blackboard->set(robot_prefix + "message", "KEY VALUE CHECK SUCCEEDED: " + key);
+            //     config().blackboard->set(robot_prefix + "message_color", "green");
+            // }
 
             // Condition satisfied => SUCCESS
             return BT::NodeStatus::SUCCESS;
@@ -166,6 +166,7 @@ namespace manymove_cpp_trees
                 config().blackboard->set(robot_prefix + "message", "KEY VALUE CHECK FAILED: " + key);
                 config().blackboard->set(robot_prefix + "message_color", "red");
             }
+
             // Condition not satisfied => FAILURE
             return BT::NodeStatus::FAILURE;
         }
@@ -200,9 +201,9 @@ namespace manymove_cpp_trees
         // Set the key in the blackboard to the string
         config().blackboard->set(key, value);
 
-        // HMI message
-        config().blackboard->set(robot_prefix + "message", "KEY " + key + " SET TO " + (value ? "true" : "false"));
-        config().blackboard->set(robot_prefix + "message_color", "green");
+        // // HMI message
+        // config().blackboard->set(robot_prefix + "message", "KEY " + key + " SET TO " + (value ? "true" : "false"));
+        // config().blackboard->set(robot_prefix + "message_color", "green");
 
         // Return SUCCESS to indicate we’ve completed setting the key
         return BT::NodeStatus::SUCCESS;

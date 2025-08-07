@@ -115,9 +115,9 @@ namespace manymove_cpp_trees
                          "SetOutputAction [%s]: IO type='%s', ionum=%d => SUCCESS",
                          name().c_str(), io_type_.c_str(), ionum_);
 
-            // HMI message
-            config().blackboard->set(prefix_ + "message", "OUTPUT " + std::to_string(ionum_) + " OF " + io_type_ + " SET TO " + std::to_string(value_));
-            config().blackboard->set(prefix_ + "message_color", "green");
+            // // HMI message
+            // config().blackboard->set(prefix_ + "message", "OUTPUT " + std::to_string(ionum_) + " OF " + io_type_ + " SET TO " + std::to_string(value_));
+            // config().blackboard->set(prefix_ + "message_color", "green");
 
             return BT::NodeStatus::SUCCESS;
         }
@@ -280,9 +280,9 @@ namespace manymove_cpp_trees
                          "GetInputAction [%s]: read IO type='%s', ionum=%d => value=%d",
                          name().c_str(), io_type_.c_str(), ionum_, action_result_.value);
 
-            // HMI message
-            config().blackboard->set(prefix_ + "message", "INPUT " + std::to_string(ionum_) + " OF " + io_type_ + " HAS VALUE " + std::to_string(action_result_.value));
-            config().blackboard->set(prefix_ + "message_color", "green");
+            // // HMI message
+            // config().blackboard->set(prefix_ + "message", "INPUT " + std::to_string(ionum_) + " OF " + io_type_ + " HAS VALUE " + std::to_string(action_result_.value));
+            // config().blackboard->set(prefix_ + "message_color", "green");
 
             return BT::NodeStatus::SUCCESS;
         }
@@ -944,9 +944,9 @@ namespace manymove_cpp_trees
                      "[%s] WaitForInput polling: checking IO '%s' (ch=%d) for value=%d, poll=%.2fs, timeout=%.2fs",
                      name().c_str(), io_type_.c_str(), ionum_, desired_value_, poll_rate_, timeout_);
 
-        // HMI message
-        config().blackboard->set(prefix_ + "message", "WAITING FOR INPUT " + std::to_string(ionum_) + " OF " + io_type_ + " TO HAVE VALUE " + std::to_string(desired_value_));
-        config().blackboard->set(prefix_ + "message_color", "yellow");
+        // // HMI message
+        // config().blackboard->set(prefix_ + "message", "WAITING FOR INPUT " + std::to_string(ionum_) + " OF " + io_type_ + " TO HAVE VALUE " + std::to_string(desired_value_));
+        // config().blackboard->set(prefix_ + "message_color", "yellow");
 
         action_client_->async_send_goal(goal_msg, opts);
 
