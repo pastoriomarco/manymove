@@ -366,17 +366,25 @@ namespace manymove_cpp_trees
         // Build GetInputAction
         std::string check_input_xml = buildGetInputXML(robot_prefix, node_name, io_type, ionum);
 
-        // Build the CheckKeyBoolValue node
-        std::ostringstream inner_xml;
-        inner_xml << "<CheckKeyBoolValue"
-                  << " key=\"" << robot_prefix << io_type << "_" << ionum << "\""
-                  << " value=\"" << (value_to_check ? "true" : "false") << "\" />";
+        std::string key_to_check = robot_prefix + io_type + "_" + std::to_string(ionum);
 
-        // Wrap in a Sequence
-        std::ostringstream sequence_xml;
-        sequence_xml << sequenceWrapperXML(node_name + "_Sequence", {check_input_xml, inner_xml.str()});
+        std::string check_key_bool_xml = buildCheckKeyBool(robot_prefix, node_name, key_to_check, value, !value_to_check);
 
-        return sequence_xml.str();
+        // // Build the CheckKeyBoolValue node
+        // std::ostringstream inner_xml;
+        // inner_xml << "<CheckKeyBoolValue"
+        //           << " key=\"" << robot_prefix << io_type << "_" << ionum << "\""
+        //           << " value=\"" << (value_to_check ? "true" : "false") << "\""
+        //           << " robot_prefix=\"" << robot_prefix << "\""
+        //           << " hmi_message_logic=\"" << (value_to_check ? "true" : "false") << "\" />";
+
+        // // Wrap in a Sequence
+        // std::ostringstream sequence_xml;
+        // sequence_xml << sequenceWrapperXML(node_name + "_Sequence", {check_input_xml, inner_xml.str()});
+
+        // return sequence_xml.str();
+
+        return sequenceWrapperXML(node_name + "_Sequence", {check_input_xml, check_key_bool_xml});
     }
 
     std::string buildWaitForInput(const std::string &robot_prefix,
@@ -428,18 +436,22 @@ namespace manymove_cpp_trees
         return xml.str();
     }
 
-    std::string buildCheckKeyBool(const std::string &node_prefix,
+    std::string buildCheckKeyBool(const std::string &robot_prefix,
+                                  const std::string &node_prefix,
                                   const std::string &key,
-                                  const bool &value)
+                                  const bool &value,
+                                  const bool &hmi_message_logic)
     {
         // Construct a node name
-        std::string node_name = node_prefix + "_CheckKey";
+        std::string node_name = robot_prefix + node_prefix + "_CheckKey";
 
         // Build the CheckKeyBoolValue node
         std::ostringstream xml;
         xml << "<CheckKeyBoolValue"
             << " key=\"" << key << "\""
-            << " value=\"" << (value ? "true" : "false") << "\" />";
+            << " value=\"" << (value ? "true" : "false") << "\""
+            << " robot_prefix=\"" << robot_prefix << "\""
+            << " hmi_message_logic=\"" << hmi_message_logic << "\" />";
 
         return xml.str();
     }
@@ -474,11 +486,12 @@ namespace manymove_cpp_trees
                                 const bool &value)
     {
         // Construct a node name
-        std::string node_name = node_prefix + "_SetKey";
+        std::string node_name = robot_prefix + node_prefix + "_SetKey";
 
         // Build the XML snippet
         std::ostringstream xml;
         xml << "<SetKeyBoolValue "
+            << "robot_prefix=\"" << robot_prefix << "\" "
             << "name=\"" << node_name << "\" "
             << "key=\"" << key << "\" "
             << "value=\"" << (value ? "true" : "false") << "\"/>";

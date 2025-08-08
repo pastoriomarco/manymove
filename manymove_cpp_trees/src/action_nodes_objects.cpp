@@ -1,4 +1,5 @@
 #include "manymove_cpp_trees/action_nodes_objects.hpp"
+#include "manymove_cpp_trees/hmi_utils.hpp"
 #include <behaviortree_cpp_v3/blackboard.h>
 
 #include <memory>
@@ -944,8 +945,7 @@ namespace manymove_cpp_trees
                 setOutput("link_name", last_link_name_);
 
                 // HMI message
-                config().blackboard->set(prefix_ + "message", "");
-                config().blackboard->set(prefix_ + "message_color", "grey");
+                setHMIMessage(config().blackboard, prefix_, "", "grey");
 
                 RCLCPP_INFO(node_->get_logger(),
                             "WaitForObjectAction: Condition met: object '%s' => exists=%s -> SUCCESS.",
@@ -961,8 +961,7 @@ namespace manymove_cpp_trees
                 {
 
                     // HMI message
-                    config().blackboard->set(prefix_ + "message", "WAITING FOR OBJECT " + object_id_ + " TIMED OUT");
-                    config().blackboard->set(prefix_ + "message_color", "red");
+                    setHMIMessage(config().blackboard, prefix_, "WAITING FOR OBJECT " + object_id_ + " TIMED OUT", "red");
 
                     RCLCPP_WARN(node_->get_logger(),
                                 "WaitForObjectAction: Timeout (%.1f s) reached for object '%s' -> FAILURE.",
@@ -994,8 +993,7 @@ namespace manymove_cpp_trees
         }
 
         // HMI message
-        config().blackboard->set(prefix_ + "message", "WAITING FOR OBJECT: " + object_id_);
-        config().blackboard->set(prefix_ + "message_color", "yellow");
+        setHMIMessage(config().blackboard, prefix_, "WAITING FOR OBJECT: " + object_id_, "yellow");
 
         return BT::NodeStatus::RUNNING;
     }

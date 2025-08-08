@@ -60,8 +60,10 @@ namespace manymove_cpp_trees
         static BT::PortsList providedPorts()
         {
             return {
+                BT::InputPort<std::string>("robot_prefix", "Prefix only for the HMI output, use \"hmi_\" for generic output"),
                 BT::InputPort<std::string>("key", "Name of the blackboard key to check"),
                 BT::InputPort<bool>("value", "Expected value"),
+                BT::InputPort<bool>("hmi_message_logic", "If true, outputs on hmi when check succeeds. If false, when it fails"),
             };
         }
 
@@ -93,6 +95,7 @@ namespace manymove_cpp_trees
         static BT::PortsList providedPorts()
         {
             return {
+                BT::InputPort<std::string>("robot_prefix", "Prefix only for the HMI output, use \"hmi_\" for generic output"),
                 BT::InputPort<std::string>("key", "Blackboard key to set"),
                 BT::InputPort<bool>("value", "Value to set (as a bool)")};
         }

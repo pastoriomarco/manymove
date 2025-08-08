@@ -167,7 +167,7 @@ void AppModule::setupUI()
             this, &AppModule::onSendClicked);
 
     generalMessage_ = new QLabel(this);
-    generalMessage_->setFixedHeight(30);
+    generalMessage_->setFixedHeight(50);
     QFont genFont = generalMessage_->font();
     genFont.setPointSize(14);
     generalMessage_->setFont(genFont);

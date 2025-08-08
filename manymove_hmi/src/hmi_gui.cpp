@@ -54,7 +54,7 @@ HmiGui::HmiGui(const std::vector<std::string> &robotPrefixes, std::vector<std::s
         robotLayout->addLayout(rowLayout);
 
         QLabel *msgLbl = new QLabel(this);
-        msgLbl->setFixedHeight(30);
+        msgLbl->setFixedHeight(50);
         QFont msgFont = msgLbl->font();
         msgFont.setPointSize(14);
         msgLbl->setFont(msgFont);

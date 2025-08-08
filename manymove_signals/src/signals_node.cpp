@@ -10,7 +10,7 @@ namespace manymove_signals
         this->declare_parameter<std::string>("robot_model", "lite6"); // defaults to lite6; TODO: add parameters for prefix
         this->get_parameter("robot_model", robot_model_);
 
-        this->declare_parameter<std::string>("robot_prefix", ""); 
+        this->declare_parameter<std::string>("robot_prefix", "");
         this->get_parameter("robot_prefix", robot_prefix_);
 
         // Define Callback Groups
@@ -397,7 +397,7 @@ namespace manymove_signals
         std::shared_ptr<const GetInput::Goal> goal)
     {
         RCLCPP_DEBUG(this->get_logger(), "Received GetInput goal: io_type=%s, ionum=%d",
-                    goal->io_type.c_str(), goal->ionum);
+                     goal->io_type.c_str(), goal->ionum);
         // Validate io_type
         if (goal->io_type != "tool" && goal->io_type != "controller")
         {
@@ -462,8 +462,8 @@ namespace manymove_signals
                                            // Inversion logic: 0 -> 1 (ON), else 0 (OFF)
                                            value = (raw_value == 0) ? 1 : 0;
 
-                                           RCLCPP_INFO(this->get_logger(), "GetInput succeeded: io_type=%s, ionum=%d, value=%d",
-                                                       goal->io_type.c_str(), goal->ionum, value);
+                                           RCLCPP_DEBUG(this->get_logger(), "GetInput succeeded: io_type=%s, ionum=%d, value=%d",
+                                                        goal->io_type.c_str(), goal->ionum, value);
                                            result->success = true;
                                            result->value = value;
                                            result->message = "GetInput succeeded";

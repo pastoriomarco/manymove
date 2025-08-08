@@ -11,18 +11,18 @@ endif()
 #--------------------------------------------------------------------
 # Dependencies
 #--------------------------------------------------------------------
-find_package(ament_cmake       REQUIRED)
-find_package(rclcpp            REQUIRED)
-find_package(rclcpp_action     REQUIRED)
-find_package(behaviortree_cpp_v3 REQUIRED)
-find_package(manymove_planner  REQUIRED)
-find_package(moveit_msgs       REQUIRED)
+find_package(ament_cmake             REQUIRED)
+find_package(rclcpp                  REQUIRED)
+find_package(rclcpp_action           REQUIRED)
+find_package(behaviortree_cpp_v3     REQUIRED)
+find_package(manymove_planner        REQUIRED)
+find_package(moveit_msgs             REQUIRED)
 find_package(manymove_object_manager REQUIRED)
-find_package(manymove_signals  REQUIRED)
-find_package(tf2               REQUIRED)
-find_package(std_srvs          REQUIRED)
-find_package(manymove_msgs     REQUIRED)
-find_package(control_msgs      REQUIRED)
+find_package(manymove_signals        REQUIRED)
+find_package(tf2                     REQUIRED)
+find_package(std_srvs                REQUIRED)
+find_package(manymove_msgs           REQUIRED)
+find_package(control_msgs            REQUIRED)
 
 #--------------------------------------------------------------------
 # Library with all BT helper nodes

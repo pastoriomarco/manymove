@@ -528,8 +528,9 @@ std::pair<bool, moveit_msgs::msg::RobotTrajectory> MoveItCppPlanner::plan(const 
         while (attempts < goal_msg.goal.config.plan_number_limit &&
                static_cast<int>(trajectories.size()) < goal_msg.goal.config.plan_number_target)
         {
-            RCLCPP_DEBUG(logger_, "Cartesian path planning attempt %d with step size %.3f, jump threshold %.3f",
-                         attempts + 1, goal_msg.goal.config.step_size, goal_msg.goal.config.jump_threshold);
+
+            RCLCPP_DEBUG(logger_, "Cartesian path planning attempt %d with step size %.3f",
+                         attempts + 1, goal_msg.goal.config.step_size);
 
             // Handle start state
             if (!goal_msg.goal.start_joint_values.empty())

@@ -1,4 +1,5 @@
 #include "manymove_cpp_trees/action_nodes_planner.hpp"
+#include "manymove_cpp_trees/hmi_utils.hpp"
 #include <behaviortree_cpp_v3/blackboard.h>
 
 #include <memory>
@@ -70,8 +71,7 @@ namespace manymove_cpp_trees
         if (collision_detected)
         {
             // HMI message
-            config().blackboard->set(robot_prefix_ + "message", "COLLISION DETECTED");
-            config().blackboard->set(robot_prefix_ + "message_color", "red");
+            setHMIMessage(config().blackboard, robot_prefix_, "COLLISION DETECTED", "red");
 
             // reset the collision_detected value
             config().blackboard->set(robot_prefix_ + "collision_detected", false);
@@ -100,8 +100,7 @@ namespace manymove_cpp_trees
         if (stop_execution)
         {
             // HMI message
-            config().blackboard->set(robot_prefix_ + "message", "WAITING FOR EXECUTION START");
-            config().blackboard->set(robot_prefix_ + "message_color", "yellow");
+            setHMIMessage(config().blackboard, robot_prefix_, "WAITING FOR EXECUTION START", "yellow");
 
             return BT::NodeStatus::FAILURE;
         }
@@ -191,8 +190,7 @@ namespace manymove_cpp_trees
                 }
 
                 // HMI message
-                config().blackboard->set(robot_prefix_ + "message", "");
-                config().blackboard->set(robot_prefix_ + "message_color", "grey");
+                setHMIMessage(config().blackboard, robot_prefix_, "", "grey");
 
                 RCLCPP_INFO(node_->get_logger(), "[MoveManipulatorAction] success => returning SUCCESS");
                 return BT::NodeStatus::SUCCESS;
@@ -213,8 +211,7 @@ namespace manymove_cpp_trees
                     config().blackboard->set(robot_prefix_ + "stop_execution", true);
 
                     // HMI message
-                    config().blackboard->set(robot_prefix_ + "message", "MOTION FAILED: " + action_result_.message);
-                    config().blackboard->set(robot_prefix_ + "message_color", "red");
+                    setHMIMessage(config().blackboard, robot_prefix_, "MOTION FAILED: " + action_result_.message, "red");
 
                     return BT::NodeStatus::FAILURE;
                 }
@@ -231,8 +228,7 @@ namespace manymove_cpp_trees
         }
 
         // HMI message
-        config().blackboard->set(robot_prefix_ + "message", "EXECUTING MOVE");
-        config().blackboard->set(robot_prefix_ + "message_color", "green");
+        setHMIMessage(config().blackboard, robot_prefix_, "EXECUTING MOVE", "green");
 
         return BT::NodeStatus::RUNNING;
     }
@@ -251,8 +247,7 @@ namespace manymove_cpp_trees
         config().blackboard->set("trajectory_" + move_id_, moveit_msgs::msg::RobotTrajectory());
 
         // HMI message
-        config().blackboard->set(robot_prefix_ + "message", "MOTION HALTED");
-        config().blackboard->set(robot_prefix_ + "message_color", "red");
+        setHMIMessage(config().blackboard, robot_prefix_, "MOTION HALTED", "red");
     }
 
     void MoveManipulatorAction::goalResponseCallback(std::shared_ptr<GoalHandleMoveManipulator> goal_handle)

@@ -68,6 +68,7 @@ namespace manymove_cpp_trees
 
         bool goal_sent_;
         bool result_received_;
+        std::string prefix_;
 
         std::string io_type_;
         int ionum_;
@@ -113,6 +114,7 @@ namespace manymove_cpp_trees
 
         bool goal_sent_;
         bool result_received_;
+        std::string prefix_;
 
         std::string io_type_;
         int ionum_;
@@ -273,6 +275,7 @@ namespace manymove_cpp_trees
         int desired_value_;
         double timeout_;
         double poll_rate_;
+        std::string prefix_;
 
         // internal state
         bool goal_sent_;
