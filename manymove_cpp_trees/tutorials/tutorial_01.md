@@ -558,7 +558,8 @@ The comments beside the sequence elements are quite self explanatory: we reap th
 
 If we only put these two nodes in sequence, when we reset the robot cycle the tree would just fail and the execution would end.  
 We need to handle the reset more gracefully. To do this, we wrap both of the startup and the cycle nodes in a Retry node. Here we use the `retrySequenceWrapperXML()` function, which lets us determine how many time we want to retry. We want to be able to reset as many times as we need, so we set the retries to `-1`.  
-When the cycle resets, `StartUpSequence` will be executed again, resetting the scene before the `RobotCycle` starts:
+When the cycle resets, `StartUpSequence` will be executed again, resetting the scene before the `RobotCycle` starts.  
+Update the `retry_forever_wrapper_xml`'s code to include the `repeat_forever_wrapper_xml`
 
 ```cpp
     std::string retry_forever_wrapper_xml = retrySequenceWrapperXML("ResetHandler", {startup_sequence_xml, repeat_forever_wrapper_xml}, -1);
