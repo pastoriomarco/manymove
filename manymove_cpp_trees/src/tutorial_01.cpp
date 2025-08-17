@@ -91,12 +91,13 @@ int main(int argc, char **argv)
     // 5. Assembling the tree
     // ----------------------------------------------------------------------------
 
-    // REMOVE THE NEXT LINE:
-    std::string retry_forever_wrapper_xml = "";
+    std::string startup_sequence_xml = sequenceWrapperXML(
+        "StartUpSequence",
+        {
+            // OPTIONAL CODE FROM SECTION 1 HERE
+        });
 
-    // ...
-    // SECTION 5 CODE HERE
-    // ...
+    std::string retry_forever_wrapper_xml = retrySequenceWrapperXML("ResetHandler", {startup_sequence_xml, /*ADD CODE HERE*/ }, -1);
 
     // GlobalMasterSequence with RepeatForever as child to set BehaviorTree ID and root main_tree_to_execute in the XML
     std::string master_body = sequenceWrapperXML("GlobalMasterSequence", {retry_forever_wrapper_xml});

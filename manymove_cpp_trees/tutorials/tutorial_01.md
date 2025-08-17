@@ -119,13 +119,30 @@ The last object is the graspable box:
 It's placed within reach of the Lite6 and it's shape and size already match the gripper orientation relative to the robot's TCP.  
 But beware: the graspable object's Z axis is facing up, while the robot's TCP's Z axis is facing down. We will want them to match when we'll go grab the object, and we'll see that when defining the variable poses in the next section.
 
-Later, we'll also see how this snippets are used in the logic tree.
-
 Before moving on, please notice that the `tcp_frame_name_key` field was added as input: without a blackboard key that refers to the robot's tcp, the attach_xml snippet will give you an error at runtime, as it won't know to what link you want to attach the object to. Here `tcp_frame_name_key` is just a string, there's no key associated yet: we'll see in the next section how to create it.
 
 The variable `rp` contains al the data of the robot. We'll talk about it in the future, but for now let's just use a couple of its fields:
 * `prefix` is an optional field, here is empty. It stores the prefix for the robot, to differentiate the various topics, services and action servers
 * `tcp_frame` contains the name of the link that represents the robot's tcp: it's the link we want to attach the object to. In some scenarios, you may want to use another frame to attach the object, for ease of reference: for example, on Franka Emika Panda robot the tcp is not aligned with the robot's flange, so it may be easier to refer to the flange itself and use a offset when using an object's pose.
+
+### Section 1 output (OPTIONAL):
+
+You might skip this part if you prefer to set up the tree at the end, but I bet you are curious to see the object you created in the scene!  
+Let's start modifying the code to assemble the tree: find the variable `startup_sequence_xml` and add the elements created within the curly brackets:
+
+```cpp
+    std::string startup_sequence_xml = sequenceWrapperXML(
+        "StartUpSequence",
+        {
+            ground.init_xml, wall.init_xml, graspable.init_xml,
+        });
+```
+
+Build the scene and launch the tutorial again, and you'll see the object appear in the scene:
+
+<img src="./media/tutorial_01_section_1.png" alt="Tutorial_01 section_1" width="640"/>
+
+---
 
 ## 2. Define the variable poses
 
@@ -158,7 +175,7 @@ Let's see how it works:
 The `buildObjectAction()` function just needs as input a name and an object function. Up till now, we masked most of the object functions' usage in the `createObjectSnippets()` function, but here we use one directly. 
 
 Let's see what each component does:
-* `"graspable_key"`: it's the blackboard key that stores the name of the object. The object name it contains will be used to search for the corresponding object in the scene to get its pose. We need to get the `"graspable"` object't pose, so we use the name key generated with the `createObjectSnippets()` function. 
+* `"graspable_key"`: it's the blackboard key that stores the name of the object. The object name it contains will be used to search for the corresponding object in the scene to get its pose. We need to get the `"graspable"` object's pose, so we use the name key generated with the `createObjectSnippets()` function. 
 * `"pick_target_key"` and `"approach_pick_target_key"`: the keys containing the `geometry_msgs::msg::Pose` that the robot will use. These are the containers that will store the resulting pose, after the tranformations computated depending of the last two keys of the function. Since we will get the pose dynamically, the pose initially contained by this keys can be empty, but we need to take care not using it before we get the updated value of the object's pose.
 * `"world_frame_key"`: this key contains `"world"` as we defined at the beginning of the file. Most of the time we want the pose to refer to the world frame, but we may choose some other frame here.
 * `"identity_transform_key"` and `"approach_pre_transform_xyz_rpy_1_key"`: here's the key that references the first tranform to adapt the pose of the object to the one of the TCP.
@@ -183,6 +200,28 @@ You may wonder: couldn't we use just one tranform?
 This is a simple scenario, so yes, we could. But using a single tranform may get confusing quicly.  
 In more complex scenarios, like those in the other executables, the transforms are a bit more complicated and we benefit from separating them in two transforms.  
 For example: if I were to rotate in the X axis of 45 degrees, but then I needed to rotate in the original Z axis, I would need a different approach as it wouldn't be as easy as inputting the required values. When I rotate the X axis, the Z axis is not vertical anymore, so I'd need a composite transform among the 3 axes. Splitting the transforms makes it much simpler: the second transform is aligned with the original Z axis.
+
+### Visual examples of frames trasformations
+
+<img src="./media/tutorial_01_section_2.png" alt="Tutorial_01 section_1" width="640"/>
+
+In the image above you can visualize why you need to flip the pose: the frame of the TCP is upside down in respect to the one of the graspable object. Rotating 180 degrees in X axis makes the two frames match.
+Remember that, if you want to change the inclination of the gripper, the position you start from is the graspable object's one.
+
+**Excercise**: if you want to grasp the object not vertically but with a 15 degrees inclination from outside the wall, how do you modify the transform?
+
+<details>
+<summary>Click to see the solution</summary>
+
+```cpp
+    blackboard->set("post_transform_xyz_rpy_1_key", std::vector<double>{0.0, 0.0, 0.0, 3.14, 0.0, 0.0});
+```
+
+If you use this line in the final program you can see how the inclination of the pick movements change!
+
+</details>
+
+---
 
 ## 3. Define the moves
 
@@ -364,6 +403,24 @@ If you use Groot to visualize the tree, this part of the tree will look like thi
 
 ---
 
+<details>
+<summary>Need instructions on how to start Groot?</summary>
+
+Once you install Groot [the offical Groot's Github repo](https://github.com/BehaviorTree/Groot), open a new terminal and source it.  
+To start it,     use this line:
+
+```bash
+ros2 run groot Groot
+```
+
+Then select `Monitor` icon and then `START`.  
+
+The `Connect` button will work only if the tree already started, so try this either after section 1 optional instructions, or at the end of the tutorial.
+
+</details>
+
+---
+
 The snippet automatically generated already contains a Fallback node with 2 child nodes.  
 Since we need to create all the fixed objects at the beginning of the program, let's combine all of their snippets:
 
@@ -467,14 +524,16 @@ In this section we'll create the 3 components of the `GlobalMasterSequence`:
 * Robot Cycle
 * Reset Handler
 
-The **Startup Sequence** combines together all the required snippets to spawn the fixed objects, reset the graspable object and move the robot to rest position:
+The **Startup Sequence** combines together all the required snippets to spawn the fixed objects, reset the graspable object and move the robot to rest position. If you already modified this snippet in section 1, delete the line you added and replace it with these:
 
 ```cpp
     std::string startup_sequence_xml = sequenceWrapperXML(
         "StartUpSequence",
-        {spawn_fixed_objects_xml,
-         reset_graspable_objects_xml,
-         to_rest_xml});
+        {
+            spawn_fixed_objects_xml,
+            reset_graspable_objects_xml,
+            to_rest_xml,
+         });
 ```
 
 If we never reset the cycle, this will run just once at the beginning.
@@ -499,7 +558,8 @@ The comments beside the sequence elements are quite self explanatory: we reap th
 
 If we only put these two nodes in sequence, when we reset the robot cycle the tree would just fail and the execution would end.  
 We need to handle the reset more gracefully. To do this, we wrap both of the startup and the cycle nodes in a Retry node. Here we use the `retrySequenceWrapperXML()` function, which lets us determine how many time we want to retry. We want to be able to reset as many times as we need, so we set the retries to `-1`.  
-When the cycle resets, `StartUpSequence` will be executed again, resetting the scene before the `RobotCycle` starts:
+When the cycle resets, `StartUpSequence` will be executed again, resetting the scene before the `RobotCycle` starts.  
+Update the `retry_forever_wrapper_xml`'s code to include the `repeat_forever_wrapper_xml`
 
 ```cpp
     std::string retry_forever_wrapper_xml = retrySequenceWrapperXML("ResetHandler", {startup_sequence_xml, repeat_forever_wrapper_xml}, -1);
@@ -521,4 +581,3 @@ ros2 launch manymove_bringup tutorial_01.launch.py
 As you see, after preparing the snippets correctly you can handle the logic of the tree with a very limited number of lines of code. The resulting tree looks like this:
 
 ![CompleteTree](./media/complete_tree_tutorial_01.png)
-
