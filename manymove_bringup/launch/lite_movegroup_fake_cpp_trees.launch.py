@@ -53,6 +53,8 @@ def launch_setup(context, *args, **kwargs):
     # no_gui_ctrl = LaunchConfiguration('no_gui_ctrl', default=False)
     ros_namespace = LaunchConfiguration('ros_namespace', default='').perform(context)
 
+    ros2_control_plugin = LaunchConfiguration('ros2_control_plugin', default='uf_robot_hardware/UFRobotFakeSystemHardware')
+
     base_frame = LaunchConfiguration('base_frame')
     tcp_frame = LaunchConfiguration('tcp_frame')
 
@@ -96,7 +98,7 @@ def launch_setup(context, *args, **kwargs):
             attach_rpy=attach_rpy,
             mesh_suffix=mesh_suffix,
             kinematics_suffix=kinematics_suffix,
-            ros2_control_plugin = 'uf_robot_hardware/UFRobotFakeSystemHardware',
+            ros2_control_plugin = ros2_control_plugin,
             ros2_control_params=ros2_control_params,
             add_gripper=add_gripper,
             add_vacuum_gripper=add_vacuum_gripper,
@@ -227,6 +229,8 @@ def launch_setup(context, *args, **kwargs):
     controllers = ['{}{}_traj_controller'.format(prefix.perform(context), xarm_type)]
     if add_gripper.perform(context) in ('True', 'true') and robot_type.perform(context) != 'lite':
         controllers.append('{}{}_gripper_traj_controller'.format(prefix.perform(context), robot_type.perform(context)))
+    elif add_gripper.perform(context) in ('True', 'true') and robot_type.perform(context) == 'lite':
+        controllers.append('{}lite_gripper_controller'.format(prefix.perform(context)))
     elif add_bio_gripper.perform(context) in ('True', 'true') and robot_type.perform(context) != 'lite':
         controllers.append('{}bio_gripper_traj_controller'.format(prefix.perform(context)))
     

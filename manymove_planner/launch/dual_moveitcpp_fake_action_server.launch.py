@@ -116,7 +116,7 @@ def launch_setup(context, *args, **kwargs):
     # no_gui_ctrl = LaunchConfiguration('no_gui_ctrl', default=False)
     ros_namespace = LaunchConfiguration('ros_namespace', default='').perform(context)
 
-    ros2_control_plugin = 'uf_robot_hardware/UFRobotFakeSystemHardware'
+    ros2_control_plugin = LaunchConfiguration('ros2_control_plugin', default='uf_robot_hardware/UFRobotFakeSystemHardware')
     controllers_name = 'fake_controllers'
     xarm_type_1 = '{}{}'.format(robot_type_1.perform(context), dof_1.perform(context) if robot_type_1.perform(context) in ('xarm', 'lite') else '')
     xarm_type_2 = '{}{}'.format(robot_type_2.perform(context), dof_2.perform(context) if robot_type_2.perform(context) in ('xarm', 'lite') else '')
@@ -304,10 +304,14 @@ def launch_setup(context, *args, **kwargs):
     ]
     if add_gripper_1.perform(context) in ('True', 'true') and robot_type_1.perform(context) != 'lite':
         controllers.append('{}{}_gripper_traj_controller'.format(prefix_1.perform(context), robot_type_1.perform(context)))
+    elif add_gripper.perform(context) in ('True', 'true') and robot_type_1.perform(context) == 'lite':
+        controllers.append('{}lite_gripper_controller'.format(prefix_1.perform(context)))
     elif add_bio_gripper_1.perform(context) in ('True', 'true') and robot_type_1.perform(context) != 'lite':
         controllers.append('{}bio_gripper_traj_controller'.format(prefix_1.perform(context)))
     if add_gripper_2.perform(context) in ('True', 'true') and robot_type_2.perform(context) != 'lite':
         controllers.append('{}{}_gripper_traj_controller'.format(prefix_2.perform(context), robot_type_2.perform(context)))
+    elif add_gripper.perform(context) in ('True', 'true') and robot_type_2.perform(context) == 'lite':
+        controllers.append('{}lite_gripper_controller'.format(prefix_2.perform(context)))
     elif add_bio_gripper_2.perform(context) in ('True', 'true') and robot_type_2.perform(context) != 'lite':
         controllers.append('{}bio_gripper_traj_controller'.format(prefix_2.perform(context)))
 
