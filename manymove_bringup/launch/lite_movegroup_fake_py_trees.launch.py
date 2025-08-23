@@ -230,7 +230,7 @@ def launch_setup(context, *args, **kwargs):
     controllers = ['{}{}_traj_controller'.format(prefix.perform(context), xarm_type)]
     if add_gripper.perform(context) in ('True', 'true') and robot_type.perform(context) != 'lite':
         controllers.append('{}{}_gripper_traj_controller'.format(prefix.perform(context), robot_type.perform(context)))
-    elif add_gripper.perform(context) in ('True', 'true') and robot_type.perform(context) == 'lite':
+    elif add_gripper.perform(context) in ('True', 'true') and robot_type.perform(context) == 'lite' and ros2_control_plugin.perform(context) !='isaac':
         controllers.append('{}lite_gripper_controller'.format(prefix.perform(context)))
     elif add_bio_gripper.perform(context) in ('True', 'true') and robot_type.perform(context) != 'lite':
         controllers.append('{}bio_gripper_traj_controller'.format(prefix.perform(context)))

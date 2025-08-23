@@ -342,13 +342,13 @@ def launch_setup(context, *args, **kwargs):
     ]
     if add_gripper_1.perform(context) in ('True', 'true') and robot_type_1.perform(context) != 'lite':
         controllers.append('{}{}_gripper_traj_controller'.format(prefix_1.perform(context), robot_type_1.perform(context)))
-    elif add_gripper.perform(context) in ('True', 'true') and robot_type_1.perform(context) == 'lite':
+    elif add_gripper_1.perform(context) in ('True', 'true') and robot_type_1.perform(context) == 'lite' and ros2_control_plugin.perform(context) !='isaac':
         controllers.append('{}lite_gripper_controller'.format(prefix_1.perform(context)))
     elif add_bio_gripper_1.perform(context) in ('True', 'true') and robot_type_1.perform(context) != 'lite':
         controllers.append('{}bio_gripper_traj_controller'.format(prefix_1.perform(context)))
     if add_gripper_2.perform(context) in ('True', 'true') and robot_type_2.perform(context) != 'lite':
         controllers.append('{}{}_gripper_traj_controller'.format(prefix_2.perform(context), robot_type_2.perform(context)))
-    elif add_gripper.perform(context) in ('True', 'true') and robot_type_2.perform(context) == 'lite':
+    elif add_gripper_2.perform(context) in ('True', 'true') and robot_type_2.perform(context) == 'lite' and ros2_control_plugin.perform(context) !='isaac':
         controllers.append('{}lite_gripper_controller'.format(prefix_2.perform(context)))
     elif add_bio_gripper_2.perform(context) in ('True', 'true') and robot_type_2.perform(context) != 'lite':
         controllers.append('{}bio_gripper_traj_controller'.format(prefix_2.perform(context)))

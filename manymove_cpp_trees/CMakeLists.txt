@@ -66,6 +66,7 @@ endmacro()
 bt_client_exec(bt_client)
 bt_client_exec(bt_client_mixed_pipelines)
 bt_client_exec(bt_client_cumotion)
+bt_client_exec(bt_client_isaac)
 bt_client_exec(bt_client_dual)
 bt_client_exec(bt_client_app_dual)
 bt_client_exec(bt_client_panda)
@@ -89,6 +90,7 @@ install(TARGETS
   bt_client
   bt_client_mixed_pipelines
   bt_client_cumotion
+  bt_client_isaac
   bt_client_dual
   bt_client_app_dual
   bt_client_panda

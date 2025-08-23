@@ -85,7 +85,7 @@ namespace manymove_cpp_trees
       return BT::NodeStatus::RUNNING;
 
     // Evaluate success from standard fields
-    bool success = (action_result_.reached_goal && !action_result_.stalled);
+    bool success = (action_result_.reached_goal || action_result_.stalled);
 
     // store the final position
     double pos = action_result_.position;
