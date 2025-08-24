@@ -51,7 +51,7 @@ namespace manymove_cpp_trees
       RCLCPP_ERROR(node_->get_logger(), "Missing input [position]");
       return BT::NodeStatus::FAILURE;
     }
-    getInput("max_effort", max_effort); 
+    getInput("max_effort", max_effort);
 
     // Build the goal
     auto goal_msg = GripperCommand::Goal();
@@ -263,6 +263,85 @@ namespace manymove_cpp_trees
     RCLCPP_INFO(node_->get_logger(),
                 "GripperTrajAction: action finished. success=%s",
                 success_ ? "TRUE" : "FALSE");
+  }
+
+  // -------------------------------------------------
+  // PublishJointStateAction
+  // -------------------------------------------------
+
+  PublishJointStateAction::PublishJointStateAction(const std::string &name,
+                                                   const BT::NodeConfiguration &config)
+      : BT::SyncActionNode(name, config)
+  {
+    if (!config.blackboard || !config.blackboard->get("node", node_))
+    {
+      throw BT::RuntimeError("PublishJointStateAction: 'node' not found in blackboard.");
+    }
+  }
+
+  BT::NodeStatus PublishJointStateAction::tick()
+  {
+    std::string topic;
+    if (!getInput("topic", topic) || topic.empty())
+    {
+      throw BT::RuntimeError("PublishJointStateAction: missing 'topic'");
+    }
+
+    std::vector<std::string> names;
+    if (!getInput("joint_names", names) || names.empty())
+    {
+      throw BT::RuntimeError("PublishJointStateAction: 'joint_names' must contain at least one joint");
+    }
+
+    std::vector<double> pos, vel, eff;
+    (void)getInput("joint_positions", pos);  
+    (void)getInput("joint_velocities", vel); 
+    (void)getInput("joint_efforts", eff);    
+
+    // recreate publisher if topic changed
+    if (!pub_ || topic != current_topic_)
+    {
+      pub_ = node_->create_publisher<sensor_msgs::msg::JointState>(topic, 10);
+      current_topic_ = topic;
+    }
+
+    const auto N = names.size();
+    auto broadcast_or_check = [&](std::vector<double> &v, const char *label)
+    {
+      if (v.empty())
+        return; 
+      if (v.size() == 1 && N > 1)
+        v.assign(N, v[0]); // broadcast single value
+      if (v.size() != N)
+      {
+        throw BT::RuntimeError(std::string("PublishJointStateAction: '") + label +
+                               "' length must be 1 or equal to 'names' length");
+      }
+    };
+
+    broadcast_or_check(pos, "positions");
+    broadcast_or_check(vel, "velocities");
+    broadcast_or_check(eff, "efforts");
+
+    sensor_msgs::msg::JointState msg;
+    bool stamp_now = true;
+    (void)getInput("stamp_now", stamp_now);
+    if (stamp_now)
+      msg.header.stamp = node_->now();
+
+    msg.name = names;
+    msg.position = pos;
+    msg.velocity = vel;
+    msg.effort = eff;
+
+    pub_->publish(msg);
+
+    RCLCPP_INFO(node_->get_logger(),
+                "[%s] Published JointState to '%s' (names=%zu, pos=%zu, vel=%zu, eff=%zu)",
+                name().c_str(), topic.c_str(),
+                msg.name.size(), msg.position.size(), msg.velocity.size(), msg.effort.size());
+
+    return BT::NodeStatus::SUCCESS;
   }
 
 } // namespace manymove_cpp_trees

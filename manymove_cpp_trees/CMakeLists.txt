@@ -23,6 +23,7 @@ find_package(tf2                     REQUIRED)
 find_package(std_srvs                REQUIRED)
 find_package(manymove_msgs           REQUIRED)
 find_package(control_msgs            REQUIRED)
+find_package(std_msgs                REQUIRED)
 
 #--------------------------------------------------------------------
 # Library with all BT helper nodes
@@ -45,7 +46,7 @@ target_include_directories(manymove_cpp_trees_lib PUBLIC
 ament_target_dependencies(manymove_cpp_trees_lib
   rclcpp rclcpp_action behaviortree_cpp_v3
   manymove_planner manymove_object_manager manymove_signals
-  moveit_msgs tf2 std_srvs manymove_msgs control_msgs
+  moveit_msgs tf2 std_srvs manymove_msgs control_msgs std_msgs
 )
 
 #--------------------------------------------------------------------
@@ -59,7 +60,7 @@ macro(bt_client_exec NAME)
   ament_target_dependencies(${NAME}
     rclcpp rclcpp_action behaviortree_cpp_v3
     manymove_planner manymove_object_manager manymove_signals
-    moveit_msgs tf2 std_srvs manymove_msgs control_msgs
+    moveit_msgs tf2 std_srvs manymove_msgs control_msgs std_msgs
   )
 endmacro()
 

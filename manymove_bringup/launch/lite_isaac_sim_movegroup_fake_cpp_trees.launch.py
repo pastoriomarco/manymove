@@ -404,7 +404,8 @@ def generate_launch_description():
         # New DeclareLaunchArguments for base_frame, tcp_frame
         DeclareLaunchArgument('base_frame', default_value='link_base', description='Base frame of the robot'),
         DeclareLaunchArgument('tcp_frame', default_value='link_tcp', description='TCP (end effector) frame of the robot' ),
-        DeclareLaunchArgument('gripper_action_server', default_value='/lite_gripper_controller/gripper_cmd', description='Name of the action server to control the gripper'),
+        # DeclareLaunchArgument('gripper_action_server', default_value='/lite_gripper_controller/gripper_cmd', description='Name of the action server to control the gripper'),
+        DeclareLaunchArgument('gripper_action_server', default_value='/isaac_joint_commands_gripper', description='Name of the TOPIC to control the gripper'),
         DeclareLaunchArgument('contact_links', default_value='["lite_gripper_right_finger", "lite_gripper_left_finger", "lite_gripper_base_link"]', description='List of links to exclude from collision checking'),
 
         DeclareLaunchArgument('log_level', default_value='info', description='Defines log level for bt_client_node'),

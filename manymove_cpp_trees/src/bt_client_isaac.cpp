@@ -81,7 +81,7 @@ int main(int argc, char **argv)
 
     ObjectSnippets graspable = createObjectSnippets(
         blackboard, keys, "graspable", "box",
-        createPoseRPY(0.15, -0.25, 0.0125, 0.0, 0.0, 0.0), {0.1, 0.024, 0.024},
+        createPoseRPY(0.15, -0.25, 0.0125, 0.0, 0.0, 0.0), {0.025, 0.025, 0.025},
         "", {1.0, 1.0, 1.0}, "tcp_frame_name_key", "touch_links_key");
 
     // ----------------------------------------------------------------------------
@@ -166,16 +166,16 @@ int main(int argc, char **argv)
 
     // Build move sequence blocks
     std::string to_rest_xml = buildMoveXML(
-        rp.prefix, rp.prefix + "toRest", rest_position, blackboard);
+        rp.prefix, rp.prefix + "toRest", rest_position, blackboard, true, 3);
 
     std::string pick_object_xml = buildMoveXML(
-        rp.prefix, rp.prefix + "pick", pick_sequence, blackboard);
+        rp.prefix, rp.prefix + "pick", pick_sequence, blackboard, true, 3);
 
     std::string drop_object_xml = buildMoveXML(
-        rp.prefix, rp.prefix + "drop", drop_sequence, blackboard);
+        rp.prefix, rp.prefix + "drop", drop_sequence, blackboard, true, 3);
 
     std::string to_home_xml = buildMoveXML(
-        rp.prefix, rp.prefix + "home", home_position, blackboard);
+        rp.prefix, rp.prefix + "home", home_position, blackboard, true, 3);
 
     // ----------------------------------------------------------------------------
     // 4. Build higher level snippets
@@ -189,13 +189,23 @@ int main(int argc, char **argv)
 
     // Setting commands for gripper open/close
     std::string move_gripper_close_xml =
-        "<GripperCommandAction position=\"0.000\" max_effort=\"10000.0\" action_server=\"" + rp.gripper_action_server + "\"/>";
+        "<PublishJointStateAction topic=\"" + rp.gripper_action_server + "\" joint_names=\"[right_finger_joint]\" joint_positions=\"[0.0]\" joint_efforts=\"[-2.0]\" />";
+    move_gripper_close_xml =
+        move_gripper_close_xml +
+        "<Delay delay_msec=\"1000\">" +
+        "<PublishJointStateAction topic=\"" + rp.gripper_action_server + "\" joint_names=\"[right_finger_joint]\" joint_positions=\"[0.0]\" joint_efforts=\"[-1.0]\" />" +
+        "</Delay>";
     std::string move_gripper_open_xml =
-        "<GripperCommandAction position=\"0.0081\" max_effort=\"10000.0\" action_server=\"" + rp.gripper_action_server + "\"/>";
+        "<PublishJointStateAction topic=\"" + rp.gripper_action_server + "\" joint_names=\"[right_finger_joint]\" joint_positions=\"[0.0081]\" joint_efforts=\"[2.0]\" />";
+    move_gripper_open_xml =
+        move_gripper_open_xml +
+        "<Delay delay_msec=\"1000\">" +
+        "<PublishJointStateAction topic=\"" + rp.gripper_action_server + "\" joint_names=\"[right_finger_joint]\" joint_positions=\"[0.0081]\" joint_efforts=\"[1.0]\" />" +
+        "</Delay>";
 
     // Define some semantically relevant sequences for gripper actions
-    std::string close_gripper_xml = sequenceWrapperXML("CloseGripper", {graspable.remove_xml, move_gripper_close_xml});
-    std::string open_gripper_xml = sequenceWrapperXML("OpenGripper", {graspable.detach_xml, move_gripper_open_xml});
+    std::string close_gripper_xml = sequenceWrapperXML("CloseGripper", {move_gripper_close_xml, graspable.attach_xml});
+    std::string open_gripper_xml = sequenceWrapperXML("OpenGripper", {move_gripper_open_xml, graspable.detach_xml});
 
     // Let's combine the moves and the gripper actions to pick up and drop down the object
     std::string pick_sequence_xml = sequenceWrapperXML("PickSequence", {pick_object_xml, close_gripper_xml});
@@ -215,7 +225,7 @@ int main(int argc, char **argv)
     std::string startup_sequence_xml = sequenceWrapperXML(
         "StartUpSequence",
         {spawn_fixed_objects_xml,
-         // reset_graspable_objects_xml,
+         reset_graspable_objects_xml,
          to_rest_xml});
 
     // Repeat node must have only one children, so it also wrap a Sequence child that wraps the other children
