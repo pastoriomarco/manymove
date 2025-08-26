@@ -11,19 +11,20 @@ endif()
 #--------------------------------------------------------------------
 # Dependencies
 #--------------------------------------------------------------------
-find_package(ament_cmake             REQUIRED)
-find_package(rclcpp                  REQUIRED)
-find_package(rclcpp_action           REQUIRED)
-find_package(behaviortree_cpp_v3     REQUIRED)
-find_package(manymove_planner        REQUIRED)
-find_package(moveit_msgs             REQUIRED)
-find_package(manymove_object_manager REQUIRED)
-find_package(manymove_signals        REQUIRED)
-find_package(tf2                     REQUIRED)
-find_package(std_srvs                REQUIRED)
-find_package(manymove_msgs           REQUIRED)
-find_package(control_msgs            REQUIRED)
-find_package(std_msgs                REQUIRED)
+find_package(ament_cmake              REQUIRED)
+find_package(rclcpp                   REQUIRED)
+find_package(rclcpp_action            REQUIRED)
+find_package(behaviortree_cpp_v3      REQUIRED)
+find_package(manymove_planner         REQUIRED)
+find_package(moveit_msgs              REQUIRED)
+find_package(manymove_object_manager  REQUIRED)
+find_package(manymove_signals         REQUIRED)
+find_package(tf2                      REQUIRED)
+find_package(std_srvs                 REQUIRED)
+find_package(manymove_msgs            REQUIRED)
+find_package(control_msgs             REQUIRED)
+find_package(std_msgs                 REQUIRED)
+find_package(topic_based_ros2_control REQUIRED)
 
 #--------------------------------------------------------------------
 # Library with all BT helper nodes
@@ -46,7 +47,7 @@ target_include_directories(manymove_cpp_trees_lib PUBLIC
 ament_target_dependencies(manymove_cpp_trees_lib
   rclcpp rclcpp_action behaviortree_cpp_v3
   manymove_planner manymove_object_manager manymove_signals
-  moveit_msgs tf2 std_srvs manymove_msgs control_msgs std_msgs
+  moveit_msgs tf2 std_srvs manymove_msgs control_msgs std_msgs topic_based_ros2_control
 )
 
 #--------------------------------------------------------------------
@@ -60,7 +61,7 @@ macro(bt_client_exec NAME)
   ament_target_dependencies(${NAME}
     rclcpp rclcpp_action behaviortree_cpp_v3
     manymove_planner manymove_object_manager manymove_signals
-    moveit_msgs tf2 std_srvs manymove_msgs control_msgs std_msgs
+    moveit_msgs tf2 std_srvs manymove_msgs control_msgs std_msgs topic_based_ros2_control
   )
 endmacro()
 
@@ -110,7 +111,7 @@ ament_export_targets(export_manymove_cpp_trees_lib HAS_LIBRARY_TARGET)
 ament_export_dependencies(
   rclcpp rclcpp_action behaviortree_cpp_v3
   manymove_planner manymove_object_manager manymove_signals
-  moveit_msgs tf2 std_srvs manymove_msgs control_msgs
+  moveit_msgs tf2 std_srvs manymove_msgs control_msgs std_msgs topic_based_ros2_control
 )
 
 ament_package()
