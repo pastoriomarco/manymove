@@ -136,6 +136,37 @@ int main(int argc, char **argv)
     approach_drop_target.position.z += 0.02;
     blackboard->set("approach_drop_target_key", approach_drop_target);
 
+    // Adjusting only the scaling factors for default moves
+    auto &max_move = move_configs["max_move"];
+    max_move.velocity_scaling_factor = 0.7;
+    max_move.acceleration_scaling_factor = 0.35;
+    max_move.max_cartesian_speed = 0.25;
+
+    auto &mid_move = move_configs["mid_move"];
+    mid_move.velocity_scaling_factor = 0.4;
+    mid_move.acceleration_scaling_factor = 0.2;
+    mid_move.max_cartesian_speed = 0.25;
+
+    auto &slow_move = move_configs["slow_move"];
+    slow_move.velocity_scaling_factor = 0.2;
+    slow_move.acceleration_scaling_factor = 0.1;
+    slow_move.max_cartesian_speed = 0.1;
+
+    auto &cartesian_max_move = move_configs["cartesian_max_move"];
+    cartesian_max_move.velocity_scaling_factor = 0.8;
+    cartesian_max_move.acceleration_scaling_factor = 0.4;
+    cartesian_max_move.max_cartesian_speed = 0.45;
+
+    auto &cartesian_mid_move = move_configs["cartesian_mid_move"];
+    cartesian_mid_move.velocity_scaling_factor = 0.4;
+    cartesian_mid_move.acceleration_scaling_factor = 0.2;
+    cartesian_mid_move.max_cartesian_speed = 0.25;
+
+    auto &cartesian_slow_move = move_configs["cartesian_slow_move"];
+    cartesian_slow_move.velocity_scaling_factor = 0.2;
+    cartesian_slow_move.acceleration_scaling_factor = 0.1;
+    cartesian_slow_move.max_cartesian_speed = 0.1;
+
     // We define the joint targets we need for the joint moves as vectors of doubles.
     // Be careful that the number of values must match the number of DOF of the robot (here, 6 DOF)
     std::vector<double> joint_rest = {0.0, -0.785, 0.785, 0.0, 1.57, 0.0};
@@ -144,24 +175,24 @@ int main(int argc, char **argv)
     std::string tcp_frame_name = rp.prefix + rp.tcp_frame;
 
     std::vector<Move> rest_position = {
-        {rp.prefix, tcp_frame_name, "joint", move_configs["max_move"], "", joint_rest},
+        {rp.prefix, tcp_frame_name, "joint", max_move, "", joint_rest},
     };
 
     // Sequences for Pick/Drop/Homing
     std::vector<Move> pick_sequence = {
-        {rp.prefix, tcp_frame_name, "pose", move_configs["mid_move"], "approach_pick_target_key"},
-        {rp.prefix, tcp_frame_name, "cartesian", move_configs["cartesian_slow_move"], "pick_target_key"},
+        {rp.prefix, tcp_frame_name, "pose", mid_move, "approach_pick_target_key"},
+        {rp.prefix, tcp_frame_name, "cartesian", cartesian_slow_move, "pick_target_key"},
     };
 
     std::vector<Move> drop_sequence = {
-        {rp.prefix, tcp_frame_name, "cartesian", move_configs["cartesian_mid_move"], "approach_pick_target_key"},
-        {rp.prefix, tcp_frame_name, "pose", move_configs["max_move"], "approach_drop_target_key"},
-        {rp.prefix, tcp_frame_name, "cartesian", move_configs["cartesian_slow_move"], "drop_target_key"},
+        {rp.prefix, tcp_frame_name, "cartesian", cartesian_mid_move, "approach_pick_target_key"},
+        {rp.prefix, tcp_frame_name, "pose", max_move, "approach_drop_target_key"},
+        {rp.prefix, tcp_frame_name, "cartesian", cartesian_slow_move, "drop_target_key"},
     };
 
     std::vector<Move> home_position = {
-        {rp.prefix, tcp_frame_name, "pose", move_configs["mid_move"], "approach_drop_target_key"},
-        {rp.prefix, tcp_frame_name, "named", move_configs["max_move"], "", {}, named_home},
+        {rp.prefix, tcp_frame_name, "pose", mid_move, "approach_drop_target_key"},
+        {rp.prefix, tcp_frame_name, "named", max_move, "", {}, named_home},
     };
 
     // Build move sequence blocks

@@ -53,6 +53,19 @@ int main(int argc, char **argv)
     defineVariableKey<double>(node, blackboard, keys, "tube_diameter_key", "double", tube_diameter);
 
     // ----------------------------------------------------------------------------
+    // HMI message variables
+    // ----------------------------------------------------------------------------
+
+    defineVariableKey<std::string>(node, blackboard, keys, (rp_1.prefix + "message"), "string", "");
+    defineVariableKey<std::string>(node, blackboard, keys, (rp_1.prefix + "message_color"), "string", "black");
+
+    defineVariableKey<std::string>(node, blackboard, keys, (rp_2.prefix + "message"), "string", "");
+    defineVariableKey<std::string>(node, blackboard, keys, (rp_2.prefix + "message_color"), "string", "black");
+
+    defineVariableKey<std::string>(node, blackboard, keys, "hmi_message", "string", "");
+    defineVariableKey<std::string>(node, blackboard, keys, "hmi_message_color", "string", "black");
+
+    // ----------------------------------------------------------------------------
     // Build blocks for poses and objects handling
     // ----------------------------------------------------------------------------
 
