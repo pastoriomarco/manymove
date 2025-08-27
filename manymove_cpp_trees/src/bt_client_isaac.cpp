@@ -8,6 +8,7 @@
 #include "manymove_cpp_trees/action_nodes_planner.hpp"
 #include "manymove_cpp_trees/action_nodes_signals.hpp"
 #include "manymove_cpp_trees/action_nodes_logic.hpp"
+#include "manymove_cpp_trees/action_nodes_isaac.hpp"
 #include "manymove_cpp_trees/robot.hpp"
 #include "manymove_cpp_trees/move.hpp"
 #include "manymove_cpp_trees/object.hpp"
@@ -81,7 +82,8 @@ int main(int argc, char **argv)
 
     ObjectSnippets graspable = createObjectSnippets(
         blackboard, keys, "graspable", "box",
-        createPoseRPY(0.15, -0.25, 0.0125, 0.0, 0.0, 0.0), {0.025, 0.025, 0.025},
+        Pose(), {0.025, 0.025, 0.025},
+        // createPoseRPY(0.15, -0.25, 0.0125, 0.0, 0.0, 0.0), {0.025, 0.025, 0.025},
         "", {1.0, 1.0, 1.0}, "tcp_frame_name_key", "touch_links_key");
 
     // ----------------------------------------------------------------------------
@@ -234,6 +236,17 @@ int main(int argc, char **argv)
         "<PublishJointStateAction topic=\"" + rp.gripper_action_server + "\" joint_names=\"[right_finger_joint]\" joint_positions=\"[0.0081]\" joint_efforts=\"[1.0]\" />" +
         "</Delay>";
 
+    std::string wait_for_robot_start_execution_xml = buildWaitForKeyBool(
+        "",
+        "robot_start_execution",
+        rp.prefix + "stop_execution",
+        false);
+
+    blackboard->set("graspable_path_key", "/World/graspable");
+    std::string get_graspable_sim_pose_xml = "<Delay delay_msec=\"100\"><GetEntityPoseNode service_name=\"/isaacsim/GetEntityState\" entity_path_key=\"graspable_path_key\" pose_key=\"graspable_pose_key\"/></Delay>";
+
+    std::string set_graspable_sim_pose_xml = "<SetEntityPoseNode service_name=\"/isaacsim/SetEntityState\" entity_path_key=\"graspable_path_key\" pose_key=\"graspable_pose_key\"/>";
+
     // Define some semantically relevant sequences for gripper actions
     std::string close_gripper_xml = sequenceWrapperXML("CloseGripper", {move_gripper_close_xml, graspable.attach_xml});
     std::string open_gripper_xml = sequenceWrapperXML("OpenGripper", {move_gripper_open_xml, graspable.detach_xml});
@@ -245,10 +258,6 @@ int main(int argc, char **argv)
     // Set up a sequence to reset the scene:
     std::string reset_graspable_objects_xml = sequenceWrapperXML("reset_graspable_objects", {open_gripper_xml, graspable.remove_xml});
 
-    // We can further combine the move sequence blocks in logic sequences.
-    std::string home_sequence_xml = sequenceWrapperXML(
-        rp.prefix + "ComposedHomeSequence", {to_home_xml, to_rest_xml});
-
     // ----------------------------------------------------------------------------
     // 5. Assembling the tree
     // ----------------------------------------------------------------------------
@@ -256,6 +265,8 @@ int main(int argc, char **argv)
     std::string startup_sequence_xml = sequenceWrapperXML(
         "StartUpSequence",
         {spawn_fixed_objects_xml,
+         wait_for_robot_start_execution_xml,
+         get_graspable_sim_pose_xml,
          reset_graspable_objects_xml,
          to_rest_xml});
 
@@ -267,7 +278,7 @@ int main(int argc, char **argv)
          pick_sequence_xml,           //< Pick sequence
          drop_sequence_xml,           //< Drop sequence
          graspable.remove_xml,        //< Delete the object for it to be added on the next cycle in the original position
-         home_sequence_xml},          //< Homing sequence
+         set_graspable_sim_pose_xml}, //< Reset the pose of the graspable object
         -1);                          //< num_cycles=-1 for infinite
 
     std::string retry_forever_wrapper_xml = retrySequenceWrapperXML("ResetHandler", {startup_sequence_xml, repeat_forever_wrapper_xml}, -1);

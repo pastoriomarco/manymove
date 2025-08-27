@@ -13,6 +13,7 @@
 #include "manymove_cpp_trees/action_nodes_signals.hpp"
 #include "manymove_cpp_trees/action_nodes_logic.hpp"
 #include "manymove_cpp_trees/action_nodes_gripper.hpp"
+#include "manymove_cpp_trees/action_nodes_isaac.hpp"
 #include "manymove_cpp_trees/bt_converters.hpp"
 #include "manymove_cpp_trees/blackboard_utils.hpp"
 
@@ -53,7 +54,10 @@ namespace manymove_cpp_trees
         factory.registerNodeType<CheckPoseDistance>("CheckPoseDistance");
 
         factory.registerNodeType<GripperCommandAction>("GripperCommandAction");
-        factory.registerNodeType<manymove_cpp_trees::GripperTrajAction>("GripperTrajAction");
+        factory.registerNodeType<GripperTrajAction>("GripperTrajAction");
+
+        factory.registerNodeType<SetEntityPoseNode>("SetEntityPoseNode");
+        factory.registerNodeType<GetEntityPoseNode>("GetEntityPoseNode");
     }
 
     // --------------------------------------------------------------------------

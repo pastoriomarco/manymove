@@ -36,6 +36,7 @@ add_library(manymove_cpp_trees_lib
   src/action_nodes_signals.cpp
   src/action_nodes_logic.cpp
   src/action_nodes_gripper.cpp
+  src/action_nodes_isaac.cpp
   src/hmi_service_node.cpp
   src/tree_helper.cpp
 )
