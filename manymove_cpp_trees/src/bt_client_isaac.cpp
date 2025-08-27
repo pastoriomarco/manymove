@@ -197,16 +197,16 @@ int main(int argc, char **argv)
 
     // Build move sequence blocks
     std::string to_rest_xml = buildMoveXML(
-        rp.prefix, rp.prefix + "toRest", rest_position, blackboard, true, 3);
+        rp.prefix, rp.prefix + "toRest", rest_position, blackboard, false, 3);
 
     std::string pick_object_xml = buildMoveXML(
-        rp.prefix, rp.prefix + "pick", pick_sequence, blackboard, true, 3);
+        rp.prefix, rp.prefix + "pick", pick_sequence, blackboard, false, 3);
 
     std::string drop_object_xml = buildMoveXML(
-        rp.prefix, rp.prefix + "drop", drop_sequence, blackboard, true, 3);
+        rp.prefix, rp.prefix + "drop", drop_sequence, blackboard, false, 3);
 
     std::string to_home_xml = buildMoveXML(
-        rp.prefix, rp.prefix + "home", home_position, blackboard, true, 3);
+        rp.prefix, rp.prefix + "home", home_position, blackboard, false, 3);
 
     // ----------------------------------------------------------------------------
     // 4. Build higher level snippets
@@ -263,12 +263,12 @@ int main(int argc, char **argv)
     std::string repeat_forever_wrapper_xml = repeatSequenceWrapperXML(
         "RobotCycle",
         {spawn_graspable_objects_xml, //< Add the graspable object to the scene and update the relative poses
-         move_gripper_open_xml,
-         pick_sequence_xml,     //< Pick sequence
-         drop_sequence_xml,     //< Drop sequence
-         home_sequence_xml,     //< Homing sequence
-         graspable.remove_xml}, //< Delete the object for it to be added on the next cycle in the original position
-        -1);                    //< num_cycles=-1 for infinite
+         move_gripper_open_xml,       //< Send command to open gripper (if the simulation was stopped)
+         pick_sequence_xml,           //< Pick sequence
+         drop_sequence_xml,           //< Drop sequence
+         graspable.remove_xml,        //< Delete the object for it to be added on the next cycle in the original position
+         home_sequence_xml},          //< Homing sequence
+        -1);                          //< num_cycles=-1 for infinite
 
     std::string retry_forever_wrapper_xml = retrySequenceWrapperXML("ResetHandler", {startup_sequence_xml, repeat_forever_wrapper_xml}, -1);
 
