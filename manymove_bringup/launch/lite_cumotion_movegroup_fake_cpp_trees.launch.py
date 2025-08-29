@@ -53,6 +53,8 @@ def launch_setup(context, *args, **kwargs):
     # no_gui_ctrl = LaunchConfiguration('no_gui_ctrl', default=False)
     ros_namespace = LaunchConfiguration('ros_namespace', default='').perform(context)
 
+    ros2_control_plugin = LaunchConfiguration('ros2_control_plugin', default='uf_robot_hardware/UFRobotFakeSystemHardware')
+
     base_frame = LaunchConfiguration('base_frame')
     tcp_frame = LaunchConfiguration('tcp_frame')
 
