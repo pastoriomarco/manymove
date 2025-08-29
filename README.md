@@ -20,35 +20,57 @@ This series of packages was created around Ufactory Lite6 and UF850 cobots, but 
 
 ## Prerequisites
 
-- **Install ROS2 Humble, Moveit2 and xarm_ros2**:
-  - You can follow the instructions on the Humble branch of my fork of [xarm_ros2 on github](https://github.com/pastoriomarco/xarm_ros2/tree/humble) to install all the required packages.
+- Install **[ROS2 Humble](https://docs.ros.org/en/ros2_documentation/humble/Installation.html)**
+- You'll need [MoveIt2](https://moveit.ai/install-moveit2/binary/) and Gazebo, but their installation will be taken care of through rosdesp intallation.
+- If you prefer to install manually, you can follow the instructions on the Humble branch of my fork of [xarm_ros2 on github](https://github.com/pastoriomarco/xarm_ros2/tree/humble).  
 
 ---
 
-## Quick start
+## Quick start (Humble)
 
-- **Define your `workspace dir`**:
-  - You can use for example ~/dev_ws as in xarm_ros2 repo, or define an appropriate workspace.
-  - From here on I'll refer to the installation directory of the workspace as `<workspace_dir>`
-- **Clone `manymove` humble branch**:
-  - From `<workspace_dir>/src`:
-  ```bash
-  git clone --branch=humble https://github.com/pastoriomarco/manymove.git
-  ```
--  **Install the dependencies**
-  - From `<workspace_dir>`:
-  ```bash
-  rosdep install --from-paths . --ignore-src --rosdistro $ROS_DISTRO -y
-  ```
-- **Build the packages from `<workspace_dir>`**: 
-  ```bash
-  colcon build
-  ```
-- **Don't forget to source!**
-  - From `<workspace_dir>`:
-  ```bash
-  source ./install/setup.bash
-  ```
+-**Define your `MANYMOVE_ROS_WS`** environment variable. If you want to change the workspace folder, edit the following line before running the command:
+```bash
+export MANYMOVE_ROS_WS=~/workspaces/dev_ws
+```
+**Prepare the necessary folders' structure** (skip it if you already created the folders):
+```bash
+cd ~
+mkdir -p ${MANYMOVE_ROS_WS}/src
+```
+**Source ROS2 Humble** (skip if already sourced, modify this if you need to source from another dir):
+```bash
+source /opt/ros/humble/setup.bash
+```
+**Clone ManyMove and xarm_ros2** (skip if you just need to update):
+- DO NOT omit "--recursive"，or the source code of dependent submodule will not be downloaded.
+- Pay attention to the use of the -b parameter command branch, $ROS_DISTRO indicates the currently activated ROS version, if the ROS environment is not activated, you need to customize the specified branch (humble/jazzy)
+```bash
+cd ${MANYMOVE_ROS_WS}/src
+git clone https://github.com/pastoriomarco/xarm_ros2.git --recursive -b $ROS_DISTRO
+git clone https://github.com/pastoriomarco/manymove.git -b $ROS_DISTRO 
+```
+**Update repos**:
+```bash
+cd ${MANYMOVE_ROS_WS}/src/xarm_ros2
+git submodule update --init --recursive
+git pull --recurse-submodules
+cd ${MANYMOVE_ROS_WS}/src/manymove
+git pull
+```
+**Install the dependencies**:
+```bash
+cd ${MANYMOVE_ROS_WS}
+rosdep update
+rosdep install --from-paths . --ignore-src --rosdistro $ROS_DISTRO -y
+```
+**Build the packages from `<workspace_dir>`**: 
+```bash
+cd ${MANYMOVE_ROS_WS} && colcon build
+```
+**Don't forget to source!**
+```bash
+source ${MANYMOVE_ROS_WS}/install/setup.bash
+```
 
 --- 
 
