@@ -30,6 +30,7 @@
           ros-${ROS_DISTRO}-find-object-2d \
           ros-${ROS_DISTRO}-topic-based-ros2-control \
           ros-${ROS_DISTRO}-simulation-interfaces \
+          ros-${ROS_DISTRO}-ros-humble-gazebo-plugins \
         && rm -rf /var/lib/apt/lists/*
     
     # 2) copy bootstrap into the base image’s entrypoint_additions
