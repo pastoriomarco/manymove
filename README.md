@@ -40,15 +40,6 @@ This series of packages was created around Ufactory Lite6 and UF850 cobots, but 
   ```bash
   rosdep install --from-paths . --ignore-src --rosdistro $ROS_DISTRO -y
   ```
-- **Copy the auxiliary files to run all examples with the right configuration**:
-  - Create the `other` folder in xarm_description/meshes and copy pneumatic gripper's mesh there. Also copy the user param file in xarm_api/config.
-  - From `<workspace_dir>` run:
-  
-  ```bash
-  mkdir -p ./src/xarm_ros2/xarm_description/meshes/other
-  cp ./src/manymove/manymove_object_manager/meshes/custom_end_tools/* ./src/xarm_ros2/xarm_description/meshes/other/
-  cp ./src/manymove/manymove_planner/config/xarm_user_params.yaml ./src/xarm_ros2/xarm_api/config/
-  ```
 - **Build the packages from `<workspace_dir>`**: 
   ```bash
   colcon build
