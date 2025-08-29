@@ -28,7 +28,7 @@ This series of packages was created around Ufactory Lite6 and UF850 cobots, but 
 
 ## Quick start (Jazzy)
 
--**Define your `MANYMOVE_ROS_WS`** environment variable. If you want to change the workspace folder, edit the following line before running the command:
+**Define your `MANYMOVE_ROS_WS`** environment variable. If you want to change the workspace folder, edit the following line before running the command:
 ```bash
 export MANYMOVE_ROS_WS=~/workspaces/dev_ws
 ```
