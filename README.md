@@ -22,13 +22,13 @@ This series of packages was created around Ufactory Lite6 and UF850 cobots, but 
 
 - Install **[ROS2 Humble](https://docs.ros.org/en/ros2_documentation/humble/Installation.html)**
 - You'll need [MoveIt2](https://moveit.ai/install-moveit2/binary/) and Gazebo, but their installation will be taken care of through rosdesp intallation.
-- If you prefer to install manually, you can follow the instructions on the Humble branch of my fork of [xarm_ros2 on github](https://github.com/pastoriomarco/xarm_ros2/tree/humble).  
+- If you prefer to install manually, you can follow the instructions on the humble branch of my fork of [xarm_ros2 on github](https://github.com/pastoriomarco/xarm_ros2/tree/humble).  
 
 ---
 
 ## Quick start (Humble)
 
--**Define your `MANYMOVE_ROS_WS`** environment variable. If you want to change the workspace folder, edit the following line before running the command:
+**Define your `MANYMOVE_ROS_WS`** environment variable. If you want to change the workspace folder, edit the following line before running the command:
 ```bash
 export MANYMOVE_ROS_WS=~/workspaces/dev_ws
 ```
