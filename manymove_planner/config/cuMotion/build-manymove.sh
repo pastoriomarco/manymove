@@ -22,12 +22,12 @@ if [ -f "${INSTALL_SETUP}" ]; then
   return 0
 fi
 
-echo "[build-manymove] applying mesh/config tweaks…"
-mkdir -p src/xarm_ros2/xarm_description/meshes/other
-cp -r src/manymove/manymove_object_manager/meshes/custom_end_tools/* \
-      src/xarm_ros2/xarm_description/meshes/other/
-cp src/manymove/manymove_planner/config/xarm_user_params.yaml \
-   src/xarm_ros2/xarm_api/config/ || true
+# echo "[build-manymove] applying mesh/config tweaks…"
+# mkdir -p src/xarm_ros2/xarm_description/meshes/other
+# cp -r src/manymove/manymove_object_manager/meshes/custom_end_tools/* \
+#       src/xarm_ros2/xarm_description/meshes/other/
+# cp src/manymove/manymove_planner/config/xarm_user_params.yaml \
+#    src/xarm_ros2/xarm_api/config/ || true
 
 echo "[build-manymove] installing rosdep dependencies…"
 
