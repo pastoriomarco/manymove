@@ -98,24 +98,24 @@ int main(int argc, char **argv)
     std::string tcp_frame_name = rp.prefix + rp.tcp_frame;
     
     std::vector<Move> rest_position = {
-        {rp.prefix, tcp_frame_name, "joint", move_configs["STOMP_max_move"], "", joint_rest},
+        {rp.prefix, tcp_frame_name, "joint", move_configs["max_move"], "", joint_rest},
     };
 
     // Sequences for Pick/Drop/Homing
     std::vector<Move> pick_sequence = {
-        {rp.prefix, tcp_frame_name, "pose", move_configs["STOMP_mid_move"], "approach_pick_target_key"},
+        {rp.prefix, tcp_frame_name, "pose", move_configs["mid_move"], "approach_pick_target_key"},
         {rp.prefix, tcp_frame_name, "cartesian", move_configs["cartesian_slow_move"], "pick_target_key"},
     };
 
     std::vector<Move> drop_sequence = {
         {rp.prefix, tcp_frame_name, "cartesian", move_configs["cartesian_mid_move"], "approach_pick_target_key"},
-        {rp.prefix, tcp_frame_name, "pose", move_configs["STOMP_max_move"], "approach_drop_target_key"},
+        {rp.prefix, tcp_frame_name, "pose", move_configs["max_move"], "approach_drop_target_key"},
         {rp.prefix, tcp_frame_name, "cartesian", move_configs["cartesian_slow_move"], "drop_target_key"},
     };
 
     std::vector<Move> home_position = {
         {rp.prefix, tcp_frame_name, "cartesian", move_configs["cartesian_mid_move"], "approach_drop_target_key"},
-        {rp.prefix, tcp_frame_name, "named", move_configs["STOMP_max_move"], "", {}, named_home},
+        {rp.prefix, tcp_frame_name, "named", move_configs["max_move"], "", {}, named_home},
     };
 
     /*

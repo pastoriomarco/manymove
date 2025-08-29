@@ -6,9 +6,13 @@
 #include <rclcpp_action/rclcpp_action.hpp>
 #include "control_msgs/action/gripper_command.hpp"
 #include <control_msgs/action/follow_joint_trajectory.hpp>
+#include <sensor_msgs/msg/joint_state.hpp>
 
 namespace manymove_cpp_trees
 {
+  // =======================================================
+  // GripperCommandAction
+  // =======================================================
 
   class GripperCommandAction : public BT::StatefulActionNode
   {
@@ -48,7 +52,7 @@ namespace manymove_cpp_trees
   };
 
   // =======================================================
-  // GripperTrajAction remains as is, or with any changes you wish.
+  // GripperTrajAction
   // =======================================================
   class GripperTrajAction : public BT::StatefulActionNode
   {
@@ -82,6 +86,34 @@ namespace manymove_cpp_trees
     bool goal_sent_;
     bool result_received_;
     bool success_;
+  };
+
+  // =======================================================
+  // PublishJointStateAction
+  // =======================================================
+
+  class PublishJointStateAction : public BT::SyncActionNode
+  {
+  public:
+    PublishJointStateAction(const std::string &name, const BT::NodeConfiguration &config);
+
+    static BT::PortsList providedPorts()
+    {
+      return {
+          BT::InputPort<std::string>("topic", "/isaac_joint_commands_gripper", "Topic to publish"),
+          BT::InputPort<std::vector<std::string>>("joint_names", "Joint names"),
+          BT::InputPort<std::vector<double>>("joint_positions", "Positions (optional)"),
+          BT::InputPort<std::vector<double>>("joint_velocities", "Velocities (optional)"),
+          BT::InputPort<std::vector<double>>("joint_efforts", "Efforts (optional)"),
+          BT::InputPort<bool>("stamp_now", true, "Stamp header with node->now()")};
+    }
+
+    BT::NodeStatus tick() override;
+
+  private:
+    rclcpp::Node::SharedPtr node_;
+    rclcpp::Publisher<sensor_msgs::msg::JointState>::SharedPtr pub_;
+    std::string current_topic_;
   };
 
 } // namespace manymove_cpp_trees

@@ -56,6 +56,8 @@ def launch_setup(context, *args, **kwargs):
     base_frame = LaunchConfiguration('base_frame')
     tcp_frame = LaunchConfiguration('tcp_frame')
 
+    ros2_control_plugin = LaunchConfiguration('ros2_control_plugin', default='uf_robot_hardware/UFRobotFakeSystemHardware')
+
     xarm_type = '{}{}'.format(robot_type.perform(context), dof.perform(context) if robot_type.perform(context) in ('xarm', 'lite') else '')
 
     ros2_control_params = generate_ros2_control_params_temp_file(
@@ -117,9 +119,25 @@ def launch_setup(context, *args, **kwargs):
             geometry_mesh_tcp_rpy=geometry_mesh_tcp_rpy,
         ).robot_description()
         .planning_scene_monitor(publish_robot_description=True, publish_robot_description_semantic=True)
-        .planning_pipelines(pipelines=["ompl", "isaac_ros_cumotion"])
+        .planning_pipelines(pipelines=["ompl", "stomp", "pilz_industrial_motion_planner"])
         # .moveit_cpp(file_path=get_package_share_directory("manymove_planner") + "/config/moveit_cpp_cumotion.yaml")
     ).to_moveit_configs()
+
+    # Load isaac_ros_cumotion_planning.yaml
+    isaac_config_file_path = os.path.join(
+        get_package_share_directory('isaac_ros_cumotion_moveit'),
+        'config',
+        'isaac_ros_cumotion_planning.yaml'
+    )
+
+    with open(isaac_config_file_path, 'r') as f:
+        isaac_pipeline_config = yaml.safe_load(f)
+
+    # Add isaac pipeline and set as default
+    moveit_configs.planning_pipelines['planning_pipelines'].append('isaac_ros_cumotion')
+    moveit_configs.planning_pipelines['isaac_ros_cumotion'] = isaac_pipeline_config
+    moveit_configs.planning_pipelines['default_planning_pipeline'] = 'isaac_ros_cumotion'
+
     
     #print(moveit_configs)
 
@@ -229,6 +247,8 @@ def launch_setup(context, *args, **kwargs):
     controllers = ['{}{}_traj_controller'.format(prefix.perform(context), xarm_type)]
     if add_gripper.perform(context) in ('True', 'true') and robot_type.perform(context) != 'lite':
         controllers.append('{}{}_gripper_traj_controller'.format(prefix.perform(context), robot_type.perform(context)))
+    elif add_gripper.perform(context) in ('True', 'true') and robot_type.perform(context) == 'lite' and ros2_control_plugin.perform(context) !='isaac':
+        controllers.append('{}lite_gripper_controller'.format(prefix.perform(context)))
     elif add_bio_gripper.perform(context) in ('True', 'true') and robot_type.perform(context) != 'lite':
         controllers.append('{}bio_gripper_traj_controller'.format(prefix.perform(context)))
     

@@ -13,6 +13,7 @@
 
 namespace manymove_cpp_trees
 {
+
     /**
      * @brief A node that provides a single "update_blackboard" service
      *        (using manymove_msgs::srv::SetBlackboardValues) and publishes

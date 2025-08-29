@@ -70,6 +70,11 @@ namespace manymove_cpp_trees
         }
         if (collision_detected)
         {
+            RCLCPP_ERROR(node_->get_logger(),
+                         "[MoveManipulatorAction] [%s]: COLLISION DETECTED",
+                         name().c_str());
+            return BT::NodeStatus::FAILURE;
+
             // HMI message
             setHMIMessage(config().blackboard, robot_prefix_, "COLLISION DETECTED", "red");
 
@@ -154,7 +159,7 @@ namespace manymove_cpp_trees
             moveit_msgs::msg::RobotTrajectory existing_trajectory;
             if (!getInput<moveit_msgs::msg::RobotTrajectory>("trajectory", existing_trajectory))
             {
-                throw BT::RuntimeError("[MoveManipulatorAction] [%s]: missing InputPort [trajectory].");
+                throw BT::RuntimeError("[MoveManipulatorAction]: missing InputPort [trajectory].");
             }
 
             // Build the goal.
@@ -204,8 +209,8 @@ namespace manymove_cpp_trees
                 if (max_tries_ != -1 && current_try_ >= max_tries_)
                 {
                     RCLCPP_ERROR(node_->get_logger(),
-                                 "[MoveManipulatorAction] failed after %d attempts => returning FAILURE",
-                                 current_try_);
+                                 "[MoveManipulatorAction] [%s]: failed after %d attempts => returning FAILURE",
+                                 name().c_str(), current_try_);
 
                     // stop the execution
                     config().blackboard->set(robot_prefix_ + "stop_execution", true);
