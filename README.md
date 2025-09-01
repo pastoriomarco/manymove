@@ -57,6 +57,12 @@ git pull --recurse-submodules
 cd ${MANYMOVE_ROS_WS}/src/manymove
 git pull
 ```
+**Install the dependencies**:
+```bash
+cd ${MANYMOVE_ROS_WS}
+rosdep update
+rosdep install --from-paths . --ignore-src --rosdistro $ROS_DISTRO -y
+```
 **Optional: install Groot** for visualizing behavior trees:
 ```bash
 cd ${MANYMOVE_ROS_WS}/src/
@@ -64,12 +70,6 @@ git clone --recurse-submodules https://github.com/pastoriomarco/Groot.git
 cd Groot
 cmake -S . -B build
 cmake --build build
-```
-**Install the dependencies**:
-```bash
-cd ${MANYMOVE_ROS_WS}
-rosdep update
-rosdep install --from-paths . --ignore-src --rosdistro $ROS_DISTRO -y
 ```
 **Build the packages from `<workspace_dir>`**: 
 ```bash
