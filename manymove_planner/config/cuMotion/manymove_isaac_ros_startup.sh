@@ -3,6 +3,7 @@ mkdir ${ISAAC_ROS_WS}/src
 cd ${ISAAC_ROS_WS}/src && \
    git clone -b release-3.2 https://github.com/NVIDIA-ISAAC-ROS/isaac_ros_common.git isaac_ros_common && \
    git clone --recurse-submodules -b release-3.2 https://github.com/NVIDIA-ISAAC-ROS/isaac_ros_cumotion.git isaac_ros_cumotion && \
+   git clone -b release-3.2 https://github.com/pastoriomarco/isaac_ros_object_detection.git isaac_ros_object_detection
    git clone https://github.com/pastoriomarco/xarm_ros2.git --recursive -b humble_no_gazebo && \
    git clone --branch=humble https://github.com/pastoriomarco/manymove.git
    git clone https://github.com/pastoriomarco/moveit_calibration.git third_party

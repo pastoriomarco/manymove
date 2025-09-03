@@ -19,7 +19,6 @@ if [ -f "${INSTALL_SETUP}" ]; then
   echo "[build-manymove] install/ already present, skipping build."
   source /opt/ros/${ROS_DISTRO}/setup.bash
   source ${INSTALL_SETUP}
-  # This script is sourced by the container entrypoint; use return, not exit
   return 0
 fi
 
@@ -32,51 +31,23 @@ fi
 
 echo "[build-manymove] installing rosdep dependencies…"
 
-# Resolve dependencies across the whole workspace once (safer for cross-tree deps like xarm_msgs)
-rosdep update || true
-rosdep install --from-paths "${SRC}" --ignore-src -y -r || true
+rosdep update  || true
+rosdep install --from-paths src --ignore-src -y
 
 echo "[build-manymove] building via colcon as normal user…"
 
 # Source the distro first; then drop privileges *only* for colcon.
 source /opt/ros/${ROS_DISTRO}/setup.bash
 
-# if [[ "$(id -u)" -eq 0 && -n "${USERNAME}" ]]; then
-#   gosu "${USERNAME}" bash -c "
-#     set -eo pipefail
-#     source /opt/ros/${ROS_DISTRO}/setup.bash
-#     colcon build --cmake-args -DCMAKE_BUILD_TYPE=Release
-#   "
 if [[ "$(id -u)" -eq 0 && -n "${USERNAME}" ]]; then
   gosu "${USERNAME}" bash -c "
     set -eo pipefail
     source /opt/ros/${ROS_DISTRO}/setup.bash
-    cd ${ISAAC_ROS_WS}
-    colcon build \
-      --symlink-install \
-      --packages-up-to \
-        manymove_cpp_trees \
-        manymove_py_trees \
-        isaac_ros_cumotion \
-        isaac_ros_cumotion_examples \
-        isaac_ros_yolov8 \
-        xarm_msgs \
-        xarm_moveit_config
+    colcon build --cmake-args -DCMAKE_BUILD_TYPE=Release
   "
 else
   # Fallback: we are already the normal user (or USERNAME unset)
-  # colcon build --cmake-args -DCMAKE_BUILD_TYPE=Release
-  cd ${ISAAC_ROS_WS}
-  colcon build \
-    --symlink-install \
-    --packages-up-to \
-      manymove_cpp_trees \
-      manymove_py_trees \
-      isaac_ros_cumotion \
-      isaac_ros_cumotion_examples \
-      isaac_ros_yolov8 \
-      xarm_msgs \
-      xarm_moveit_config
+  colcon build --cmake-args -DCMAKE_BUILD_TYPE=Release
 fi
 
 source ${INSTALL_SETUP}

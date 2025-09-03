@@ -30,13 +30,6 @@
           ros-${ROS_DISTRO}-find-object-2d \
           ros-${ROS_DISTRO}-topic-based-ros2-control \
           ros-${ROS_DISTRO}-simulation-interfaces \
-          ros-${ROS_DISTRO}-isaac-ros-dnn-image-encoder \
-          ros-${ROS_DISTRO}-isaac-ros-tensor-rt \
-          ros-${ROS_DISTRO}-isaac-ros-nitros-tensor-list-type \
-          ros-${ROS_DISTRO}-isaac-ros-managed-nitros \
-          ros-${ROS_DISTRO}-isaac-ros-nitros \
-          ros-${ROS_DISTRO}-isaac-ros-triton \
-          ros-${ROS_DISTRO}-isaac-ros-nitros-detection2-d-array-type \
         && rm -rf /var/lib/apt/lists/*
     
     # 2) copy bootstrap into the base image’s entrypoint_additions
