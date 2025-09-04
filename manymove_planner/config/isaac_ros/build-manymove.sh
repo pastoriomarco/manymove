@@ -62,6 +62,7 @@ if [[ "$(id -u)" -eq 0 && -n "${USERNAME}" ]]; then
         isaac_ros_cumotion_examples \
         isaac_ros_yolov8 \
         isaac_ros_foundationpose \
+        isaac_ros_custom_bringup \
         xarm_msgs \
         xarm_moveit_config
   "
@@ -78,6 +79,7 @@ else
       isaac_ros_cumotion_examples \
       isaac_ros_yolov8 \
       isaac_ros_foundationpose \
+      isaac_ros_custom_bringup \
       xarm_msgs \
       xarm_moveit_config
 fi
