@@ -33,6 +33,7 @@ fi
 echo "[build-manymove] installing rosdep dependencies…"
 
 # Resolve dependencies across the whole workspace once (safer for cross-tree deps like xarm_msgs)
+apt update
 rosdep update || true
 rosdep install --from-paths "${SRC}" --ignore-src -y -r || true
 
@@ -60,6 +61,7 @@ if [[ "$(id -u)" -eq 0 && -n "${USERNAME}" ]]; then
         isaac_ros_cumotion \
         isaac_ros_cumotion_examples \
         isaac_ros_yolov8 \
+        isaac_ros_foundationpose \
         xarm_msgs \
         xarm_moveit_config
   "
@@ -75,6 +77,7 @@ else
       isaac_ros_cumotion \
       isaac_ros_cumotion_examples \
       isaac_ros_yolov8 \
+      isaac_ros_foundationpose \
       xarm_msgs \
       xarm_moveit_config
 fi

@@ -37,6 +37,11 @@
           ros-${ROS_DISTRO}-isaac-ros-nitros \
           ros-${ROS_DISTRO}-isaac-ros-triton \
           ros-${ROS_DISTRO}-isaac-ros-nitros-detection2-d-array-type \
+          ros-${ROS_DISTRO}-isaac-ros-nitros-detection3-d-array-type \
+          ros-${ROS_DISTRO}-isaac-ros-nitros-point-cloud-type \
+          ros-${ROS_DISTRO}-isaac-ros-stereo-image-proc \
+          ros-${ROS_DISTRO}-isaac-ros-depth-image-proc \
+          ros-${ROS_DISTRO}-isaac-ros-nitros-topic-tools \
         && rm -rf /var/lib/apt/lists/*
     
     # 2) copy bootstrap into the base image’s entrypoint_additions
