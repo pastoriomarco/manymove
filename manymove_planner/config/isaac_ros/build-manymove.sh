@@ -58,6 +58,8 @@ if [[ "$(id -u)" -eq 0 && -n "${USERNAME}" ]]; then
       --packages-up-to \
         manymove_cpp_trees \
         manymove_py_trees \
+        manymove_hmi \
+        manymove_bringup \
         isaac_ros_cumotion \
         isaac_ros_cumotion_examples \
         isaac_ros_yolov8 \
@@ -75,6 +77,8 @@ else
     --packages-up-to \
       manymove_cpp_trees \
       manymove_py_trees \
+      manymove_hmi \
+      manymove_bringup \
       isaac_ros_cumotion \
       isaac_ros_cumotion_examples \
       isaac_ros_yolov8 \
