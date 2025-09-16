@@ -4,11 +4,15 @@
 #include <string>
 #include <memory>
 #include <future>
+#include <mutex>
+#include <optional>
 
 #include <rclcpp/rclcpp.hpp>
 #include <behaviortree_cpp_v3/behavior_tree.h>
 #include <behaviortree_cpp_v3/blackboard.h>
 #include <geometry_msgs/msg/pose.hpp>
+#include <std_msgs/msg/header.hpp>
+#include <vision_msgs/msg/detection3_d_array.hpp>
 
 #include <simulation_interfaces/srv/get_entity_state.hpp>
 #include <simulation_interfaces/srv/set_entity_state.hpp>
@@ -103,6 +107,87 @@ namespace manymove_cpp_trees
         std::string pose_key_;
         geometry_msgs::msg::Pose pose_;
         SetFuture future_;
+    };
+
+    geometry_msgs::msg::Pose align_foundationpose_orientation(
+        const geometry_msgs::msg::Pose &input_pose);
+
+    class FoundationPoseAlignmentNode : public BT::StatefulActionNode
+    {
+    public:
+        using DetectionArray = vision_msgs::msg::Detection3DArray;
+
+        explicit FoundationPoseAlignmentNode(const std::string &name,
+                                             const BT::NodeConfiguration &config);
+
+        static BT::PortsList providedPorts()
+        {
+            return {
+                BT::InputPort<std::string>("input_topic",
+                                           "pose_estimation/output",
+                                           "Detection3DArray topic from FoundationPose"),
+                BT::InputPort<std::string>("pose_key",
+                                           "Blackboard key to write the aligned pose"),
+                BT::InputPort<std::string>("header_key", "",
+                                           "Blackboard key to write the detection header"),
+                BT::InputPort<std::string>("target_id", "",
+                                           "Filter detections by class id (empty = any)"),
+                BT::InputPort<double>("minimum_score", 0.0,
+                                       "Minimum hypothesis score to accept"),
+                BT::InputPort<double>("timeout", 1.0,
+                                       "Seconds to wait for a valid detection (<=0: wait forever)"),
+                BT::InputPort<double>("approach_offset", 0.05,
+                                       "Offset along aligned +Z to compute approach pose"),
+                BT::InputPort<std::string>("approach_pose_key", "",
+                                           "Blackboard key to write computed approach pose"),
+                BT::InputPort<std::string>("object_pose_key", "",
+                                           "Blackboard key to write the aligned pose for planning scene"),
+                BT::OutputPort<geometry_msgs::msg::Pose>("pose",
+                                                         "Aligned pose output"),
+                BT::OutputPort<geometry_msgs::msg::Pose>("approach_pose",
+                                                          "Aligned approach pose output"),
+                BT::OutputPort<std_msgs::msg::Header>("header",
+                                                      "Header associated with the aligned detection")};
+        }
+
+        BT::NodeStatus onStart() override;
+        BT::NodeStatus onRunning() override;
+        void onHalted() override;
+
+    private:
+        struct DetectionSelection
+        {
+            vision_msgs::msg::Detection3D detection;
+            vision_msgs::msg::ObjectHypothesisWithPose result;
+        };
+
+        void ensureSubscription(const std::string &topic);
+        void detectionCallback(const DetectionArray::SharedPtr msg);
+        std::optional<DetectionSelection> pickDetection(const DetectionArray &array);
+
+        rclcpp::Node::SharedPtr node_;
+        rclcpp::Subscription<DetectionArray>::SharedPtr subscription_;
+        std::string current_topic_;
+
+        std::mutex mutex_;
+        DetectionArray latest_detection_;
+        bool have_message_{false};
+        uint64_t message_sequence_{0};
+        uint64_t last_processed_sequence_{0};
+
+        rclcpp::Time start_time_;
+        double timeout_seconds_{0.0};
+        double minimum_score_{0.0};
+        std::string target_id_;
+        std::string pose_key_;
+        std::string header_key_;
+        std::string approach_pose_key_;
+        std::string object_pose_key_;
+        double approach_offset_{0.0};
+        bool store_pose_{false};
+        bool store_header_{false};
+        bool store_approach_{false};
+        bool store_object_pose_{false};
     };
 
 } // namespace manymove_cpp_trees

@@ -17,6 +17,7 @@ find_package(rclcpp_action            REQUIRED)
 find_package(behaviortree_cpp_v3      REQUIRED)
 find_package(manymove_planner         REQUIRED)
 find_package(moveit_msgs              REQUIRED)
+find_package(geometry_msgs            REQUIRED)
 find_package(manymove_object_manager  REQUIRED)
 find_package(manymove_signals         REQUIRED)
 find_package(tf2                      REQUIRED)
@@ -26,6 +27,7 @@ find_package(control_msgs             REQUIRED)
 find_package(std_msgs                 REQUIRED)
 find_package(topic_based_ros2_control REQUIRED)
 find_package(simulation_interfaces    REQUIRED)
+find_package(vision_msgs              REQUIRED)
 
 #--------------------------------------------------------------------
 # Library with all BT helper nodes
@@ -49,8 +51,8 @@ target_include_directories(manymove_cpp_trees_lib PUBLIC
 ament_target_dependencies(manymove_cpp_trees_lib
   rclcpp rclcpp_action behaviortree_cpp_v3
   manymove_planner manymove_object_manager manymove_signals
-  moveit_msgs tf2 std_srvs manymove_msgs control_msgs 
-  std_msgs topic_based_ros2_control simulation_interfaces
+  moveit_msgs geometry_msgs tf2 std_srvs manymove_msgs control_msgs 
+  std_msgs topic_based_ros2_control simulation_interfaces vision_msgs
 )
 
 #--------------------------------------------------------------------
@@ -81,6 +83,7 @@ bt_client_exec(bt_client_uf850)
 bt_client_exec(bt_client_xarm7)
 bt_client_exec(collision_test)
 bt_client_exec(tutorial_01)
+bt_client_exec(bt_client_foundationpose)
 
 #--------------------------------------------------------------------
 # Installation & export
@@ -105,6 +108,7 @@ install(TARGETS
   bt_client_xarm7
   collision_test
   tutorial_01
+  bt_client_foundationpose
   DESTINATION lib/${PROJECT_NAME}
 )
 
@@ -115,8 +119,8 @@ ament_export_targets(export_manymove_cpp_trees_lib HAS_LIBRARY_TARGET)
 ament_export_dependencies(
   rclcpp rclcpp_action behaviortree_cpp_v3
   manymove_planner manymove_object_manager manymove_signals
-  moveit_msgs tf2 std_srvs manymove_msgs control_msgs
-  std_msgs topic_based_ros2_control simulation_interfaces
+  moveit_msgs geometry_msgs tf2 std_srvs manymove_msgs control_msgs
+  std_msgs topic_based_ros2_control simulation_interfaces vision_msgs
 )
 
 ament_package()

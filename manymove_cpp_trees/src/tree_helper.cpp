@@ -305,6 +305,33 @@ namespace manymove_cpp_trees
         return xml.str();
     }
 
+    std::string buildFoundationPoseSequence(const std::string &sequence_name,
+                                            const std::string &input_topic,
+                                            double approach_offset,
+                                            double minimum_score,
+                                            double timeout,
+                                            const std::string &pose_key,
+                                            const std::string &approach_pose_key,
+                                            const std::string &header_key,
+                                            const std::string &object_pose_key)
+    {
+        std::ostringstream xml;
+        xml << "<Sequence name=\"" << sequence_name << "\">";
+        xml << "<FoundationPoseAlignmentNode"
+            << " input_topic=\"" << input_topic << "\""
+            << " pose_key=\"" << pose_key << "\""
+            << " approach_pose_key=\"" << approach_pose_key << "\""
+            << " minimum_score=\"" << minimum_score << "\""
+            << " timeout=\"" << timeout << "\""
+            << " object_pose_key=\"" << object_pose_key << "\""
+            << " header_key=\"" << header_key << "\""
+            << " approach_offset=\"" << approach_offset << "\"";
+        xml << " />";
+
+        xml << "</Sequence>";
+        return xml.str();
+    }
+
     std::string buildSetOutputXML(const std::string &robot_prefix,
                                   const std::string &node_prefix,
                                   const std::string &io_type,

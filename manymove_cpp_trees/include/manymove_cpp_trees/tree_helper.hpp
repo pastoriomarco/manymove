@@ -58,6 +58,8 @@ namespace manymove_cpp_trees
 
         factory.registerNodeType<SetEntityPoseNode>("SetEntityPoseNode");
         factory.registerNodeType<GetEntityPoseNode>("GetEntityPoseNode");
+
+        factory.registerNodeType<FoundationPoseAlignmentNode>("FoundationPoseAlignmentNode");
     }
 
     // --------------------------------------------------------------------------
@@ -131,6 +133,16 @@ namespace manymove_cpp_trees
                              BT::Blackboard::Ptr blackboard,
                              bool reset_trajs = false,
                              int max_tries = 1);
+
+    std::string buildFoundationPoseSequence(const std::string &sequence_name,
+                                            const std::string &input_topic,
+                                            double approach_offset,
+                                            double minimum_score,
+                                            double timeout,
+                                            const std::string &pose_key,
+                                            const std::string &approach_pose_key,
+                                            const std::string &header_key,
+                                            const std::string &object_pose_key);
 
     /**
      * @brief Builds an XML snippet for a single object action node based on the provided ObjectAction.
