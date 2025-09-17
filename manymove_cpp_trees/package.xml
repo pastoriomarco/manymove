@@ -18,6 +18,8 @@
   <depend>manymove_object_manager</depend>
   <depend>manymove_signals</depend>
   <depend>tf2</depend>
+  <depend>tf2_ros</depend>
+  <depend>tf2_geometry_msgs</depend>
   <depend>std_srvs</depend>
   <depend>manymove_msgs</depend>
   <depend>control_msgs</depend>

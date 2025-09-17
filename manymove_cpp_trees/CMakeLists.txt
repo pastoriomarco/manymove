@@ -21,6 +21,8 @@ find_package(geometry_msgs            REQUIRED)
 find_package(manymove_object_manager  REQUIRED)
 find_package(manymove_signals         REQUIRED)
 find_package(tf2                      REQUIRED)
+find_package(tf2_ros                  REQUIRED)
+find_package(tf2_geometry_msgs        REQUIRED)
 find_package(std_srvs                 REQUIRED)
 find_package(manymove_msgs            REQUIRED)
 find_package(control_msgs             REQUIRED)
@@ -51,7 +53,7 @@ target_include_directories(manymove_cpp_trees_lib PUBLIC
 ament_target_dependencies(manymove_cpp_trees_lib
   rclcpp rclcpp_action behaviortree_cpp_v3
   manymove_planner manymove_object_manager manymove_signals
-  moveit_msgs geometry_msgs tf2 std_srvs manymove_msgs control_msgs 
+  moveit_msgs geometry_msgs tf2 tf2_ros tf2_geometry_msgs std_srvs manymove_msgs control_msgs
   std_msgs topic_based_ros2_control simulation_interfaces vision_msgs
 )
 
@@ -119,7 +121,7 @@ ament_export_targets(export_manymove_cpp_trees_lib HAS_LIBRARY_TARGET)
 ament_export_dependencies(
   rclcpp rclcpp_action behaviortree_cpp_v3
   manymove_planner manymove_object_manager manymove_signals
-  moveit_msgs geometry_msgs tf2 std_srvs manymove_msgs control_msgs
+  moveit_msgs tf2 tf2_ros tf2_geometry_msgs std_srvs manymove_msgs control_msgs
   std_msgs topic_based_ros2_control simulation_interfaces vision_msgs
 )
 

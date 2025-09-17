@@ -1,5 +1,6 @@
 #include "manymove_cpp_trees/action_nodes_isaac.hpp"
 
+#include <algorithm>
 #include <chrono>
 #include <cmath>
 #include <functional>
@@ -13,6 +14,8 @@
 #include <tf2/LinearMath/Matrix3x3.h>
 #include <tf2/LinearMath/Quaternion.h>
 #include <tf2/LinearMath/Vector3.h>
+#include <tf2/time.h>
+#include <tf2_geometry_msgs/tf2_geometry_msgs.hpp>
 
 using namespace std::chrono_literals;
 
@@ -243,42 +246,42 @@ namespace manymove_cpp_trees
 
     namespace
     {
-    constexpr double kEpsilon = 1e-6;
+        constexpr double kEpsilon = 1e-6;
 
-    inline tf2::Vector3 projectOntoPlane(const tf2::Vector3 &vector,
-                                         const tf2::Vector3 &normal)
-    {
-        return vector - (vector.dot(normal)) * normal;
-    }
-
-    inline tf2::Vector3 pickPerpendicularFallback(const tf2::Vector3 &axis)
-    {
-        const tf2::Vector3 world_y(0.0, 1.0, 0.0);
-        tf2::Vector3 candidate = projectOntoPlane(world_y, axis);
-        if (candidate.length2() > kEpsilon)
+        inline tf2::Vector3 projectOntoPlane(const tf2::Vector3 &vector,
+                                             const tf2::Vector3 &normal)
         {
-            candidate.normalize();
-            return candidate;
+            return vector - (vector.dot(normal)) * normal;
         }
 
-        const tf2::Vector3 world_z(0.0, 0.0, 1.0);
-        candidate = projectOntoPlane(world_z, axis);
-        if (candidate.length2() > kEpsilon)
+        inline tf2::Vector3 pickPerpendicularFallback(const tf2::Vector3 &axis)
         {
-            candidate.normalize();
-            return candidate;
-        }
+            const tf2::Vector3 world_y(0.0, 1.0, 0.0);
+            tf2::Vector3 candidate = projectOntoPlane(world_y, axis);
+            if (candidate.length2() > kEpsilon)
+            {
+                candidate.normalize();
+                return candidate;
+            }
 
-        const tf2::Vector3 world_x(1.0, 0.0, 0.0);
-        candidate = projectOntoPlane(world_x, axis);
-        if (candidate.length2() > kEpsilon)
-        {
-            candidate.normalize();
-            return candidate;
-        }
+            const tf2::Vector3 world_z(0.0, 0.0, 1.0);
+            candidate = projectOntoPlane(world_z, axis);
+            if (candidate.length2() > kEpsilon)
+            {
+                candidate.normalize();
+                return candidate;
+            }
 
-        return tf2::Vector3(0.0, 0.0, 1.0);
-    }
+            const tf2::Vector3 world_x(1.0, 0.0, 0.0);
+            candidate = projectOntoPlane(world_x, axis);
+            if (candidate.length2() > kEpsilon)
+            {
+                candidate.normalize();
+                return candidate;
+            }
+
+            return tf2::Vector3(0.0, 0.0, 1.0);
+        }
 
     } // namespace
 
@@ -286,9 +289,9 @@ namespace manymove_cpp_trees
         const geometry_msgs::msg::Pose &input_pose)
     {
         tf2::Quaternion source_q(input_pose.orientation.x,
-                                  input_pose.orientation.y,
-                                  input_pose.orientation.z,
-                                  input_pose.orientation.w);
+                                 input_pose.orientation.y,
+                                 input_pose.orientation.z,
+                                 input_pose.orientation.w);
         if (source_q.length2() > 0.0)
         {
             source_q.normalize();
@@ -345,12 +348,13 @@ namespace manymove_cpp_trees
             throw BT::RuntimeError("FoundationPoseAlignmentNode: missing 'node' in blackboard");
         }
 
+        tf_buffer_ = std::make_unique<tf2_ros::Buffer>(node_->get_clock());
+        tf_listener_ = std::make_unique<tf2_ros::TransformListener>(*tf_buffer_);
     }
 
     void FoundationPoseAlignmentNode::ensureSubscription(const std::string &topic)
     {
-        if (subscription_ && topic == current_topic_
-            && subscription_->get_topic_name() == topic)
+        if (subscription_ && topic == current_topic_ && subscription_->get_topic_name() == topic)
         {
             return;
         }
@@ -423,6 +427,9 @@ namespace manymove_cpp_trees
         getInput("approach_pose_key", approach_pose_key_);
         getInput("object_pose_key", object_pose_key_);
         getInput("approach_offset", approach_offset_);
+        getInput("planning_frame", planning_frame_);
+        getInput("transform_timeout", transform_timeout_);
+        transform_timeout_ = std::max(0.0, transform_timeout_);
 
         store_pose_ = !pose_key_.empty();
         store_header_ = !header_key_.empty();
@@ -496,6 +503,58 @@ namespace manymove_cpp_trees
 
         geometry_msgs::msg::Pose corrected_pose = align_foundationpose_orientation(
             selection->result.pose.pose);
+        std_msgs::msg::Header detection_header = selection->detection.header;
+        if (detection_header.frame_id.empty())
+        {
+            detection_header = message_snapshot.header;
+        }
+
+        if (planning_frame_.empty())
+        {
+            planning_frame_ = "world";
+        }
+
+        geometry_msgs::msg::PoseStamped transformed_pose;
+        if (!detection_header.frame_id.empty())
+        {
+            geometry_msgs::msg::PoseStamped camera_pose;
+            camera_pose.header = detection_header;
+            camera_pose.pose = corrected_pose;
+            camera_pose.header.stamp = rclcpp::Time(0);
+
+            try
+            {
+                transformed_pose = tf_buffer_->transform(
+                    camera_pose, planning_frame_, tf2::durationFromSec(transform_timeout_));
+                corrected_pose = transformed_pose.pose;
+            }
+            catch (const tf2::TransformException &ex)
+            {
+                RCLCPP_WARN_THROTTLE(node_->get_logger(), *clock, 2000,
+                                     "[%s] Failed to transform pose from '%s' to '%s': %s",
+                                     name().c_str(), camera_pose.header.frame_id.c_str(),
+                                     planning_frame_.c_str(), ex.what());
+
+                if (timeout_seconds_ > 0.0)
+                {
+                    const rclcpp::Duration elapsed = clock->now() - start_time_;
+                    if (elapsed.seconds() > timeout_seconds_)
+                    {
+                        RCLCPP_ERROR(node_->get_logger(),
+                                     "[%s] Timed out waiting for TF transform to '%s'", name().c_str(),
+                                     planning_frame_.c_str());
+                        return BT::NodeStatus::FAILURE;
+                    }
+                }
+                return BT::NodeStatus::RUNNING;
+            }
+        }
+        else
+        {
+            RCLCPP_ERROR(node_->get_logger(),
+                         "[%s] Detection header has empty frame_id; cannot transform pose", name().c_str());
+            return BT::NodeStatus::FAILURE;
+        }
 
         if (store_pose_)
         {
@@ -512,9 +571,9 @@ namespace manymove_cpp_trees
         if (compute_approach)
         {
             tf2::Quaternion q(corrected_pose.orientation.x,
-                               corrected_pose.orientation.y,
-                               corrected_pose.orientation.z,
-                               corrected_pose.orientation.w);
+                              corrected_pose.orientation.y,
+                              corrected_pose.orientation.z,
+                              corrected_pose.orientation.w);
             if (q.length2() > 0.0)
             {
                 q.normalize();
@@ -541,10 +600,16 @@ namespace manymove_cpp_trees
             setOutput("approach_pose", approach_pose);
         }
 
-        std_msgs::msg::Header header = selection->detection.header;
+        std_msgs::msg::Header header = transformed_pose.header;
         if (header.frame_id.empty())
         {
-            header = message_snapshot.header;
+            header = detection_header;
+            header.frame_id = planning_frame_;
+            header.stamp = node_->get_clock()->now();
+        }
+        else
+        {
+            header.frame_id = planning_frame_;
         }
         if (store_header_)
         {
