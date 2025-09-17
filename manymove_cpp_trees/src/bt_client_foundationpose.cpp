@@ -187,7 +187,7 @@ int main(int argc, char **argv)
     // Let's build the full sequence in logically separated blocks:
     std::string spawn_fixed_objects_xml = sequenceWrapperXML("SpawnFixedObjects", {ground.init_xml, wall.init_xml});
 
-    double approach_offset = 0.08;
+    double approach_offset = -0.08;
     blackboard->set("graspable_path_key", "/World/TDNS06");
     std::string foundation_pose_sequence_xml = buildFoundationPoseSequence(
         "UpdateFoundationPose",
