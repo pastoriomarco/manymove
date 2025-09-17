@@ -264,8 +264,8 @@ namespace manymove_cpp_trees
                 return candidate;
             }
 
-            const tf2::Vector3 world_z(0.0, 0.0, 1.0);
-            candidate = projectOntoPlane(world_z, axis);
+            const tf2::Vector3 world_down(0.0, 0.0, -1.0);
+            candidate = projectOntoPlane(world_down, axis);
             if (candidate.length2() > kEpsilon)
             {
                 candidate.normalize();
@@ -299,9 +299,9 @@ namespace manymove_cpp_trees
 
         tf2::Matrix3x3 source_matrix(source_q);
         const tf2::Vector3 x_axis = source_matrix.getColumn(0).normalized();
-        const tf2::Vector3 world_z(0.0, 0.0, 1.0);
+        const tf2::Vector3 world_down(0.0, 0.0, -1.0);
 
-        tf2::Vector3 projected_vertical = projectOntoPlane(world_z, x_axis);
+        tf2::Vector3 projected_vertical = projectOntoPlane(world_down, x_axis);
         tf2::Vector3 new_z;
         if (projected_vertical.length2() > kEpsilon)
         {
@@ -312,16 +312,36 @@ namespace manymove_cpp_trees
             new_z = pickPerpendicularFallback(x_axis);
         }
 
+        if (new_z.length2() < kEpsilon)
+        {
+            new_z = tf2::Vector3(0.0, 0.0, -1.0);
+        }
+
+        if (new_z.dot(world_down) < 0.0)
+        {
+            new_z = -new_z;
+        }
+
         tf2::Vector3 new_y = new_z.cross(x_axis);
         if (new_y.length2() < kEpsilon)
         {
             tf2::Vector3 helper = pickPerpendicularFallback(x_axis);
             new_z = helper;
+            if (new_z.dot(world_down) < 0.0)
+            {
+                new_z = -new_z;
+            }
             new_y = new_z.cross(x_axis);
         }
 
         new_y.normalize();
         tf2::Vector3 corrected_z = x_axis.cross(new_y).normalized();
+
+        if (corrected_z.dot(world_down) < 0.0)
+        {
+            new_y = -new_y;
+            corrected_z = -corrected_z;
+        }
 
         tf2::Matrix3x3 corrected_matrix(
             x_axis.x(), new_y.x(), corrected_z.x(),
@@ -501,8 +521,6 @@ namespace manymove_cpp_trees
             return BT::NodeStatus::RUNNING;
         }
 
-        geometry_msgs::msg::Pose corrected_pose = align_foundationpose_orientation(
-            selection->result.pose.pose);
         std_msgs::msg::Header detection_header = selection->detection.header;
         if (detection_header.frame_id.empty())
         {
@@ -514,26 +532,72 @@ namespace manymove_cpp_trees
             planning_frame_ = "world";
         }
 
-        geometry_msgs::msg::PoseStamped transformed_pose;
-        if (!detection_header.frame_id.empty())
+        const std::string alignment_frame = "world";
+        geometry_msgs::msg::Pose raw_pose = selection->result.pose.pose;
+        geometry_msgs::msg::PoseStamped detection_pose;
+        detection_pose.header = detection_header;
+        detection_pose.pose = raw_pose;
+        detection_pose.header.stamp = rclcpp::Time(0);
+
+        geometry_msgs::msg::PoseStamped pose_in_alignment;
+        if (detection_pose.header.frame_id.empty())
         {
-            geometry_msgs::msg::PoseStamped camera_pose;
-            camera_pose.header = detection_header;
-            camera_pose.pose = corrected_pose;
-            camera_pose.header.stamp = rclcpp::Time(0);
+            RCLCPP_ERROR(node_->get_logger(),
+                         "[%s] Detection header has empty frame_id; cannot transform pose",
+                         name().c_str());
+            return BT::NodeStatus::FAILURE;
+        }
+
+        try
+        {
+            pose_in_alignment = tf_buffer_->transform(
+                detection_pose, alignment_frame, tf2::durationFromSec(transform_timeout_));
+        }
+        catch (const tf2::TransformException &ex)
+        {
+            RCLCPP_WARN_THROTTLE(node_->get_logger(), *clock, 2000,
+                                 "[%s] Failed to transform pose from '%s' to '%s': %s",
+                                 name().c_str(), detection_pose.header.frame_id.c_str(),
+                                 alignment_frame.c_str(), ex.what());
+            if (timeout_seconds_ > 0.0)
+            {
+                const rclcpp::Duration elapsed = clock->now() - start_time_;
+                if (elapsed.seconds() > timeout_seconds_)
+                {
+                    RCLCPP_ERROR(node_->get_logger(),
+                                 "[%s] Timed out waiting for TF transform to '%s'", name().c_str(),
+                                 alignment_frame.c_str());
+                    return BT::NodeStatus::FAILURE;
+                }
+            }
+            return BT::NodeStatus::RUNNING;
+        }
+
+        geometry_msgs::msg::Pose aligned_pose = align_foundationpose_orientation(pose_in_alignment.pose);
+
+        geometry_msgs::msg::PoseStamped aligned_pose_ps = pose_in_alignment;
+        aligned_pose_ps.pose = aligned_pose;
+
+        geometry_msgs::msg::Pose corrected_pose = aligned_pose;
+        geometry_msgs::msg::PoseStamped transformed_pose = aligned_pose_ps;
+        if (planning_frame_ != alignment_frame)
+        {
+            geometry_msgs::msg::PoseStamped world_pose_for_transform = aligned_pose_ps;
+            world_pose_for_transform.header.stamp = rclcpp::Time(0);
 
             try
             {
                 transformed_pose = tf_buffer_->transform(
-                    camera_pose, planning_frame_, tf2::durationFromSec(transform_timeout_));
+                    world_pose_for_transform, planning_frame_,
+                    tf2::durationFromSec(transform_timeout_));
                 corrected_pose = transformed_pose.pose;
             }
             catch (const tf2::TransformException &ex)
             {
                 RCLCPP_WARN_THROTTLE(node_->get_logger(), *clock, 2000,
                                      "[%s] Failed to transform pose from '%s' to '%s': %s",
-                                     name().c_str(), camera_pose.header.frame_id.c_str(),
-                                     planning_frame_.c_str(), ex.what());
+                                     name().c_str(), alignment_frame.c_str(), planning_frame_.c_str(),
+                                     ex.what());
 
                 if (timeout_seconds_ > 0.0)
                 {
@@ -548,12 +612,6 @@ namespace manymove_cpp_trees
                 }
                 return BT::NodeStatus::RUNNING;
             }
-        }
-        else
-        {
-            RCLCPP_ERROR(node_->get_logger(),
-                         "[%s] Detection header has empty frame_id; cannot transform pose", name().c_str());
-            return BT::NodeStatus::FAILURE;
         }
 
         if (store_pose_)

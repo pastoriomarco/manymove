@@ -87,8 +87,12 @@ int main(int argc, char **argv)
         Pose(), {0.025, 0.025, 0.025},
         "", {1.0, 1.0, 1.0}, "tcp_frame_name_key", "touch_links_key");
 
-    blackboard->set("pick_target_key", Pose());
-    blackboard->set("approach_pick_target_key", Pose());
+    // blackboard->set("pick_target_key", Pose());
+    defineVariableKey<Pose>(node, blackboard, keys, "pick_target_key", "pose", Pose());
+
+    // blackboard->set("approach_pick_target_key", Pose());
+    defineVariableKey<Pose>(node, blackboard, keys, "approach_pick_target_key", "pose", Pose());
+
     blackboard->set("foundationpose_header_key", std_msgs::msg::Header());
     blackboard->set("graspable_spawn_pose_key", Pose());
     Pose disposed_pose = createPose(0.0, 0.0, -0.5, 0.0, 0.0, 0.0, 1.0);
