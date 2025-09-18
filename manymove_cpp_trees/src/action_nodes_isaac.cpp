@@ -446,6 +446,7 @@ namespace manymove_cpp_trees
         getInput("timeout", timeout_seconds_);
         getInput("approach_pose_key", approach_pose_key_);
         getInput("object_pose_key", object_pose_key_);
+        getInput("pick_offset", pick_offset_);
         getInput("approach_offset", approach_offset_);
         getInput("planning_frame", planning_frame_);
         getInput("transform_timeout", transform_timeout_);
@@ -612,6 +613,29 @@ namespace manymove_cpp_trees
                 }
                 return BT::NodeStatus::RUNNING;
             }
+        }
+
+        const bool adjust_pick_pose = std::abs(pick_offset_) > kEpsilon;
+        if (adjust_pick_pose)
+        {
+            tf2::Quaternion q(corrected_pose.orientation.x,
+                              corrected_pose.orientation.y,
+                              corrected_pose.orientation.z,
+                              corrected_pose.orientation.w);
+            if (q.length2() > 0.0)
+            {
+                q.normalize();
+            }
+            tf2::Matrix3x3 rotation(q);
+            tf2::Vector3 aligned_z = rotation.getColumn(2);
+            if (aligned_z.length2() < kEpsilon)
+            {
+                aligned_z = tf2::Vector3(0.0, 0.0, 1.0);
+            }
+            tf2::Vector3 offset_vec = aligned_z.normalized() * pick_offset_;
+            corrected_pose.position.x += offset_vec.x();
+            corrected_pose.position.y += offset_vec.y();
+            corrected_pose.position.z += offset_vec.z();
         }
 
         if (store_pose_)

@@ -84,7 +84,7 @@ int main(int argc, char **argv)
 
     ObjectSnippets graspable = createObjectSnippets(
         blackboard, keys, "graspable", "box",
-        Pose(), {0.025, 0.025, 0.025},
+        Pose(), {0.06, 0.015, 0.015},
         "", {1.0, 1.0, 1.0}, "tcp_frame_name_key", "touch_links_key");
 
     // blackboard->set("pick_target_key", Pose());
@@ -187,11 +187,13 @@ int main(int argc, char **argv)
     // Let's build the full sequence in logically separated blocks:
     std::string spawn_fixed_objects_xml = sequenceWrapperXML("SpawnFixedObjects", {ground.init_xml, wall.init_xml});
 
+    double pick_offset = 0.01;
     double approach_offset = -0.08;
     blackboard->set("graspable_path_key", "/World/TDNS06");
     std::string foundation_pose_sequence_xml = buildFoundationPoseSequence(
         "UpdateFoundationPose",
         "/output",
+        pick_offset,
         approach_offset,
         0.0,
         1.0,

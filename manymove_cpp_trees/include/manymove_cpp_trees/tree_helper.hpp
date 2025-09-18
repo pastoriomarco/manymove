@@ -136,6 +136,7 @@ namespace manymove_cpp_trees
 
     std::string buildFoundationPoseSequence(const std::string &sequence_name,
                                             const std::string &input_topic,
+                                            double pick_offset,
                                             double approach_offset,
                                             double minimum_score,
                                             double timeout,

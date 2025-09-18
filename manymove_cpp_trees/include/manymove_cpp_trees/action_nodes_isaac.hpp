@@ -139,6 +139,8 @@ namespace manymove_cpp_trees
                                       "Minimum hypothesis score to accept"),
                 BT::InputPort<double>("timeout", 1.0,
                                       "Seconds to wait for a valid detection (<=0: wait forever)"),
+                BT::InputPort<double>("pick_offset", 0.0,
+                                      "Offset along aligned +Z to adjust pick pose"),
                 BT::InputPort<double>("approach_offset", 0.05,
                                       "Offset along aligned +Z to compute approach pose"),
                 BT::InputPort<std::string>("approach_pose_key", "",
@@ -190,6 +192,7 @@ namespace manymove_cpp_trees
         std::string header_key_;
         std::string approach_pose_key_;
         std::string object_pose_key_;
+        double pick_offset_{0.0};
         double approach_offset_{0.0};
         bool store_pose_{false};
         bool store_header_{false};
