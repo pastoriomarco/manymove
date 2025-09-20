@@ -27,6 +27,27 @@ namespace manymove_cpp_trees
     // ======================================================================
     // GetEntityPoseNode (async, non-blocking)
     // ======================================================================
+    /**
+     * Node summary
+     * - Queries Isaac Sim (simulation_interfaces/GetEntityState) to read the pose of an entity.
+     * - Asynchronous and non-blocking: returns RUNNING while waiting for the service response.
+     * - Writes the retrieved Pose to a blackboard key and also emits it on an output port.
+     *
+     * Ports
+     * Required inputs (always used):
+     * - entity_path_key (string): name of a blackboard key that stores the entity path string (e.g. "/World/Cube").
+     * - pose_key (string): name of a blackboard key to write the retrieved Pose into.
+     *
+     * Optional inputs:
+     * - service_name (string, default: "/isaacsim/GetEntityState"): service to call.
+     *
+     * Outputs:
+     * - pose (geometry_msgs/Pose): the retrieved Pose (also stored into the blackboard key specified by pose_key).
+     *
+     * Behavior & failures
+     * - If the service is not available yet, the node keeps returning RUNNING (logs throttled warnings).
+     * - FAILS if the required blackboard keys are not provided or if the service returns an error.
+     */
     class GetEntityPoseNode : public BT::StatefulActionNode
     {
     public:
@@ -72,6 +93,26 @@ namespace manymove_cpp_trees
     // ======================================================================
     // SetEntityPoseNode (async, non-blocking)
     // ======================================================================
+    /**
+     * Node summary
+     * - Calls Isaac Sim (simulation_interfaces/SetEntityState) to set the pose of an entity.
+     * - Asynchronous and non-blocking: returns RUNNING while waiting for the service response.
+     * - Reads the entity path and the desired Pose from blackboard keys.
+     *
+     * Ports
+     * Required inputs (always used):
+     * - entity_path_key (string): name of a blackboard key that stores the entity path string.
+     * - pose_key (string): name of a blackboard key that stores the Pose to set.
+     *
+     * Optional inputs:
+     * - service_name (string, default: "/isaacsim/SetEntityState"): service to call.
+     *
+     * Outputs: none
+     *
+     * Behavior & failures
+     * - If the service is not available yet, the node keeps returning RUNNING (logs throttled warnings).
+     * - FAILS if the required blackboard keys are missing, or the service returns an error.
+     */
     class SetEntityPoseNode : public BT::StatefulActionNode
     {
     public:
@@ -139,6 +180,44 @@ namespace manymove_cpp_trees
         const geometry_msgs::msg::Pose &input_pose,
         bool force_z_vertical = false);
 
+    /**
+     * Node summary
+     * - Subscribes to a FoundationPose Detection3DArray topic, selects a detection according to filters,
+     *   transforms and optionally normalizes the pose, applies local offsets, and returns/stores results.
+     * - Asynchronous: returns RUNNING while waiting for messages or TF transforms.
+     *
+     * Ports
+     * Always used (but many have defaults):
+     * - input_topic (string, default: "pose_estimation/output"): Detection3DArray topic.
+     * - pose_key (string, REQUIRED): blackboard key to store the final pick pose. If empty or missing, the node
+     *   will not store into the blackboard (only outputs), but downstream behaviors that expect the key may fail.
+     * - planning_frame (string, default: "world"): target frame for outputs (pose, approach_pose, header).
+     * - transform_timeout (double, default: 0.1): TF timeout when transforming poses to planning_frame.
+     * - minimum_score (double, default: 0.0): discard results with lower score.
+     * - timeout (double, default: 1.0): how long to wait for a valid detection (<=0 means forever).
+     *
+     * Optional inputs (used only if provided/non-empty):
+     * - target_id (string, default: ""): filter by class id; empty accepts any class.
+     * - header_key (string, default: ""): blackboard key to store the (possibly rewritten) header.
+     * - approach_pose_key (string, default: ""): blackboard key to store the computed approach pose.
+     * - object_pose_key (string, default: ""): blackboard key to store the aligned pose before local offsets
+     *   (useful for planning scene updates).
+     * - pick_transform (double[6], xyzrpy, optional): local transform applied after alignment (pick pose).
+     * - approach_transform (double[6], xyzrpy, optional): local transform applied after alignment (approach pose).
+     * - z_threshold_activation (bool, default: false) and z_threshold (double, default: 0.0): when enabled, enforce a
+     *   minimum Z value in planning_frame before applying local transforms.
+     * - normalize_pose (bool, default: false): when true, normalize the orientation to align with vertical.
+     * - force_z_vertical (bool, default: false): when normalizing, forces Z axis to be exactly vertical.
+     *
+     * Outputs
+     * - pose (geometry_msgs/Pose): final pick pose after alignment and pick_transform.
+     * - approach_pose (geometry_msgs/Pose): approach pose after alignment and approach_transform.
+     * - header (std_msgs/Header): header corresponding to the output poses (in planning_frame).
+     *
+     * Behavior & failures
+     * - RUNNING while waiting for new detections or TF transforms.
+     * - FAILS if no valid detection arrives within timeout, or if TF transform to alignment/planning frames times out.
+     */
     class FoundationPoseAlignmentNode : public BT::StatefulActionNode
     {
     public:

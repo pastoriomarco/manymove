@@ -1,4 +1,5 @@
 #include "manymove_cpp_trees/action_nodes_isaac.hpp"
+#include "manymove_cpp_trees/bt_converters.hpp"
 
 #include <algorithm>
 #include <chrono>
@@ -469,32 +470,31 @@ namespace manymove_cpp_trees
 
     BT::NodeStatus FoundationPoseAlignmentNode::onStart()
     {
-        std::string topic;
-        if (!getInput("input_topic", topic))
-        {
-            RCLCPP_ERROR(node_->get_logger(), "[%s] Missing required input 'input_topic'", name().c_str());
-            return BT::NodeStatus::FAILURE;
-        }
+        // Topic is always used, but has a sensible default in providedPorts().
+        // Treat missing as optional and fall back to the default.
+        std::string topic = "pose_estimation/output";
+        (void)getInput("input_topic", topic);
 
         if (!getInput("pose_key", pose_key_) || pose_key_.empty())
         {
             RCLCPP_ERROR(node_->get_logger(), "[%s] Missing required input 'pose_key'", name().c_str());
             return BT::NodeStatus::FAILURE;
         }
-        getInput("header_key", header_key_);
-        getInput("target_id", target_id_);
-        getInput("minimum_score", minimum_score_);
-        getInput("timeout", timeout_seconds_);
-        getInput("approach_pose_key", approach_pose_key_);
-        getInput("object_pose_key", object_pose_key_);
-        getInput("pick_transform", pick_transform_);
-        getInput("approach_transform", approach_transform_);
-        getInput("planning_frame", planning_frame_);
-        getInput("transform_timeout", transform_timeout_);
-        getInput("z_threshold_activation", z_threshold_activation_);
-        getInput("z_threshold", z_threshold_);
-        getInput("normalize_pose", normalize_pose_);
-        getInput("force_z_vertical", force_z_vertical_);
+        // Optional inputs: if not provided, keep pre-initialized defaults
+        (void)getInput("header_key", header_key_);
+        (void)getInput("target_id", target_id_);
+        (void)getInput("minimum_score", minimum_score_);
+        (void)getInput("timeout", timeout_seconds_);
+        (void)getInput("approach_pose_key", approach_pose_key_);
+        (void)getInput("object_pose_key", object_pose_key_);
+        (void)getInput("pick_transform", pick_transform_);
+        (void)getInput("approach_transform", approach_transform_);
+        (void)getInput("planning_frame", planning_frame_);
+        (void)getInput("transform_timeout", transform_timeout_);
+        (void)getInput("z_threshold_activation", z_threshold_activation_);
+        (void)getInput("z_threshold", z_threshold_);
+        (void)getInput("normalize_pose", normalize_pose_);
+        (void)getInput("force_z_vertical", force_z_vertical_);
         transform_timeout_ = std::max(0.0, transform_timeout_);
 
         store_pose_ = !pose_key_.empty();
