@@ -619,10 +619,8 @@ namespace manymove_cpp_trees
             return BT::NodeStatus::RUNNING;
         }
 
-        if (z_threshold_activation_ && pose_in_alignment.pose.position.z < z_threshold_)
-        {
-            pose_in_alignment.pose.position.z = z_threshold_;
-        }
+        // Note: Z-threshold will be applied in the planning frame later,
+        // so we do not modify pose_in_alignment here.
 
         geometry_msgs::msg::Pose aligned_pose = pose_in_alignment.pose;
         if (normalize_pose_)
@@ -668,6 +666,12 @@ namespace manymove_cpp_trees
                 }
                 return BT::NodeStatus::RUNNING;
             }
+        }
+
+        // Apply Z threshold in the planning frame (final output frame)
+        if (z_threshold_activation_ && corrected_pose.position.z < z_threshold_)
+        {
+            corrected_pose.position.z = z_threshold_;
         }
 
         const bool adjust_pick_pose = std::abs(pick_offset_) > kEpsilon;

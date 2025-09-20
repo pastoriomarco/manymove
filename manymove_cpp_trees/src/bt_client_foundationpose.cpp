@@ -201,8 +201,8 @@ int main(int argc, char **argv)
         "approach_pick_target_key",
         "foundationpose_header_key",
         "graspable_pose_key",
-        false,
-        0.031,
+        true,
+        0.011,
         true,
         true);
 
