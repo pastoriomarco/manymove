@@ -113,7 +113,8 @@ namespace manymove_cpp_trees
     };
 
     geometry_msgs::msg::Pose align_foundationpose_orientation(
-        const geometry_msgs::msg::Pose &input_pose);
+        const geometry_msgs::msg::Pose &input_pose,
+        bool force_z_vertical = false);
 
     class FoundationPoseAlignmentNode : public BT::StatefulActionNode
     {
@@ -151,6 +152,12 @@ namespace manymove_cpp_trees
                                            "Frame where the aligned pose should be expressed"),
                 BT::InputPort<double>("transform_timeout", 0.1,
                                       "Timeout (s) when waiting for TF transform to the planning frame"),
+                BT::InputPort<bool>("z_threshold_activation", false,
+                                    "Enable enforcement of a minimum Z value for the pose"),
+                BT::InputPort<double>("z_threshold", 0.0,
+                                      "Minimum allowed Z value when the threshold is enabled"),
+                BT::InputPort<bool>("force_z_vertical", false,
+                                    "If true, align the pose so its Z axis is perfectly vertical"),
                 BT::OutputPort<geometry_msgs::msg::Pose>("pose",
                                                          "Aligned pose output"),
                 BT::OutputPort<geometry_msgs::msg::Pose>("approach_pose",
@@ -194,6 +201,9 @@ namespace manymove_cpp_trees
         std::string object_pose_key_;
         double pick_offset_{0.0};
         double approach_offset_{0.0};
+        bool z_threshold_activation_{false};
+        double z_threshold_{0.0};
+        bool force_z_vertical_{false};
         bool store_pose_{false};
         bool store_header_{false};
         bool store_approach_{false};

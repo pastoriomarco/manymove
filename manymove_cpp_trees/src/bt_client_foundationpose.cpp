@@ -187,7 +187,7 @@ int main(int argc, char **argv)
     // Let's build the full sequence in logically separated blocks:
     std::string spawn_fixed_objects_xml = sequenceWrapperXML("SpawnFixedObjects", {ground.init_xml, wall.init_xml});
 
-    double pick_offset = 0.01;
+    double pick_offset = 0.0;
     double approach_offset = -0.08;
     blackboard->set("graspable_path_key", "/World/TDNS06");
     std::string foundation_pose_sequence_xml = buildFoundationPoseSequence(
@@ -196,11 +196,13 @@ int main(int argc, char **argv)
         pick_offset,
         approach_offset,
         0.0,
-        1.0,
+        30.0,
         "pick_target_key",
         "approach_pick_target_key",
         "foundationpose_header_key",
-        "graspable_pose_key");
+        "graspable_pose_key",
+        true,
+        0.0125);
 
     // Setting commands for gripper open/close
     std::string move_gripper_close_xml =
@@ -266,14 +268,14 @@ int main(int argc, char **argv)
     std::string repeat_forever_wrapper_xml = repeatSequenceWrapperXML(
         "RobotCycle",
         {
-            spawn_graspable_objects_xml,   //< Acquire detection and spawn planning object
-            move_gripper_open_xml,         //< Ensure gripper open before pick
-            pick_sequence_xml,             //< Pick sequence
-            drop_sequence_xml,             //< Drop sequence
-            graspable.remove_xml,          //< Remove from planning scene
-            //remove_graspable_sim_pose_xml, //< Move the Isaac object out of workspace
-        },                                 //<
-        -1);                               //< num_cycles=-1 for infinite
+            spawn_graspable_objects_xml, //< Acquire detection and spawn planning object
+            move_gripper_open_xml,       //< Ensure gripper open before pick
+            pick_sequence_xml,           //< Pick sequence
+            drop_sequence_xml,           //< Drop sequence
+            graspable.remove_xml,        //< Remove from planning scene
+            // remove_graspable_sim_pose_xml, //< Move the Isaac object out of workspace
+        },   //<
+        -1); //< num_cycles=-1 for infinite
 
     std::string retry_forever_wrapper_xml = retrySequenceWrapperXML(
         "ResetHandler", {startup_sequence_xml, repeat_forever_wrapper_xml}, -1);

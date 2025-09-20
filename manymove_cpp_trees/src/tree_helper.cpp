@@ -314,7 +314,10 @@ namespace manymove_cpp_trees
                                             const std::string &pose_key,
                                             const std::string &approach_pose_key,
                                             const std::string &header_key,
-                                            const std::string &object_pose_key)
+                                            const std::string &object_pose_key,
+                                            bool z_threshold_activation,
+                                            double z_threshold,
+                                            bool force_z_vertical)
     {
         std::ostringstream xml;
         xml << "<Sequence name=\"" << sequence_name << "\">";
@@ -327,7 +330,10 @@ namespace manymove_cpp_trees
             << " object_pose_key=\"" << object_pose_key << "\""
             << " header_key=\"" << header_key << "\""
             << " pick_offset=\"" << pick_offset << "\""
-            << " approach_offset=\"" << approach_offset << "\"";
+            << " approach_offset=\"" << approach_offset << "\""
+            << " z_threshold_activation=\"" << (z_threshold_activation ? "true" : "false") << "\""
+            << " z_threshold=\"" << z_threshold << "\""
+            << " force_z_vertical=\"" << (force_z_vertical ? "true" : "false") << "\"";
         xml << " />";
 
         xml << "</Sequence>";

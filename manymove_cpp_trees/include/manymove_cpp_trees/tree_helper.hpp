@@ -143,7 +143,10 @@ namespace manymove_cpp_trees
                                             const std::string &pose_key,
                                             const std::string &approach_pose_key,
                                             const std::string &header_key,
-                                            const std::string &object_pose_key);
+                                            const std::string &object_pose_key,
+                                            bool z_threshold_activation = false,
+                                            double z_threshold = 0.0,
+                                            bool force_z_vertical = false);
 
     /**
      * @brief Builds an XML snippet for a single object action node based on the provided ObjectAction.

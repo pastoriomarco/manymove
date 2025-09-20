@@ -286,7 +286,8 @@ namespace manymove_cpp_trees
     } // namespace
 
     geometry_msgs::msg::Pose align_foundationpose_orientation(
-        const geometry_msgs::msg::Pose &input_pose)
+        const geometry_msgs::msg::Pose &input_pose,
+        bool force_z_vertical)
     {
         tf2::Quaternion source_q(input_pose.orientation.x,
                                  input_pose.orientation.y,
@@ -300,6 +301,46 @@ namespace manymove_cpp_trees
         tf2::Matrix3x3 source_matrix(source_q);
         const tf2::Vector3 x_axis = source_matrix.getColumn(0).normalized();
         const tf2::Vector3 world_down(0.0, 0.0, -1.0);
+
+        if (force_z_vertical)
+        {
+            tf2::Vector3 new_x = projectOntoPlane(x_axis, world_down);
+            if (new_x.length2() < kEpsilon)
+            {
+                new_x = tf2::Vector3(1.0, 0.0, 0.0);
+            }
+            else
+            {
+                new_x.normalize();
+            }
+
+            tf2::Vector3 new_y = world_down.cross(new_x);
+            if (new_y.length2() < kEpsilon)
+            {
+                new_y = tf2::Vector3(0.0, 1.0, 0.0);
+            }
+            else
+            {
+                new_y.normalize();
+            }
+
+            const tf2::Vector3 corrected_z = world_down;
+
+            tf2::Matrix3x3 corrected_matrix(
+                new_x.x(), new_y.x(), corrected_z.x(),
+                new_x.y(), new_y.y(), corrected_z.y(),
+                new_x.z(), new_y.z(), corrected_z.z());
+
+            tf2::Quaternion corrected_q;
+            corrected_matrix.getRotation(corrected_q);
+
+            geometry_msgs::msg::Pose result = input_pose;
+            result.orientation.x = corrected_q.x();
+            result.orientation.y = corrected_q.y();
+            result.orientation.z = corrected_q.z();
+            result.orientation.w = corrected_q.w();
+            return result;
+        }
 
         tf2::Vector3 projected_vertical = projectOntoPlane(world_down, x_axis);
         tf2::Vector3 new_z;
@@ -450,6 +491,9 @@ namespace manymove_cpp_trees
         getInput("approach_offset", approach_offset_);
         getInput("planning_frame", planning_frame_);
         getInput("transform_timeout", transform_timeout_);
+        getInput("z_threshold_activation", z_threshold_activation_);
+        getInput("z_threshold", z_threshold_);
+        getInput("force_z_vertical", force_z_vertical_);
         transform_timeout_ = std::max(0.0, transform_timeout_);
 
         store_pose_ = !pose_key_.empty();
@@ -574,7 +618,13 @@ namespace manymove_cpp_trees
             return BT::NodeStatus::RUNNING;
         }
 
-        geometry_msgs::msg::Pose aligned_pose = align_foundationpose_orientation(pose_in_alignment.pose);
+        if (z_threshold_activation_ && pose_in_alignment.pose.position.z < z_threshold_)
+        {
+            pose_in_alignment.pose.position.z = z_threshold_;
+        }
+
+        geometry_msgs::msg::Pose aligned_pose = align_foundationpose_orientation(
+            pose_in_alignment.pose, force_z_vertical_);
 
         geometry_msgs::msg::PoseStamped aligned_pose_ps = pose_in_alignment;
         aligned_pose_ps.pose = aligned_pose;
