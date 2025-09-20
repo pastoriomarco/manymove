@@ -146,6 +146,7 @@ namespace manymove_cpp_trees
                                             const std::string &object_pose_key,
                                             bool z_threshold_activation = false,
                                             double z_threshold = 0.0,
+                                            bool normalize_pose = false,
                                             bool force_z_vertical = false);
 
     /**

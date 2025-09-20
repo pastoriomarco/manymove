@@ -317,6 +317,7 @@ namespace manymove_cpp_trees
                                             const std::string &object_pose_key,
                                             bool z_threshold_activation,
                                             double z_threshold,
+                                            bool normalize_pose,
                                             bool force_z_vertical)
     {
         std::ostringstream xml;
@@ -333,6 +334,7 @@ namespace manymove_cpp_trees
             << " approach_offset=\"" << approach_offset << "\""
             << " z_threshold_activation=\"" << (z_threshold_activation ? "true" : "false") << "\""
             << " z_threshold=\"" << z_threshold << "\""
+            << " normalize_pose=\"" << (normalize_pose ? "true" : "false") << "\""
             << " force_z_vertical=\"" << (force_z_vertical ? "true" : "false") << "\"";
         xml << " />";
 

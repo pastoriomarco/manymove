@@ -156,6 +156,8 @@ namespace manymove_cpp_trees
                                     "Enable enforcement of a minimum Z value for the pose"),
                 BT::InputPort<double>("z_threshold", 0.0,
                                       "Minimum allowed Z value when the threshold is enabled"),
+                BT::InputPort<bool>("normalize_pose", false,
+                                    "If false, skip orientation normalization; if true, apply alignment"),
                 BT::InputPort<bool>("force_z_vertical", false,
                                     "If true, align the pose so its Z axis is perfectly vertical"),
                 BT::OutputPort<geometry_msgs::msg::Pose>("pose",
@@ -203,6 +205,7 @@ namespace manymove_cpp_trees
         double approach_offset_{0.0};
         bool z_threshold_activation_{false};
         double z_threshold_{0.0};
+        bool normalize_pose_{false};
         bool force_z_vertical_{false};
         bool store_pose_{false};
         bool store_header_{false};

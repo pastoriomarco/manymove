@@ -493,6 +493,7 @@ namespace manymove_cpp_trees
         getInput("transform_timeout", transform_timeout_);
         getInput("z_threshold_activation", z_threshold_activation_);
         getInput("z_threshold", z_threshold_);
+        getInput("normalize_pose", normalize_pose_);
         getInput("force_z_vertical", force_z_vertical_);
         transform_timeout_ = std::max(0.0, transform_timeout_);
 
@@ -623,8 +624,12 @@ namespace manymove_cpp_trees
             pose_in_alignment.pose.position.z = z_threshold_;
         }
 
-        geometry_msgs::msg::Pose aligned_pose = align_foundationpose_orientation(
-            pose_in_alignment.pose, force_z_vertical_);
+        geometry_msgs::msg::Pose aligned_pose = pose_in_alignment.pose;
+        if (normalize_pose_)
+        {
+            aligned_pose = align_foundationpose_orientation(
+                pose_in_alignment.pose, force_z_vertical_);
+        }
 
         geometry_msgs::msg::PoseStamped aligned_pose_ps = pose_in_alignment;
         aligned_pose_ps.pose = aligned_pose;
