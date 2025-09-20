@@ -208,17 +208,17 @@ int main(int argc, char **argv)
 
     // Setting commands for gripper open/close
     std::string move_gripper_close_xml =
-        "<PublishJointStateAction topic=\"" + rp.gripper_action_server + "\" joint_names=\"[right_finger_joint]\" joint_positions=\"[0.0]\" joint_efforts=\"[-2.0]\" />";
+        "<PublishJointStateAction topic=\"" + rp.gripper_action_server + "\" joint_names=\"[right_finger_joint]\" joint_positions=\"[0.0]\" joint_efforts=\"[-5.0]\" />";
     move_gripper_close_xml +=
         "<Delay delay_msec=\"1000\">" +
-        std::string("<PublishJointStateAction topic=\"") + rp.gripper_action_server + "\" joint_names=\"[right_finger_joint]\" joint_positions=\"[0.0]\" joint_efforts=\"[-1.0]\" />" +
+        std::string("<PublishJointStateAction topic=\"") + rp.gripper_action_server + "\" joint_names=\"[right_finger_joint]\" joint_positions=\"[0.0]\" joint_efforts=\"[-2.0]\" />" +
         "</Delay>";
 
     std::string move_gripper_open_xml =
-        "<PublishJointStateAction topic=\"" + rp.gripper_action_server + "\" joint_names=\"[right_finger_joint]\" joint_positions=\"[0.0081]\" joint_efforts=\"[2.0]\" />";
+        "<PublishJointStateAction topic=\"" + rp.gripper_action_server + "\" joint_names=\"[right_finger_joint]\" joint_positions=\"[0.0081]\" joint_efforts=\"[5.0]\" />";
     move_gripper_open_xml +=
         "<Delay delay_msec=\"1000\">" +
-        std::string("<PublishJointStateAction topic=\"") + rp.gripper_action_server + "\" joint_names=\"[right_finger_joint]\" joint_positions=\"[0.0081]\" joint_efforts=\"[1.0]\" />" +
+        std::string("<PublishJointStateAction topic=\"") + rp.gripper_action_server + "\" joint_names=\"[right_finger_joint]\" joint_positions=\"[0.0081]\" joint_efforts=\"[2.0]\" />" +
         "</Delay>";
 
     std::string wait_for_robot_start_execution_xml = buildWaitForKeyBool(
