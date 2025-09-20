@@ -134,6 +134,38 @@ namespace manymove_cpp_trees
                              bool reset_trajs = false,
                              int max_tries = 1);
 
+    /**
+     * @brief Build a self-contained sequence that subscribes to FoundationPose, selects a detection,
+     *        aligns its pose, and publishes the results to ports/blackboard.
+     *
+     * The generated XML consists of a <Sequence> containing a single <FoundationPoseAlignmentNode>.
+     * The node filters detections (by @p minimum_score and optional target filtering), transforms
+     * the pose into a planning frame, optionally normalizes the orientation, applies a minimum-Z
+     * clamp in the planning frame, computes optional pick and approach poses, and outputs them.
+     *
+     * @param sequence_name          Unique name for the wrapping <Sequence>.
+     * @param input_topic            Topic publishing vision_msgs/Detection3DArray from FoundationPose.
+     * @param pick_offset            Offset in meters applied to the final pose position along the
+     *                               pose's local +Z axis (in the planning frame) to form the pick pose.
+     * @param approach_offset        Offset in meters applied along local +Z (planning frame) to form
+     *                               the approach pose relative to the final pose.
+     * @param minimum_score          Minimum hypothesis score to accept a detection (0.0–1.0 typical).
+     * @param timeout                Seconds to wait for a valid detection; <= 0.0 waits indefinitely.
+     * @param pose_key               Blackboard key to store the final aligned pose (planning frame).
+     * @param approach_pose_key      Blackboard key to store the computed approach pose (optional).
+     * @param header_key             Blackboard key to store the detection header (optional).
+     * @param object_pose_key        Blackboard key to store the aligned pose for planning scene (optional).
+     * @param z_threshold_activation If true, enforce a minimum Z in the planning frame; if the final
+     *                               pose.z < @p z_threshold, it is set to @p z_threshold. If false,
+     *                               no Z clamping is applied.
+     * @param z_threshold            The minimum allowed Z (meters) used when @p z_threshold_activation is true.
+     * @param normalize_pose         If true, normalize orientation using align_foundationpose_orientation;
+     *                               if false, leave the incoming orientation unchanged.
+     * @param force_z_vertical       Passed to align_foundationpose_orientation when @p normalize_pose is true:
+     *                               - true: force local Z to world vertical (down), make X horizontal.
+     *                               - false: keep X, make Z as vertical as possible about X.
+     * @return XML snippet with the configured sequence.
+     */
     std::string buildFoundationPoseSequence(const std::string &sequence_name,
                                             const std::string &input_topic,
                                             double pick_offset,

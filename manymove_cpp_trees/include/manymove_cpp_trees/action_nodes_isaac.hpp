@@ -112,6 +112,28 @@ namespace manymove_cpp_trees
         SetFuture future_;
     };
 
+    /**
+     * @brief Normalize the orientation of a pose for grasp alignment.
+     *
+     * The returned pose is a copy of @p input_pose with the position preserved and
+     * the orientation (quaternion) potentially adjusted to form an orthonormal frame
+     * consistent with world vertical. The world "down" direction is assumed to be (0, 0, -1).
+     *
+     * Behavior by @p force_z_vertical:
+     *   - true  => Force the local Z axis to be exactly vertical (world down). The X axis is
+     *              recomputed as the original X projected onto the horizontal plane; Y is Z × X.
+     *              This changes both Z and X to guarantee Z is perfectly vertical.
+     *   - false => Preserve the original X axis exactly. Choose Z to be as close as possible to
+     *              world down while remaining orthogonal to X (rotate about X); Y is Z × X.
+     *
+     * Robust fallbacks are used if the input quaternion is degenerate or nearly aligned with
+     * world axes; the output quaternion is normalized.
+     *
+     * @param input_pose       Source pose. Position is returned unchanged.
+     * @param force_z_vertical If true, force Z to world vertical; otherwise keep X and make Z as
+     *                         vertical as possible subject to X orthogonality.
+     * @return Pose with adjusted orientation quaternion.
+     */
     geometry_msgs::msg::Pose align_foundationpose_orientation(
         const geometry_msgs::msg::Pose &input_pose,
         bool force_z_vertical = false);
