@@ -307,8 +307,8 @@ namespace manymove_cpp_trees
 
     std::string buildFoundationPoseSequence(const std::string &sequence_name,
                                             const std::string &input_topic,
-                                            double pick_offset,
-                                            double approach_offset,
+                                            const std::vector<double> &pick_transform,
+                                            const std::vector<double> &approach_transform,
                                             double minimum_score,
                                             double timeout,
                                             const std::string &pose_key,
@@ -330,8 +330,8 @@ namespace manymove_cpp_trees
             << " timeout=\"" << timeout << "\""
             << " object_pose_key=\"" << object_pose_key << "\""
             << " header_key=\"" << header_key << "\""
-            << " pick_offset=\"" << pick_offset << "\""
-            << " approach_offset=\"" << approach_offset << "\""
+            << " pick_transform=\"" << BT::convertToString(pick_transform) << "\""
+            << " approach_transform=\"" << BT::convertToString(approach_transform) << "\""
             << " z_threshold_activation=\"" << (z_threshold_activation ? "true" : "false") << "\""
             << " z_threshold=\"" << z_threshold << "\""
             << " normalize_pose=\"" << (normalize_pose ? "true" : "false") << "\""

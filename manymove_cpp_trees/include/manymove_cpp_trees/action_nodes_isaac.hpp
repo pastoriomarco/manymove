@@ -6,6 +6,7 @@
 #include <future>
 #include <mutex>
 #include <optional>
+#include <vector>
 
 #include <rclcpp/rclcpp.hpp>
 #include <behaviortree_cpp_v3/behavior_tree.h>
@@ -162,10 +163,10 @@ namespace manymove_cpp_trees
                                       "Minimum hypothesis score to accept"),
                 BT::InputPort<double>("timeout", 1.0,
                                       "Seconds to wait for a valid detection (<=0: wait forever)"),
-                BT::InputPort<double>("pick_offset", 0.0,
-                                      "Offset along aligned +Z to adjust pick pose"),
-                BT::InputPort<double>("approach_offset", 0.05,
-                                      "Offset along aligned +Z to compute approach pose"),
+                BT::InputPort<std::vector<double>>("pick_transform",
+                                                   "Local transform [x,y,z,r,p,y] applied after alignment to 'pose'"),
+                BT::InputPort<std::vector<double>>("approach_transform",
+                                                   "Local transform [x,y,z,r,p,y] applied after alignment to 'approach_pose'"),
                 BT::InputPort<std::string>("approach_pose_key", "",
                                            "Blackboard key to write computed approach pose"),
                 BT::InputPort<std::string>("object_pose_key", "",
@@ -223,8 +224,8 @@ namespace manymove_cpp_trees
         std::string header_key_;
         std::string approach_pose_key_;
         std::string object_pose_key_;
-        double pick_offset_{0.0};
-        double approach_offset_{0.0};
+        std::vector<double> pick_transform_;
+        std::vector<double> approach_transform_;
         bool z_threshold_activation_{false};
         double z_threshold_{0.0};
         bool normalize_pose_{false};

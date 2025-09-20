@@ -487,8 +487,8 @@ namespace manymove_cpp_trees
         getInput("timeout", timeout_seconds_);
         getInput("approach_pose_key", approach_pose_key_);
         getInput("object_pose_key", object_pose_key_);
-        getInput("pick_offset", pick_offset_);
-        getInput("approach_offset", approach_offset_);
+        getInput("pick_transform", pick_transform_);
+        getInput("approach_transform", approach_transform_);
         getInput("planning_frame", planning_frame_);
         getInput("transform_timeout", transform_timeout_);
         getInput("z_threshold_activation", z_threshold_activation_);
@@ -674,72 +674,64 @@ namespace manymove_cpp_trees
             corrected_pose.position.z = z_threshold_;
         }
 
-        const bool adjust_pick_pose = std::abs(pick_offset_) > kEpsilon;
-        if (adjust_pick_pose)
+        // Helper to apply a local XYZRPY transform (6 elements) to a pose: T_out = T_pose * T_delta
+        auto apply_local_xyzrpy = [](const geometry_msgs::msg::Pose &base,
+                                     const std::vector<double> &xyzrpy) -> geometry_msgs::msg::Pose {
+            std::vector<double> v(6, 0.0);
+            for (size_t i = 0; i < std::min<size_t>(6, xyzrpy.size()); ++i) v[i] = xyzrpy[i];
+
+            tf2::Quaternion q_base(base.orientation.x, base.orientation.y, base.orientation.z, base.orientation.w);
+            if (q_base.length2() > 0.0) q_base.normalize();
+            tf2::Matrix3x3 R_base(q_base);
+
+            tf2::Quaternion q_delta;
+            q_delta.setRPY(v[3], v[4], v[5]);
+
+            tf2::Vector3 t_delta(v[0], v[1], v[2]);
+            tf2::Vector3 t_world = R_base * t_delta; // local -> world translation
+
+            geometry_msgs::msg::Pose out = base;
+            out.position.x += t_world.x();
+            out.position.y += t_world.y();
+            out.position.z += t_world.z();
+
+            tf2::Quaternion q_out = q_base * q_delta; // local rotation composition
+            if (q_out.length2() > 0.0) q_out.normalize();
+            out.orientation.x = q_out.x();
+            out.orientation.y = q_out.y();
+            out.orientation.z = q_out.z();
+            out.orientation.w = q_out.w();
+            return out;
+        };
+
+        // Compute final pick pose (pose output) by applying pick_transform after Z-thresholding
+        geometry_msgs::msg::Pose final_pose = corrected_pose;
+        if (!pick_transform_.empty())
         {
-            tf2::Quaternion q(corrected_pose.orientation.x,
-                              corrected_pose.orientation.y,
-                              corrected_pose.orientation.z,
-                              corrected_pose.orientation.w);
-            if (q.length2() > 0.0)
-            {
-                q.normalize();
-            }
-            tf2::Matrix3x3 rotation(q);
-            tf2::Vector3 aligned_z = rotation.getColumn(2);
-            if (aligned_z.length2() < kEpsilon)
-            {
-                aligned_z = tf2::Vector3(0.0, 0.0, 1.0);
-            }
-            tf2::Vector3 offset_vec = aligned_z.normalized() * pick_offset_;
-            corrected_pose.position.x += offset_vec.x();
-            corrected_pose.position.y += offset_vec.y();
-            corrected_pose.position.z += offset_vec.z();
+            final_pose = apply_local_xyzrpy(corrected_pose, pick_transform_);
         }
 
         if (store_pose_)
         {
-            config().blackboard->set(pose_key_, corrected_pose);
+            config().blackboard->set(pose_key_, final_pose);
         }
         if (store_object_pose_)
         {
             config().blackboard->set(object_pose_key_, corrected_pose);
         }
-        setOutput("pose", corrected_pose);
+        setOutput("pose", final_pose);
 
         geometry_msgs::msg::Pose approach_pose = corrected_pose;
-        bool compute_approach = std::abs(approach_offset_) > kEpsilon || store_approach_;
-        if (compute_approach)
+        bool compute_approach = !approach_transform_.empty() || store_approach_;
+        if (!approach_transform_.empty())
         {
-            tf2::Quaternion q(corrected_pose.orientation.x,
-                              corrected_pose.orientation.y,
-                              corrected_pose.orientation.z,
-                              corrected_pose.orientation.w);
-            if (q.length2() > 0.0)
-            {
-                q.normalize();
-            }
-            tf2::Matrix3x3 rotation(q);
-            tf2::Vector3 aligned_z = rotation.getColumn(2);
-            if (aligned_z.length2() < kEpsilon)
-            {
-                aligned_z = tf2::Vector3(0.0, 0.0, 1.0);
-            }
-            tf2::Vector3 offset_vec = aligned_z.normalized() * approach_offset_;
-            approach_pose.position.x += offset_vec.x();
-            approach_pose.position.y += offset_vec.y();
-            approach_pose.position.z += offset_vec.z();
-
-            if (store_approach_)
-            {
-                config().blackboard->set(approach_pose_key_, approach_pose);
-            }
-            setOutput("approach_pose", approach_pose);
+            approach_pose = apply_local_xyzrpy(corrected_pose, approach_transform_);
         }
-        else
+        if (store_approach_)
         {
-            setOutput("approach_pose", approach_pose);
+            config().blackboard->set(approach_pose_key_, approach_pose);
         }
+        setOutput("approach_pose", approach_pose);
 
         std_msgs::msg::Header header = transformed_pose.header;
         if (header.frame_id.empty())
@@ -759,11 +751,11 @@ namespace manymove_cpp_trees
         setOutput("header", header);
 
         RCLCPP_INFO(node_->get_logger(),
-                    "[%s] aligned pose published (%.3f, %.3f, %.3f | %.3f, %.3f, %.3f, %.3f)%s",
+                    "[%s] published pose (%.3f, %.3f, %.3f | %.3f, %.3f, %.3f, %.3f)%s",
                     name().c_str(),
-                    corrected_pose.position.x, corrected_pose.position.y, corrected_pose.position.z,
-                    corrected_pose.orientation.x, corrected_pose.orientation.y,
-                    corrected_pose.orientation.z, corrected_pose.orientation.w,
+                    final_pose.position.x, final_pose.position.y, final_pose.position.z,
+                    final_pose.orientation.x, final_pose.orientation.y,
+                    final_pose.orientation.z, final_pose.orientation.w,
                     compute_approach ? " with approach pose" : "");
 
         return BT::NodeStatus::SUCCESS;
