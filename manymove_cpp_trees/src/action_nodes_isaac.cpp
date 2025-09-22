@@ -676,12 +676,15 @@ namespace manymove_cpp_trees
 
         // Helper to apply a local XYZRPY transform (6 elements) to a pose: T_out = T_pose * T_delta
         auto apply_local_xyzrpy = [](const geometry_msgs::msg::Pose &base,
-                                     const std::vector<double> &xyzrpy) -> geometry_msgs::msg::Pose {
+                                     const std::vector<double> &xyzrpy) -> geometry_msgs::msg::Pose
+        {
             std::vector<double> v(6, 0.0);
-            for (size_t i = 0; i < std::min<size_t>(6, xyzrpy.size()); ++i) v[i] = xyzrpy[i];
+            for (size_t i = 0; i < std::min<size_t>(6, xyzrpy.size()); ++i)
+                v[i] = xyzrpy[i];
 
             tf2::Quaternion q_base(base.orientation.x, base.orientation.y, base.orientation.z, base.orientation.w);
-            if (q_base.length2() > 0.0) q_base.normalize();
+            if (q_base.length2() > 0.0)
+                q_base.normalize();
             tf2::Matrix3x3 R_base(q_base);
 
             tf2::Quaternion q_delta;
@@ -696,7 +699,8 @@ namespace manymove_cpp_trees
             out.position.z += t_world.z();
 
             tf2::Quaternion q_out = q_base * q_delta; // local rotation composition
-            if (q_out.length2() > 0.0) q_out.normalize();
+            if (q_out.length2() > 0.0)
+                q_out.normalize();
             out.orientation.x = q_out.x();
             out.orientation.y = q_out.y();
             out.orientation.z = q_out.z();
