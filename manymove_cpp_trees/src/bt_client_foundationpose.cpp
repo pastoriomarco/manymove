@@ -227,10 +227,6 @@ int main(int argc, char **argv)
         rp.prefix + "stop_execution",
         false);
 
-    std::string get_graspable_sim_pose_xml = "<Delay delay_msec=\"100\"><GetEntityPoseNode service_name=\"/isaacsim/GetEntityState\" entity_path_key=\"graspable_path_key\" pose_key=\"graspable_spawn_pose_key\"/></Delay>";
-    // std::string set_graspable_sim_pose_xml = "<SetEntityPoseNode service_name=\"/isaacsim/SetEntityState\" entity_path_key=\"graspable_path_key\" pose_key=\"graspable_spawn_pose_key\"/>";
-    // std::string remove_graspable_sim_pose_xml = "<SetEntityPoseNode service_name=\"/isaacsim/SetEntityState\" entity_path_key=\"graspable_path_key\" pose_key=\"graspable_disposal_pose_key\"/>";
-
     std::string spawn_graspable_objects_xml = sequenceWrapperXML(
         "SpawnGraspableObjects",
         {foundation_pose_sequence_xml,
@@ -251,7 +247,6 @@ int main(int argc, char **argv)
         {
             open_gripper_xml,
             graspable.remove_xml,
-            // remove_graspable_sim_pose_xml,
         });
 
     // ----------------------------------------------------------------------------
@@ -262,8 +257,7 @@ int main(int argc, char **argv)
         "StartUpSequence",
         {spawn_fixed_objects_xml,
          wait_for_robot_start_execution_xml,
-         // get_graspable_sim_pose_xml,
-         // reset_graspable_objects_xml,
+         reset_graspable_objects_xml,
          to_rest_xml});
 
     // Repeat node must have only one children, so it also wrap a Sequence child that wraps the other children
@@ -275,9 +269,8 @@ int main(int argc, char **argv)
             pick_sequence_xml,           //< Pick sequence
             drop_sequence_xml,           //< Drop sequence
             graspable.remove_xml,        //< Remove from planning scene
-            // remove_graspable_sim_pose_xml, //< Move the Isaac object out of workspace
-        },   //<
-        -1); //< num_cycles=-1 for infinite
+        },                               //<
+        -1);                             //< num_cycles=-1 for infinite
 
     std::string retry_forever_wrapper_xml = retrySequenceWrapperXML(
         "ResetHandler", {startup_sequence_xml, repeat_forever_wrapper_xml}, -1);
