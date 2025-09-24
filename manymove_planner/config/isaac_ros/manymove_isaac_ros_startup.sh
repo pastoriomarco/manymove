@@ -32,6 +32,7 @@ ensure_repo isaac_ros_pose_estimation https://github.com/NVIDIA-ISAAC-ROS/isaac_
 ensure_repo isaac_ros_custom_bringup https://github.com/pastoriomarco/isaac_ros_custom_bringup.git
 ensure_repo xarm_ros2 https://github.com/pastoriomarco/xarm_ros2.git --recursive -b humble_no_gazebo
 ensure_repo manymove https://github.com/pastoriomarco/manymove.git --branch=humble
+ensure_repo isaac_sim_custom_examples https://github.com/pastoriomarco/isaac_sim_custom_examples.git
 ensure_repo third_party https://github.com/pastoriomarco/moveit_calibration.git
 
 # Sync submodules for xarm_ros2 if present
