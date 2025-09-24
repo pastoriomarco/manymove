@@ -58,6 +58,8 @@ namespace manymove_cpp_trees
 
         factory.registerNodeType<SetEntityPoseNode>("SetEntityPoseNode");
         factory.registerNodeType<GetEntityPoseNode>("GetEntityPoseNode");
+
+        factory.registerNodeType<FoundationPoseAlignmentNode>("FoundationPoseAlignmentNode");
     }
 
     // --------------------------------------------------------------------------
@@ -131,6 +133,55 @@ namespace manymove_cpp_trees
                              BT::Blackboard::Ptr blackboard,
                              bool reset_trajs = false,
                              int max_tries = 1);
+
+    /**
+     * @brief Build a self-contained sequence that subscribes to FoundationPose, selects a detection,
+     *        aligns its pose, applies optional 6-DoF local transforms, and publishes results.
+     *
+     * The generated XML consists of a <Sequence> containing a single <FoundationPoseAlignmentNode>.
+     * The node filters detections (by @p minimum_score and optional target filtering), transforms
+     * the pose into a planning frame, optionally normalizes the orientation, applies a minimum-Z
+     * clamp in the planning frame, then applies local transforms to the final outputs only.
+     *
+     * @param sequence_name          Unique name for the wrapping <Sequence>.
+     * @param input_topic            Topic publishing vision_msgs/Detection3DArray from FoundationPose.
+     * @param pick_transform         Local transform [x,y,z,r,p,y] applied to the final pose after all
+     *                               other processing (including Z clamp). Applied only to @p pose_key output
+     *                               (not to @p object_pose_key). Units: meters + radians.
+     * @param approach_transform     Local transform [x,y,z,r,p,y] applied to the final pose after all
+     *                               other processing (including Z clamp) to produce the approach pose;
+     *                               applied only to @p approach_pose_key. Units: meters + radians.
+     * @param minimum_score          Minimum hypothesis score to accept a detection (0.0–1.0 typical).
+     * @param timeout                Seconds to wait for a valid detection; <= 0.0 waits indefinitely.
+     * @param pose_key               Blackboard key to store the final aligned+transformed pose.
+     * @param approach_pose_key      Blackboard key to store the approach pose (optional).
+     * @param header_key             Blackboard key to store the detection header (optional).
+     * @param object_pose_key        Blackboard key to store the aligned pose for planning scene (no transforms).
+     * @param z_threshold_activation If true, enforce a minimum Z in the planning frame; if the final
+     *                               base pose.z < @p z_threshold, it is set to @p z_threshold. If false,
+     *                               no Z clamping is applied. The clamp is applied before local transforms.
+     * @param z_threshold            The minimum allowed Z (meters) used when @p z_threshold_activation is true.
+     * @param normalize_pose         If true, normalize orientation using align_foundationpose_orientation;
+     *                               if false, leave the incoming orientation unchanged.
+     * @param force_z_vertical       Passed to align_foundationpose_orientation when @p normalize_pose is true:
+     *                               - true: force local Z to world vertical (down), make X horizontal.
+     *                               - false: keep X, make Z as vertical as possible about X.
+     * @return XML snippet with the configured sequence.
+     */
+    std::string buildFoundationPoseSequence(const std::string &sequence_name,
+                                            const std::string &input_topic,
+                                            const std::vector<double> &pick_transform,
+                                            const std::vector<double> &approach_transform,
+                                            double minimum_score,
+                                            double timeout,
+                                            const std::string &pose_key,
+                                            const std::string &approach_pose_key,
+                                            const std::string &header_key,
+                                            const std::string &object_pose_key,
+                                            bool z_threshold_activation = false,
+                                            double z_threshold = 0.0,
+                                            bool normalize_pose = false,
+                                            bool force_z_vertical = false);
 
     /**
      * @brief Builds an XML snippet for a single object action node based on the provided ObjectAction.

@@ -305,6 +305,43 @@ namespace manymove_cpp_trees
         return xml.str();
     }
 
+    std::string buildFoundationPoseSequence(const std::string &sequence_name,
+                                            const std::string &input_topic,
+                                            const std::vector<double> &pick_transform,
+                                            const std::vector<double> &approach_transform,
+                                            double minimum_score,
+                                            double timeout,
+                                            const std::string &pose_key,
+                                            const std::string &approach_pose_key,
+                                            const std::string &header_key,
+                                            const std::string &object_pose_key,
+                                            bool z_threshold_activation,
+                                            double z_threshold,
+                                            bool normalize_pose,
+                                            bool force_z_vertical)
+    {
+        std::ostringstream xml;
+        xml << "<Sequence name=\"" << sequence_name << "\">";
+        xml << "<FoundationPoseAlignmentNode"
+            << " input_topic=\"" << input_topic << "\""
+            << " pose_key=\"" << pose_key << "\""
+            << " approach_pose_key=\"" << approach_pose_key << "\""
+            << " minimum_score=\"" << minimum_score << "\""
+            << " timeout=\"" << timeout << "\""
+            << " object_pose_key=\"" << object_pose_key << "\""
+            << " header_key=\"" << header_key << "\""
+            << " pick_transform=\"" << BT::convertToString(pick_transform) << "\""
+            << " approach_transform=\"" << BT::convertToString(approach_transform) << "\""
+            << " z_threshold_activation=\"" << (z_threshold_activation ? "true" : "false") << "\""
+            << " z_threshold=\"" << z_threshold << "\""
+            << " normalize_pose=\"" << (normalize_pose ? "true" : "false") << "\""
+            << " force_z_vertical=\"" << (force_z_vertical ? "true" : "false") << "\"";
+        xml << " />";
+
+        xml << "</Sequence>";
+        return xml.str();
+    }
+
     std::string buildSetOutputXML(const std::string &robot_prefix,
                                   const std::string &node_prefix,
                                   const std::string &io_type,
