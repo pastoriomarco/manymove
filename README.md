@@ -85,7 +85,7 @@ source ${MANYMOVE_ROS_WS}/install/setup.bash
 
 --- 
 
-## Bring you own robot
+## Bring your own robot
 
 If you want to create a new application in ManyMove, once you have a working moveit config package you just need the following information:
 - Base frame/link of the robot
@@ -98,7 +98,7 @@ When using an actuated gripper you also need:
 - The name of the action server to control the gripper
 - The list of the gripper's links to exclude from collision checking
 
-When using multiple robots with a single URFD, you'll need a *prefix* for each robot (see the dual_* examples).
+When using multiple robots with a single URDF, you'll need a *prefix* for each robot (see the dual_* examples).
 
 These values will be used to start up the following nodes:
 - action_server_node: the core of the planners
