@@ -181,8 +181,24 @@ int main(int argc, char **argv)
         rp.prefix, rp.prefix + "home", home_position, blackboard, false, 3);
 
     // ----------------------------------------------------------------------------
-    // 4. Build higher level snippets
+    // 4. Build object pose retrieval elements
     // ----------------------------------------------------------------------------
+
+    blackboard->set<bool>("pick_pose_validity_key", false);
+
+    std::string check_pick_pose_validity_xml = buildCheckKeyBool(rp.prefix, "CheckPickPoseValidity", "pick_pose_validity_key", true);
+    std::string wait_for_pick_pose_valid_xml = buildWaitForKeyBool(rp.prefix, "WaitForPickPoseValid", "pick_pose_validity_key", true);
+    std::string wait_for_pick_pose_invalid_xml = buildWaitForKeyBool(rp.prefix, "WaitForPickPoseInvalid", "pick_pose_validity_key", false);
+    std::string set_pick_pose_valid_xml = buildSetKeyBool(rp.prefix, "SetPickPoseValid", "pick_pose_validity_key", true);
+    std::string set_pick_pose_invalid_xml = buildSetKeyBool(rp.prefix, "SetPickPoseInvalid", "pick_pose_validity_key", false);
+
+    blackboard->set<bool>("graspable_created_key", false);
+
+    std::string check_graspable_created_xml = buildCheckKeyBool(rp.prefix, "CheckGraspableCreated", "graspable_created_key", true);
+    std::string wait_for_graspable_created_xml = buildWaitForKeyBool(rp.prefix, "WaitForGraspableCreated", "graspable_created_key", true);
+    std::string wait_for_graspable_absent_xml = buildWaitForKeyBool(rp.prefix, "WaitForGraspableAbsent", "graspable_created_key", false);
+    std::string set_graspable_created_xml = buildSetKeyBool(rp.prefix, "SetGraspableCreated", "graspable_created_key", true);
+    std::string set_graspable_deleted_xml = buildSetKeyBool(rp.prefix, "SetGraspableDeleted", "graspable_created_key", false);
 
     // Let's build the full sequence in logically separated blocks:
     std::string spawn_fixed_objects_xml = sequenceWrapperXML("SpawnFixedObjects", {ground.init_xml, wall.init_xml});
@@ -192,7 +208,7 @@ int main(int argc, char **argv)
     // Bounds vector [min_x, min_y, min_z, max_x, max_y, max_z] for validating FoundationPose pose
     // Adjust these as needed for your workspace
     std::vector<double> bounds = {-0.20, -0.40, 0.00, 0.20, -0.10, 0.20};
-    // blackboard->set("graspable_path_key", "/World/TDNS06");
+
     std::string foundation_pose_sequence_xml = buildFoundationPoseSequence(
         "UpdateFoundationPose",
         "/output",
@@ -232,12 +248,18 @@ int main(int argc, char **argv)
         rp.prefix + "stop_execution",
         false);
 
-    std::string spawn_graspable_objects_xml = sequenceWrapperXML(
+    std::string retry_forever_foundationpose_xml = retrySequenceWrapperXML(
+        "GetFoundationposeOutput", {foundation_pose_sequence_xml, set_pick_pose_valid_xml}, -1);
+
+    std::string spawn_graspable_objects_xml = repeatSequenceWrapperXML(
         "SpawnGraspableObjects",
-        {foundation_pose_sequence_xml,
-         // set_graspable_sim_pose_xml,
-         //  graspable.remove_xml,
-         graspable.add_xml});
+        {
+            wait_for_pick_pose_invalid_xml,
+            retry_forever_foundationpose_xml,
+            wait_for_graspable_absent_xml,
+            graspable.add_xml,
+            set_graspable_created_xml,
+        });
 
     // Define some semantically relevant sequences for gripper actions
     std::string close_gripper_xml = sequenceWrapperXML("CloseGripper", {move_gripper_close_xml, graspable.attach_xml});
@@ -252,6 +274,8 @@ int main(int argc, char **argv)
         {
             open_gripper_xml,
             graspable.remove_xml,
+            set_graspable_deleted_xml,
+            set_pick_pose_invalid_xml,
         });
 
     // ----------------------------------------------------------------------------
@@ -266,19 +290,24 @@ int main(int argc, char **argv)
          to_rest_xml});
 
     // Repeat node must have only one children, so it also wrap a Sequence child that wraps the other children
-    std::string repeat_forever_wrapper_xml = repeatSequenceWrapperXML(
+    std::string robot_cycle_wrapper_xml = repeatSequenceWrapperXML(
         "RobotCycle",
         {
-            spawn_graspable_objects_xml, //< Acquire detection and spawn planning object
-            move_gripper_open_xml,       //< Ensure gripper open before pick
-            pick_sequence_xml,           //< Pick sequence
-            drop_sequence_xml,           //< Drop sequence
-            graspable.remove_xml,        //< Remove from planning scene
-        },                               //<
-        -1);                             //< num_cycles=-1 for infinite
+            // spawn_graspable_objects_xml, //< Acquire detection and spawn planning object
+            move_gripper_open_xml,        //< Ensure gripper open before pick
+            wait_for_pick_pose_valid_xml, //<
+            pick_sequence_xml,            //< Pick sequence
+            set_pick_pose_invalid_xml,    //<
+            drop_sequence_xml,            //< Drop sequence
+            graspable.remove_xml,         //< Remove from planning scene
+            set_graspable_deleted_xml,    //<
+        },                                //<
+        -1);                              //< num_cycles=-1 for infinite
+
+    std::string parallel_sequences_xml = parallelWrapperXML("ParallelWrapper", {spawn_graspable_objects_xml, robot_cycle_wrapper_xml}, 2, 2);
 
     std::string retry_forever_wrapper_xml = retrySequenceWrapperXML(
-        "ResetHandler", {startup_sequence_xml, repeat_forever_wrapper_xml}, -1);
+        "ResetHandler", {startup_sequence_xml, parallel_sequences_xml}, -1);
 
     // GlobalMasterSequence with RepeatForever as child to set BehaviorTree ID and root main_tree_to_execute in the XML
     std::string master_body = sequenceWrapperXML("GlobalMasterSequence", {retry_forever_wrapper_xml});
