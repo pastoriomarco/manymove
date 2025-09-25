@@ -189,7 +189,7 @@ namespace manymove_cpp_trees
      * Ports
      * Always used (but many have defaults):
      * - input_topic (string, default: "pose_estimation/output"): Detection3DArray topic.
-     * - pose_key (string, REQUIRED): blackboard key to store the final pick pose. If empty or missing, the node
+     * - pick_pose_key (string, REQUIRED): blackboard key to store the final pick pose. If empty or missing, the node
      *   will not store into the blackboard (only outputs), but downstream behaviors that expect the key may fail.
      * - planning_frame (string, default: "world"): target frame for outputs (pose, approach_pose, header).
      * - transform_timeout (double, default: 0.1): TF timeout when transforming poses to planning_frame.
@@ -232,8 +232,8 @@ namespace manymove_cpp_trees
                 BT::InputPort<std::string>("input_topic",
                                            "pose_estimation/output",
                                            "Detection3DArray topic from FoundationPose"),
-                BT::InputPort<std::string>("pose_key",
-                                           "Blackboard key to write the aligned pose"),
+                BT::InputPort<std::string>("pick_pose_key",
+                                           "Blackboard key to write the aligned pick pose"),
                 BT::InputPort<std::string>("header_key", "",
                                            "Blackboard key to write the detection header"),
                 BT::InputPort<std::string>("target_id", "",
@@ -299,7 +299,7 @@ namespace manymove_cpp_trees
         double timeout_seconds_{0.0};
         double minimum_score_{0.0};
         std::string target_id_;
-        std::string pose_key_;
+        std::string pick_pose_key_;
         std::string header_key_;
         std::string approach_pose_key_;
         std::string object_pose_key_;
@@ -309,7 +309,7 @@ namespace manymove_cpp_trees
         double z_threshold_{0.0};
         bool normalize_pose_{false};
         bool force_z_vertical_{false};
-        bool store_pose_{false};
+        bool store_pick_pose_{false};
         bool store_header_{false};
         bool store_approach_{false};
         bool store_object_pose_{false};

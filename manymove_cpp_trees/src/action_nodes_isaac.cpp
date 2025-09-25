@@ -475,9 +475,9 @@ namespace manymove_cpp_trees
         std::string topic = "pose_estimation/output";
         (void)getInput("input_topic", topic);
 
-        if (!getInput("pose_key", pose_key_) || pose_key_.empty())
+        if (!getInput("pick_pose_key", pick_pose_key_) || pick_pose_key_.empty())
         {
-            RCLCPP_ERROR(node_->get_logger(), "[%s] Missing required input 'pose_key'", name().c_str());
+            RCLCPP_ERROR(node_->get_logger(), "[%s] Missing required input 'pick_pose_key'", name().c_str());
             return BT::NodeStatus::FAILURE;
         }
         // Optional inputs: if not provided, keep pre-initialized defaults
@@ -497,7 +497,7 @@ namespace manymove_cpp_trees
         (void)getInput("force_z_vertical", force_z_vertical_);
         transform_timeout_ = std::max(0.0, transform_timeout_);
 
-        store_pose_ = !pose_key_.empty();
+        store_pick_pose_ = !pick_pose_key_.empty();
         store_header_ = !header_key_.empty();
         store_approach_ = !approach_pose_key_.empty();
         store_object_pose_ = !object_pose_key_.empty();
@@ -715,9 +715,9 @@ namespace manymove_cpp_trees
             final_pose = apply_local_xyzrpy(corrected_pose, pick_transform_);
         }
 
-        if (store_pose_)
+        if (store_pick_pose_)
         {
-            config().blackboard->set(pose_key_, final_pose);
+            config().blackboard->set(pick_pose_key_, final_pose);
         }
         if (store_object_pose_)
         {

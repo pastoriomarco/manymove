@@ -579,18 +579,14 @@ namespace manymove_cpp_trees
             throw BT::RuntimeError("CheckPoseBounds: missing input 'pose_key'");
         }
 
-        std::vector<double> min_b, max_b;
-        if (!getInput("min_bounds", min_b))
+        std::vector<double> bounds;
+        if (!getInput("bounds", bounds))
         {
-            throw BT::RuntimeError("CheckPoseBounds: missing input 'min_bounds'");
+            throw BT::RuntimeError("CheckPoseBounds: missing input 'bounds'");
         }
-        if (!getInput("max_bounds", max_b))
+        if (bounds.size() != 6)
         {
-            throw BT::RuntimeError("CheckPoseBounds: missing input 'max_bounds'");
-        }
-        if (min_b.size() != 3 || max_b.size() != 3)
-        {
-            throw BT::RuntimeError("CheckPoseBounds: 'min_bounds' and 'max_bounds' must have 3 elements");
+            throw BT::RuntimeError("CheckPoseBounds: 'bounds' must have 6 elements [min_x,min_y,min_z,max_x,max_y,max_z]");
         }
 
         bool inclusive = true;
@@ -604,13 +600,13 @@ namespace manymove_cpp_trees
             return BT::NodeStatus::FAILURE;
         }
 
-        // Normalize bounds in case user specified them swapped
-        const double min_x = std::min(min_b[0], max_b[0]);
-        const double max_x = std::max(min_b[0], max_b[0]);
-        const double min_y = std::min(min_b[1], max_b[1]);
-        const double max_y = std::max(min_b[1], max_b[1]);
-        const double min_z = std::min(min_b[2], max_b[2]);
-        const double max_z = std::max(min_b[2], max_b[2]);
+        // Normalize bounds per axis in case user specified swapped values
+        const double min_x = std::min(bounds[0], bounds[3]);
+        const double max_x = std::max(bounds[0], bounds[3]);
+        const double min_y = std::min(bounds[1], bounds[4]);
+        const double max_y = std::max(bounds[1], bounds[4]);
+        const double min_z = std::min(bounds[2], bounds[5]);
+        const double max_z = std::max(bounds[2], bounds[5]);
 
         const double x = pose.position.x;
         const double y = pose.position.y;

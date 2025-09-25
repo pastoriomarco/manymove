@@ -228,9 +228,8 @@ namespace manymove_cpp_trees
      * @brief Condition node that verifies a pose is within axis-aligned bounds.
      *
      * INPUT PORTS
-     *   - pose_key   (string, *required*)  Blackboard key for the pose to check
-     *   - min_bounds (vector<double>, size 3) Minimum [x,y,z]
-     *   - max_bounds (vector<double>, size 3) Maximum [x,y,z]
+     *   - pose_key (string, *required*)  Blackboard key for the pose to check
+     *   - bounds   (vector<double>, size 6) [min_x, min_y, min_z, max_x, max_y, max_z]
      *   - inclusive  (bool, default=true)    Use inclusive comparisons
      */
     class CheckPoseBounds : public BT::ConditionNode
@@ -242,8 +241,7 @@ namespace manymove_cpp_trees
         {
             return {
                 BT::InputPort<std::string>("pose_key", "Blackboard key for pose to check"),
-                BT::InputPort<std::vector<double>>("min_bounds", "[min_x, min_y, min_z]"),
-                BT::InputPort<std::vector<double>>("max_bounds", "[max_x, max_y, max_z]"),
+                BT::InputPort<std::vector<double>>("bounds", "[min_x, min_y, min_z, max_x, max_y, max_z]"),
                 BT::InputPort<bool>("inclusive", true, "Inclusive bounds check")};
         }
 

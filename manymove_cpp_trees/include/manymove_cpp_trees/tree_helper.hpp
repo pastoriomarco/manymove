@@ -147,14 +147,14 @@ namespace manymove_cpp_trees
      * @param sequence_name          Unique name for the wrapping <Sequence>.
      * @param input_topic            Topic publishing vision_msgs/Detection3DArray from FoundationPose.
      * @param pick_transform         Local transform [x,y,z,r,p,y] applied to the final pose after all
-     *                               other processing (including Z clamp). Applied only to @p pose_key output
+     *                               other processing (including Z clamp). Applied only to @p pick_pose_key output
      *                               (not to @p object_pose_key). Units: meters + radians.
      * @param approach_transform     Local transform [x,y,z,r,p,y] applied to the final pose after all
      *                               other processing (including Z clamp) to produce the approach pose;
      *                               applied only to @p approach_pose_key. Units: meters + radians.
      * @param minimum_score          Minimum hypothesis score to accept a detection (0.0–1.0 typical).
      * @param timeout                Seconds to wait for a valid detection; <= 0.0 waits indefinitely.
-     * @param pose_key               Blackboard key to store the final aligned+transformed pose.
+     * @param pick_pose_key          Blackboard key to store the final aligned+transformed pose.
      * @param approach_pose_key      Blackboard key to store the approach pose (optional).
      * @param header_key             Blackboard key to store the detection header (optional).
      * @param object_pose_key        Blackboard key to store the aligned pose for planning scene (no transforms).
@@ -176,7 +176,7 @@ namespace manymove_cpp_trees
                                             const std::vector<double> &approach_transform,
                                             double minimum_score,
                                             double timeout,
-                                            const std::string &pose_key,
+                                            const std::string &pick_pose_key,
                                             const std::string &approach_pose_key,
                                             const std::string &header_key,
                                             const std::string &object_pose_key,
@@ -405,15 +405,13 @@ namespace manymove_cpp_trees
      * @brief Build an XML snippet for a <CheckPoseBounds> condition node.
      * @param node_prefix       Prefix for the node name.
      * @param pose_key          Blackboard key for the pose to check.
-     * @param min_bounds        [min_x, min_y, min_z]
-     * @param max_bounds        [max_x, max_y, max_z]
+     * @param bounds            Single 6-element vector: [min_x, min_y, min_z, max_x, max_y, max_z]
      * @param inclusive         Use inclusive comparisons (default true)
      * @return XML string
      */
     std::string buildCheckPoseBoundsXML(const std::string &node_prefix,
                                         const std::string &pose_key,
-                                        const std::vector<double> &min_bounds,
-                                        const std::vector<double> &max_bounds,
+                                        const std::vector<double> &bounds,
                                         bool inclusive = true);
 
     // ----------------------------------------------------------------------------

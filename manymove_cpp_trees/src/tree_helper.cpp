@@ -311,7 +311,7 @@ namespace manymove_cpp_trees
                                             const std::vector<double> &approach_transform,
                                             double minimum_score,
                                             double timeout,
-                                            const std::string &pose_key,
+                                            const std::string &pick_pose_key,
                                             const std::string &approach_pose_key,
                                             const std::string &header_key,
                                             const std::string &object_pose_key,
@@ -326,7 +326,7 @@ namespace manymove_cpp_trees
         xml << "<Sequence name=\"" << sequence_name << "\">";
         xml << "<FoundationPoseAlignmentNode"
             << " input_topic=\"" << input_topic << "\""
-            << " pose_key=\"" << pose_key << "\""
+            << " pick_pose_key=\"" << pick_pose_key << "\""
             << " approach_pose_key=\"" << approach_pose_key << "\""
             << " minimum_score=\"" << minimum_score << "\""
             << " timeout=\"" << timeout << "\""
@@ -346,9 +346,7 @@ namespace manymove_cpp_trees
             {
                 throw BT::RuntimeError("buildFoundationPoseSequence: 'bounds' must have 6 elements [min_x,min_y,min_z,max_x,max_y,max_z]");
             }
-            std::vector<double> min_bounds = {bounds[0], bounds[1], bounds[2]};
-            std::vector<double> max_bounds = {bounds[3], bounds[4], bounds[5]};
-            xml << "\n" << buildCheckPoseBoundsXML("FoundationPoseBounds", pose_key, min_bounds, max_bounds, true);
+            xml << "\n" << buildCheckPoseBoundsXML("FoundationPoseBounds", pick_pose_key, bounds, true);
         }
 
         xml << "</Sequence>";
@@ -648,15 +646,13 @@ namespace manymove_cpp_trees
 
     std::string buildCheckPoseBoundsXML(const std::string &node_prefix,
                                         const std::string &pose_key,
-                                        const std::vector<double> &min_bounds,
-                                        const std::vector<double> &max_bounds,
+                                        const std::vector<double> &bounds,
                                         bool inclusive)
     {
         std::ostringstream xml;
         xml << "<CheckPoseBounds name=\"" << node_prefix << "_CheckPoseBounds\" "
             << "pose_key=\"" << pose_key << "\" "
-            << "min_bounds=\"" << BT::convertToString(min_bounds) << "\" "
-            << "max_bounds=\"" << BT::convertToString(max_bounds) << "\" "
+            << "bounds=\"" << BT::convertToString(bounds) << "\" "
             << "inclusive=\"" << (inclusive ? "true" : "false") << "\"/>";
         return xml.str();
     }

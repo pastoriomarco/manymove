@@ -191,7 +191,7 @@ int main(int argc, char **argv)
     std::vector<double> approach_transform = {-0.015, 0.0, -0.08, 0.0, 0.0, 0.0};
     // Bounds vector [min_x, min_y, min_z, max_x, max_y, max_z] for validating FoundationPose pose
     // Adjust these as needed for your workspace
-    std::vector<double> bounds = {-0.20, -0.30, 0.00, 0.50, 0.30, 0.40};
+    std::vector<double> bounds = {-0.40, -0.40, 0.00, 0.00, 0.00, 0.20};
     // blackboard->set("graspable_path_key", "/World/TDNS06");
     std::string foundation_pose_sequence_xml = buildFoundationPoseSequence(
         "UpdateFoundationPose",
@@ -208,7 +208,7 @@ int main(int argc, char **argv)
         0.011,
         true,
         true,
-        true,            // bounds_check enabled
+        true,
         bounds);
 
     // Setting commands for gripper open/close
