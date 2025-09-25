@@ -224,6 +224,35 @@ namespace manymove_cpp_trees
         rclcpp::Node::SharedPtr node_;
     };
 
+    /**
+     * @brief Condition node that verifies a pose is within axis-aligned bounds.
+     *
+     * INPUT PORTS
+     *   - pose_key   (string, *required*)  Blackboard key for the pose to check
+     *   - min_bounds (vector<double>, size 3) Minimum [x,y,z]
+     *   - max_bounds (vector<double>, size 3) Maximum [x,y,z]
+     *   - inclusive  (bool, default=true)    Use inclusive comparisons
+     */
+    class CheckPoseBounds : public BT::ConditionNode
+    {
+    public:
+        CheckPoseBounds(const std::string &name, const BT::NodeConfiguration &cfg);
+
+        static BT::PortsList providedPorts()
+        {
+            return {
+                BT::InputPort<std::string>("pose_key", "Blackboard key for pose to check"),
+                BT::InputPort<std::vector<double>>("min_bounds", "[min_x, min_y, min_z]"),
+                BT::InputPort<std::vector<double>>("max_bounds", "[max_x, max_y, max_z]"),
+                BT::InputPort<bool>("inclusive", true, "Inclusive bounds check")};
+        }
+
+        BT::NodeStatus tick() override;
+
+    private:
+        rclcpp::Node::SharedPtr node_;
+    };
+
 } // namespace manymove_cpp_trees
 
 #endif // MANYMOVE_CPP_TREES_ACTION_NODES_LOGIC_HPP

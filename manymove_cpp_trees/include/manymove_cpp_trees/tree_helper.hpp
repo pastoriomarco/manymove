@@ -52,6 +52,7 @@ namespace manymove_cpp_trees
         factory.registerNodeType<RetryPauseResetNode>("RetryPauseResetNode");
         factory.registerNodeType<GetLinkPoseAction>("GetLinkPoseAction");
         factory.registerNodeType<CheckPoseDistance>("CheckPoseDistance");
+        factory.registerNodeType<CheckPoseBounds>("CheckPoseBounds");
 
         factory.registerNodeType<GripperCommandAction>("GripperCommandAction");
         factory.registerNodeType<GripperTrajAction>("GripperTrajAction");
@@ -168,6 +169,7 @@ namespace manymove_cpp_trees
      *                               - false: keep X, make Z as vertical as possible about X.
      * @return XML snippet with the configured sequence.
      */
+    // Single signature with optional bounds check (6-vector bounds)
     std::string buildFoundationPoseSequence(const std::string &sequence_name,
                                             const std::string &input_topic,
                                             const std::vector<double> &pick_transform,
@@ -181,7 +183,9 @@ namespace manymove_cpp_trees
                                             bool z_threshold_activation = false,
                                             double z_threshold = 0.0,
                                             bool normalize_pose = false,
-                                            bool force_z_vertical = false);
+                                            bool force_z_vertical = false,
+                                            bool bounds_check = false,
+                                            const std::vector<double> &bounds = {});
 
     /**
      * @brief Builds an XML snippet for a single object action node based on the provided ObjectAction.
@@ -396,6 +400,21 @@ namespace manymove_cpp_trees
                                           const std::string &reference_pose_key,
                                           const std::string &target_pose_key,
                                           double tolerance);
+
+    /**
+     * @brief Build an XML snippet for a <CheckPoseBounds> condition node.
+     * @param node_prefix       Prefix for the node name.
+     * @param pose_key          Blackboard key for the pose to check.
+     * @param min_bounds        [min_x, min_y, min_z]
+     * @param max_bounds        [max_x, max_y, max_z]
+     * @param inclusive         Use inclusive comparisons (default true)
+     * @return XML string
+     */
+    std::string buildCheckPoseBoundsXML(const std::string &node_prefix,
+                                        const std::string &pose_key,
+                                        const std::vector<double> &min_bounds,
+                                        const std::vector<double> &max_bounds,
+                                        bool inclusive = true);
 
     // ----------------------------------------------------------------------------
     // Wrappers

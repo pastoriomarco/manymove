@@ -318,7 +318,9 @@ namespace manymove_cpp_trees
                                             bool z_threshold_activation,
                                             double z_threshold,
                                             bool normalize_pose,
-                                            bool force_z_vertical)
+                                            bool force_z_vertical,
+                                            bool bounds_check,
+                                            const std::vector<double> &bounds)
     {
         std::ostringstream xml;
         xml << "<Sequence name=\"" << sequence_name << "\">";
@@ -337,6 +339,17 @@ namespace manymove_cpp_trees
             << " normalize_pose=\"" << (normalize_pose ? "true" : "false") << "\""
             << " force_z_vertical=\"" << (force_z_vertical ? "true" : "false") << "\"";
         xml << " />";
+
+        if (bounds_check)
+        {
+            if (bounds.size() != 6)
+            {
+                throw BT::RuntimeError("buildFoundationPoseSequence: 'bounds' must have 6 elements [min_x,min_y,min_z,max_x,max_y,max_z]");
+            }
+            std::vector<double> min_bounds = {bounds[0], bounds[1], bounds[2]};
+            std::vector<double> max_bounds = {bounds[3], bounds[4], bounds[5]};
+            xml << "\n" << buildCheckPoseBoundsXML("FoundationPoseBounds", pose_key, min_bounds, max_bounds, true);
+        }
 
         xml << "</Sequence>";
         return xml.str();
@@ -630,6 +643,21 @@ namespace manymove_cpp_trees
             << "reference_pose_key=\"" << reference_pose_key << "\" "
             << "target_pose_key=\"" << target_pose_key << "\" "
             << "tolerance=\"" << tolerance << "\"/>";
+        return xml.str();
+    }
+
+    std::string buildCheckPoseBoundsXML(const std::string &node_prefix,
+                                        const std::string &pose_key,
+                                        const std::vector<double> &min_bounds,
+                                        const std::vector<double> &max_bounds,
+                                        bool inclusive)
+    {
+        std::ostringstream xml;
+        xml << "<CheckPoseBounds name=\"" << node_prefix << "_CheckPoseBounds\" "
+            << "pose_key=\"" << pose_key << "\" "
+            << "min_bounds=\"" << BT::convertToString(min_bounds) << "\" "
+            << "max_bounds=\"" << BT::convertToString(max_bounds) << "\" "
+            << "inclusive=\"" << (inclusive ? "true" : "false") << "\"/>";
         return xml.str();
     }
 

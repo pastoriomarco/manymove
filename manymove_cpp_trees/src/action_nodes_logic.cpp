@@ -556,4 +556,90 @@ namespace manymove_cpp_trees
         return BT::NodeStatus::FAILURE;
     }
 
+    // =========================================================================
+    // CheckPoseBounds implementation
+    // =========================================================================
+
+    CheckPoseBounds::CheckPoseBounds(const std::string &name,
+                                     const BT::NodeConfiguration &cfg)
+        : BT::ConditionNode(name, cfg)
+    {
+        if (!cfg.blackboard)
+        {
+            throw BT::RuntimeError("CheckPoseBounds: no blackboard provided.");
+        }
+        cfg.blackboard->get("node", node_);
+    }
+
+    BT::NodeStatus CheckPoseBounds::tick()
+    {
+        std::string pose_key;
+        if (!getInput("pose_key", pose_key))
+        {
+            throw BT::RuntimeError("CheckPoseBounds: missing input 'pose_key'");
+        }
+
+        std::vector<double> min_b, max_b;
+        if (!getInput("min_bounds", min_b))
+        {
+            throw BT::RuntimeError("CheckPoseBounds: missing input 'min_bounds'");
+        }
+        if (!getInput("max_bounds", max_b))
+        {
+            throw BT::RuntimeError("CheckPoseBounds: missing input 'max_bounds'");
+        }
+        if (min_b.size() != 3 || max_b.size() != 3)
+        {
+            throw BT::RuntimeError("CheckPoseBounds: 'min_bounds' and 'max_bounds' must have 3 elements");
+        }
+
+        bool inclusive = true;
+        getInput("inclusive", inclusive);
+
+        geometry_msgs::msg::Pose pose;
+        if (!config().blackboard->get(pose_key, pose))
+        {
+            RCLCPP_ERROR(node_ ? node_->get_logger() : rclcpp::get_logger("CheckPoseBounds"),
+                         "[%s] key '%s' not found", name().c_str(), pose_key.c_str());
+            return BT::NodeStatus::FAILURE;
+        }
+
+        // Normalize bounds in case user specified them swapped
+        const double min_x = std::min(min_b[0], max_b[0]);
+        const double max_x = std::max(min_b[0], max_b[0]);
+        const double min_y = std::min(min_b[1], max_b[1]);
+        const double max_y = std::max(min_b[1], max_b[1]);
+        const double min_z = std::min(min_b[2], max_b[2]);
+        const double max_z = std::max(min_b[2], max_b[2]);
+
+        const double x = pose.position.x;
+        const double y = pose.position.y;
+        const double z = pose.position.z;
+
+        bool inside;
+        if (inclusive)
+        {
+            inside = (x >= min_x && x <= max_x) &&
+                     (y >= min_y && y <= max_y) &&
+                     (z >= min_z && z <= max_z);
+        }
+        else
+        {
+            inside = (x > min_x && x < max_x) &&
+                     (y > min_y && y < max_y) &&
+                     (z > min_z && z < max_z);
+        }
+
+        RCLCPP_INFO(node_ ? node_->get_logger() : rclcpp::get_logger("CheckPoseBounds"),
+                    "[%s] Pose: [%.3f, %.3f, %.3f], Bounds X:[%.3f, %.3f] Y:[%.3f, %.3f] Z:[%.3f, %.3f] => %s",
+                    name().c_str(),
+                    x, y, z,
+                    min_x, max_x,
+                    min_y, max_y,
+                    min_z, max_z,
+                    inside ? "INSIDE" : "OUTSIDE");
+
+        return inside ? BT::NodeStatus::SUCCESS : BT::NodeStatus::FAILURE;
+    }
+
 } // namespace manymove_cpp_trees
