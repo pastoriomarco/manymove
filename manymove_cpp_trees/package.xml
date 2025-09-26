@@ -26,6 +26,7 @@
   <depend>std_msgs</depend>
   <depend>topic_based_ros2_control</depend>
   <depend>simulation_interfaces</depend>
+  <depend>vision_msgs</depend>
 
   <test_depend>ament_lint_auto</test_depend>
   <test_depend>ament_lint_common</test_depend>
