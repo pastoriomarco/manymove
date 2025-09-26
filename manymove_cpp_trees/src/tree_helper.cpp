@@ -305,7 +305,7 @@ namespace manymove_cpp_trees
         return xml.str();
     }
 
-    std::string buildFoundationPoseSequence(const std::string &sequence_name,
+    std::string buildFoundationPoseSequenceXML(const std::string &sequence_name,
                                             const std::string &input_topic,
                                             const std::vector<double> &pick_transform,
                                             const std::vector<double> &approach_transform,
@@ -344,7 +344,7 @@ namespace manymove_cpp_trees
         {
             if (bounds.size() != 6)
             {
-                throw BT::RuntimeError("buildFoundationPoseSequence: 'bounds' must have 6 elements [min_x,min_y,min_z,max_x,max_y,max_z]");
+                throw BT::RuntimeError("buildFoundationPoseSequenceXML: 'bounds' must have 6 elements [min_x,min_y,min_z,max_x,max_y,max_z]");
             }
             xml << "\n" << buildCheckPoseBoundsXML("FoundationPoseBounds", pick_pose_key, bounds, true);
         }
@@ -631,6 +631,23 @@ namespace manymove_cpp_trees
         return xml.str();
     }
 
+    std::string buildCopyPoseXML(const std::string &robot_prefix,
+                              const std::string &node_prefix,
+                              const std::string &source_key,
+                              const std::string &target_key)
+    {
+        // Construct a node name with the given prefixes
+        std::string node_name = robot_prefix + node_prefix + "_CopyPose";
+
+        std::ostringstream xml;
+        xml << "<CopyPoseKey "
+            << "name=\"" << node_name << "\" "
+            << "source_key=\"" << source_key << "\" "
+            << "target_key=\"" << target_key << "\" "
+            << "robot_prefix=\"" << robot_prefix << "\"/>";
+        return xml.str();
+    }
+
     std::string buildCheckPoseDistanceXML(const std::string &node_prefix,
                                           const std::string &reference_pose_key,
                                           const std::string &target_pose_key,
@@ -681,8 +698,8 @@ namespace manymove_cpp_trees
     {
         std::ostringstream xml;
         xml << "  <Parallel name=\"" << sequence_name << "\""
-            << " success_threshold=\"" << success_threshold << "\">"
-            << " failure_threshold=\"" << failure_threshold << "c\">\n";
+            << " success_threshold=\"" << success_threshold << "\""
+            << " failure_threshold=\"" << failure_threshold << "\">\n";
         for (auto &b : branches)
         {
             xml << b << "\n";

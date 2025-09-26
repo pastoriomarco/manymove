@@ -53,6 +53,7 @@ namespace manymove_cpp_trees
         factory.registerNodeType<GetLinkPoseAction>("GetLinkPoseAction");
         factory.registerNodeType<CheckPoseDistance>("CheckPoseDistance");
         factory.registerNodeType<CheckPoseBounds>("CheckPoseBounds");
+        factory.registerNodeType<CopyPoseKey>("CopyPoseKey");
 
         factory.registerNodeType<GripperCommandAction>("GripperCommandAction");
         factory.registerNodeType<GripperTrajAction>("GripperTrajAction");
@@ -170,7 +171,7 @@ namespace manymove_cpp_trees
      * @return XML snippet with the configured sequence.
      */
     // Single signature with optional bounds check (6-vector bounds)
-    std::string buildFoundationPoseSequence(const std::string &sequence_name,
+    std::string buildFoundationPoseSequenceXML(const std::string &sequence_name,
                                             const std::string &input_topic,
                                             const std::vector<double> &pick_transform,
                                             const std::vector<double> &approach_transform,
@@ -388,6 +389,23 @@ namespace manymove_cpp_trees
                                     const std::string &ref_frame_key,
                                     const std::string &pre_key,
                                     const std::string &post_key);
+
+    /**
+     * @brief Build an XML snippet for a <CopyPoseKey> action node.
+     *
+     * Copies a geometry_msgs::msg::Pose from one blackboard key to another and
+     * emits an HMI message using the provided prefix.
+     *
+     * @param robot_prefix  Prefix for HMI messages (e.g., "R_" or "hmi_").
+     * @param node_prefix   Used to construct a unique node name.
+     * @param source_key    Blackboard key to read Pose from.
+     * @param target_key    Blackboard key to write Pose to.
+     * @return XML snippet string.
+     */
+    std::string buildCopyPoseXML(const std::string &robot_prefix,
+                              const std::string &node_prefix,
+                              const std::string &source_key,
+                              const std::string &target_key);
 
     /**
      * @brief Build an XML snippet for a <CheckPoseDistance> condition node.

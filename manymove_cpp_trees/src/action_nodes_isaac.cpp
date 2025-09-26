@@ -480,13 +480,23 @@ namespace manymove_cpp_trees
             RCLCPP_ERROR(node_->get_logger(), "[%s] Missing required input 'pick_pose_key'", name().c_str());
             return BT::NodeStatus::FAILURE;
         }
+        if (!getInput("approach_pose_key", approach_pose_key_) || approach_pose_key_.empty())
+        {
+            RCLCPP_ERROR(node_->get_logger(), "[%s] Missing required input 'approach_pose_key'", name().c_str());
+            return BT::NodeStatus::FAILURE;
+        }
+        if (!getInput("object_pose_key", object_pose_key_) || object_pose_key_.empty())
+        {
+            RCLCPP_ERROR(node_->get_logger(), "[%s] Missing required input 'object_pose_key'", name().c_str());
+            return BT::NodeStatus::FAILURE;
+        }
         // Optional inputs: if not provided, keep pre-initialized defaults
         (void)getInput("header_key", header_key_);
         (void)getInput("target_id", target_id_);
         (void)getInput("minimum_score", minimum_score_);
         (void)getInput("timeout", timeout_seconds_);
-        (void)getInput("approach_pose_key", approach_pose_key_);
-        (void)getInput("object_pose_key", object_pose_key_);
+        // (void)getInput("approach_pose_key", approach_pose_key_);
+        // (void)getInput("object_pose_key", object_pose_key_);
         (void)getInput("pick_transform", pick_transform_);
         (void)getInput("approach_transform", approach_transform_);
         (void)getInput("planning_frame", planning_frame_);

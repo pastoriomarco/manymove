@@ -638,4 +638,47 @@ namespace manymove_cpp_trees
         return inside ? BT::NodeStatus::SUCCESS : BT::NodeStatus::FAILURE;
     }
 
+    // =========================================================================
+    // CopyPoseKey implementation
+    // =========================================================================
+
+    BT::NodeStatus CopyPoseKey::tick()
+    {
+        std::string source_key;
+        std::string target_key;
+        std::string robot_prefix;
+
+        if (!getInput<std::string>("source_key", source_key))
+        {
+            throw BT::RuntimeError("CopyPoseKey: missing input 'source_key'");
+        }
+        if (!getInput<std::string>("target_key", target_key))
+        {
+            throw BT::RuntimeError("CopyPoseKey: missing input 'target_key'");
+        }
+        // robot_prefix is optional; if absent, leave empty
+        getInput<std::string>("robot_prefix", robot_prefix);
+
+        geometry_msgs::msg::Pose pose;
+        if (!config().blackboard->get(source_key, pose))
+        {
+            // If the source key does not exist or is of a different type, fail
+            setHMIMessage(config().blackboard, robot_prefix.empty() ? std::string("hmi_") : robot_prefix,
+                          "COPY POSE FAILED: missing '" + source_key + "'", "red");
+            RCLCPP_ERROR(rclcpp::get_logger("CopyPoseKey"),
+                         "[%s] Source key '%s' not found or wrong type", name().c_str(), source_key.c_str());
+            return BT::NodeStatus::FAILURE;
+        }
+
+        config().blackboard->set(target_key, pose);
+
+        setHMIMessage(config().blackboard, robot_prefix.empty() ? std::string("hmi_") : robot_prefix,
+                      "POSE COPIED: " + source_key + " -> " + target_key, "green");
+
+        RCLCPP_INFO(rclcpp::get_logger("CopyPoseKey"),
+                    "[%s] Copied Pose from '%s' to '%s'", name().c_str(), source_key.c_str(), target_key.c_str());
+
+        return BT::NodeStatus::SUCCESS;
+    }
+
 } // namespace manymove_cpp_trees

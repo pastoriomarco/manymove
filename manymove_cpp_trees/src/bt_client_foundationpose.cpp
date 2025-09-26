@@ -209,7 +209,7 @@ int main(int argc, char **argv)
     // Adjust these as needed for your workspace
     std::vector<double> bounds = {-0.20, -0.40, 0.00, 0.20, -0.10, 0.20};
 
-    std::string foundation_pose_sequence_xml = buildFoundationPoseSequence(
+    std::string foundation_pose_sequence_xml = buildFoundationPoseSequenceXML(
         "UpdateFoundationPose",
         "/output",
         pick_transform,
@@ -226,6 +226,10 @@ int main(int argc, char **argv)
         true,
         true,
         bounds);
+
+    blackboard->set<Pose>("previous_graspable_pose_key", Pose());
+    std::string copy_current_object_pose_xml = buildCopyPoseXML(rp.prefix, "PreviousObjFPPose", "graspable_pose_key", "previous_graspable_pose_key");
+    std::string check_previous_pose_distance_xml = buildCheckPoseDistanceXML("CheckPreviousPoseDistance", "graspable_pose_key", "previous_graspable_pose_key", 0.01);
 
     // Setting commands for gripper open/close
     std::string move_gripper_close_xml =
@@ -249,7 +253,14 @@ int main(int argc, char **argv)
         false);
 
     std::string retry_forever_foundationpose_xml = retrySequenceWrapperXML(
-        "GetFoundationposeOutput", {foundation_pose_sequence_xml, set_pick_pose_valid_xml}, -1);
+        "GetFoundationposeOutput",
+        {
+            copy_current_object_pose_xml,
+            foundation_pose_sequence_xml,
+            std::string("<Inverter>") + check_previous_pose_distance_xml + std::string("</Inverter>"),
+            set_pick_pose_valid_xml,
+        },
+        -1);
 
     std::string spawn_graspable_objects_xml = repeatSequenceWrapperXML(
         "SpawnGraspableObjects",

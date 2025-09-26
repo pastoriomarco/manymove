@@ -251,6 +251,32 @@ namespace manymove_cpp_trees
         rclcpp::Node::SharedPtr node_;
     };
 
+    /**
+     * @brief Action node that copies a geometry_msgs::msg::Pose from one
+     *        blackboard key to another.
+     *
+     * INPUT PORTS
+     *   - source_key (string, required)  Blackboard key to read from
+     *   - target_key (string, required)  Blackboard key to write to
+     *   - robot_prefix (string, optional) Prefix for HMI messages (e.g., "R_" or "hmi_")
+     */
+    class CopyPoseKey : public BT::SyncActionNode
+    {
+    public:
+        CopyPoseKey(const std::string &name, const BT::NodeConfiguration &cfg)
+            : BT::SyncActionNode(name, cfg) {}
+
+        static BT::PortsList providedPorts()
+        {
+            return {
+                BT::InputPort<std::string>("source_key", "Blackboard key (Pose) to read"),
+                BT::InputPort<std::string>("target_key", "Blackboard key (Pose) to write"),
+                BT::InputPort<std::string>("robot_prefix", "Prefix for HMI messages, optional")};
+        }
+
+        BT::NodeStatus tick() override;
+    };
+
 } // namespace manymove_cpp_trees
 
 #endif // MANYMOVE_CPP_TREES_ACTION_NODES_LOGIC_HPP
