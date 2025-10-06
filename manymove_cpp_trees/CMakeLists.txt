@@ -87,6 +87,7 @@ bt_client_exec(bt_client_xarm7)
 bt_client_exec(collision_test)
 bt_client_exec(tutorial_01)
 bt_client_exec(bt_client_foundationpose)
+bt_client_exec(bt_client_tools)
 
 #--------------------------------------------------------------------
 # Installation & export
@@ -112,6 +113,7 @@ install(TARGETS
   collision_test
   tutorial_01
   bt_client_foundationpose
+  bt_client_tools
   DESTINATION lib/${PROJECT_NAME}
 )
 
