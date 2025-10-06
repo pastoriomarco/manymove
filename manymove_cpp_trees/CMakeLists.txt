@@ -30,6 +30,7 @@ find_package(std_msgs                 REQUIRED)
 find_package(topic_based_ros2_control REQUIRED)
 find_package(simulation_interfaces    REQUIRED)
 find_package(vision_msgs              REQUIRED)
+find_package(nav2_msgs                REQUIRED)
 
 #--------------------------------------------------------------------
 # Library with all BT helper nodes
@@ -68,7 +69,7 @@ macro(bt_client_exec NAME)
   ament_target_dependencies(${NAME}
     rclcpp rclcpp_action behaviortree_cpp_v3
     manymove_planner manymove_object_manager manymove_signals
-    moveit_msgs tf2 std_srvs manymove_msgs control_msgs
+    moveit_msgs tf2 std_srvs manymove_msgs control_msgs nav2_msgs
   std_msgs topic_based_ros2_control simulation_interfaces
   )
 endmacro()
@@ -122,7 +123,7 @@ ament_export_dependencies(
   rclcpp rclcpp_action behaviortree_cpp_v3
   manymove_planner manymove_object_manager manymove_signals
   moveit_msgs tf2 tf2_ros tf2_geometry_msgs std_srvs manymove_msgs control_msgs
-  std_msgs topic_based_ros2_control simulation_interfaces vision_msgs
+  std_msgs topic_based_ros2_control simulation_interfaces vision_msgs nav2_msgs
 )
 
 ament_package()

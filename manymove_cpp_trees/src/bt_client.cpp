@@ -2,6 +2,7 @@
 #include <behaviortree_cpp_v3/bt_factory.h>
 #include <behaviortree_cpp_v3/behavior_tree.h>
 #include <behaviortree_cpp_v3/loggers/bt_zmq_publisher.h>
+#include <behaviortree_cpp_v3/loggers/bt_file_logger.h>
 #include <behaviortree_cpp_v3/decorators/force_failure_node.h>
 
 #include "manymove_cpp_trees/action_nodes_objects.hpp"
@@ -23,8 +24,30 @@
 #include <string>
 #include <vector>
 
+// nav2 live BT view interface
+#include <nav2_msgs/msg/behavior_tree_log.hpp>
+#include <nav2_msgs/msg/behavior_tree_status_change.hpp>
+
 using geometry_msgs::msg::Pose;
 using namespace manymove_cpp_trees;
+
+// Helper to convert BT::NodeStatus to the string values expected by
+// nav2_msgs/BehaviorTreeStatusChange.current_status
+static std::string toString(BT::NodeStatus s)
+{
+    switch (s)
+    {
+    case BT::NodeStatus::SUCCESS:
+        return "SUCCESS";
+    case BT::NodeStatus::FAILURE:
+        return "FAILURE";
+    case BT::NodeStatus::RUNNING:
+        return "RUNNING";
+    case BT::NodeStatus::IDLE:
+    default:
+        return "IDLE";
+    }
+}
 
 int main(int argc, char **argv)
 {
@@ -351,7 +374,20 @@ int main(int argc, char **argv)
     }
 
     // 10) ZMQ publisher (optional, to visualize in Groot)
+    // To visualize the tree with Groot execute:
+    // ros2 run groot Groot
     BT::PublisherZMQ publisher(tree);
+
+    // Also log the tree definition + transitions to FlatBuffers (.fbl) for bt_tools
+    // Note: buffer_max_size = 0 writes immediately
+    BT::FileLogger fbl_logger(tree, "/tmp/manymove_bt_trace.fbl", 0);
+
+    // Create ROS2 publisher for Nav2-style BT log messages consumed by bt_live
+    // To visualize the tree with bt_tools web viewer run:
+    // ros2 run bt_live bt_live --ros-args -p fbl_file:=/tmp/manymove_bt_trace.fbl
+    // Then on your browser open http://localhost:8000
+    auto bt_pub = node->create_publisher<nav2_msgs::msg::BehaviorTreeLog>(
+        "/behavior_tree_log", 10);
 
     // Create the HMI Service Node and pass the same blackboard ***
     auto hmi_node = std::make_shared<manymove_cpp_trees::HMIServiceNode>("hmi_service_node", blackboard, keys);
@@ -368,6 +404,27 @@ int main(int argc, char **argv)
     {
         executor.spin_some();
         BT::NodeStatus status = tree.tickRoot();
+
+        // Publish a snapshot of node statuses for bt_live
+        nav2_msgs::msg::BehaviorTreeLog log_msg;
+        // Older rclcpp may not have Time::to_msg(); compute sec/nanosec manually
+        {
+            const auto now = node->get_clock()->now();
+            const auto nsec_total = now.nanoseconds();
+            log_msg.timestamp.sec = static_cast<int32_t>(nsec_total / 1000000000LL);
+            log_msg.timestamp.nanosec = static_cast<uint32_t>(nsec_total % 1000000000LL);
+        }
+        log_msg.event_log.reserve(tree.nodes.size());
+        for (const auto &n_ptr : tree.nodes)
+        {
+            const auto *n = n_ptr.get();
+            nav2_msgs::msg::BehaviorTreeStatusChange ev;
+            ev.node_name = n->name();
+            ev.current_status = toString(n->status());
+            // Some nav2_msgs distributions don't include uid; bt_live can map by name.
+            log_msg.event_log.push_back(std::move(ev));
+        }
+        bt_pub->publish(std::move(log_msg));
 
         if (status == BT::NodeStatus::SUCCESS)
         {
