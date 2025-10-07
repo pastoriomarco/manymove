@@ -42,6 +42,11 @@
           ros-${ROS_DISTRO}-isaac-ros-stereo-image-proc \
           ros-${ROS_DISTRO}-isaac-ros-depth-image-proc \
           ros-${ROS_DISTRO}-isaac-ros-nitros-topic-tools \
+          ros-${ROS_DISTRO}-nav2-msgs \
+          ros-${ROS_DISTRO}-usb-cam \
+          ros-${ROS_DISTRO}-isaac-ros-h264-decoder \
+          ros-${ROS_DISTRO}-isaac-ros-visual-slam \
+          ros-${ROS_DISTRO}-nova-carter-bringup \
         && rm -rf /var/lib/apt/lists/*
     
     # 2) copy bootstrap into the base image’s entrypoint_additions
