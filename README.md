@@ -1,4 +1,4 @@
-# ManyMove project - `ROS2 humble`
+# ManyMove project — ROS 2 Humble & Jazzy
 
 ![ManyMove example](https://github.com/pastoriomarco/manymove/blob/dfc9c7f00e11d70d5e27fd2e0c13bfcf5de6de54/media/manymove_example.gif)
 
@@ -12,44 +12,52 @@ This software is released under the BSD-3-Clause license (see `LICENSE` for deta
 
 ## Description
 
-The `manymove` project is meant for roboticists to ease the transition to ROS2 coming from the classic frameworks of major manufacturers.  
+The `manymove` project is meant for roboticists to ease the transition to ROS 2 coming from the classic frameworks of major manufacturers.  
 It provides a simplified, generalized framework for building robotic manipulator control logic using ROS 2 and MoveIt 2.  
-This series of packages was created around Ufactory Lite6 and UF850 cobots, but it is structured in a way that can extend to other robots. Also included is an example using Franka Emika Panda, which is the default demo model for Moveit in ROS2 Humble.
+This series of packages was created around Ufactory Lite6 and UF850 cobots, but it is structured so you can extend it to other robots. MoveIt demos for Franka Emika Panda are also included.
 
 ---
 
 ## Prerequisites
 
-- Install **[ROS2 Humble](https://docs.ros.org/en/ros2_documentation/humble/Installation.html)**
-- You'll need [MoveIt2](https://moveit.ai/install-moveit2/binary/) and Gazebo, but their installation will be taken care of through rosdesp intallation.
-- If you prefer to install manually, you can follow the instructions on the humble branch of my fork of [xarm_ros2 on github](https://github.com/pastoriomarco/xarm_ros2/tree/humble).  
+- Install **ROS 2 Humble** or **ROS 2 Jazzy** from the official docs:
+  - [ROS 2 Humble](https://docs.ros.org/en/ros2_documentation/humble/Installation.html)
+  - [ROS 2 Jazzy](https://docs.ros.org/en/ros2_documentation/jazzy/Installation.html)
+- `rosdep`, Gazebo and MoveIt 2 are required. When using `rosdep install` (see below) they will be pulled automatically.
+- Recommended: ensure the environment variable `ROS_DISTRO` is exported (`echo $ROS_DISTRO`) before following the quick start procedure.
 
 ---
 
-## Quick start (Humble)
+## Quick start (Humble & Jazzy)
 
-**Define your `MANYMOVE_ROS_WS`** environment variable. If you want to change the workspace folder, edit the following line before running the command:
+The commands below are distro-agnostic and rely on the `ROS_DISTRO` environment variable. When you source `/opt/ros/<distro>/setup.bash`, the variable is exported automatically.
+
+**1. Define your workspace path**
 ```bash
 export MANYMOVE_ROS_WS=~/workspaces/dev_ws
 ```
-**Prepare the necessary folders' structure** (skip it if you already created the folders):
+
+**2. Create the workspace folders (skip if already present)**
 ```bash
 cd ~
 mkdir -p ${MANYMOVE_ROS_WS}/src
 ```
-**Source ROS2 Humble** (skip if already sourced, modify this if you need to source from another dir):
+
+**3. Source ROS 2**
 ```bash
-source /opt/ros/humble/setup.bash
+source /opt/ros/${ROS_DISTRO}/setup.bash
 ```
-**Clone ManyMove and xarm_ros2** (skip if you just need to update):
-- DO NOT omit "--recursive"，or the source code of dependent submodule will not be downloaded.
-- Pay attention to the use of the -b parameter command branch, $ROS_DISTRO indicates the currently activated ROS version, if the ROS environment is not activated, you need to customize the specified branch (humble/jazzy)
+
+**4. Clone ManyMove and xarm_ros2**
+- Do not omit `--recursive`, otherwise the dependent submodules are not downloaded.
+- The `-b $ROS_DISTRO` pattern keeps your checkout aligned with the sourced distro.
 ```bash
 cd ${MANYMOVE_ROS_WS}/src
 git clone https://github.com/pastoriomarco/xarm_ros2.git --recursive -b $ROS_DISTRO
-git clone https://github.com/pastoriomarco/manymove.git -b $ROS_DISTRO 
+git clone https://github.com/pastoriomarco/manymove.git -b main
 ```
-**Update repos**:
+
+**5. Update repositories (optional refresh)**
 ```bash
 cd ${MANYMOVE_ROS_WS}/src/xarm_ros2
 git submodule update --init --recursive
@@ -57,13 +65,15 @@ git pull --recurse-submodules
 cd ${MANYMOVE_ROS_WS}/src/manymove
 git pull
 ```
-**Install the dependencies**:
+
+**6. Install dependencies**
 ```bash
 cd ${MANYMOVE_ROS_WS}
 rosdep update
 rosdep install --from-paths . --ignore-src --rosdistro $ROS_DISTRO -y
 ```
-**Optional: install Groot** for visualizing behavior trees:
+
+**7. (OPTIONAL) Install Groot** for visualising behavior trees
 ```bash
 cd ${MANYMOVE_ROS_WS}/src/
 git clone --recurse-submodules https://github.com/pastoriomarco/Groot.git
@@ -74,14 +84,29 @@ cd ${MANYMOVE_ROS_WS}
 rosdep update
 rosdep install --from-paths . --ignore-src --rosdistro $ROS_DISTRO -y
 ```
-**Build the packages from `<workspace_dir>`**: 
+
+**8. Build the workspace**
 ```bash
 cd ${MANYMOVE_ROS_WS} && colcon build
 ```
-**Don't forget to source!**
+
+**9. Source the overlay**
 ```bash
 source ${MANYMOVE_ROS_WS}/install/setup.bash
 ```
+
+That’s it! Repeat steps 3–9 whenever you open a new shell.
+
+---
+
+## Compatibility & Testing Notes
+
+- The planner and signals packages use lightweight compile-time shims (see `manymove_planner/compat/` and helper templates in `manymove_signals`) so the same code builds on Humble and Jazzy without runtime cost.
+- Keep an eye on ROS and MoveIt deprecation warnings during development. When APIs change, update the compatibility helpers in one place to maintain support for multiple distros.
+- Automated build and lint pipelines are being staged. Recommended best practices:
+  - Run `colcon build --event-handlers console_cohesion+` before pushing.
+  - Add `ament_*` linters (C++/Python) and basic GTest/PyTest smoke tests so future CI can do more than compile.
+  - Test the key launch files on both distros when introducing new features that touch planning or MoveItCpp execution.
 
 --- 
 
