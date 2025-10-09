@@ -6,27 +6,27 @@
 #include <cmath>
 #include <future>
 #include <map>
-#include <tf2/LinearMath/Quaternion.h>
+#if __has_include(<tf2/LinearMath/Quaternion.hpp>)
+#  include <tf2/LinearMath/Quaternion.hpp>
+#else
+#  include <tf2/LinearMath/Quaternion.h>
+#endif
 
-#include <moveit/move_group_interface/move_group_interface.h>
-#include <moveit/planning_scene_interface/planning_scene_interface.h>
+#include "manymove_planner/compat/moveit_includes_compat.hpp"
 #include <moveit_msgs/msg/collision_object.hpp>
 #include <moveit_msgs/srv/get_planning_scene.hpp>
 #include <geometry_msgs/msg/pose_stamped.hpp>
 #include <moveit_msgs/msg/robot_trajectory.hpp>
-#include <moveit/trajectory_processing/time_optimal_trajectory_generation.h>
-#include <moveit/trajectory_processing/ruckig_traj_smoothing.h>
-#include <moveit/robot_trajectory/robot_trajectory.h>
-
-#include <moveit/planning_scene/planning_scene.h>
-#include <moveit/collision_detection/collision_common.h>
-#include <moveit/planning_scene_monitor/planning_scene_monitor.h>
 
 #include "manymove_msgs/msg/move_manipulator_goal.hpp"
 
 #include <control_msgs/action/follow_joint_trajectory.hpp>
 
-#include <moveit/robot_model/robot_model.h>
+#if __has_include(<moveit/robot_model/robot_model.hpp>)
+#  include <moveit/robot_model/robot_model.hpp>
+#else
+#  include <moveit/robot_model/robot_model.h>
+#endif
 
 /**
  * @class MoveGroupPlanner

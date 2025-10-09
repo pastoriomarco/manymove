@@ -70,6 +70,10 @@ namespace manymove_cpp_trees
         max_move_config.rotational_precision = 0.05;
         max_move_config.step_size = 0.005;
         max_move_config.jump_threshold = 0.0;
+        // Defaults for Jazzy CartesianPrecision (ignored on Humble)
+        max_move_config.cartesian_precision_translational = 0.001;   // 1 mm
+        max_move_config.cartesian_precision_rotational = 0.05;       // ~2.9 deg
+        max_move_config.cartesian_precision_max_resolution = 0.005;  // 5 mm
         max_move_config.plan_number_target = 8;
         max_move_config.plan_number_limit = 16;
         max_move_config.smoothing_type = "time_optimal";

@@ -6,26 +6,25 @@
 #include <cmath>
 #include <future>
 #include <map>
-#include <tf2/LinearMath/Quaternion.h>
+#if __has_include(<tf2/LinearMath/Quaternion.hpp>)
+#  include <tf2/LinearMath/Quaternion.hpp>
+#else
+#  include <tf2/LinearMath/Quaternion.h>
+#endif
 #include <tf2_eigen/tf2_eigen.hpp>
 
-#include <moveit/moveit_cpp/moveit_cpp.h>
-#include <moveit/planning_pipeline/planning_pipeline.h>
-#include <moveit/robot_trajectory/robot_trajectory.h>
+#include "manymove_planner/compat/moveit_includes_compat.hpp"
 #include <moveit_msgs/msg/collision_object.hpp>
 #include <geometry_msgs/msg/pose_stamped.hpp>
 #include <moveit_msgs/msg/robot_trajectory.hpp>
-#include <moveit/robot_state/cartesian_interpolator.h>
-#include <moveit/trajectory_processing/time_optimal_trajectory_generation.h>
-#include <moveit/trajectory_processing/ruckig_traj_smoothing.h>
+// Included via compat: robot_state/cartesian_interpolator, robot_trajectory,
+// and trajectory processing headers.
 
 #include "manymove_msgs/msg/move_manipulator_goal.hpp"
 
 #include <control_msgs/action/follow_joint_trajectory.hpp>
 
-#include <moveit/robot_model/robot_model.h>
-#include <moveit/planning_scene/planning_scene.h>
-#include <moveit/moveit_cpp/planning_component.h>
+// Included via compat: robot_model, planning_scene, planning_component
 
 /**
  * @class MoveItCppPlanner

@@ -1,4 +1,5 @@
 #include "manymove_planner/move_group_planner.hpp"
+#include "manymove_planner/compat/moveit_compat.hpp"
 
 MoveGroupPlanner::MoveGroupPlanner(
     const rclcpp::Node::SharedPtr &node,
@@ -431,7 +432,7 @@ std::pair<bool, moveit_msgs::msg::RobotTrajectory> MoveGroupPlanner::plan(const 
                 // trajectories.emplace_back(plan.trajectory_, length);
 
                 // Time parametrize the path and choose the fastest:
-                auto [ok, timed_traj] = applyTimeParameterization(plan.trajectory_, cfg);
+                auto [ok, timed_traj] = applyTimeParameterization(manymove_planner_compat::mgiPlanTrajectory(plan), cfg);
                 if (!ok)
                 {
                     RCLCPP_WARN(logger_, "Time‑parameterization failed on this candidate, skipping.");
@@ -467,8 +468,9 @@ std::pair<bool, moveit_msgs::msg::RobotTrajectory> MoveGroupPlanner::plan(const 
         {
             moveit::planning_interface::MoveGroupInterface::Plan plan;
             RCLCPP_DEBUG_STREAM(logger_, "Cartesian path planning attempt with step size " << goal_msg.goal.config.step_size << ", jump threshold " << goal_msg.goal.config.jump_threshold);
-            double fraction = move_group_interface_->computeCartesianPath(
-                waypoints, goal_msg.goal.config.step_size, goal_msg.goal.config.jump_threshold, plan.trajectory_);
+            double fraction = manymove_planner_compat::computeCartesianPathCompat(
+                *move_group_interface_, waypoints, goal_msg.goal.config.step_size,
+                goal_msg.goal.config.jump_threshold, plan);
 
             if (fraction >= 1.0)
             {
@@ -482,7 +484,7 @@ std::pair<bool, moveit_msgs::msg::RobotTrajectory> MoveGroupPlanner::plan(const 
                     // double length = computePathLength(plan.trajectory_);
                     // trajectories.emplace_back(plan.trajectory_, length);
 
-                    auto [ok, timed_traj] = applyTimeParameterization(plan.trajectory_, cfg);
+                    auto [ok, timed_traj] = applyTimeParameterization(manymove_planner_compat::mgiPlanTrajectory(plan), cfg);
                     if (ok && !timed_traj.joint_trajectory.points.empty())
                     {
                         double duration =

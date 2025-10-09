@@ -1,5 +1,5 @@
 #include <rclcpp/rclcpp.hpp>
-#include <moveit/moveit_cpp/moveit_cpp.h>
+#include "manymove_planner/compat/moveit_includes_compat.hpp"
 #include "manymove_planner/moveit_cpp_planner.hpp"
 #include "manymove_planner/planner_interface.hpp"
 #include "manymove_planner/action_server.hpp"

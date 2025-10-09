@@ -21,7 +21,11 @@
 #include <vector>
 #include <unordered_map>
 #include <geometry_msgs/msg/pose.hpp>
-#include <tf2/LinearMath/Quaternion.h>
+#if __has_include(<tf2/LinearMath/Quaternion.hpp>)
+#  include <tf2/LinearMath/Quaternion.hpp>
+#else
+#  include <tf2/LinearMath/Quaternion.h>
+#endif
 
 namespace manymove_cpp_trees
 {

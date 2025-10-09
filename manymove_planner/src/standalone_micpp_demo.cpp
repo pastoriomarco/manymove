@@ -2,18 +2,25 @@
 #include <memory>
 
 // MoveitCpp
-#include <moveit/moveit_cpp/moveit_cpp.h>
-#include <moveit/moveit_cpp/planning_component.h>
+#include "manymove_planner/compat/moveit_includes_compat.hpp"
 
 #include <geometry_msgs/msg/point_stamped.h>
 
 // For linear movements
 #include <tf2_eigen/tf2_eigen.hpp>
-#include <moveit/robot_state/robot_state.h>
-#include <moveit/robot_state/cartesian_interpolator.h>
+#if __has_include(<moveit/robot_state/robot_state.hpp>)
+#  include <moveit/robot_state/robot_state.hpp>
+#else
+#  include <moveit/robot_state/robot_state.h>
+#endif
+#include "manymove_planner/compat/cartesian_interpolator_compat.hpp"
 
 // For visualization
-#include <moveit_visual_tools/moveit_visual_tools.h>
+#if __has_include(<moveit_visual_tools/moveit_visual_tools.hpp>)
+#  include <moveit_visual_tools/moveit_visual_tools.hpp>
+#else
+#  include <moveit_visual_tools/moveit_visual_tools.h>
+#endif
 
 namespace rvt = rviz_visual_tools;
 
@@ -428,7 +435,13 @@ int main(int argc, char **argv)
     moveit::core::RobotStatePtr wp_start_state = planning_components->getStartState();
 
     // Compute Cartesian path using the correct signature
-    double fraction = moveit::core::CartesianInterpolator::computeCartesianPath(
+    manymove_msgs::msg::MovementConfig demo_cfg;
+    demo_cfg.jump_threshold = 0.0;
+    demo_cfg.cartesian_precision_translational = 0.001;
+    demo_cfg.cartesian_precision_rotational = 0.05;
+    demo_cfg.cartesian_precision_max_resolution = 0.005;
+
+    double fraction = manymove_planner_compat::computeCartesianPathCompat(
         wp_start_state.get(),                         // Pass the raw pointer
         joint_model_group_ptr,                        // Joint model group
         trajectory_states,                            // Resulting trajectory states
@@ -436,7 +449,7 @@ int main(int argc, char **argv)
         waypoints,                                    // Waypoints for Cartesian motion
         true,                                         // Global reference frame
         moveit::core::MaxEEFStep(0.01),               // Maximum end-effector step size
-        moveit::core::JumpThreshold(0.0),             // Jump threshold
+        demo_cfg,                                     // Config for precision / jump
         moveit::core::GroupStateValidityCallbackFn(), // No validity callback
         kinematics::KinematicsQueryOptions(),         // Default kinematics options
         nullptr                                       // No IK cost function

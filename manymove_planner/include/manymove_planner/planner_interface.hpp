@@ -10,7 +10,7 @@
 #include <manymove_msgs/msg/movement_config.hpp>
 #include <manymove_msgs/action/plan_manipulator.hpp>
 #include <rclcpp_action/rclcpp_action.hpp>
-#include <moveit/robot_trajectory/robot_trajectory.h>
+#include "manymove_planner/compat/moveit_includes_compat.hpp"
 #include <control_msgs/action/follow_joint_trajectory.hpp>
 #include <moveit_msgs/msg/constraints.hpp>
 

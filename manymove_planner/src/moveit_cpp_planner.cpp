@@ -1,4 +1,5 @@
 #include "manymove_planner/moveit_cpp_planner.hpp"
+#include "manymove_planner/compat/cartesian_interpolator_compat.hpp"
 
 using manymove_msgs::msg::MovementConfig;
 using namespace std::chrono_literals;
@@ -578,7 +579,7 @@ std::pair<bool, moveit_msgs::msg::RobotTrajectory> MoveItCppPlanner::plan(const 
             moveit::core::GroupStateValidityCallbackFn custom_callback =
                 std::bind(&MoveItCppPlanner::isStateValid, this, std::placeholders::_1, std::placeholders::_2);
 
-            double fraction = moveit::core::CartesianInterpolator::computeCartesianPath(
+            double fraction = manymove_planner_compat::computeCartesianPathCompat(
                 start_state.get(),
                 joint_model_group_ptr,
                 trajectory_states,
@@ -586,7 +587,7 @@ std::pair<bool, moveit_msgs::msg::RobotTrajectory> MoveItCppPlanner::plan(const 
                 eigen_waypoints,
                 true,
                 moveit::core::MaxEEFStep(goal_msg.goal.config.step_size),
-                moveit::core::JumpThreshold(goal_msg.goal.config.jump_threshold),
+                goal_msg.goal.config,
                 custom_callback,
                 kinematics::KinematicsQueryOptions(),
                 nullptr);

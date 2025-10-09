@@ -85,3 +85,20 @@ Key parameters (set via launch files):
 - This package does **not** provide safety features. Always configure appropriate safety systems on your robot controller.
 - It is highly experimental; use with caution.
 - See the [manymove main README](../README.md) for disclaimers, licensing, and credits.
+
+---
+
+## Compatibility (Humble ↔ Jazzy)
+
+This package uses a small, internal compatibility layer to build cleanly on both ROS 2 Humble and Jazzy without changing code paths per distro:
+
+- MoveIt includes: a compat header selects `.hpp` (Jazzy) or `.h` (Humble) using `__has_include`.
+  - See `manymove_planner/compat/moveit_includes_compat.hpp`.
+- MoveGroupInterface API: a shim normalizes the `.trajectory` vs `.trajectory_` member and `computeCartesianPath(...)` signature drift (with/without `jump_threshold`).
+  - See `manymove_planner/compat/moveit_compat.hpp`.
+- CartesianInterpolator API: a shim selects between Humble’s `JumpThreshold` and Jazzy’s `CartesianPrecision`.
+  - See `manymove_planner/compat/cartesian_interpolator_compat.hpp`.
+
+Message definitions are unified via a superset `MovementConfig.msg`. Jazzy-only fields (Cartesian precision) get sensible defaults and are ignored on Humble. Conversely, Humble-only `jump_threshold` is ignored on Jazzy.
+
+CI should build a matrix over `{humble, jazzy}` to verify changes across distros.
