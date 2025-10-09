@@ -50,7 +50,7 @@ source /opt/ros/${ROS_DISTRO}/setup.bash
 
 **4. Clone ManyMove and xarm_ros2**
 - Do not omit `--recursive`, otherwise the dependent submodules are not downloaded.
-- The `-b $ROS_DISTRO` pattern keeps your checkout aligned with the sourced distro.
+- `xarm_ros2` uses distro-specific branches, while `manymove` keeps all compatibility work on `main`.
 ```bash
 cd ${MANYMOVE_ROS_WS}/src
 git clone https://github.com/pastoriomarco/xarm_ros2.git --recursive -b $ROS_DISTRO
@@ -98,17 +98,6 @@ source ${MANYMOVE_ROS_WS}/install/setup.bash
 That’s it! Repeat steps 3–9 whenever you open a new shell.
 
 ---
-
-## Compatibility & Testing Notes
-
-- The planner and signals packages use lightweight compile-time shims (see `manymove_planner/compat/` and helper templates in `manymove_signals`) so the same code builds on Humble and Jazzy without runtime cost.
-- Keep an eye on ROS and MoveIt deprecation warnings during development. When APIs change, update the compatibility helpers in one place to maintain support for multiple distros.
-- Automated build and lint pipelines are being staged. Recommended best practices:
-  - Run `colcon build --event-handlers console_cohesion+` before pushing.
-  - Add `ament_*` linters (C++/Python) and basic GTest/PyTest smoke tests so future CI can do more than compile.
-  - Test the key launch files on both distros when introducing new features that touch planning or MoveItCpp execution.
-
---- 
 
 ## Bring your own robot
 
