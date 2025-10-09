@@ -49,6 +49,7 @@ add_library(moveit_cpp_planner_lib
 ament_target_dependencies(moveit_cpp_planner_lib
   rclcpp
   moveit_core
+  moveit_ros_planning_interface
   tf2_geometry_msgs
   geometry_msgs
   control_msgs

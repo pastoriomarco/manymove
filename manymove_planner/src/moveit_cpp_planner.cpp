@@ -1,5 +1,6 @@
 #include "manymove_planner/moveit_cpp_planner.hpp"
 #include "manymove_planner/compat/cartesian_interpolator_compat.hpp"
+#include "manymove_planner/compat/moveit_compat.hpp"
 
 using manymove_msgs::msg::MovementConfig;
 using namespace std::chrono_literals;
@@ -19,7 +20,10 @@ MoveItCppPlanner::MoveItCppPlanner(
     if (!moveit_cpp_ptr_)
     {
         moveit_cpp_ptr_ = std::make_shared<moveit_cpp::MoveItCpp>(node_);
-        moveit_cpp_ptr_->getPlanningSceneMonitor()->providePlanningSceneService();
+        if (auto psm = manymove_planner_compat::getPlanningSceneMonitorRw(moveit_cpp_ptr_))
+        {
+            psm->providePlanningSceneService();
+        }
     }
 
     /**
@@ -35,7 +39,7 @@ MoveItCppPlanner::MoveItCppPlanner(
     // // moveit_cpp_ptr_->getPlanningSceneMonitor()->startPublishingPlanningScene(planning_scene_monitor::PlanningSceneMonitor::SceneUpdateType::UPDATE_GEOMETRY);
     // moveit_cpp_ptr_->getPlanningSceneMonitor()->monitorDiffs(true);
 
-    auto planning_pipeline_names = moveit_cpp_ptr_->getPlanningPipelineNames(planning_group_);
+    auto planning_pipeline_names = manymove_planner_compat::getPlanningPipelineNames(*moveit_cpp_ptr_, planning_group_);
     for (const auto &s : planning_pipeline_names)
     {
         RCLCPP_INFO(logger_, "Pipeline registered: %s", s.c_str());
@@ -875,7 +879,7 @@ bool MoveItCppPlanner::sendControlledStop(const manymove_msgs::msg::MovementConf
 bool MoveItCppPlanner::isStateValid(const moveit::core::RobotState *state,
                                     const moveit::core::JointModelGroup *group) const
 {
-    auto psm = moveit_cpp_ptr_->getPlanningSceneMonitor();
+    auto psm = manymove_planner_compat::getPlanningSceneMonitorRw(moveit_cpp_ptr_);
     if (!psm)
     {
         RCLCPP_ERROR(logger_, "PlanningSceneMonitor is null. Cannot perform collision checking.");
@@ -1144,7 +1148,7 @@ bool MoveItCppPlanner::isTrajectoryValid(
     }
 
     // Get a lock on the planning scene through the planning scene monitor.
-    planning_scene_monitor::LockedPlanningSceneRO lscene(moveit_cpp_ptr_->getPlanningSceneMonitor());
+    planning_scene_monitor::LockedPlanningSceneRO lscene(manymove_planner_compat::getPlanningSceneMonitorRw(moveit_cpp_ptr_));
     if (!lscene)
     {
         RCLCPP_ERROR(logger_, "PlanningSceneMonitor is not available in isTrajectoryValid().");
@@ -1183,7 +1187,7 @@ bool MoveItCppPlanner::isTrajectoryValid(
     }
 
     // Lock the current planning scene via the planning scene monitor.
-    planning_scene_monitor::LockedPlanningSceneRO lscene(moveit_cpp_ptr_->getPlanningSceneMonitor());
+    planning_scene_monitor::LockedPlanningSceneRO lscene(manymove_planner_compat::getPlanningSceneMonitorRw(moveit_cpp_ptr_));
     if (!lscene)
     {
         RCLCPP_ERROR(logger_, "Failed to lock the PlanningScene in isTrajectoryValid");

@@ -1,5 +1,37 @@
 #include "manymove_signals/signals.hpp"
 
+namespace
+{
+template <typename NodeT, typename ServiceT>
+auto createClientCompat(NodeT *node,
+                        const std::string &service_name,
+                        rclcpp::CallbackGroup::SharedPtr group,
+                        int)
+    -> decltype(node->template create_client<ServiceT>(service_name, rclcpp::ServicesQoS(), group))
+{
+    return node->template create_client<ServiceT>(service_name, rclcpp::ServicesQoS(), group);
+}
+
+template <typename NodeT, typename ServiceT>
+auto createClientCompat(NodeT *node,
+                        const std::string &service_name,
+                        rclcpp::CallbackGroup::SharedPtr group,
+                        long)
+    -> decltype(node->template create_client<ServiceT>(service_name, rmw_qos_profile_services_default, group))
+{
+    return node->template create_client<ServiceT>(service_name, rmw_qos_profile_services_default, group);
+}
+
+template <typename NodeT, typename ServiceT>
+auto createClient(NodeT *node,
+                  const std::string &service_name,
+                  rclcpp::CallbackGroup::SharedPtr group)
+    -> decltype(createClientCompat<NodeT, ServiceT>(node, service_name, group, 0))
+{
+    return createClientCompat<NodeT, ServiceT>(node, service_name, group, 0);
+}
+} // namespace
+
 namespace manymove_signals
 {
 
@@ -58,44 +90,44 @@ namespace manymove_signals
         }
 
         // Tool GPIO
-        set_digital_io_clients_["tool"] = this->create_client<xarm_msgs::srv::SetDigitalIO>(
+        set_digital_io_clients_["tool"] = createClient<SignalsNode, xarm_msgs::srv::SetDigitalIO>(
+            this,
             namespace_prefix + "/set_tgpio_digital",
-            rmw_qos_profile_services_default,
             service_callback_group_);
-        get_digital_io_clients_["tool"] = this->create_client<xarm_msgs::srv::GetDigitalIO>(
+        get_digital_io_clients_["tool"] = createClient<SignalsNode, xarm_msgs::srv::GetDigitalIO>(
+            this,
             namespace_prefix + "/get_tgpio_digital",
-            rmw_qos_profile_services_default,
             service_callback_group_);
 
         // Controller GPIO
-        set_digital_io_clients_["controller"] = this->create_client<xarm_msgs::srv::SetDigitalIO>(
+        set_digital_io_clients_["controller"] = createClient<SignalsNode, xarm_msgs::srv::SetDigitalIO>(
+            this,
             namespace_prefix + "/set_cgpio_digital",
-            rmw_qos_profile_services_default,
             service_callback_group_);
-        get_digital_io_clients_["controller"] = this->create_client<xarm_msgs::srv::GetDigitalIO>(
+        get_digital_io_clients_["controller"] = createClient<SignalsNode, xarm_msgs::srv::GetDigitalIO>(
+            this,
             namespace_prefix + "/get_cgpio_digital",
-            rmw_qos_profile_services_default,
             service_callback_group_);
 
         // Initialize SetInt16 clients for mode and state
-        set_int16_clients_["mode"] = this->create_client<xarm_msgs::srv::SetInt16>(
+        set_int16_clients_["mode"] = createClient<SignalsNode, xarm_msgs::srv::SetInt16>(
+            this,
             namespace_prefix + "/set_mode",
-            rmw_qos_profile_services_default,
             service_callback_group_);
-        set_int16_clients_["state"] = this->create_client<xarm_msgs::srv::SetInt16>(
+        set_int16_clients_["state"] = createClient<SignalsNode, xarm_msgs::srv::SetInt16>(
+            this,
             namespace_prefix + "/set_state",
-            rmw_qos_profile_services_default,
             service_callback_group_);
 
         // Initialize additional service clients for ResetRobotState
-        clean_error_client_ = this->create_client<xarm_msgs::srv::Call>(
+        clean_error_client_ = createClient<SignalsNode, xarm_msgs::srv::Call>(
+            this,
             namespace_prefix + "/clean_error",
-            rmw_qos_profile_services_default,
             service_callback_group_);
 
-        motion_enable_client_ = this->create_client<xarm_msgs::srv::SetInt16ById>(
+        motion_enable_client_ = createClient<SignalsNode, xarm_msgs::srv::SetInt16ById>(
+            this,
             namespace_prefix + "/motion_enable",
-            rmw_qos_profile_services_default,
             service_callback_group_);
     }
 

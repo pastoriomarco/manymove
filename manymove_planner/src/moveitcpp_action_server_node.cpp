@@ -1,5 +1,6 @@
 #include <rclcpp/rclcpp.hpp>
 #include "manymove_planner/compat/moveit_includes_compat.hpp"
+#include "manymove_planner/compat/moveit_compat.hpp"
 #include "manymove_planner/moveit_cpp_planner.hpp"
 #include "manymove_planner/planner_interface.hpp"
 #include "manymove_planner/action_server.hpp"
@@ -83,7 +84,10 @@ int main(int argc, char **argv)
   // MoveItCpp Node (Dedicated for PlanningScene)
   auto moveitcpp_node = std::make_shared<rclcpp::Node>("moveitcpp_node", node_opts);
   auto moveit_cpp = std::make_shared<moveit_cpp::MoveItCpp>(moveitcpp_node);
-  moveit_cpp->getPlanningSceneMonitor()->providePlanningSceneService();
+  if (auto psm = manymove_planner_compat::getPlanningSceneMonitorRw(moveit_cpp))
+  {
+    psm->providePlanningSceneService();
+  }
 
   rclcpp::executors::SingleThreadedExecutor moveitcpp_executor;
   moveitcpp_executor.add_node(moveitcpp_node);

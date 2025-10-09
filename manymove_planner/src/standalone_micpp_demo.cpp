@@ -1,8 +1,10 @@
 #include <rclcpp/rclcpp.hpp>
 #include <memory>
+#include <vector>
 
 // MoveitCpp
 #include "manymove_planner/compat/moveit_includes_compat.hpp"
+#include "manymove_planner/compat/moveit_compat.hpp"
 
 #include <geometry_msgs/msg/point_stamped.h>
 
@@ -56,6 +58,7 @@ int main(int argc, char **argv)
     //
     static const std::string PLANNING_GROUP = "lite6";
     static const std::string LOGNAME = "moveit_cpp_tutorial";
+    static const std::vector<std::string> CONTROLLERS{1, "lite6_traj_controller"};
 
     /* Otherwise robot with zeros joint_states */
     rclcpp::sleep_for(std::chrono::seconds(1));
@@ -63,7 +66,11 @@ int main(int argc, char **argv)
     RCLCPP_INFO(LOGGER, "Starting MoveIt Tutorials...");
 
     auto moveit_cpp_ptr = std::make_shared<moveit_cpp::MoveItCpp>(node);
-    moveit_cpp_ptr->getPlanningSceneMonitor()->providePlanningSceneService();
+    auto planning_scene_monitor = manymove_planner_compat::getPlanningSceneMonitorRw(moveit_cpp_ptr);
+    if (planning_scene_monitor)
+    {
+        planning_scene_monitor->providePlanningSceneService();
+    }
 
     auto planning_components = std::make_shared<moveit_cpp::PlanningComponent>(PLANNING_GROUP, moveit_cpp_ptr);
     auto robot_model_ptr = moveit_cpp_ptr->getRobotModel();
@@ -76,7 +83,7 @@ int main(int argc, char **argv)
     // The package MoveItVisualTools provides many capabilities for visualizing objects, robots,
     // and trajectories in RViz as well as debugging tools such as step-by-step introspection of a script
     moveit_visual_tools::MoveItVisualTools visual_tools(node, "link_base", "moveit_cpp_tutorial",
-                                                        moveit_cpp_ptr->getPlanningSceneMonitor());
+                                                        planning_scene_monitor);
     visual_tools.deleteAllMarkers();
     visual_tools.loadRemoteControl();
 
@@ -134,7 +141,7 @@ int main(int argc, char **argv)
         visual_tools.trigger();
 
         /* Uncomment if you want to execute the plan */
-        planning_components->execute(); // Execute the plan
+        manymove_planner_compat::executePlanningComponent(*planning_components); // Execute the plan
     }
 
     // Plan #1 visualization:
@@ -183,7 +190,7 @@ int main(int argc, char **argv)
         visual_tools.trigger();
 
         // Execute the plan
-        planning_components->execute(); // Execute the plan
+        manymove_planner_compat::executePlanningComponent(*planning_components); // Execute the plan
     }
 
     // Visualization
@@ -231,7 +238,7 @@ int main(int argc, char **argv)
         visual_tools.trigger();
 
         /* Uncomment if you want to execute the plan */
-        // planning_components->execute(); // Execute the plan
+        // manymove_planner_compat::executePlanningComponent(*planning_components); // Execute the plan
     }
 
     // Plan #3 visualization:
@@ -296,7 +303,7 @@ int main(int argc, char **argv)
         visual_tools.trigger();
 
         /* Uncomment if you want to execute the plan */
-        planning_components->execute(); // Execute the plan
+        manymove_planner_compat::executePlanningComponent(*planning_components); // Execute the plan
     }
 
     // Plan #4 visualization:
@@ -343,7 +350,7 @@ int main(int argc, char **argv)
         visual_tools.trigger();
 
         /* Uncomment if you want to execute the plan */
-        planning_components->execute(); // Execute the plan
+        manymove_planner_compat::executePlanningComponent(*planning_components); // Execute the plan
     }
 
     // Plan #5 visualization:
@@ -385,7 +392,7 @@ int main(int argc, char **argv)
 
     // Add object to planning scene
     { // Lock PlanningScene
-        planning_scene_monitor::LockedPlanningSceneRW scene(moveit_cpp_ptr->getPlanningSceneMonitor());
+        planning_scene_monitor::LockedPlanningSceneRW scene(planning_scene_monitor);
         scene->processCollisionObjectMsg(collision_object);
     } // Unlock PlanningScene
     planning_components->setStartStateToCurrentState();
@@ -399,7 +406,7 @@ int main(int argc, char **argv)
         visual_tools.trigger();
 
         /* Uncomment if you want to execute the plan */
-        planning_components->execute(); // Execute the plan
+        manymove_planner_compat::executePlanningComponent(*planning_components); // Execute the plan
     }
 
     // Plan #6 visualization:
@@ -474,7 +481,7 @@ int main(int argc, char **argv)
 
         // Execute the trajectory
         auto trajectory_ptr = std::make_shared<robot_trajectory::RobotTrajectory>(trajectory);
-        moveit_cpp_ptr->execute(PLANNING_GROUP, trajectory_ptr);
+        manymove_planner_compat::executeTrajectory(*moveit_cpp_ptr, PLANNING_GROUP, trajectory_ptr, CONTROLLERS);
     }
     else
     {

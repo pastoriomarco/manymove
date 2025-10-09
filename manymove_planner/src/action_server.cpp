@@ -1,5 +1,28 @@
 #include "manymove_planner/action_server.hpp"
 
+namespace
+{
+template <typename RequestT>
+auto setSwitchActivateAsapImpl(RequestT &request, bool value, int)
+    -> decltype(request.activate_asap = value, void())
+{
+    request.activate_asap = value;
+}
+
+template <typename RequestT>
+auto setSwitchActivateAsapImpl(RequestT &request, bool value, long)
+    -> decltype(request.start_asap = value, void())
+{
+    request.start_asap = value;
+}
+
+template <typename RequestT>
+void setSwitchActivateAsap(RequestT &request, bool value)
+{
+    setSwitchActivateAsapImpl(request, value, 0);
+}
+} // namespace
+
 ManipulatorActionServer::ManipulatorActionServer(
     const rclcpp::Node::SharedPtr &node,
     const std::shared_ptr<PlannerInterface> &planner,
@@ -559,7 +582,7 @@ void ManipulatorActionServer::activateControllerAsync(
     request->activate_controllers.push_back(controller_name);
     request->deactivate_controllers.clear();
     request->strictness = request->STRICT;
-    request->start_asap = false;
+    setSwitchActivateAsap(*request, false);
     request->timeout.sec = 0;
     request->timeout.nanosec = 0;
 
@@ -616,7 +639,7 @@ void ManipulatorActionServer::deactivateControllerAsync(
     request->activate_controllers.clear();                      // We are not starting any new controllers
     request->deactivate_controllers.push_back(controller_name); // We want to deactivate/stop this controller
     request->strictness = request->STRICT;                      // STRICT means all requested switches must succeed
-    request->start_asap = false;                                // You can set this to true or false depending on your usage
+    setSwitchActivateAsap(*request, false);                                // You can set this to true or false depending on your usage
     request->timeout.sec = 0;                                   // Timeout for the switch
     request->timeout.nanosec = 0;
 
