@@ -9,6 +9,8 @@ planning_scene_monitor_options:
 
 planning_pipelines:
   pipeline_names: ["ompl", "chomp", "pilz_industrial_motion_planner"]
+  # in Jazzy, you can leverage STOMP too: update the above line adding "stomp", then uncomment the STOMP-related definition in move.hpp in src/manymove/manymove_cpp_trees/include/manymove_cpp_trees/move.hpp
+  # You also need the _planning.yaml in your moveit config, but for github.com/pastoriomarco/xarm_ros2 they are already there
 
 plan_request_params:
   planning_attempts: 1

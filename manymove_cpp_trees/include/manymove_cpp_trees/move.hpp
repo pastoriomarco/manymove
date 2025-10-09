@@ -157,13 +157,21 @@ namespace manymove_cpp_trees
         LIN_slow_move_config.acceleration_scaling_factor = 0.1;
         LIN_slow_move_config.min_stop_time = 0.05; // need more stop precision on slow moves for input searches
 
-        // Chomp move
+        // CHOMP move
         MovementConfig CHOMP_max_move_config = max_move_config;
         CHOMP_max_move_config.planning_pipeline = "chomp";
         CHOMP_max_move_config.planner_id = "CHOMP";
         CHOMP_max_move_config.planning_time = 5;
         CHOMP_max_move_config.planning_attempts = 1;
         CHOMP_max_move_config.plan_number_target = 1;
+
+        // // STOMP move (uncomment here and modify src/manymove/manymove_planner/config/moveit_cpp.yaml to add STOMP in Jazzy)
+        // MovementConfig CHOMP_max_move_config = max_move_config;
+        // CHOMP_max_move_config.planning_pipeline = "stomp";
+        // CHOMP_max_move_config.planner_id = "STOMP";
+        // CHOMP_max_move_config.planning_time = 5;
+        // CHOMP_max_move_config.planning_attempts = 1;
+        // CHOMP_max_move_config.plan_number_target = 1;
 
         return {
             // Standard moves for joint and pose for OMPL planning library
@@ -186,8 +194,11 @@ namespace manymove_cpp_trees
             {"LIN_mid_move", LIN_mid_move_config},
             {"LIN_slow_move", LIN_slow_move_config},
 
-            // Params for chomp planning library
+            // Params for CHOMP planning library
             {"CHOMP_max_move", CHOMP_max_move_config},
+
+            // // Params for STOMP planning library (uncomment here and modify src/manymove/manymove_planner/config/moveit_cpp.yaml to add STOMP in Jazzy)
+            // {"STOMP_max_move", STOMP_max_move_config},
 
             // Test for moves with cuMotion planning library
             {"cumotion_max_move", cumotion_max_move_config},
