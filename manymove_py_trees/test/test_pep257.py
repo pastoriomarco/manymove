@@ -12,6 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from pathlib import Path
+
 import pytest
 from ament_pep257.main import main
 
@@ -19,5 +21,6 @@ from ament_pep257.main import main
 @pytest.mark.linter
 @pytest.mark.pep257
 def test_pep257():
-    rc = main(argv=[".", "test"])
+    repo_root = Path(__file__).resolve().parents[2]
+    rc = main(argv=["--config", str(repo_root / "setup.cfg"), ".", "test"])
     assert rc == 0, "Found code style errors / warnings"
