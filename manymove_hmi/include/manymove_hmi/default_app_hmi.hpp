@@ -1,3 +1,10 @@
+/*
+BSD 3-Clause License
+Copyright (c) 2024-2025, Flexin Group SRL
+All rights reserved.
+See LICENSE file in the project root for full license text.
+*/
+
 #ifndef DEFAULT_APP_HMI_HPP
 #define DEFAULT_APP_HMI_HPP
 
