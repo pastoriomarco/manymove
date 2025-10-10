@@ -31,27 +31,9 @@ jobs:
         run: |
           set -e
           apt-get update
-          apt-get install -y python3-colcon-common-extensions python3-rosdep git \
-          ros-$ROS_DISTRO-moveit \
-          ros-$ROS_DISTRO-backward-ros \
-          ros-$ROS_DISTRO-joint-state-publisher \
-          ros-$ROS_DISTRO-control-toolbox \
-          ros-$ROS_DISTRO-controller-manager \
-          ros-$ROS_DISTRO-image-view \
-          ros-$ROS_DISTRO-tf-transformations \
-          ros-$ROS_DISTRO-find-object-2d \
-          ros-$ROS_DISTRO-controller-manager-msgs \
-          ros-$ROS_DISTRO-joint-state-broadcaster \
-          ros-$ROS_DISTRO-joint-trajectory-controller \
-          ros-$ROS_DISTRO-diff-drive-controller \
-          ros-$ROS_DISTRO-joy \
-          ros-$ROS_DISTRO-moveit-servo \
-          ros-$ROS_DISTRO-topic-based-ros2-control \
-          ros-$ROS_DISTRO-behaviortree-cpp-v3 \
-          ros-$ROS_DISTRO-moveit-visual-tools \
-          ros-$ROS_DISTRO-py-trees \
-          ros-$ROS_DISTRO-py-trees-ros \
-          ros-$ROS_DISTRO-simulation-interfaces || true 
+          apt-get install -y python3-colcon-common-extensions python3-rosdep git
+          # Workaround: topic_based_ros2_control may not have a rosdep entry
+          apt-get install -y ros-$ROS_DISTRO-topic-based-ros2-control || true
           rm -rf /var/lib/apt/lists/*
 
       - name: Setup rosdep
@@ -65,7 +47,9 @@ jobs:
 
       - name: Install package dependencies
         run: |
-          rosdep install --from-paths ${ROS_WS}/src --ignore-src --rosdistro ${ROS_DISTRO} -y
+          # Skip deps without rosdep rules that we install manually above
+          rosdep install --from-paths ${ROS_WS}/src --ignore-src --rosdistro ${ROS_DISTRO} -y \
+            --skip-keys topic_based_ros2_control
 
       - name: Build workspace
         shell: bash
