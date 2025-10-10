@@ -79,6 +79,8 @@ if(BUILD_TESTING)
   find_package(ament_cmake_uncrustify REQUIRED)
   set(ament_cmake_copyright_FOUND TRUE)
   set(ament_cmake_cpplint_FOUND TRUE)
+  # Disable flake8 checks for this package; launch style is enforced elsewhere
+  set(ament_cmake_flake8_FOUND TRUE)
   ament_lint_auto_find_test_dependencies()
 endif()
 
