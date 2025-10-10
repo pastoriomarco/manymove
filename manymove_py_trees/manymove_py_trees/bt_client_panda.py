@@ -1,27 +1,27 @@
 #!/usr/bin/env python3
-import rclpy
-from rclpy.node import Node
-from rclpy.executors import MultiThreadedExecutor
-import py_trees
-import py_trees_ros
+"""Demo behaviour-tree client for the Franka Panda manipulator."""
+
 import time
 
-from geometry_msgs.msg import Pose, Point, Quaternion
+import py_trees
+import py_trees_ros
+import rclpy
+from geometry_msgs.msg import Point, Pose, Quaternion
 from moveit_msgs.msg import RobotTrajectory
 from py_trees.blackboard import Blackboard
+from rclpy.executors import MultiThreadedExecutor
+from rclpy.node import Node
 
-# (1) Imports for move definitions and tree helper:
-from manymove_py_trees.move_definitions import define_movement_configs, create_move
-from manymove_py_trees.tree_helper import create_tree_from_sequences
-
-# (2) Import the HMI service node (which publishes blackboard status and provides services)
 from manymove_py_trees.hmi_service_node import HMIServiceNode
+from manymove_py_trees.move_definitions import create_move, define_movement_configs
+from manymove_py_trees.tree_helper import create_tree_from_sequences
 
 
 def build_and_run_bt(node: Node):
+    """Create and tick the Panda demonstration behaviour tree."""
     node.get_logger().info("BT Client Node started")
-    node.declare_parameter('tcp_frame', 'panda_link8')
-    tcp_frame = node.get_parameter('tcp_frame').value
+    node.declare_parameter("tcp_frame", "panda_link8")
+    tcp_frame = node.get_parameter("tcp_frame").value
 
     # Create and initialize the Blackboard with the keys used by the behavior
     bb = Blackboard()
@@ -39,17 +39,10 @@ def build_and_run_bt(node: Node):
     joint_rest = [0.0, -0.785, 0.0, -2.355, 0.0, 3.14, 0.785]
     named_home = "ready"
 
-    pick_target = Pose(
-        position=Point(x=0.3, y=0.3, z=0.25),
-        orientation=Quaternion(x=1.0, y=0.0, z=0.0, w=0.0)
-    )
+    pick_target = Pose(position=Point(x=0.3, y=0.3, z=0.25), orientation=Quaternion(x=1.0, y=0.0, z=0.0, w=0.0))
     approach_target = Pose(
-        position=Point(
-            x=pick_target.position.x,
-            y=pick_target.position.y,
-            z=pick_target.position.z + 0.02
-        ),
-        orientation=Quaternion(x=1.0, y=0.0, z=0.0, w=0.0)
+        position=Point(x=pick_target.position.x, y=pick_target.position.y, z=pick_target.position.z + 0.02),
+        orientation=Quaternion(x=1.0, y=0.0, z=0.0, w=0.0),
     )
 
     # Define three sequences: rest, pick, and home.
@@ -70,11 +63,7 @@ def build_and_run_bt(node: Node):
     chained_branch = create_tree_from_sequences(node, list_of_sequences, root_name="LogicSequence")
     main_seq = py_trees.composites.Sequence("Main_Sequence", memory=True)
     main_seq.add_child(chained_branch.root)
-    repeated_root = py_trees.decorators.Repeat(
-        child=main_seq,
-        num_success=-1,  # infinite repeat
-        name="RepeatForever"
-    )
+    repeated_root = py_trees.decorators.Repeat(child=main_seq, num_success=-1, name="RepeatForever")  # infinite repeat
     bt_tree = py_trees_ros.trees.BehaviourTree(repeated_root)
 
     # Setup the BT (which will read the rclpy Node from the blackboard)
@@ -104,6 +93,7 @@ def build_and_run_bt(node: Node):
 
 
 def main():
+    """Entry point that spins the Panda BT client alongside the HMI service node."""
     rclpy.init()
 
     # Use a MultiThreadedExecutor so that the HMI service node and BT node can run concurrently
@@ -122,6 +112,7 @@ def main():
 
     # Run the executor in a background thread
     import threading
+
     executor_thread = threading.Thread(target=executor.spin, daemon=True)
     executor_thread.start()
 

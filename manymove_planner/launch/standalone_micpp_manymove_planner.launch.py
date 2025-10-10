@@ -1,13 +1,16 @@
+"""Launch description for the standalone micpp manymove planner scenario."""
+
 import os
-from launch import LaunchDescription
-from launch_ros.actions import Node
-from launch.launch_context import LaunchContext
+
 from ament_index_python.packages import get_package_share_directory
+from launch import LaunchDescription
+from launch.launch_context import LaunchContext
+from launch_ros.actions import Node
 from uf_ros_lib.moveit_configs_builder import MoveItConfigsBuilder
 
 
 def generate_launch_description():
-
+    """Create the launch description entry point."""
     # Load the robot configuration
     moveit_config = (
         MoveItConfigsBuilder(
@@ -15,8 +18,8 @@ def generate_launch_description():
             ros2_control_plugin="uf_robot_hardware/UFRobotFakeSystemHardware",
             context=LaunchContext(),
             robot_type="lite",
-            dof=6, 
-            add_realsense_d435i=True, 
+            dof=6,
+            add_realsense_d435i=True,
             add_d435i_links=True,
             add_other_geometry=True,
             geometry_type="mesh",
@@ -24,7 +27,7 @@ def generate_launch_description():
             geometry_mesh_filename="pneumatic_lite.stl",
             geometry_mesh_tcp_xyz="0.03075 0 0.11885",
             geometry_mesh_tcp_rpy="0 0.52 0",
-            #kinematics_suffix="LS1"
+            # kinematics_suffix="LS1"
         )
         .robot_description()
         .trajectory_execution(file_path="config/lite6/fake_controllers.yaml")
@@ -43,9 +46,7 @@ def generate_launch_description():
     )
 
     # RViz
-    rviz_config_file = (
-        get_package_share_directory("manymove_planner") + "/config/micpp_demo.rviz"
-    )
+    rviz_config_file = get_package_share_directory("manymove_planner") + "/config/micpp_demo.rviz"
 
     rviz_node = Node(
         package="rviz2",
@@ -87,7 +88,6 @@ def generate_launch_description():
         "lite6_controllers.yaml",
     )
 
-
     ros2_control_node = Node(
         package="controller_manager",
         executable="ros2_control_node",
@@ -125,4 +125,3 @@ def generate_launch_description():
             arm_controller_spawner,
         ]
     )
-

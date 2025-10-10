@@ -1,23 +1,20 @@
 #!/usr/bin/env python3
 
-import py_trees
-import rclpy
-from rclpy.action import ActionClient
-from moveit_msgs.msg import RobotTrajectory
-from manymove_msgs.action import MoveManipulator
-from manymove_msgs.action._move_manipulator import MoveManipulator_Result
+"""Behavior-tree leaf that manages MoveManipulator action goals via py_trees."""
 
+import py_trees
+from manymove_msgs.action._move_manipulator import MoveManipulator_Result
+from moveit_msgs.msg import RobotTrajectory
 from py_trees.common import Access
+from rclpy.action import ActionClient
+
+from manymove_msgs.action import MoveManipulator
+
 
 class MoveManipulatorBehavior(py_trees.behaviour.Behaviour):
-    def __init__(
-        self,
-        name: str,
-        node,
-        move,
-        prefix: str = "",
-        wait_for_server_seconds: float = 5.0
-    ):
+    """Wrap the MoveManipulator action into a reusable py_trees behaviour."""
+
+    def __init__(self, name: str, node, move, prefix: str = "", wait_for_server_seconds: float = 5.0):
         super().__init__(name=name)
         self.prefix = prefix
         self._node = node  # store the ROS2 node reference directly
@@ -53,9 +50,10 @@ class MoveManipulatorBehavior(py_trees.behaviour.Behaviour):
         self._cancel_in_progress = False
 
     def setup(self, **kwargs):
-        """
-        Called once, when the tree is "setup". We fetch our rclpy node
-        from the blackboard (key = 'node'), then create the action client.
+        """Initialise the action client and cache the ROS node from the blackboard.
+
+        Raises:
+            RuntimeError: If the node is missing or the action server is unavailable.
         """
         self._node = self.bb.get("node")
         if not self._node:
@@ -63,10 +61,7 @@ class MoveManipulatorBehavior(py_trees.behaviour.Behaviour):
 
         server_name = self.prefix + "move_manipulator"
         self._action_client = ActionClient(
-            self._node,
-            MoveManipulator,
-            server_name,
-            callback_group=self._node.default_callback_group
+            self._node, MoveManipulator, server_name, callback_group=self._node.default_callback_group
         )
 
         self._node.get_logger().info(
@@ -76,9 +71,7 @@ class MoveManipulatorBehavior(py_trees.behaviour.Behaviour):
             raise RuntimeError(f"[{self.name}] server '{server_name}' not available")
 
     def initialise(self):
-        """
-        Called every time this behavior transitions from INVALID to RUNNING.
-        """
+        """Prepare behaviour state each time it transitions to RUNNING."""
         self._node.get_logger().info(f"[{self.name}] => initialise()")
         self._goal_sent = False
         self._result_received = False
@@ -97,9 +90,7 @@ class MoveManipulatorBehavior(py_trees.behaviour.Behaviour):
             self._paused = True
 
     def update(self):
-        """
-        Called every tick while RUNNING (unless or until we reach SUCCESS or FAILURE).
-        """
+        """Tick the behaviour until the MoveManipulator action finishes."""
         if self.status == py_trees.common.Status.FAILURE:
             return py_trees.common.Status.FAILURE
 
@@ -144,9 +135,7 @@ class MoveManipulatorBehavior(py_trees.behaviour.Behaviour):
                 return py_trees.common.Status.FAILURE
 
             self._node.get_logger().info(f"[{self.name}] sending MoveManipulator goal => prefix '{self.prefix}'")
-            send_goal_future = self._action_client.send_goal_async(
-                goal_msg, feedback_callback=self.feedback_callback
-            )
+            send_goal_future = self._action_client.send_goal_async(goal_msg, feedback_callback=self.feedback_callback)
             send_goal_future.add_done_callback(self.goal_response_callback)
 
             self._goal_sent = True
@@ -179,9 +168,7 @@ class MoveManipulatorBehavior(py_trees.behaviour.Behaviour):
         return py_trees.common.Status.RUNNING
 
     def terminate(self, new_status):
-        """
-        Called once we leave RUNNING (either we succeed, fail, or get halted => INVALID).
-        """
+        """Clean up state whenever the behaviour stops running."""
         if new_status == py_trees.common.Status.INVALID:
             self._cancel_all_goals()
             self._clear_trajectory()
@@ -238,6 +225,7 @@ class MoveManipulatorBehavior(py_trees.behaviour.Behaviour):
     # Action Callbacks
     # -------------------------------------------------------
     def goal_response_callback(self, future):
+        """Handle responses from the MoveManipulator action server."""
         goal_handle = future.result()
         if not goal_handle or not goal_handle.accepted:
             self._node.get_logger().error(f"[{self.name}] goal REJECTED => will fail in update()")
@@ -256,6 +244,7 @@ class MoveManipulatorBehavior(py_trees.behaviour.Behaviour):
             get_result_future.add_done_callback(self.result_callback)
 
     def result_callback(self, future):
+        """Handle completion of the MoveManipulator goal."""
         wrapped_result = future.result()
         if not wrapped_result:
             self._node.get_logger().error(f"[{self.name}] result callback with no wrapped_result => fail")
@@ -273,6 +262,7 @@ class MoveManipulatorBehavior(py_trees.behaviour.Behaviour):
         self._result_received = True
 
     def feedback_callback(self, fb_msg):
+        """React to feedback updates from the MoveManipulator action."""
         fb = fb_msg.feedback
         if fb.in_collision:
             self._node.get_logger().warn(

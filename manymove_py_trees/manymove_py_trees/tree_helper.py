@@ -1,33 +1,33 @@
 #!/usr/bin/env python3
 
-import py_trees
-import py_trees_ros
+"""Utilities for building behaviour trees from MoveManipulator requests."""
+
 from typing import List
 
-# Assuming you have these in your package:
+import py_trees
+import py_trees_ros
+
 from manymove_py_trees.move_definitions import Move
 from manymove_py_trees.move_manipulator_behavior import MoveManipulatorBehavior
 
+
 def create_tree_from_moves(
-    node,
-    moves: List[Move],
-    root_name: str = "MoveSequence"
+    node, moves: List[Move], root_name: str = "MoveSequence"
 ) -> py_trees_ros.trees.BehaviourTree:
-    """
-    Build a simple BT that executes each Move in sequence using the 'move_manipulator' action.
+    """Build a behaviour tree that executes each move sequentially.
 
     Each Move is handled by a single MoveManipulatorBehavior node, which:
-      - Sends the MoveManipulator action goal
-      - Waits for success/failure
-      - Cancels on halt, etc.
+    - Sends the MoveManipulator action goal.
+    - Waits for success or failure.
+    - Cancels when halted.
 
     Args:
-        node:       ROS2 node (rclpy.node.Node)
-        moves:      list of Move objects
-        root_name:  name for the top-level node
+        node: rclpy node used to run the behaviour tree.
+        moves: Ordered list of Move objects to execute.
+        root_name: Name to apply to the top-level sequence.
 
     Returns:
-        A py_trees_ros.trees.BehaviourTree that executes each move in a row.
+        py_trees_ros.trees.BehaviourTree: Behaviour tree that executes the supplied moves.
     """
     # If no moves, just return an empty Sequence
     if not moves:
@@ -39,11 +39,7 @@ def create_tree_from_moves(
 
     # For each Move, add a child node that calls MoveManipulator
     for i, move in enumerate(moves):
-        move_node = MoveManipulatorBehavior(
-            name=f"Move_{i}",
-            node=node,
-            move=move
-        )
+        move_node = MoveManipulatorBehavior(name=f"Move_{i}", node=node, move=move)
         root.add_child(move_node)
 
     # Wrap in a ROS BehaviorTree
@@ -52,12 +48,9 @@ def create_tree_from_moves(
 
 
 def create_tree_from_sequences(
-    node,
-    list_of_move_sequences: List[List[Move]],
-    root_name: str = "RootOfSequences"
+    node, list_of_move_sequences: List[List[Move]], root_name: str = "RootOfSequences"
 ) -> py_trees_ros.trees.BehaviourTree:
-    """
-    Create a BT that executes multiple sequences of moves in order.
+    """Create a behaviour tree that runs each sub-sequence of moves in series.
 
     For example, if you have:
        seq1 = [Move(...), Move(...)]
@@ -68,12 +61,12 @@ def create_tree_from_sequences(
     Each move is handled by a MoveManipulatorBehavior node.
 
     Args:
-        node:                  ROS2 node
-        list_of_move_sequences A list of sequences, each a list of Move objects
-        root_name:             name for the top-level node
+        node: rclpy node used to run the behaviour tree.
+        list_of_move_sequences: List of move sequences to stitch together.
+        root_name: Name to apply to the root composite node.
 
     Returns:
-        A py_trees_ros.trees.BehaviourTree that runs each sub-sequence in series.
+        py_trees_ros.trees.BehaviourTree: Behaviour tree that runs each sub-sequence in order.
     """
     # Build a top-level Sequence
     root = py_trees.composites.Sequence(name=root_name, memory=True)
@@ -82,11 +75,7 @@ def create_tree_from_sequences(
     for seq_idx, moves in enumerate(list_of_move_sequences):
         sub_seq_node = py_trees.composites.Sequence(name=f"SubSequence_{seq_idx}", memory=True)
         for i, move in enumerate(moves):
-            move_node = MoveManipulatorBehavior(
-                name=f"Move_{seq_idx}_{i}",
-                node=node,
-                move=move
-            )
+            move_node = MoveManipulatorBehavior(name=f"Move_{seq_idx}_{i}", node=node, move=move)
             sub_seq_node.add_child(move_node)
         # Add this sub-sequence to the root
         root.add_child(sub_seq_node)

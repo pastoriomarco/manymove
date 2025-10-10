@@ -1,26 +1,25 @@
 #!/usr/bin/env python3
 
+"""Helpers for composing MoveManipulator requests and convenience moves."""
+
 from dataclasses import dataclass
-from typing import List, Optional, Dict
+from typing import Dict, List, Optional
 
 import rclpy
-from rclpy.node import Node
+from geometry_msgs.msg import Point, Pose, Quaternion
 from rclpy.action import ActionClient
+from rclpy.node import Node
 
-from geometry_msgs.msg import Pose, Point, Quaternion
-
-# manymove_msgs definitions
-from manymove_msgs.msg import MovementConfig, MoveManipulatorGoal
 from manymove_msgs.action import MoveManipulator
+from manymove_msgs.msg import MoveManipulatorGoal, MovementConfig
 
 
 @dataclass
 class Move:
-    """
-    Dataclass representing a single move request for the 'move_manipulator' action.
-    """
+    """Represent a single request for the MoveManipulator action."""
+
     movement_type: str  # "pose", "joint", "named", "cartesian"
-    tcp_frame: str  
+    tcp_frame: str
     pose_target: Optional[Pose] = None
     named_target: Optional[str] = None
     joint_values: Optional[List[float]] = None
@@ -29,15 +28,10 @@ class Move:
     def __post_init__(self):
         allowed_types = ["pose", "joint", "named", "cartesian"]
         if self.movement_type not in allowed_types:
-            raise ValueError(
-                f"Unsupported movement_type '{self.movement_type}'. "
-                f"Must be one of {allowed_types}."
-            )
+            raise ValueError(f"Unsupported movement_type '{self.movement_type}'. " f"Must be one of {allowed_types}.")
 
     def to_move_manipulator_goal(self) -> MoveManipulatorGoal:
-        """
-        Convert this Move object into a MoveManipulatorGoal message.
-        """
+        """Convert this Move object into a MoveManipulatorGoal message."""
         mmg = MoveManipulatorGoal()
         mmg.movement_type = self.movement_type
         mmg.config = self.config
@@ -46,9 +40,7 @@ class Move:
 
         if self.movement_type in ["pose", "cartesian"]:
             if not isinstance(self.pose_target, Pose):
-                raise TypeError(
-                    f"For '{self.movement_type}' moves, a valid Pose must be provided."
-                )
+                raise TypeError(f"For '{self.movement_type}' moves, a valid Pose must be provided.")
             mmg.pose_target = self.pose_target
 
         elif self.movement_type == "joint":
@@ -65,9 +57,7 @@ class Move:
 
 
 def define_movement_configs() -> Dict[str, MovementConfig]:
-    """
-    Define and return some example movement configurations for your robot.
-    """
+    """Create a handful of example MovementConfig presets used by the demos."""
     max_move_config = MovementConfig()
     max_move_config.velocity_scaling_factor = 1.0
     max_move_config.acceleration_scaling_factor = 1.0
@@ -102,7 +92,7 @@ def define_movement_configs() -> Dict[str, MovementConfig]:
     mid_move_config.plan_number_target = 8
     mid_move_config.plan_number_limit = 32
     mid_move_config.smoothing_type = "time_optimal"
-    
+
     slow_move_config = MovementConfig()
     slow_move_config.velocity_scaling_factor = 0.25
     slow_move_config.acceleration_scaling_factor = 0.25
@@ -120,23 +110,20 @@ def define_movement_configs() -> Dict[str, MovementConfig]:
     slow_move_config.plan_number_limit = 32
     slow_move_config.smoothing_type = "time_optimal"
 
-    return {
-        "max_move": max_move_config,
-        "mid_move": mid_move_config,
-        "slow_move": slow_move_config
-    }
+    return {"max_move": max_move_config, "mid_move": mid_move_config, "slow_move": slow_move_config}
 
 
 def create_pose(position: dict, orientation: dict) -> Pose:
+    """Create a Pose from Python dictionaries describing position and orientation.
+
+    Args:
+        position: Dictionary with ``x``, ``y`` and ``z`` entries.
+        orientation: Dictionary with quaternion ``x``, ``y``, ``z`` and ``w`` entries.
+
+    Returns:
+        geometry_msgs.msg.Pose populated from the supplied dictionaries.
     """
-    Helper function to create a Pose from Python dictionaries, e.g.:
-        position = {"x": 0.2, "y": 0.0, "z": 0.3}
-        orientation = {"x": 0.0, "y": 0.0, "z": 0.0, "w": 1.0}
-    """
-    return Pose(
-        position=Point(**position),
-        orientation=Quaternion(**orientation)
-    )
+    return Pose(position=Point(**position), orientation=Quaternion(**orientation))
 
 
 def create_move(
@@ -145,44 +132,34 @@ def create_move(
     target: Pose = None,
     named_target: str = None,
     joint_values: List[float] = None,
-    config: MovementConfig = None
+    config: MovementConfig = None,
 ) -> Move:
-    """
-    Helper to create a Move object.
+    """Build a Move dataclass instance from the provided target information.
 
     Args:
-        movement_type: "pose", "cartesian", "joint", or "named"
-        target: a Pose for 'pose'/'cartesian'
-        named_target: a string name for 'named'
-        joint_values: list of angles for 'joint'
-        config: MovementConfig for velocity, acceleration, etc.
+        movement_type: Mode of motion such as ``pose``, ``cartesian``, ``joint`` or ``named``.
+        target: Pose target for ``pose`` or ``cartesian`` moves.
+        named_target: Predefined target for ``named`` moves.
+        joint_values: Joint positions for ``joint`` moves.
+        config: Movement tuning parameters to attach to the request.
 
     Returns:
-        A Move instance.
+        Move: Populated Move dataclass ready to be converted into a goal.
     """
     if config is None:
         config = MovementConfig()
-
     return Move(
         movement_type=movement_type,
         tcp_frame=tcp_frame,
         pose_target=target,
         named_target=named_target,
         joint_values=joint_values,
-        config=config
+        config=config,
     )
 
 
 def build_move_manipulator_goal(move: Move) -> MoveManipulator.Goal:
-    """
-    Convert a Move instance into a MoveManipulator action goal.
-
-    The MoveManipulator action expects 'plan_request' to be a MoveManipulatorGoal message,
-    which includes movement_type, pose_target, joint_values, etc.
-
-    If your code doesn't call 'to_move_manipulator_goal()' on the Move object,
-    you can call this function instead to produce the same data.
-    """
+    """Convert a Move instance into a MoveManipulator action goal."""
     action_goal = MoveManipulator.Goal()
 
     # Create the sub-message
@@ -193,11 +170,16 @@ def build_move_manipulator_goal(move: Move) -> MoveManipulator.Goal:
 
 
 def send_move_manipulator_goal(node: Node, move: Move) -> bool:
+    """Send a MoveManipulator goal and block until the action completes.
+
+    Args:
+        node: rclpy node used to create the action client and spin callbacks.
+        move: Move description to forward to the action server.
+
+    Returns:
+        bool: True when the goal succeeds, False otherwise.
     """
-    Helper function to send a single MoveManipulator goal to the 'move_manipulator' server
-    and block until completion. Returns True if success, False otherwise.
-    """
-    action_client = ActionClient(node, MoveManipulator, 'move_manipulator')
+    action_client = ActionClient(node, MoveManipulator, "move_manipulator")
 
     node.get_logger().info("Waiting for 'move_manipulator' action server...")
     if not action_client.wait_for_server(timeout_sec=5.0):

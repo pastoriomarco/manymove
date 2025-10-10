@@ -1,36 +1,28 @@
 #!/usr/bin/env python3
 
-import rclpy
-from rclpy.node import Node
-from rclpy.executors import MultiThreadedExecutor
+"""Fake behaviour-tree client that runs prerecorded moves without robot hardware."""
+
+import time
 
 import py_trees
 import py_trees_ros
-import time
-
-from geometry_msgs.msg import Pose, Point, Quaternion
+import rclpy
+from geometry_msgs.msg import Point, Pose, Quaternion
 from moveit_msgs.msg import RobotTrajectory
 from py_trees.blackboard import Blackboard
+from rclpy.executors import MultiThreadedExecutor
+from rclpy.node import Node
 
-# (1) Imports for your moves/BT
-from manymove_py_trees.move_definitions import (
-    define_movement_configs,
-    create_move,
-)
-from manymove_py_trees.tree_helper import create_tree_from_sequences
-
-# (2) Import the HMIServiceNode from your hmi_service_node.py file
 from manymove_py_trees.hmi_service_node import HMIServiceNode
+from manymove_py_trees.move_definitions import create_move, define_movement_configs
+from manymove_py_trees.tree_helper import create_tree_from_sequences
 
 
 def build_and_run_bt(node: Node):
-    """
-    Build the same BT logic you had before and run it in a loop,
-    returning after success/failure or keyboard interrupt.
-    """
+    """Build the demonstration behaviour tree and tick it until completion."""
     node.get_logger().info("BT Client Node started")
-    node.declare_parameter('tcp_frame', 'link_tcp')
-    tcp_frame = node.get_parameter('tcp_frame').value
+    node.declare_parameter("tcp_frame", "link_tcp")
+    tcp_frame = node.get_parameter("tcp_frame").value
 
     bb = Blackboard()
     # Set defaults for keys used by MoveManipulatorBehavior:
@@ -87,9 +79,7 @@ def build_and_run_bt(node: Node):
     main_seq.add_child(chained_branch.root)
 
     repeated_root = py_trees.decorators.Repeat(
-        child=main_seq,
-        num_success=-1,  # negative => infinite repeats
-        name="RepeatForever"
+        child=main_seq, num_success=-1, name="RepeatForever"  # negative => infinite repeats
     )
 
     bt_tree = py_trees_ros.trees.BehaviourTree(repeated_root)
@@ -124,6 +114,7 @@ def build_and_run_bt(node: Node):
 
 
 def main():
+    """Entry point that spins the fake BT client alongside the HMI service node."""
     # Initialize rclpy
     rclpy.init()
 
@@ -147,6 +138,7 @@ def main():
     #  1) Start the executor in a background thread
     #  2) Then do the BT loop in this main thread
     import threading
+
     executor_thread = threading.Thread(target=executor.spin, daemon=True)
     executor_thread.start()
 

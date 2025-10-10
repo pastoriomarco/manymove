@@ -1,14 +1,23 @@
 # ================================================================
 # from: xarm_moveit_config/launch/_dual_robot_moveit_fake.launch.py
 # ================================================================
+"""Launch description for the dual moveitcpp fake action server scenario."""
+
 
 import os
+
 # import yaml
 from ament_index_python import get_package_share_directory
 from launch import LaunchDescription
-from launch.actions import OpaqueFunction, DeclareLaunchArgument #, IncludeLaunchDescription
+from launch.actions import (  # , IncludeLaunchDescription
+    DeclareLaunchArgument,
+    OpaqueFunction,
+)
+from launch.launch_description_sources import load_python_launch_file_as_module
+
 # from launch.launch_description_sources import PythonLaunchDescriptionSource
-from launch.substitutions import LaunchConfiguration #, PathJoinSubstitution
+from launch.substitutions import LaunchConfiguration  # , PathJoinSubstitution
+
 # from launch_ros.substitutions import FindPackageShare
 from launch_ros.actions import Node
 from uf_ros_lib.moveit_configs_builder import DualMoveItConfigsBuilder
@@ -18,121 +27,134 @@ from uf_ros_lib.uf_robot_utils import generate_dual_ros2_control_params_temp_fil
 # from: xarm_controller/launch/_dual_ros2_control.launch.py
 # ================================================================
 
-from launch.launch_description_sources import load_python_launch_file_as_module
 
 # ================================================================
 # from: xarm_moveit_config/launch/_dual_robot_moveit_fake.launch.py
 # ================================================================
 
-def launch_setup(context, *args, **kwargs):
-    dof = LaunchConfiguration('dof', default=6)
-    dof_1 = LaunchConfiguration('dof_1', default=dof)
-    dof_2 = LaunchConfiguration('dof_2', default=dof)
-    robot_type = LaunchConfiguration('robot_type', default='lite')
-    robot_type_1 = LaunchConfiguration('robot_type_1', default='lite')#default=robot_type)
-    robot_type_2 = LaunchConfiguration('robot_type_2', default='uf850')#default=robot_type)
-    prefix_1 = LaunchConfiguration('prefix_1', default='L_')
-    prefix_2 = LaunchConfiguration('prefix_2', default='R_')
-    hw_ns = LaunchConfiguration('hw_ns', default='ufactory')
-    limited = LaunchConfiguration('limited', default=True)
-    effort_control = LaunchConfiguration('effort_control', default=False)
-    velocity_control = LaunchConfiguration('velocity_control', default=False)
-    model1300 = LaunchConfiguration('model1300', default=False)
-    model1300_1 = LaunchConfiguration('model1300_1', default=model1300)
-    model1300_2 = LaunchConfiguration('model1300_2', default=model1300)
-    robot_sn = LaunchConfiguration('robot_sn', default='')
-    robot_sn_1 = LaunchConfiguration('robot_sn_1', default=robot_sn)
-    robot_sn_2 = LaunchConfiguration('robot_sn_2', default=robot_sn)
-    mesh_suffix = LaunchConfiguration('mesh_suffix', default='stl')
-    kinematics_suffix = LaunchConfiguration('kinematics_suffix', default='')
-    kinematics_suffix_1 = LaunchConfiguration('kinematics_suffix_1', default=kinematics_suffix)
-    kinematics_suffix_2 = LaunchConfiguration('kinematics_suffix_2', default=kinematics_suffix)
 
-    add_gripper = LaunchConfiguration('add_gripper', default=False)
-    add_gripper_1 = LaunchConfiguration('add_gripper_1', default=add_gripper)
-    add_gripper_2 = LaunchConfiguration('add_gripper_2', default=add_gripper)
-    add_vacuum_gripper = LaunchConfiguration('add_vacuum_gripper', default=False)
-    add_vacuum_gripper_1 = LaunchConfiguration('add_vacuum_gripper_1', default=add_vacuum_gripper)
-    add_vacuum_gripper_2 = LaunchConfiguration('add_vacuum_gripper_2', default=add_vacuum_gripper)
-    add_bio_gripper = LaunchConfiguration('add_bio_gripper', default=False)
-    add_bio_gripper_1 = LaunchConfiguration('add_bio_gripper_1', default=add_bio_gripper)
-    add_bio_gripper_2 = LaunchConfiguration('add_bio_gripper_2', default=add_bio_gripper)
-    add_realsense_d435i = LaunchConfiguration('add_realsense_d435i', default=True)
-    add_realsense_d435i_1 = LaunchConfiguration('add_realsense_d435i_1', default=add_realsense_d435i)
-    add_realsense_d435i_2 = LaunchConfiguration('add_realsense_d435i_2', default=add_realsense_d435i)
-    add_d435i_links = LaunchConfiguration('add_d435i_links', default=True)
-    add_d435i_links_1 = LaunchConfiguration('add_d435i_links_1', default=add_d435i_links)
-    add_d435i_links_2 = LaunchConfiguration('add_d435i_links_2', default=add_d435i_links)
-    add_other_geometry = LaunchConfiguration('add_other_geometry', default=True)
-    add_other_geometry_1 = LaunchConfiguration('add_other_geometry_1', default=add_other_geometry)
-    add_other_geometry_2 = LaunchConfiguration('add_other_geometry_2', default=add_other_geometry)
-    geometry_type = LaunchConfiguration('geometry_type', default='mesh')
-    geometry_type_1 = LaunchConfiguration('geometry_type_1', default=geometry_type)
-    geometry_type_2 = LaunchConfiguration('geometry_type_2', default=geometry_type)
-    geometry_mass = LaunchConfiguration('geometry_mass', default=0.3)
-    geometry_mass_1 = LaunchConfiguration('geometry_mass_1', default=geometry_mass)
-    geometry_mass_2 = LaunchConfiguration('geometry_mass_2', default=geometry_mass)
-    geometry_height = LaunchConfiguration('geometry_height', default=0.1)
-    geometry_height_1 = LaunchConfiguration('geometry_height_1', default=geometry_height)
-    geometry_height_2 = LaunchConfiguration('geometry_height_2', default=geometry_height)
-    geometry_radius = LaunchConfiguration('geometry_radius', default=0.1)
-    geometry_radius_1 = LaunchConfiguration('geometry_radius_1', default=geometry_radius)
-    geometry_radius_2 = LaunchConfiguration('geometry_radius_2', default=geometry_radius)
-    geometry_length = LaunchConfiguration('geometry_length', default=0.1)
-    geometry_length_1 = LaunchConfiguration('geometry_length_1', default=geometry_length)
-    geometry_length_2 = LaunchConfiguration('geometry_length_2', default=geometry_length)
-    geometry_width = LaunchConfiguration('geometry_width', default=0.1)
-    geometry_width_1 = LaunchConfiguration('geometry_width_1', default=geometry_width)
-    geometry_width_2 = LaunchConfiguration('geometry_width_2', default=geometry_width)
-    geometry_mesh_filename = LaunchConfiguration('geometry_mesh_filename', default='pneumatic_lite.stl')
-    geometry_mesh_filename_1 = LaunchConfiguration('geometry_mesh_filename_1', default=geometry_mesh_filename)
-    geometry_mesh_filename_2 = LaunchConfiguration('geometry_mesh_filename_2', default=geometry_mesh_filename)
-    geometry_mesh_origin_xyz = LaunchConfiguration('geometry_mesh_origin_xyz', default='"0 0 0"')
-    geometry_mesh_origin_xyz_1 = LaunchConfiguration('geometry_mesh_origin_xyz_1', default=geometry_mesh_origin_xyz)
-    geometry_mesh_origin_xyz_2 = LaunchConfiguration('geometry_mesh_origin_xyz_2', default=geometry_mesh_origin_xyz)
-    geometry_mesh_origin_rpy = LaunchConfiguration('geometry_mesh_origin_rpy', default='"0 0 0"')
-    geometry_mesh_origin_rpy_1 = LaunchConfiguration('geometry_mesh_origin_rpy_1', default=geometry_mesh_origin_rpy)
-    geometry_mesh_origin_rpy_2 = LaunchConfiguration('geometry_mesh_origin_rpy_2', default=geometry_mesh_origin_rpy)
-    geometry_mesh_tcp_xyz = LaunchConfiguration('geometry_mesh_tcp_xyz', default='"0.03075 0 0.11885"')
-    geometry_mesh_tcp_xyz_1 = LaunchConfiguration('geometry_mesh_tcp_xyz_1', default=geometry_mesh_tcp_xyz)
-    geometry_mesh_tcp_xyz_2 = LaunchConfiguration('geometry_mesh_tcp_xyz_2', default=geometry_mesh_tcp_xyz)
-    geometry_mesh_tcp_rpy = LaunchConfiguration('geometry_mesh_tcp_rpy', default='"0 0.52 0"')
-    geometry_mesh_tcp_rpy_1 = LaunchConfiguration('geometry_mesh_tcp_rpy_1', default=geometry_mesh_tcp_rpy)
-    geometry_mesh_tcp_rpy_2 = LaunchConfiguration('geometry_mesh_tcp_rpy_2', default=geometry_mesh_tcp_rpy)
+def launch_setup(context, *args, **kwargs):
+    """Configure launch actions for the dual moveitcpp fake action server scenario."""
+    dof = LaunchConfiguration("dof", default=6)
+    dof_1 = LaunchConfiguration("dof_1", default=dof)
+    dof_2 = LaunchConfiguration("dof_2", default=dof)
+    LaunchConfiguration("robot_type", default="lite")
+    robot_type_1 = LaunchConfiguration("robot_type_1", default="lite")  # default=robot_type)
+    robot_type_2 = LaunchConfiguration("robot_type_2", default="uf850")  # default=robot_type)
+    prefix_1 = LaunchConfiguration("prefix_1", default="L_")
+    prefix_2 = LaunchConfiguration("prefix_2", default="R_")
+    hw_ns = LaunchConfiguration("hw_ns", default="ufactory")
+    limited = LaunchConfiguration("limited", default=True)
+    effort_control = LaunchConfiguration("effort_control", default=False)
+    velocity_control = LaunchConfiguration("velocity_control", default=False)
+    model1300 = LaunchConfiguration("model1300", default=False)
+    model1300_1 = LaunchConfiguration("model1300_1", default=model1300)
+    model1300_2 = LaunchConfiguration("model1300_2", default=model1300)
+    robot_sn = LaunchConfiguration("robot_sn", default="")
+    robot_sn_1 = LaunchConfiguration("robot_sn_1", default=robot_sn)
+    robot_sn_2 = LaunchConfiguration("robot_sn_2", default=robot_sn)
+    mesh_suffix = LaunchConfiguration("mesh_suffix", default="stl")
+    kinematics_suffix = LaunchConfiguration("kinematics_suffix", default="")
+    kinematics_suffix_1 = LaunchConfiguration("kinematics_suffix_1", default=kinematics_suffix)
+    kinematics_suffix_2 = LaunchConfiguration("kinematics_suffix_2", default=kinematics_suffix)
+
+    add_gripper = LaunchConfiguration("add_gripper", default=False)
+    add_gripper_1 = LaunchConfiguration("add_gripper_1", default=add_gripper)
+    add_gripper_2 = LaunchConfiguration("add_gripper_2", default=add_gripper)
+    add_vacuum_gripper = LaunchConfiguration("add_vacuum_gripper", default=False)
+    add_vacuum_gripper_1 = LaunchConfiguration("add_vacuum_gripper_1", default=add_vacuum_gripper)
+    add_vacuum_gripper_2 = LaunchConfiguration("add_vacuum_gripper_2", default=add_vacuum_gripper)
+    add_bio_gripper = LaunchConfiguration("add_bio_gripper", default=False)
+    add_bio_gripper_1 = LaunchConfiguration("add_bio_gripper_1", default=add_bio_gripper)
+    add_bio_gripper_2 = LaunchConfiguration("add_bio_gripper_2", default=add_bio_gripper)
+    add_realsense_d435i = LaunchConfiguration("add_realsense_d435i", default=True)
+    add_realsense_d435i_1 = LaunchConfiguration("add_realsense_d435i_1", default=add_realsense_d435i)
+    add_realsense_d435i_2 = LaunchConfiguration("add_realsense_d435i_2", default=add_realsense_d435i)
+    add_d435i_links = LaunchConfiguration("add_d435i_links", default=True)
+    add_d435i_links_1 = LaunchConfiguration("add_d435i_links_1", default=add_d435i_links)
+    add_d435i_links_2 = LaunchConfiguration("add_d435i_links_2", default=add_d435i_links)
+    add_other_geometry = LaunchConfiguration("add_other_geometry", default=True)
+    add_other_geometry_1 = LaunchConfiguration("add_other_geometry_1", default=add_other_geometry)
+    add_other_geometry_2 = LaunchConfiguration("add_other_geometry_2", default=add_other_geometry)
+    geometry_type = LaunchConfiguration("geometry_type", default="mesh")
+    geometry_type_1 = LaunchConfiguration("geometry_type_1", default=geometry_type)
+    geometry_type_2 = LaunchConfiguration("geometry_type_2", default=geometry_type)
+    geometry_mass = LaunchConfiguration("geometry_mass", default=0.3)
+    geometry_mass_1 = LaunchConfiguration("geometry_mass_1", default=geometry_mass)
+    geometry_mass_2 = LaunchConfiguration("geometry_mass_2", default=geometry_mass)
+    geometry_height = LaunchConfiguration("geometry_height", default=0.1)
+    geometry_height_1 = LaunchConfiguration("geometry_height_1", default=geometry_height)
+    geometry_height_2 = LaunchConfiguration("geometry_height_2", default=geometry_height)
+    geometry_radius = LaunchConfiguration("geometry_radius", default=0.1)
+    geometry_radius_1 = LaunchConfiguration("geometry_radius_1", default=geometry_radius)
+    geometry_radius_2 = LaunchConfiguration("geometry_radius_2", default=geometry_radius)
+    geometry_length = LaunchConfiguration("geometry_length", default=0.1)
+    geometry_length_1 = LaunchConfiguration("geometry_length_1", default=geometry_length)
+    geometry_length_2 = LaunchConfiguration("geometry_length_2", default=geometry_length)
+    geometry_width = LaunchConfiguration("geometry_width", default=0.1)
+    geometry_width_1 = LaunchConfiguration("geometry_width_1", default=geometry_width)
+    geometry_width_2 = LaunchConfiguration("geometry_width_2", default=geometry_width)
+    geometry_mesh_filename = LaunchConfiguration("geometry_mesh_filename", default="pneumatic_lite.stl")
+    geometry_mesh_filename_1 = LaunchConfiguration("geometry_mesh_filename_1", default=geometry_mesh_filename)
+    geometry_mesh_filename_2 = LaunchConfiguration("geometry_mesh_filename_2", default=geometry_mesh_filename)
+    geometry_mesh_origin_xyz = LaunchConfiguration("geometry_mesh_origin_xyz", default='"0 0 0"')
+    geometry_mesh_origin_xyz_1 = LaunchConfiguration("geometry_mesh_origin_xyz_1", default=geometry_mesh_origin_xyz)
+    geometry_mesh_origin_xyz_2 = LaunchConfiguration("geometry_mesh_origin_xyz_2", default=geometry_mesh_origin_xyz)
+    geometry_mesh_origin_rpy = LaunchConfiguration("geometry_mesh_origin_rpy", default='"0 0 0"')
+    geometry_mesh_origin_rpy_1 = LaunchConfiguration("geometry_mesh_origin_rpy_1", default=geometry_mesh_origin_rpy)
+    geometry_mesh_origin_rpy_2 = LaunchConfiguration("geometry_mesh_origin_rpy_2", default=geometry_mesh_origin_rpy)
+    geometry_mesh_tcp_xyz = LaunchConfiguration("geometry_mesh_tcp_xyz", default='"0.03075 0 0.11885"')
+    geometry_mesh_tcp_xyz_1 = LaunchConfiguration("geometry_mesh_tcp_xyz_1", default=geometry_mesh_tcp_xyz)
+    geometry_mesh_tcp_xyz_2 = LaunchConfiguration("geometry_mesh_tcp_xyz_2", default=geometry_mesh_tcp_xyz)
+    geometry_mesh_tcp_rpy = LaunchConfiguration("geometry_mesh_tcp_rpy", default='"0 0.52 0"')
+    geometry_mesh_tcp_rpy_1 = LaunchConfiguration("geometry_mesh_tcp_rpy_1", default=geometry_mesh_tcp_rpy)
+    geometry_mesh_tcp_rpy_2 = LaunchConfiguration("geometry_mesh_tcp_rpy_2", default=geometry_mesh_tcp_rpy)
 
     # ================================================================
     # from: src/manymove_planner/launch/lite_micpp_fake_action_server.launch.py
     # ================================================================
 
-    base_frame_1 = LaunchConfiguration('base_frame_1')
-    tcp_frame_1 = LaunchConfiguration('tcp_frame_1')
-    base_frame_2 = LaunchConfiguration('base_frame_2')
-    tcp_frame_2 = LaunchConfiguration('tcp_frame_2')
+    base_frame_1 = LaunchConfiguration("base_frame_1")
+    tcp_frame_1 = LaunchConfiguration("tcp_frame_1")
+    base_frame_2 = LaunchConfiguration("base_frame_2")
+    tcp_frame_2 = LaunchConfiguration("tcp_frame_2")
 
     # ================================================================
     # from: xarm_moveit_config/launch/_dual_robot_moveit_fake.launch.py
     # ================================================================
 
     # no_gui_ctrl = LaunchConfiguration('no_gui_ctrl', default=False)
-    ros_namespace = LaunchConfiguration('ros_namespace', default='').perform(context)
+    ros_namespace = LaunchConfiguration("ros_namespace", default="").perform(context)
 
-    ros2_control_plugin = LaunchConfiguration('ros2_control_plugin', default='uf_robot_hardware/UFRobotFakeSystemHardware')
-    controllers_name = 'fake_controllers'
-    xarm_type_1 = '{}{}'.format(robot_type_1.perform(context), dof_1.perform(context) if robot_type_1.perform(context) in ('xarm', 'lite') else '')
-    xarm_type_2 = '{}{}'.format(robot_type_2.perform(context), dof_2.perform(context) if robot_type_2.perform(context) in ('xarm', 'lite') else '')
+    ros2_control_plugin = LaunchConfiguration(
+        "ros2_control_plugin", default="uf_robot_hardware/UFRobotFakeSystemHardware"
+    )
+    controllers_name = "fake_controllers"
+    xarm_type_1 = "{}{}".format(
+        robot_type_1.perform(context),
+        dof_1.perform(context) if robot_type_1.perform(context) in ("xarm", "lite") else "",
+    )
+    xarm_type_2 = "{}{}".format(
+        robot_type_2.perform(context),
+        dof_2.perform(context) if robot_type_2.perform(context) in ("xarm", "lite") else "",
+    )
 
     ros2_control_params = generate_dual_ros2_control_params_temp_file(
-        os.path.join(get_package_share_directory('xarm_controller'), 'config', '{}_controllers.yaml'.format(xarm_type_1)),
-        os.path.join(get_package_share_directory('xarm_controller'), 'config', '{}_controllers.yaml'.format(xarm_type_2)),
-        prefix_1=prefix_1.perform(context), 
-        prefix_2=prefix_2.perform(context), 
-        add_gripper_1=add_gripper_1.perform(context) in ('True', 'true'),
-        add_gripper_2=add_gripper_2.perform(context) in ('True', 'true'),
-        add_bio_gripper_1=add_bio_gripper_1.perform(context) in ('True', 'true'),
-        add_bio_gripper_2=add_bio_gripper_2.perform(context) in ('True', 'true'),
+        os.path.join(
+            get_package_share_directory("xarm_controller"), "config", "{}_controllers.yaml".format(xarm_type_1)
+        ),
+        os.path.join(
+            get_package_share_directory("xarm_controller"), "config", "{}_controllers.yaml".format(xarm_type_2)
+        ),
+        prefix_1=prefix_1.perform(context),
+        prefix_2=prefix_2.perform(context),
+        add_gripper_1=add_gripper_1.perform(context) in ("True", "true"),
+        add_gripper_2=add_gripper_2.perform(context) in ("True", "true"),
+        add_bio_gripper_1=add_bio_gripper_1.perform(context) in ("True", "true"),
+        add_bio_gripper_2=add_bio_gripper_2.perform(context) in ("True", "true"),
         ros_namespace=ros_namespace,
-        robot_type_1=robot_type_1.perform(context), 
-        robot_type_2=robot_type_2.perform(context), 
+        robot_type_1=robot_type_1.perform(context),
+        robot_type_2=robot_type_2.perform(context),
     )
 
     # ================================================================
@@ -205,7 +227,8 @@ def launch_setup(context, *args, **kwargs):
             geometry_mesh_tcp_xyz_2=geometry_mesh_tcp_xyz_2,
             geometry_mesh_tcp_rpy_1=geometry_mesh_tcp_rpy_1,
             geometry_mesh_tcp_rpy_2=geometry_mesh_tcp_rpy_2,
-        ).planning_scene_monitor(publish_robot_description=True, publish_robot_description_semantic=True)
+        )
+        .planning_scene_monitor(publish_robot_description=True, publish_robot_description_semantic=True)
         .planning_pipelines(pipelines=["ompl", "chomp", "pilz_industrial_motion_planner"])
         .moveit_cpp(file_path=get_package_share_directory("manymove_planner") + "/config/moveit_cpp.yaml")
     ).to_moveit_configs()
@@ -218,16 +241,16 @@ def launch_setup(context, *args, **kwargs):
         parameters=[moveit_config.robot_description],
         remappings=[
             # ('joint_states', joint_states_remapping),
-            ('/tf', 'tf'),
-            ('/tf_static', 'tf_static'),
-        ]
+            ("/tf", "tf"),
+            ("/tf_static", "tf_static"),
+        ],
     )
 
     # ================================================================
     # from: xarm_moveit_config/launch/_dual_robot_moveit_common2.launch.py
     # ================================================================
 
-    use_sim_time = LaunchConfiguration('use_sim_time', default=False)
+    use_sim_time = LaunchConfiguration("use_sim_time", default=False)
 
     # ================================================================
     # from: src/manymove_planner/launch/lite_micpp_fake_action_server.launch.py
@@ -236,34 +259,35 @@ def launch_setup(context, *args, **kwargs):
 
     # Start the actual action_server node
     moveitcpp_action_servers_node = Node(
-        package='manymove_planner',
-        executable='moveitcpp_action_server_node',
+        package="manymove_planner",
+        executable="moveitcpp_action_server_node",
         # Don't use the "name" parameter, the name will be automatically set with {node_prefix_*}action_server_node to avoid duplicate nodes
-        output='screen',
+        output="screen",
         parameters=[
             moveit_config.to_dict(),
             {
-                'node_prefixes': [prefix_1.perform(context), prefix_2.perform(context)],
-                'planner_prefixes': [prefix_1.perform(context), prefix_2.perform(context)],
-                'planning_groups': [xarm_type_1, xarm_type_2], 
-                'base_frames': [base_frame_1.perform(context), base_frame_2.perform(context)], 
-                'tcp_frames': [tcp_frame_1.perform(context), tcp_frame_2.perform(context)], 
-                'traj_controllers': ["{}_traj_controller".format(xarm_type_1), "{}_traj_controller".format(xarm_type_2)],
-            }
+                "node_prefixes": [prefix_1.perform(context), prefix_2.perform(context)],
+                "planner_prefixes": [prefix_1.perform(context), prefix_2.perform(context)],
+                "planning_groups": [xarm_type_1, xarm_type_2],
+                "base_frames": [base_frame_1.perform(context), base_frame_2.perform(context)],
+                "tcp_frames": [tcp_frame_1.perform(context), tcp_frame_2.perform(context)],
+                "traj_controllers": [
+                    "{}_traj_controller".format(xarm_type_1),
+                    "{}_traj_controller".format(xarm_type_2),
+                ],
+            },
         ],
     )
 
     # Launch RViz
-    rviz_config_file = (
-        get_package_share_directory("manymove_planner") + "/config/micpp_demo.rviz"
-    )
+    rviz_config_file = get_package_share_directory("manymove_planner") + "/config/micpp_demo.rviz"
 
     rviz_node = Node(
-        package='rviz2',
-        executable='rviz2',
+        package="rviz2",
+        executable="rviz2",
         # name='rviz2',
-        output='screen',
-        arguments=['-d', rviz_config_file],
+        output="screen",
+        arguments=["-d", rviz_config_file],
         parameters=[
             moveit_config.robot_description,
             moveit_config.robot_description_semantic,
@@ -277,66 +301,81 @@ def launch_setup(context, *args, **kwargs):
     # from: xarm_moveit_config/launch/_dual_robot_moveit_common2.launch.py
     # ================================================================
 
-    link_base_1 = '{}link_base'.format(prefix_1.perform(context))
-    link_base_2 = '{}link_base'.format(prefix_2.perform(context))
+    link_base_1 = "{}link_base".format(prefix_1.perform(context))
+    link_base_2 = "{}link_base".format(prefix_2.perform(context))
 
     # Static TF
     static_tf_1 = Node(
-        package='tf2_ros',
-        executable='static_transform_publisher',
-        name='{}static_transform_publisher'.format(prefix_1.perform(context)),
-        output='screen',
-        arguments=['0.0', '0.0', '0.0', '0.0', '0.0', '0.0', 'world', link_base_1],
-        parameters=[{'use_sim_time': use_sim_time}],
+        package="tf2_ros",
+        executable="static_transform_publisher",
+        name="{}static_transform_publisher".format(prefix_1.perform(context)),
+        output="screen",
+        arguments=["0.0", "0.0", "0.0", "0.0", "0.0", "0.0", "world", link_base_1],
+        parameters=[{"use_sim_time": use_sim_time}],
     )
     static_tf_2 = Node(
-        package='tf2_ros',
-        executable='static_transform_publisher',
-        name='{}static_transform_publisher'.format(prefix_2.perform(context)),
-        output='screen',
-        arguments=['0.0', '1.0', '0.0', '0.0', '0.0', '0.0', 'world', link_base_2],
-        parameters=[{'use_sim_time': use_sim_time}],
+        package="tf2_ros",
+        executable="static_transform_publisher",
+        name="{}static_transform_publisher".format(prefix_2.perform(context)),
+        output="screen",
+        arguments=["0.0", "1.0", "0.0", "0.0", "0.0", "0.0", "world", link_base_2],
+        parameters=[{"use_sim_time": use_sim_time}],
     )
 
     controllers = [
-        '{}{}_traj_controller'.format(prefix_1.perform(context), xarm_type_1),
-        '{}{}_traj_controller'.format(prefix_2.perform(context), xarm_type_2),
+        "{}{}_traj_controller".format(prefix_1.perform(context), xarm_type_1),
+        "{}{}_traj_controller".format(prefix_2.perform(context), xarm_type_2),
     ]
-    if add_gripper_1.perform(context) in ('True', 'true') and robot_type_1.perform(context) != 'lite':
-        controllers.append('{}{}_gripper_traj_controller'.format(prefix_1.perform(context), robot_type_1.perform(context)))
-    elif add_gripper_1.perform(context) in ('True', 'true') and robot_type_1.perform(context) == 'lite' and ros2_control_plugin.perform(context) !='isaac':
-        controllers.append('{}lite_gripper_controller'.format(prefix_1.perform(context)))
-    elif add_bio_gripper_1.perform(context) in ('True', 'true') and robot_type_1.perform(context) != 'lite':
-        controllers.append('{}bio_gripper_traj_controller'.format(prefix_1.perform(context)))
-    if add_gripper_2.perform(context) in ('True', 'true') and robot_type_2.perform(context) != 'lite':
-        controllers.append('{}{}_gripper_traj_controller'.format(prefix_2.perform(context), robot_type_2.perform(context)))
-    elif add_gripper_2.perform(context) in ('True', 'true') and robot_type_2.perform(context) == 'lite' and ros2_control_plugin.perform(context) !='isaac':
-        controllers.append('{}lite_gripper_controller'.format(prefix_2.perform(context)))
-    elif add_bio_gripper_2.perform(context) in ('True', 'true') and robot_type_2.perform(context) != 'lite':
-        controllers.append('{}bio_gripper_traj_controller'.format(prefix_2.perform(context)))
+    if add_gripper_1.perform(context) in ("True", "true") and robot_type_1.perform(context) != "lite":
+        controllers.append(
+            "{}{}_gripper_traj_controller".format(prefix_1.perform(context), robot_type_1.perform(context))
+        )
+    elif (
+        add_gripper_1.perform(context) in ("True", "true")
+        and robot_type_1.perform(context) == "lite"
+        and ros2_control_plugin.perform(context) != "isaac"
+    ):
+        controllers.append("{}lite_gripper_controller".format(prefix_1.perform(context)))
+    elif add_bio_gripper_1.perform(context) in ("True", "true") and robot_type_1.perform(context) != "lite":
+        controllers.append("{}bio_gripper_traj_controller".format(prefix_1.perform(context)))
+    if add_gripper_2.perform(context) in ("True", "true") and robot_type_2.perform(context) != "lite":
+        controllers.append(
+            "{}{}_gripper_traj_controller".format(prefix_2.perform(context), robot_type_2.perform(context))
+        )
+    elif (
+        add_gripper_2.perform(context) in ("True", "true")
+        and robot_type_2.perform(context) == "lite"
+        and ros2_control_plugin.perform(context) != "isaac"
+    ):
+        controllers.append("{}lite_gripper_controller".format(prefix_2.perform(context)))
+    elif add_bio_gripper_2.perform(context) in ("True", "true") and robot_type_2.perform(context) != "lite":
+        controllers.append("{}bio_gripper_traj_controller".format(prefix_2.perform(context)))
 
     # ================================================================
     # from: xarm_controller/launch/_dual_ros2_control.launch.py
     # ================================================================
 
-    mod = load_python_launch_file_as_module(os.path.join(get_package_share_directory('xarm_api'), 'launch', 'lib', 'robot_api_lib.py'))
-    generate_robot_api_params = getattr(mod, 'generate_robot_api_params')
+    mod = load_python_launch_file_as_module(
+        os.path.join(get_package_share_directory("xarm_api"), "launch", "lib", "robot_api_lib.py")
+    )
+    generate_robot_api_params = getattr(mod, "generate_robot_api_params")
     robot_params = generate_robot_api_params(
-        os.path.join(get_package_share_directory('xarm_api'), 'config', 'xarm_params.yaml'),
-        os.path.join(get_package_share_directory('xarm_api'), 'config', 'xarm_user_params.yaml'),
-        LaunchConfiguration('ros_namespace', default='').perform(context), node_name='ufactory_driver'
+        os.path.join(get_package_share_directory("xarm_api"), "config", "xarm_params.yaml"),
+        os.path.join(get_package_share_directory("xarm_api"), "config", "xarm_user_params.yaml"),
+        LaunchConfiguration("ros_namespace", default="").perform(context),
+        node_name="ufactory_driver",
     )
 
     # ros2 control node
     ros2_control_node = Node(
-        package='controller_manager',
-        executable='ros2_control_node',
+        package="controller_manager",
+        executable="ros2_control_node",
         parameters=[
             moveit_config.robot_description,
             ros2_control_params,
             robot_params,
         ],
-        output='screen',
+        output="screen",
     )
 
     # ================================================================
@@ -344,27 +383,23 @@ def launch_setup(context, *args, **kwargs):
     # ================================================================
 
     joint_state_broadcaster = Node(
-        package='controller_manager',
-        executable='spawner',
-        output='screen',
-        arguments=[
-            'joint_state_broadcaster',
-            '--controller-manager', '{}/controller_manager'.format(ros_namespace)
-        ],
+        package="controller_manager",
+        executable="spawner",
+        output="screen",
+        arguments=["joint_state_broadcaster", "--controller-manager", "{}/controller_manager".format(ros_namespace)],
     )
 
     # Load controllers
     controller_nodes = []
     for controller in controllers:
-        controller_nodes.append(Node(
-            package='controller_manager',
-            executable='spawner',
-            output='screen',
-            arguments=[
-                controller,
-                '--controller-manager', '{}/controller_manager'.format(ros_namespace)
-            ],
-        ))
+        controller_nodes.append(
+            Node(
+                package="controller_manager",
+                executable="spawner",
+                output="screen",
+                arguments=[controller, "--controller-manager", "{}/controller_manager".format(ros_namespace)],
+            )
+        )
 
     # ================================================================
     # launch manymove_object_manager
@@ -372,11 +407,11 @@ def launch_setup(context, *args, **kwargs):
 
     # Object Manager node
     object_manager_node = Node(
-        package='manymove_object_manager',
-        executable='object_manager_node',
-        name='object_manager_node',
-        output='screen',
-        parameters=[{'frame_id': 'world'}]
+        package="manymove_object_manager",
+        executable="object_manager_node",
+        name="object_manager_node",
+        output="screen",
+        parameters=[{"frame_id": "world"}],
     )
 
     # ================================================================
@@ -385,14 +420,16 @@ def launch_setup(context, *args, **kwargs):
 
     # HMI node
     manymove_hmi_node = Node(
-        package='manymove_hmi',
-        executable='manymove_hmi_executable',
+        package="manymove_hmi",
+        executable="manymove_hmi_executable",
         # name='manymove_hmi_node',
-        output='screen',
-        parameters=[{
-            'robot_prefixes': [prefix_1.perform(context), prefix_2.perform(context)],
-            'robot_names': [xarm_type_1, xarm_type_2],
-        }]
+        output="screen",
+        parameters=[
+            {
+                "robot_prefixes": [prefix_1.perform(context), prefix_2.perform(context)],
+                "robot_names": [xarm_type_1, xarm_type_2],
+            }
+        ],
     )
 
     # ================================================================
@@ -413,11 +450,17 @@ def launch_setup(context, *args, **kwargs):
 
 
 def generate_launch_description():
-    return LaunchDescription([
-        DeclareLaunchArgument('base_frame_1', default_value='link_base', description='Base frame of the robot 1'),
-        DeclareLaunchArgument('tcp_frame_1', default_value='link_tcp', description='TCP (end effector) frame of the robot 1' ),
-        DeclareLaunchArgument('base_frame_2', default_value='link_base', description='Base frame of the robot 2'),
-        DeclareLaunchArgument('tcp_frame_2', default_value='link_tcp', description='TCP (end effector) frame of the robot 2' ),
-
-        OpaqueFunction(function=launch_setup)
-    ])
+    """Create the launch description entry point."""
+    return LaunchDescription(
+        [
+            DeclareLaunchArgument("base_frame_1", default_value="link_base", description="Base frame of the robot 1"),
+            DeclareLaunchArgument(
+                "tcp_frame_1", default_value="link_tcp", description="TCP (end effector) frame of the robot 1"
+            ),
+            DeclareLaunchArgument("base_frame_2", default_value="link_base", description="Base frame of the robot 2"),
+            DeclareLaunchArgument(
+                "tcp_frame_2", default_value="link_tcp", description="TCP (end effector) frame of the robot 2"
+            ),
+            OpaqueFunction(function=launch_setup),
+        ]
+    )

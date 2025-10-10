@@ -1,22 +1,22 @@
 #!/usr/bin/env python3
 
-import rclpy
-from rclpy.node import Node
-from std_msgs.msg import String
-import py_trees
+"""Expose services and helpers for manipulating behaviour-tree blackboard state."""
+
 import json
 import time
 
+import py_trees
+import rclpy
+from geometry_msgs.msg import Pose
+from rclpy.node import Node
+from std_msgs.msg import String
+
 # Import the new service type
 from manymove_msgs.srv import SetBlackboardValues
-from geometry_msgs.msg import Pose
+
 
 def create_pose_from_dict(d):
-    """
-    Create a geometry_msgs/Pose from a dict with keys: x, y, z, roll, pitch, yaw.
-    For simplicity, we set an identity quaternion; if you need proper conversion
-    from RPY to quaternion, add that here.
-    """
+    """Convert a JSON-like dictionary into a Pose message with an identity quaternion."""
     pose = Pose()
     pose.position.x = d.get("x", 0.0)
     pose.position.y = d.get("y", 0.0)
@@ -29,7 +29,10 @@ def create_pose_from_dict(d):
     pose.orientation.w = 1.0
     return pose
 
+
 class HMIServiceNode(Node):
+    """Expose services and status topics used to adjust the behaviour-tree blackboard."""
+
     def __init__(self, node_name, blackboard=None, robot_prefix=""):
         super().__init__(node_name)
         self.robot_prefix = robot_prefix
@@ -39,9 +42,7 @@ class HMIServiceNode(Node):
 
         # Create a single "update_blackboard" service using the new service type.
         self.update_blackboard_srv = self.create_service(
-            SetBlackboardValues,
-            "update_blackboard",
-            self.handle_update_blackboard
+            SetBlackboardValues, "update_blackboard", self.handle_update_blackboard
         )
 
         self.get_logger().info("HMI Service Node started (Python version).")
@@ -53,6 +54,7 @@ class HMIServiceNode(Node):
         self.create_timer(0.25, self.publish_blackboard_status)
 
     def handle_update_blackboard(self, request, response):
+        """Apply SetBlackboardValues requests onto the shared py_trees blackboard."""
         n = len(request.key)
         if len(request.value_type) != n or len(request.value_data) != n:
             response.success = False
@@ -64,9 +66,7 @@ class HMIServiceNode(Node):
             key = request.key[i]
             value_type = request.value_type[i]
             data_str = request.value_data[i]
-            self.get_logger().info(
-                f"Updating BB key='{key}' type='{value_type}' data='{data_str}'"
-            )
+            self.get_logger().info(f"Updating BB key='{key}' type='{value_type}' data='{data_str}'")
             try:
                 if value_type == "bool":
                     # Expect data_str to be a JSON string "true" or "false"
@@ -101,17 +101,14 @@ class HMIServiceNode(Node):
         return response
 
     def publish_blackboard_status(self):
+        """Publish the current blackboard state so that HMI clients can reflect it."""
         msg = String()
         if self.robot_prefix == "":
             # Global keys: "stop_execution", "reset", "collision_detected"
             stop_execution = self.blackboard.get("stop_execution")
             reset = self.blackboard.get("reset")
             collision_detected = self.blackboard.get("collision_detected")
-            msg_dict = {
-                "stop_execution": stop_execution,
-                "reset": reset,
-                "collision_detected": collision_detected
-            }
+            msg_dict = {"stop_execution": stop_execution, "reset": reset, "collision_detected": collision_detected}
         else:
             # For a specific robot prefix, expect keys like "L_stop_execution", etc.
             stop_execution = self.blackboard.get(f"{self.robot_prefix}stop_execution")
@@ -120,16 +117,18 @@ class HMIServiceNode(Node):
             msg_dict = {
                 f"{self.robot_prefix}stop_execution": stop_execution,
                 f"{self.robot_prefix}reset": reset,
-                f"{self.robot_prefix}collision_detected": collision_detected
+                f"{self.robot_prefix}collision_detected": collision_detected,
             }
         msg.data = json.dumps(msg_dict)
         self.status_publisher.publish(msg)
 
+
 def main(args=None):
+    """Spin the HMI service node as a standalone executable."""
     rclpy.init(args=args)
 
     # Create the node with an empty prefix (global) or a specific one ("L_", "R_")
-    node = HMIServiceNode("hmi_service_node", robot_prefix="") 
+    node = HMIServiceNode("hmi_service_node", robot_prefix="")
     time.sleep(2.0)
     node.get_logger().info("Waited 2 seconds, hopefully the Blackboard keys are now set.")
 
@@ -137,5 +136,6 @@ def main(args=None):
     node.destroy_node()
     rclpy.shutdown()
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     main()
