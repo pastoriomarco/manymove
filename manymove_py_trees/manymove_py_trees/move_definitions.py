@@ -114,14 +114,20 @@ def define_movement_configs() -> Dict[str, MovementConfig]:
 
 
 def create_pose(position: dict, orientation: dict) -> Pose:
-    """Create a Pose from Python dictionaries describing position and orientation.
+    """
+    Create a Pose from dictionaries describing position and orientation.
 
-    Args:
-        position: Dictionary with ``x``, ``y`` and ``z`` entries.
-        orientation: Dictionary with quaternion ``x``, ``y``, ``z`` and ``w`` entries.
+    Parameters
+    ----------
+    position : dict
+        Mapping with ``x``, ``y`` and ``z`` entries.
+    orientation : dict
+        Mapping with quaternion ``x``, ``y``, ``z`` and ``w`` entries.
 
-    Returns:
-        geometry_msgs.msg.Pose populated from the supplied dictionaries.
+    Returns
+    -------
+    Pose
+        Populated pose message derived from the supplied dictionaries.
     """
     return Pose(position=Point(**position), orientation=Quaternion(**orientation))
 
@@ -134,17 +140,28 @@ def create_move(
     joint_values: List[float] = None,
     config: MovementConfig = None,
 ) -> Move:
-    """Build a Move dataclass instance from the provided target information.
+    """
+    Build a Move dataclass instance from the provided target information.
 
-    Args:
-        movement_type: Mode of motion such as ``pose``, ``cartesian``, ``joint`` or ``named``.
-        target: Pose target for ``pose`` or ``cartesian`` moves.
-        named_target: Predefined target for ``named`` moves.
-        joint_values: Joint positions for ``joint`` moves.
-        config: Movement tuning parameters to attach to the request.
+    Parameters
+    ----------
+    movement_type : str
+        Mode of motion such as ``pose``, ``cartesian``, ``joint`` or ``named``.
+    tcp_frame : str
+        Frame to treat as the tool centre point.
+    target : Pose, optional
+        Pose target for ``pose`` or ``cartesian`` moves.
+    named_target : str, optional
+        Predefined target for ``named`` moves.
+    joint_values : List[float], optional
+        Joint positions for ``joint`` moves.
+    config : MovementConfig, optional
+        Movement tuning parameters to attach to the request.
 
-    Returns:
-        Move: Populated Move dataclass ready to be converted into a goal.
+    Returns
+    -------
+    Move
+        Populated Move dataclass ready to be converted into a goal.
     """
     if config is None:
         config = MovementConfig()
@@ -170,14 +187,20 @@ def build_move_manipulator_goal(move: Move) -> MoveManipulator.Goal:
 
 
 def send_move_manipulator_goal(node: Node, move: Move) -> bool:
-    """Send a MoveManipulator goal and block until the action completes.
+    """
+    Send a MoveManipulator goal and block until the action completes.
 
-    Args:
-        node: rclpy node used to create the action client and spin callbacks.
-        move: Move description to forward to the action server.
+    Parameters
+    ----------
+    node : Node
+        rclpy node used to create the action client and spin callbacks.
+    move : Move
+        Move description to forward to the action server.
 
-    Returns:
-        bool: True when the goal succeeds, False otherwise.
+    Returns
+    -------
+    bool
+        ``True`` when the goal succeeds, ``False`` otherwise.
     """
     action_client = ActionClient(node, MoveManipulator, "move_manipulator")
 

@@ -50,10 +50,13 @@ class MoveManipulatorBehavior(py_trees.behaviour.Behaviour):
         self._cancel_in_progress = False
 
     def setup(self, **kwargs):
-        """Initialise the action client and cache the ROS node from the blackboard.
+        """
+        Initialise the action client and cache the ROS node from the blackboard.
 
-        Raises:
-            RuntimeError: If the node is missing or the action server is unavailable.
+        Raises
+        ------
+        RuntimeError
+            Raised when the node is missing or the action server is unavailable.
         """
         self._node = self.bb.get("node")
         if not self._node:

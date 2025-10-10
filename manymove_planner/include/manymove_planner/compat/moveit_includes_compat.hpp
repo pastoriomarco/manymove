@@ -88,4 +88,3 @@
 #else
 #  include <moveit/robot_state/cartesian_interpolator.h>
 #endif
-
