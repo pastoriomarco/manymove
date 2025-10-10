@@ -31,10 +31,27 @@ jobs:
         run: |
           set -e
           apt-get update
-          apt-get install -y python3-colcon-common-extensions python3-rosdep git
-          # Workaround: topic_based_ros2_control may not have a rosdep entry
-          apt-get install -y ros-$ROS_DISTRO-topic-based-ros2-control || true
-          rm -rf /var/lib/apt/lists/*
+          apt-get install -y ros-$ROS_DISTRO-topic-based-ros2-control
+          apt-get install -y python3-colcon-common-extensions python3-rosdep git \
+          ros-$ROS_DISTRO-moveit \
+          ros-$ROS_DISTRO-joint-state-publisher \
+          ros-$ROS_DISTRO-control-toolbox \
+          ros-$ROS_DISTRO-controller-manager \
+          ros-$ROS_DISTRO-image-view \
+          ros-$ROS_DISTRO-tf-transformations \
+          ros-$ROS_DISTRO-find-object-2d \
+          ros-$ROS_DISTRO-controller-manager-msgs \
+          ros-$ROS_DISTRO-joint-state-broadcaster \
+          ros-$ROS_DISTRO-joint-trajectory-controller \
+          ros-$ROS_DISTRO-diff-drive-controller \
+          ros-$ROS_DISTRO-joy \
+          ros-$ROS_DISTRO-moveit-servo \
+          ros-$ROS_DISTRO-behaviortree-cpp-v3 \
+          ros-$ROS_DISTRO-moveit-visual-tools \
+          ros-$ROS_DISTRO-vision-msgs \
+          ros-$ROS_DISTRO-py-trees \
+          ros-$ROS_DISTRO-py-trees-ros \
+          ros-$ROS_DISTRO-simulation-interfaces
 
       - name: Setup rosdep
         run: |
@@ -43,19 +60,21 @@ jobs:
       - name: Prepare workspace
         run: |
           mkdir -p ${ROS_WS}/src
-          ln -s ${GITHUB_WORKSPACE}/manymove ${ROS_WS}/src/manymove
+          ln -s ${GITHUB_WORKSPACE} ${ROS_WS}/src/manymove
 
       - name: Install package dependencies
+        shell: bash
         run: |
-          # Skip deps without rosdep rules that we install manually above
-          rosdep install --from-paths ${ROS_WS}/src --ignore-src --rosdistro ${ROS_DISTRO} -y \
-            --skip-keys topic_based_ros2_control
+          set -e
+          source /opt/ros/$ROS_DISTRO/setup.bash
+          rosdep install --from-paths ${ROS_WS}/src --ignore-src --rosdistro ${ROS_DISTRO} -y
 
       - name: Build workspace
         shell: bash
         run: |
           set -e
           source /opt/ros/$ROS_DISTRO/setup.bash
+          cd ${ROS_WS}
           colcon build --base-paths ${ROS_WS}/src --event-handlers console_cohesion+
 
       - name: Run tests
@@ -64,5 +83,7 @@ jobs:
           set -e
           source /opt/ros/$ROS_DISTRO/setup.bash
           cd ${ROS_WS}
-          colcon test --base-paths src --event-handlers console_cohesion+
+          colcon test \
+            --base-paths src \
+            --event-handlers console_cohesion+
           colcon test-result --verbose
