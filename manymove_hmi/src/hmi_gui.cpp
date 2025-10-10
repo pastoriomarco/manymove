@@ -1,9 +1,10 @@
 /*
-BSD 3-Clause License
-Copyright (c) 2024-2025, Flexin Group SRL
-All rights reserved.
-See LICENSE file in the project root for full license text.
-*/
+ * BSD 3-Clause License
+ * Copyright (c) 2024-2025, Flexin Group SRL
+ * All rights reserved.
+ *
+ * See the LICENSE file in the project root for full license information.
+ */
 
 #include "manymove_hmi/hmi_gui.hpp"
 #include <QVBoxLayout>

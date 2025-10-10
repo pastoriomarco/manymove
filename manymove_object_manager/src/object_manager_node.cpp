@@ -440,7 +440,8 @@ ObjectManagerNode::handleAttachDetachGoal(
 {
 
   RCLCPP_INFO(
-    this->get_logger(), "Received request to %s object: %s to link: %s", goal->attach ? "attach" : "detach",
+    this->get_logger(), "Received request to %s object: %s to link: %s",
+    goal->attach ? "attach" : "detach",
     goal->object_id.c_str(), goal->link_name.c_str());
 
   // Basic validation
@@ -958,7 +959,8 @@ std::optional<moveit_msgs::msg::CollisionObject> ObjectManagerNode::getObjectDat
         if (attached_collision_object.object.id == object_id) {
           // Object found, return it
           RCLCPP_INFO(
-            this->get_logger(), "Object '%s' data retrieved from attached objects in planning scene.",
+            this->get_logger(),
+            "Object '%s' data retrieved from attached objects in planning scene.",
             object_id.c_str());
           return attached_collision_object.object;
         }
@@ -1000,7 +1002,8 @@ std::optional<std::string> ObjectManagerNode::getAttachedObjectLinkById(
         if (attached_collision_object.object.id == object_id) {
           // Object found, return it
           RCLCPP_INFO(
-            this->get_logger(), "Object '%s' link retrieved from attached objects in planning scene.",
+            this->get_logger(),
+            "Object '%s' link retrieved from attached objects in planning scene.",
             object_id.c_str());
           return attached_collision_object.link_name;
         }

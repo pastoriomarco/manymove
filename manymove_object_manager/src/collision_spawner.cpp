@@ -361,7 +361,8 @@ private:
   {
     if (!check_object_exists_action_client_->action_server_is_ready()) {
       RCLCPP_WARN(
-        this->get_logger(), "CheckObjectExists action server not ready. Assuming object '%s' does not exist.",
+        this->get_logger(),
+        "CheckObjectExists action server not ready. Assuming object '%s' does not exist.",
         object_id.c_str());
       return false;
     }
