@@ -15,6 +15,7 @@
 """Ensure the package complies with the flake8 style guide."""
 
 import pytest
+from pathlib import Path
 from ament_flake8.main import main_with_errors
 
 
@@ -22,5 +23,7 @@ from ament_flake8.main import main_with_errors
 @pytest.mark.linter
 def test_flake8():
     """Execute ament_flake8 against the repository-level configuration."""
-    rc, errors = main_with_errors(argv=[])
+    # Use the package-local .flake8 so line length and ignores match our repo
+    config = Path(__file__).resolve().parent.parent / ".flake8"
+    rc, errors = main_with_errors(argv=["--config", str(config)])
     assert rc == 0, "Found %d code style errors / warnings:\n" % len(errors) + "\n".join(errors)

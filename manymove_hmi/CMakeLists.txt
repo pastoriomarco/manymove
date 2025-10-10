@@ -81,4 +81,11 @@ ament_export_include_directories(include)
 ament_export_targets(export_manymove_hmi_lib HAS_LIBRARY_TARGET)
 ament_export_dependencies(rclcpp std_msgs std_srvs manymove_msgs)
 
+if(BUILD_TESTING)
+  find_package(ament_lint_auto REQUIRED)
+  find_package(ament_cmake_uncrustify REQUIRED)
+  set(ament_cmake_cpplint_FOUND TRUE)
+  ament_lint_auto_find_test_dependencies()
+endif()
+
 ament_package()

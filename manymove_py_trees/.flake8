@@ -1,0 +1,8 @@
+[flake8]
+max-line-length = 120
+extend-ignore = E203, W503
+exclude = __pycache__, build, dist, .venv, .tox
+per-file-ignores =
+    **/__init__.py: F401
+    **/launch/*.py: F401,E402
+
