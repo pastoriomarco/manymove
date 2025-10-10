@@ -83,8 +83,9 @@ ament_export_dependencies(rclcpp std_msgs std_srvs manymove_msgs)
 
 if(BUILD_TESTING)
   find_package(ament_lint_auto REQUIRED)
-  set(ament_cmake_uncrustify_FOUND TRUE)
+  find_package(ament_cmake_uncrustify REQUIRED)
   set(ament_cmake_cpplint_FOUND TRUE)
+  set(AMENT_UNCRUSTIFY_CONFIG_FILE ${CMAKE_CURRENT_SOURCE_DIR}/../uncrustify.cfg)
   ament_lint_auto_find_test_dependencies()
 endif()
 
