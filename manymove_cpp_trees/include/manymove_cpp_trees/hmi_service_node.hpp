@@ -14,7 +14,7 @@
 namespace manymove_cpp_trees
 {
 
-    /**
+/**
      * @brief A node that provides a single "update_blackboard" service
      *        (using manymove_msgs::srv::SetBlackboardValues) and publishes
      *        the status of keys every 250ms.
@@ -22,43 +22,44 @@ namespace manymove_cpp_trees
      * All data is handled as JSON. The publishBlackboardStatus() method iterates
      * over a vector of BlackboardEntry structures to build the JSON message.
      */
-    class HMIServiceNode : public rclcpp::Node
-    {
-    public:
-        // Constructor: pass the complete vector of keys.
-        explicit HMIServiceNode(const std::string &node_name,
-                                BT::Blackboard::Ptr blackboard,
-                                std::vector<BlackboardEntry> keys = {});
+class HMIServiceNode : public rclcpp::Node
+{
+public:
+  // Constructor: pass the complete vector of keys.
+  explicit HMIServiceNode(
+    const std::string & node_name,
+    BT::Blackboard::Ptr blackboard,
+    std::vector<BlackboardEntry> keys = {});
 
-    private:
-        BT::Blackboard::Ptr blackboard_;
-        std::vector<BlackboardEntry> keys_;
+private:
+  BT::Blackboard::Ptr blackboard_;
+  std::vector<BlackboardEntry> keys_;
 
-        // The update_blackboard service.
-        rclcpp::Service<manymove_msgs::srv::SetBlackboardValues>::SharedPtr update_blackboard_srv_;
+  // The update_blackboard service.
+  rclcpp::Service<manymove_msgs::srv::SetBlackboardValues>::SharedPtr update_blackboard_srv_;
 
-        // Publisher for blackboard status.
-        rclcpp::Publisher<std_msgs::msg::String>::SharedPtr publisher_;
+  // Publisher for blackboard status.
+  rclcpp::Publisher<std_msgs::msg::String>::SharedPtr publisher_;
 
-        // Timer to publish status every 250ms.
-        rclcpp::TimerBase::SharedPtr status_timer_;
+  // Timer to publish status every 250ms.
+  rclcpp::TimerBase::SharedPtr status_timer_;
 
-        // Service callback.
-        void handleUpdateBlackboard(
-            const std::shared_ptr<manymove_msgs::srv::SetBlackboardValues::Request> request,
-            std::shared_ptr<manymove_msgs::srv::SetBlackboardValues::Response> response);
+  // Service callback.
+  void handleUpdateBlackboard(
+    const std::shared_ptr<manymove_msgs::srv::SetBlackboardValues::Request> request,
+    std::shared_ptr<manymove_msgs::srv::SetBlackboardValues::Response> response);
 
-        std::string serializePoseRPY(const geometry_msgs::msg::Pose &pose);
+  std::string serializePoseRPY(const geometry_msgs::msg::Pose & pose);
 
-        // Timer callback.
-        void publishBlackboardStatus();
+  // Timer callback.
+  void publishBlackboardStatus();
 
-        // Minimal JSON parse for "double_array" (e.g. "[0.01, 0.01, 0.25]").
-        std::vector<double> parseJsonDoubleArray(const std::string &json_str);
+  // Minimal JSON parse for "double_array" (e.g. "[0.01, 0.01, 0.25]").
+  std::vector<double> parseJsonDoubleArray(const std::string & json_str);
 
-        // Minimal JSON parse for pose (e.g. {"x":0.1,"y":0.2,"z":0.3,"roll":1.57,"pitch":0.0,"yaw":0.0}).
-        geometry_msgs::msg::Pose parseJsonPose(const std::string &json_str);
-    };
+  // Minimal JSON parse for pose (e.g. {"x":0.1,"y":0.2,"z":0.3,"roll":1.57,"pitch":0.0,"yaw":0.0}).
+  geometry_msgs::msg::Pose parseJsonPose(const std::string & json_str);
+};
 
 } // namespace manymove_cpp_trees
 

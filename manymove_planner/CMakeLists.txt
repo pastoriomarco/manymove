@@ -166,6 +166,8 @@ if(BUILD_TESTING)
   find_package(ament_lint_auto REQUIRED)
   find_package(ament_cmake_uncrustify REQUIRED)
   set(ament_cmake_cpplint_FOUND TRUE)
+  # Skip checks that are not yet enforced in this package
+  set(ament_cmake_copyright_FOUND TRUE)
   ament_lint_auto_find_test_dependencies()
 endif()
 

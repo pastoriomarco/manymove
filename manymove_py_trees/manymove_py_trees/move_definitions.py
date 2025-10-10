@@ -128,6 +128,7 @@ def create_pose(position: dict, orientation: dict) -> Pose:
     -------
     Pose
         Populated pose message derived from the supplied dictionaries.
+
     """
     return Pose(position=Point(**position), orientation=Quaternion(**orientation))
 
@@ -162,6 +163,7 @@ def create_move(
     -------
     Move
         Populated Move dataclass ready to be converted into a goal.
+
     """
     if config is None:
         config = MovementConfig()
@@ -201,6 +203,7 @@ def send_move_manipulator_goal(node: Node, move: Move) -> bool:
     -------
     bool
         ``True`` when the goal succeeds, ``False`` otherwise.
+
     """
     action_client = ActionClient(node, MoveManipulator, "move_manipulator")
 

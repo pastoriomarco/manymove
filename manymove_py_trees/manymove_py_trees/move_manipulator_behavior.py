@@ -57,6 +57,7 @@ class MoveManipulatorBehavior(py_trees.behaviour.Behaviour):
         ------
         RuntimeError
             Raised when the node is missing or the action server is unavailable.
+
         """
         self._node = self.bb.get("node")
         if not self._node:

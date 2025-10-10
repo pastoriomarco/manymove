@@ -30,87 +30,90 @@
 namespace manymove_cpp_trees
 {
 
-    class MoveManipulatorAction : public BT::StatefulActionNode
-    {
-    public:
-        using MoveManipulator = manymove_msgs::action::MoveManipulator;
-        using GoalHandleMoveManipulator = rclcpp_action::ClientGoalHandle<MoveManipulator>;
+class MoveManipulatorAction : public BT::StatefulActionNode
+{
+public:
+  using MoveManipulator = manymove_msgs::action::MoveManipulator;
+  using GoalHandleMoveManipulator = rclcpp_action::ClientGoalHandle<MoveManipulator>;
 
-        MoveManipulatorAction(const std::string &name, const BT::NodeConfiguration &config);
+  MoveManipulatorAction(const std::string & name, const BT::NodeConfiguration & config);
 
-        static BT::PortsList providedPorts()
-        {
-            return {
-                BT::InputPort<std::string>("move_id"),
-                BT::InputPort<std::string>("robot_prefix"),
-                BT::InputPort<moveit_msgs::msg::RobotTrajectory>("trajectory"),
-                BT::InputPort<std::string>("pose_key", "Optional key to retrieve the dynamic target pose"),
-                BT::InputPort<bool>("collision_detected", "If a collision is detected, the execution fails"),
-                BT::InputPort<bool>("invalidate_traj_on_exec", "Flag to indicate if the trajectory should be invalidated on exec even if successful"),
-                BT::InputPort<bool>("stop_execution", "Flag to indicate that the execution is stopped"),
-                BT::InputPort<int>("max_tries", "Number of times to try the execution"),
-            };
-        }
-
-    protected:
-        BT::NodeStatus onStart() override;
-        BT::NodeStatus onRunning() override;
-        void onHalted() override;
-
-    private:
-        void goalResponseCallback(std::shared_ptr<GoalHandleMoveManipulator> goal_handle);
-        void feedbackCallback(std::shared_ptr<GoalHandleMoveManipulator>,
-                              const std::shared_ptr<const MoveManipulator::Feedback> feedback);
-        void resultCallback(const GoalHandleMoveManipulator::WrappedResult &result);
-
-        int max_tries_;
-        int current_try_;
-
-        rclcpp::Node::SharedPtr node_;
-        rclcpp_action::Client<MoveManipulator>::SharedPtr action_client_;
-
-        bool goal_sent_;
-        bool result_received_;
-
-        std::string move_id_;
-        std::string robot_prefix_;
-        MoveManipulator::Result action_result_;
+  static BT::PortsList providedPorts()
+  {
+    return {
+      BT::InputPort<std::string>("move_id"),
+      BT::InputPort<std::string>("robot_prefix"),
+      BT::InputPort<moveit_msgs::msg::RobotTrajectory>("trajectory"),
+      BT::InputPort<std::string>("pose_key", "Optional key to retrieve the dynamic target pose"),
+      BT::InputPort<bool>("collision_detected", "If a collision is detected, the execution fails"),
+      BT::InputPort<bool>(
+        "invalidate_traj_on_exec",
+        "Flag to indicate if the trajectory should be invalidated on exec even if successful"),
+      BT::InputPort<bool>("stop_execution", "Flag to indicate that the execution is stopped"),
+      BT::InputPort<int>("max_tries", "Number of times to try the execution"),
     };
+  }
 
-    /**
+protected:
+  BT::NodeStatus onStart() override;
+  BT::NodeStatus onRunning() override;
+  void onHalted() override;
+
+private:
+  void goalResponseCallback(std::shared_ptr<GoalHandleMoveManipulator> goal_handle);
+  void feedbackCallback(
+    std::shared_ptr<GoalHandleMoveManipulator>,
+    const std::shared_ptr<const MoveManipulator::Feedback> feedback);
+  void resultCallback(const GoalHandleMoveManipulator::WrappedResult & result);
+
+  int max_tries_;
+  int current_try_;
+
+  rclcpp::Node::SharedPtr node_;
+  rclcpp_action::Client<MoveManipulator>::SharedPtr action_client_;
+
+  bool goal_sent_;
+  bool result_received_;
+
+  std::string move_id_;
+  std::string robot_prefix_;
+  MoveManipulator::Result action_result_;
+};
+
+/**
      * @class ResetTrajectories
      * @brief A synchronous BT node that resets trajectories and their validity in the blackboard.
      *
      * It takes a comma-separated list of move_ids and for each, sets 'trajectory_{id}' to empty
      * and 'validity_{id}' to false in the blackboard.
      */
-    class ResetTrajectories : public BT::SyncActionNode
-    {
-    public:
-        /**
-         * @brief Constructor for the ResetTrajectories node.
-         * @param name The name of the BT node.
-         * @param config The BT NodeConfiguration (ports, blackboard, etc.).
-         */
-        ResetTrajectories(const std::string &name, const BT::NodeConfiguration &config);
+class ResetTrajectories : public BT::SyncActionNode
+{
+public:
+  /**
+       * @brief Constructor for the ResetTrajectories node.
+       * @param name The name of the BT node.
+       * @param config The BT NodeConfiguration (ports, blackboard, etc.).
+       */
+  ResetTrajectories(const std::string & name, const BT::NodeConfiguration & config);
 
-        /**
-         * @brief Define the required/optional ports for this node.
-         */
-        static BT::PortsList providedPorts()
-        {
-            return {BT::InputPort<std::string>("move_ids", "Comma-separated list of move IDs to reset")};
-        }
+  /**
+       * @brief Define the required/optional ports for this node.
+       */
+  static BT::PortsList providedPorts()
+  {
+    return {BT::InputPort<std::string>("move_ids", "Comma-separated list of move IDs to reset")};
+  }
 
-        /**
-         * @brief Tick function that performs the reset actions.
-         */
-        BT::NodeStatus tick() override;
+  /**
+       * @brief Tick function that performs the reset actions.
+       */
+  BT::NodeStatus tick() override;
 
-    private:
-        // ROS2 node
-        rclcpp::Node::SharedPtr node_;
-    };
+private:
+  // ROS2 node
+  rclcpp::Node::SharedPtr node_;
+};
 
 } // namespace manymove_cpp_trees
 

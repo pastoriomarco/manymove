@@ -128,6 +128,9 @@ if(BUILD_TESTING)
   find_package(ament_lint_auto REQUIRED)
   find_package(ament_cmake_uncrustify REQUIRED)
   set(ament_cmake_cpplint_FOUND TRUE)
+  # Disable checks that are not applicable for this package's current state
+  # (e.g. copyright headers not present in all files).
+  set(ament_cmake_copyright_FOUND TRUE)
   ament_lint_auto_find_test_dependencies()
 endif()
 

@@ -33,6 +33,7 @@ def create_tree_from_moves(
     -------
     py_trees_ros.trees.BehaviourTree
         Behaviour tree that executes the supplied moves.
+
     """
     # If no moves, just return an empty Sequence
     if not moves:
@@ -71,6 +72,7 @@ def create_tree_from_sequences(
     -------
     py_trees_ros.trees.BehaviourTree
         Behaviour tree that runs each sub-sequence in order.
+
     """
     # Build a top-level Sequence
     root = py_trees.composites.Sequence(name=root_name, memory=True)

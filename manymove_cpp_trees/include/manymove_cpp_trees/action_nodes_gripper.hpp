@@ -10,111 +10,112 @@
 
 namespace manymove_cpp_trees
 {
-  // =======================================================
-  // GripperCommandAction
-  // =======================================================
+// =======================================================
+// GripperCommandAction
+// =======================================================
 
-  class GripperCommandAction : public BT::StatefulActionNode
+class GripperCommandAction : public BT::StatefulActionNode
+{
+public:
+  using GripperCommand = control_msgs::action::GripperCommand;
+  using GoalHandleGripperCommand = rclcpp_action::ClientGoalHandle<GripperCommand>;
+
+  GripperCommandAction(const std::string & name, const BT::NodeConfiguration & config);
+
+  static BT::PortsList providedPorts()
   {
-  public:
-    using GripperCommand = control_msgs::action::GripperCommand;
-    using GoalHandleGripperCommand = rclcpp_action::ClientGoalHandle<GripperCommand>;
+    return {
+      BT::InputPort<double>("position", 0.0, "Desired gripper position"),
+      BT::InputPort<double>("max_effort", 0.0, "Maximum effort"),
+      BT::InputPort<std::string>("action_server", "Action server name"),
+      BT::OutputPort<double>("current_position", "Current gripper position")};
+  }
 
-    GripperCommandAction(const std::string &name, const BT::NodeConfiguration &config);
+  BT::NodeStatus onStart() override;
+  BT::NodeStatus onRunning() override;
+  void onHalted() override;
 
-    static BT::PortsList providedPorts()
-    {
-      return {
-          BT::InputPort<double>("position", 0.0, "Desired gripper position"),
-          BT::InputPort<double>("max_effort", 0.0, "Maximum effort"),
-          BT::InputPort<std::string>("action_server", "Action server name"),
-          BT::OutputPort<double>("current_position", "Current gripper position")};
-    }
+private:
+  void goalResponseCallback(std::shared_ptr<GoalHandleGripperCommand> goal_handle);
+  void resultCallback(const GoalHandleGripperCommand::WrappedResult & result);
+  void feedbackCallback(
+    std::shared_ptr<GoalHandleGripperCommand>,
+    const std::shared_ptr<const GripperCommand::Feedback> feedback);
 
-    BT::NodeStatus onStart() override;
-    BT::NodeStatus onRunning() override;
-    void onHalted() override;
+  rclcpp::Node::SharedPtr node_;
+  rclcpp_action::Client<GripperCommand>::SharedPtr action_client_;
 
-  private:
-    void goalResponseCallback(std::shared_ptr<GoalHandleGripperCommand> goal_handle);
-    void resultCallback(const GoalHandleGripperCommand::WrappedResult &result);
-    void feedbackCallback(std::shared_ptr<GoalHandleGripperCommand>,
-                          const std::shared_ptr<const GripperCommand::Feedback> feedback);
+  bool goal_sent_;
+  bool result_received_;
 
-    rclcpp::Node::SharedPtr node_;
-    rclcpp_action::Client<GripperCommand>::SharedPtr action_client_;
+  // Store the final result from the action server
+  GripperCommand::Result action_result_;
+};
 
-    bool goal_sent_;
-    bool result_received_;
+// =======================================================
+// GripperTrajAction
+// =======================================================
+class GripperTrajAction : public BT::StatefulActionNode
+{
+public:
+  using FollowJointTrajectory = control_msgs::action::FollowJointTrajectory;
+  using GoalHandleFollowJointTrajectory = rclcpp_action::ClientGoalHandle<FollowJointTrajectory>;
 
-    // Store the final result from the action server
-    GripperCommand::Result action_result_;
-  };
+  GripperTrajAction(const std::string & name, const BT::NodeConfiguration & config);
 
-  // =======================================================
-  // GripperTrajAction
-  // =======================================================
-  class GripperTrajAction : public BT::StatefulActionNode
+  static BT::PortsList providedPorts()
   {
-  public:
-    using FollowJointTrajectory = control_msgs::action::FollowJointTrajectory;
-    using GoalHandleFollowJointTrajectory = rclcpp_action::ClientGoalHandle<FollowJointTrajectory>;
+    return {
+      BT::InputPort<std::string>(
+        "action_server", "FollowJointTrajectory server name"),
+      BT::InputPort<std::vector<std::string>>("joint_names", "List of gripper joint names"),
+      BT::InputPort<std::vector<double>>("positions", "Target joint positions for each joint_name"),
+      BT::InputPort<double>("time_from_start", 1.0, "Trajectory duration in seconds")};
+  }
 
-    GripperTrajAction(const std::string &name, const BT::NodeConfiguration &config);
+  BT::NodeStatus onStart() override;
+  BT::NodeStatus onRunning() override;
+  void onHalted() override;
 
-    static BT::PortsList providedPorts()
-    {
-      return {
-          BT::InputPort<std::string>(
-              "action_server", "FollowJointTrajectory server name"),
-          BT::InputPort<std::vector<std::string>>("joint_names", "List of gripper joint names"),
-          BT::InputPort<std::vector<double>>("positions", "Target joint positions for each joint_name"),
-          BT::InputPort<double>("time_from_start", 1.0, "Trajectory duration in seconds")};
-    }
+private:
+  void goalResponseCallback(std::shared_ptr<GoalHandleFollowJointTrajectory> goal_handle);
+  void resultCallback(const GoalHandleFollowJointTrajectory::WrappedResult & result);
 
-    BT::NodeStatus onStart() override;
-    BT::NodeStatus onRunning() override;
-    void onHalted() override;
+  rclcpp::Node::SharedPtr node_;
+  rclcpp_action::Client<FollowJointTrajectory>::SharedPtr action_client_;
 
-  private:
-    void goalResponseCallback(std::shared_ptr<GoalHandleFollowJointTrajectory> goal_handle);
-    void resultCallback(const GoalHandleFollowJointTrajectory::WrappedResult &result);
+  bool goal_sent_;
+  bool result_received_;
+  bool success_;
+};
 
-    rclcpp::Node::SharedPtr node_;
-    rclcpp_action::Client<FollowJointTrajectory>::SharedPtr action_client_;
+// =======================================================
+// PublishJointStateAction
+// =======================================================
 
-    bool goal_sent_;
-    bool result_received_;
-    bool success_;
-  };
+class PublishJointStateAction : public BT::SyncActionNode
+{
+public:
+  PublishJointStateAction(const std::string & name, const BT::NodeConfiguration & config);
 
-  // =======================================================
-  // PublishJointStateAction
-  // =======================================================
-
-  class PublishJointStateAction : public BT::SyncActionNode
+  static BT::PortsList providedPorts()
   {
-  public:
-    PublishJointStateAction(const std::string &name, const BT::NodeConfiguration &config);
+    return {
+      BT::InputPort<std::string>("topic", "/isaac_joint_commands_gripper", "Topic to publish"),
+      BT::InputPort<std::vector<std::string>>("joint_names", "Joint names"),
+      BT::InputPort<std::vector<double>>("joint_positions", "Positions (optional)"),
+      BT::InputPort<std::vector<double>>("joint_velocities", "Velocities (optional)"),
+      BT::InputPort<std::vector<double>>("joint_efforts", "Efforts (optional)"),
+      BT::InputPort<bool>("stamp_now", true, "Stamp header with node->now()")};
+  }
 
-    static BT::PortsList providedPorts()
-    {
-      return {
-          BT::InputPort<std::string>("topic", "/isaac_joint_commands_gripper", "Topic to publish"),
-          BT::InputPort<std::vector<std::string>>("joint_names", "Joint names"),
-          BT::InputPort<std::vector<double>>("joint_positions", "Positions (optional)"),
-          BT::InputPort<std::vector<double>>("joint_velocities", "Velocities (optional)"),
-          BT::InputPort<std::vector<double>>("joint_efforts", "Efforts (optional)"),
-          BT::InputPort<bool>("stamp_now", true, "Stamp header with node->now()")};
-    }
+  BT::NodeStatus tick() override;
 
-    BT::NodeStatus tick() override;
-
-  private:
-    rclcpp::Node::SharedPtr node_;
-    rclcpp::Publisher<sensor_msgs::msg::JointState>::SharedPtr pub_;
-    std::string current_topic_;
-  };
+private:
+  rclcpp::Node::SharedPtr node_;
+  rclcpp::Publisher<sensor_msgs::msg::JointState>::SharedPtr pub_;
+  std::string current_topic_;
+};
 
 } // namespace manymove_cpp_trees
 
