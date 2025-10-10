@@ -9,7 +9,6 @@ import rclpy
 from geometry_msgs.msg import Point, Pose, Quaternion
 from rclpy.action import ActionClient
 from rclpy.node import Node
-
 from manymove_msgs.action import MoveManipulator
 from manymove_msgs.msg import MoveManipulatorGoal, MovementConfig
 

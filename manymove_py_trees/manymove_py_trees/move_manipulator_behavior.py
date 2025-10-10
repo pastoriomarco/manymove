@@ -7,7 +7,6 @@ from manymove_msgs.action._move_manipulator import MoveManipulator_Result
 from moveit_msgs.msg import RobotTrajectory
 from py_trees.common import Access
 from rclpy.action import ActionClient
-
 from manymove_msgs.action import MoveManipulator
 
 

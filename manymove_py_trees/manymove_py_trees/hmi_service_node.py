@@ -10,7 +10,6 @@ import rclpy
 from geometry_msgs.msg import Pose
 from rclpy.node import Node
 from std_msgs.msg import String
-
 # Import the new service type
 from manymove_msgs.srv import SetBlackboardValues
 

@@ -116,8 +116,8 @@ ament_target_dependencies(standalone_micpp_demo
 # Installation
 ##########################
 # Install only the library targets for export.
-install(TARGETS 
-  move_group_planner_lib 
+install(TARGETS
+  move_group_planner_lib
   moveit_cpp_planner_lib
   EXPORT export_${PROJECT_NAME}
   ARCHIVE DESTINATION lib/${PROJECT_NAME}
@@ -126,8 +126,8 @@ install(TARGETS
 )
 
 # Install the executables without exporting them.
-install(TARGETS 
-  action_server_node 
+install(TARGETS
+  action_server_node
   moveitcpp_action_server_node
   standalone_micpp_demo
   RUNTIME DESTINATION lib/${PROJECT_NAME}
