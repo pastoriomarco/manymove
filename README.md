@@ -118,7 +118,7 @@ These values will be used to start up the following nodes:
 - action_server_node: the core of the planners
 - manymove_py_trees_node: the BT logic node
 - manymove_hmi_node: the HMI interface
-- manymove_signals: on a real robot, handles the service calls to get/set signals (currently taylored for Ufactory robots)
+- manymove_signals_*: on a real robot, handles the service calls to get/set signals (currently available manymove_signals_xarm taylored for Ufactory robots)
 
 A little side note on Panda examples: the reference TCP frame there is not actually centered between gripper's fingers, as 'panda_link8' represents the center of the flange. But since it's aligned to the ideal TCP, you can just offset the poses when you need to refer to the TCP, without having to create a new link. In the Panda example, the **-0.102** in the following line represents this offset:
 
@@ -151,27 +151,29 @@ This repository is composed of several sub-packages, each handling different res
    - Provides actions like `AddCollisionObject`, `RemoveCollisionObject`, `AttachDetachObject`, etc., which can be called by higher-level logic to handle objects in the environment.  
    - Includes mesh files and YAML configuration for objects.
 
-4. **`manymove_signals`**  
-   - Handles **digital I/O signals** and checks the robot’s state via dedicated actions (e.g., `CheckRobotState`, `SetOutput`, `GetInput`).  
-   - Useful for toggling end-effector tools or reading sensor inputs in a flexible, standardized way.
-
-5. **`manymove_cpp_trees`**  
+4. **`manymove_cpp_trees`**  
    - A C++ **BehaviorTree.CPP** framework that integrates with the actions exposed by the planner, object manager, and signals packages.  
    - Offers custom BT nodes (e.g., planning, object manipulation, signal I/O, conditions, etc.) so you can compose robotic behaviors in a modular, visual manner.  
    - Contains a **BT client** nodes (e.g. `bt_client.cpp`) that demonstrates how to build, run, and manage complex behavior trees at runtime.
 
-6. **`manymove_py_trees`**  
+5. **`manymove_py_trees`**  
    - A Python-based alternative using **py_trees** to build or test similar control flows.  
    - Useful if you prefer Python or need quick scripting for behavior logic.  
    - Mirrors some capabilities found in the C++ trees package.
 
-7. **`manymove_hmi`**  
+6. **`manymove_hmi`**  
    - Implements a **basic Human–Machine Interface (HMI)**.  
    - Provides a GUI (`hmi_gui`) and related tools (`ros2_worker`) so that operators can issue commands, monitor status, or set parameters.  
    - Can be integrated with the behavior trees (or any other logic) to pause, stop, or resume execution.
 
-8. **`manymove_bringup`**   
+7. **`manymove_bringup`**   
    - Contains the launchers for the complete multi-package examples listed below (and more).
+
+Specific packages for real robot signals:
+
+4. **`manymove_signals_xarm`**  
+   - Handles **digital I/O signals** and checks the robot’s state via dedicated actions (e.g., `CheckRobotState`, `SetOutput`, `GetInput`).  
+   - Useful for toggling end-effector tools or reading sensor inputs in a flexible, standardized way.
 
 ---
 

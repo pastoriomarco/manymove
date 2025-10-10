@@ -52,7 +52,6 @@ DEPENDENCIES
     geometry_msgs
     shape_msgs
     action_msgs
-    xarm_msgs
     moveit_msgs
     std_msgs
     std_srvs

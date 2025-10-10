@@ -52,17 +52,6 @@ jobs:
           ros-$ROS_DISTRO-py-trees \
           ros-$ROS_DISTRO-py-trees-ros \
           ros-$ROS_DISTRO-simulation-interfaces || true 
-          # Distro-specific simulation stacks
-          if [ "$ROS_DISTRO" = "humble" ]; then
-            # Gazebo Classic packages on Humble
-            apt-get install -y ros-$ROS_DISTRO-gazebo-ros-pkgs \
-            ros-$ROS_DISTRO-gazebo-ros2-control
-          else
-            # ROS-GZ (Gazebo Garden/Ignition) on Jazzy
-            apt-get install -y ros-$ROS_DISTRO-ros-gz-sim \
-            ros-$ROS_DISTRO-ros-gz-bridge \
-            ros-$ROS_DISTRO-gz-ros2-control
-          fi
           rm -rf /var/lib/apt/lists/*
 
       - name: Setup rosdep
@@ -73,7 +62,6 @@ jobs:
         run: |
           mkdir -p ${ROS_WS}/src
           ln -s ${GITHUB_WORKSPACE}/manymove ${ROS_WS}/src/manymove
-          git clone --recursive -b ${ROS_DISTRO} https://github.com/pastoriomarco/xarm_ros2.git ${ROS_WS}/src/xarm_ros2
 
       - name: Install package dependencies
         run: |
@@ -92,21 +80,5 @@ jobs:
           set -e
           source /opt/ros/$ROS_DISTRO/setup.bash
           cd ${ROS_WS}
-          colcon test \
-            --base-paths src \
-            --packages-skip \
-              xarm_api \
-              xarm_controller \
-              xarm_description \
-              xarm_gazebo \
-              xarm_moveit_config \
-              xarm_moveit_servo \
-              xarm_msgs \
-              xarm_planner \
-              xarm_sdk \
-              mbot_demo \
-              uf_ros_lib \
-              realsense_gazebo_plugin \
-              d435i_xarm_setup \
-            --event-handlers console_cohesion+
+          colcon test --base-paths src --event-handlers console_cohesion+
           colcon test-result --verbose

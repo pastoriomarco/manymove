@@ -303,7 +303,7 @@ def launch_setup(context, *args, **kwargs):
 
     # Signals node
     manymove_signals_node = Node(
-        package='manymove_signals',
+        package='manymove_signals_xarm',
         executable='signals_node',
         name='manymove_signals_node',
         output='screen',
