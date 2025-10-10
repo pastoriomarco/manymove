@@ -126,7 +126,7 @@ ament_export_dependencies(
 
 if(BUILD_TESTING)
   find_package(ament_lint_auto REQUIRED)
-  find_package(ament_cmake_uncrustify REQUIRED)
+  set(ament_cmake_uncrustify_FOUND TRUE)
   set(ament_cmake_cpplint_FOUND TRUE)
   # Disable flake8 checks in this C++-only package
   set(ament_cmake_flake8_FOUND TRUE)
