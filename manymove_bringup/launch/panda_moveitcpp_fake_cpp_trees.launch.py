@@ -1,7 +1,6 @@
 """Launch description for the panda moveitcpp fake cpp trees scenario."""
 
 import os
-
 from ament_index_python.packages import get_package_share_directory
 from launch import LaunchDescription
 from launch.actions import DeclareLaunchArgument, ExecuteProcess, OpaqueFunction
@@ -23,7 +22,10 @@ def launch_setup(context, *args, **kwargs):
     ros2_control_hardware_type = DeclareLaunchArgument(
         "ros2_control_hardware_type",
         default_value="mock_components",
-        description="ROS2 control hardware interface type to use for the launch file -- possible values: [mock_components, isaac]",
+        description=(
+            "ROS2 control hardware interface type to use for the launch file -- "
+            "possible values: [mock_components, isaac]"
+        ),
     )
 
     moveit_configs = (
@@ -43,7 +45,8 @@ def launch_setup(context, *args, **kwargs):
     action_server_node = Node(
         package="manymove_planner",
         executable="action_server_node",
-        # Don't use the "name" parameter, the name will be automatically set with {node_prefix}action_server_node to avoid duplicate nodes
+        # Don't use the "name" parameter, the name will be automatically set with {node_prefix}action_server_node to
+        # avoid duplicate nodes
         output="screen",
         parameters=[
             moveit_configs.to_dict(),

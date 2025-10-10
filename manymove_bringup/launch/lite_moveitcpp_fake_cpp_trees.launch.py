@@ -1,8 +1,6 @@
 """Launch description for the lite moveitcpp fake cpp trees scenario."""
 
 import os
-
-# from launch_ros.substitutions import FindPackageShare
 from ament_index_python.packages import get_package_share_directory
 from launch import LaunchDescription
 from launch.actions import DeclareLaunchArgument, OpaqueFunction, RegisterEventHandler
@@ -139,7 +137,8 @@ def launch_setup(context, *args, **kwargs):
     action_server_node = Node(
         package="manymove_planner",
         executable="action_server_node",
-        # Don't use the "name" parameter, the name will be automatically set with {node_prefix}action_server_node to avoid duplicate nodes
+        # Don't use the "name" parameter, the name will be automatically set with {node_prefix}action_server_node to
+        # avoid duplicate nodes
         output="screen",
         parameters=[
             moveit_config_dict,

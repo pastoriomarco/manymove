@@ -12,11 +12,7 @@ from launch import LaunchDescription
 from launch.actions import DeclareLaunchArgument, OpaqueFunction, RegisterEventHandler
 from launch.event_handlers import OnProcessExit, OnProcessStart
 from launch.launch_description_sources import load_python_launch_file_as_module
-
-# from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch.substitutions import LaunchConfiguration  # , PathJoinSubstitution
-
-# from launch_ros.substitutions import FindPackageShare
 from launch_ros.actions import Node
 from uf_ros_lib.moveit_configs_builder import DualMoveItConfigsBuilder
 from uf_ros_lib.uf_robot_utils import generate_dual_ros2_control_params_temp_file
@@ -287,7 +283,8 @@ def launch_setup(context, *args, **kwargs):
     action_server_node_1 = Node(
         package="manymove_planner",
         executable="action_server_node",
-        # Don't use the "name" parameter, the name will be automatically set with {node_prefix_*}action_server_node to avoid duplicate nodes
+        # Don't use the "name" parameter, the name will be automatically set with {node_prefix_*}action_server_node to
+        # avoid duplicate nodes
         output="screen",
         parameters=[
             moveit_config.to_dict(),
@@ -306,7 +303,8 @@ def launch_setup(context, *args, **kwargs):
     action_server_node_2 = Node(
         package="manymove_planner",
         executable="action_server_node",
-        # Don't use the "name" parameter, the name will be automatically set with {node_prefix}action_server_node to avoid duplicate nodes
+        # Don't use the "name" parameter, the name will be automatically set with {node_prefix}action_server_node to
+        # avoid duplicate nodes
         output="screen",
         parameters=[
             moveit_config.to_dict(),

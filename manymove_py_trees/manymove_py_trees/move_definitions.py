@@ -26,6 +26,7 @@ class Move:
     config: MovementConfig = MovementConfig()
 
     def __post_init__(self):
+        """Validate that the requested move type is supported."""
         allowed_types = ["pose", "joint", "named", "cartesian"]
         if self.movement_type not in allowed_types:
             raise ValueError(f"Unsupported movement_type '{self.movement_type}'. " f"Must be one of {allowed_types}.")

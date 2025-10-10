@@ -15,6 +15,7 @@ class MoveManipulatorBehavior(py_trees.behaviour.Behaviour):
     """Wrap the MoveManipulator action into a reusable py_trees behaviour."""
 
     def __init__(self, name: str, node, move, prefix: str = "", wait_for_server_seconds: float = 5.0):
+        """Store configuration and initialise blackboard handles."""
         super().__init__(name=name)
         self.prefix = prefix
         self._node = node  # store the ROS2 node reference directly

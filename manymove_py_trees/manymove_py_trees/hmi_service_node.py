@@ -34,6 +34,7 @@ class HMIServiceNode(Node):
     """Expose services and status topics used to adjust the behaviour-tree blackboard."""
 
     def __init__(self, node_name, blackboard=None, robot_prefix=""):
+        """Initialize publishers and services for behaviour tree interaction."""
         super().__init__(node_name)
         self.robot_prefix = robot_prefix
         if blackboard is None:

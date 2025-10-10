@@ -1,18 +1,13 @@
 """Launch description for the lite foundationpose movegroup fake cpp trees scenario."""
 
 import os
-
 from ament_index_python import get_package_share_directory
 from launch import LaunchDescription
 from launch.actions import DeclareLaunchArgument, OpaqueFunction, RegisterEventHandler
 from launch.conditions import UnlessCondition
 from launch.event_handlers import OnProcessExit, OnProcessStart
 from launch.launch_description_sources import load_python_launch_file_as_module
-
-# from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch.substitutions import LaunchConfiguration  # , PathJoinSubstitution
-
-# from launch_ros.substitutions import FindPackageShare
 from launch_ros.actions import Node
 from uf_ros_lib.moveit_configs_builder import MoveItConfigsBuilder
 from uf_ros_lib.uf_robot_utils import generate_ros2_control_params_temp_file
@@ -174,7 +169,8 @@ def launch_setup(context, *args, **kwargs):
     action_server_node = Node(
         package="manymove_planner",
         executable="action_server_node",
-        # Don't use the "name" parameter, the name will be automatically set with {node_prefix}action_server_node to avoid duplicate nodes
+        # Don't use the "name" parameter, the name will be automatically set with {node_prefix}action_server_node to
+        # avoid duplicate nodes
         output="screen",
         parameters=[
             moveit_configs.to_dict(),
@@ -417,7 +413,8 @@ def generate_launch_description():
             DeclareLaunchArgument(
                 "tcp_frame", default_value="link_tcp", description="TCP (end effector) frame of the robot"
             ),
-            # DeclareLaunchArgument('gripper_action_server', default_value='/lite_gripper_controller/gripper_cmd', description='Name of the action server to control the gripper'),
+            # DeclareLaunchArgument('gripper_action_server', default_value='/lite_gripper_controller/gripper_cmd',
+            # description='Name of the action server to control the gripper'),
             DeclareLaunchArgument(
                 "gripper_action_server",
                 default_value="/isaac_joint_commands_gripper",
@@ -438,4 +435,6 @@ def generate_launch_description():
 
 
 # Defaults to this CLI command (remove the kinematics_suffix:=LS1 if not generated from a real robot with prefix LS1):
-# ros2 launch xarm_moveit_config lite6_moveit_fake.launch.py add_realsense_d435i:=true add_d435i_links:=true add_other_geometry:=true geometry_type:=mesh geometry_mass:=0.3 geometry_mesh_filename:=pneumatic_lite.stl geometry_mesh_tcp_xyz:="0.03075 0 0.11885" geometry_mesh_tcp_rpy:="0 0.52 0" kinematics_suffix:=LS1
+# ros2 launch xarm_moveit_config lite6_moveit_fake.launch.py add_realsense_d435i:=true add_d435i_links:=true
+# add_other_geometry:=true geometry_type:=mesh geometry_mass:=0.3 geometry_mesh_filename:=pneumatic_lite.stl
+# geometry_mesh_tcp_xyz:="0.03075 0 0.11885" geometry_mesh_tcp_rpy:="0 0.52 0" kinematics_suffix:=LS1
