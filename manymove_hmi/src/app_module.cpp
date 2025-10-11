@@ -57,34 +57,30 @@ inline QString convertFromInternal(
   const std::vector<KeyConfig> & cfgs,
   const QString & key, const QString & val)
 {
-  double scale = scaleFor
-                   (cfgs,
-                   key);
+  double scale = scaleFor(
+    cfgs,
+    key);
   if (scale == 1.0) {
     return val;
   }
   bool ok = false;
-  double v = val.toDouble
-               (&ok);
-  return ok ? QString::number
-           (v * scale) : val;
+  double v = val.toDouble(&ok);
+  return ok ? QString::number(v * scale) : val;
 }
 
 inline QString convertToInternal(
   const std::vector<KeyConfig> & cfgs,
   const QString & key, const QString & val)
 {
-  double scale = scaleFor
-                   (cfgs,
-                   key);
+  double scale = scaleFor(
+    cfgs,
+    key);
   if (scale == 1.0) {
     return val;
   }
   bool ok = false;
-  double v = val.toDouble
-               (&ok);
-  return ok ? QString::number
-           (v / scale) : val;
+  double v = val.toDouble(&ok);
+  return ok ? QString::number(v / scale) : val;
 }
 } // namespace
 
@@ -99,8 +95,7 @@ AppModule::AppModule(
 {
   /* 1) build black-board key list once --------------------------- */
   for (const auto & k : keyConfigs_) {
-    bb_keys_.push_back
-    (
+    bb_keys_.push_back(
     {
       k.key, k.value_type
     });
@@ -112,8 +107,7 @@ AppModule::AppModule(
   }
 
   /* 3) build the visual layout ----------------------------------- */
-  setupUI
-    ();
+  setupUI();
 }
 
 /* ------------------------------------------------------------------ */
@@ -121,179 +115,136 @@ AppModule::AppModule(
 /* ------------------------------------------------------------------ */
 void AppModule::setupUI()
 {
-  layout_ = new QVBoxLayout
-              (this);
+  layout_ = new QVBoxLayout(this);
 
   for (const auto & cfg : keyConfigs_) {
-    QWidget * rowWidget = new QWidget
-                            (this);
-    QHBoxLayout * row = new QHBoxLayout
-                          (rowWidget);
-    row->setContentsMargins
-      (0,
+    QWidget * rowWidget = new QWidget(this);
+    QHBoxLayout * row = new QHBoxLayout(rowWidget);
+    row->setContentsMargins(
+      0,
       0,
       0,
       0);
 
     if (cfg.show_label) {
-      QLabel * label = new QLabel
-                         (cfg.key,
-                         rowWidget);
-      label->setFixedWidth
-        (250);
-      QFont labelFont = label->font
-                          ();
-      labelFont.setPointSize
-        (14);
-      label->setFont
-        (labelFont);
-      row->addWidget
-        (label);
+      QLabel * label = new QLabel(
+        cfg.key,
+        rowWidget);
+      label->setFixedWidth(250);
+      QFont labelFont = label->font();
+      labelFont.setPointSize(14);
+      label->setFont(labelFont);
+      row->addWidget(label);
     }
 
-    if (!cfg.unit.isEmpty
-          ()) {
-      QLabel * unitLbl = new QLabel
-                           (cfg.unit,
-                           rowWidget);
-      unitLbl->setFixedWidth
-        (60);
-      row->addWidget
-        (unitLbl);
+    if (!cfg.unit.isEmpty()) {
+      QLabel * unitLbl = new QLabel(
+        cfg.unit,
+        rowWidget);
+      unitLbl->setFixedWidth(60);
+      row->addWidget(unitLbl);
     }
 
     /* ---------------------------------------------------------- */
     if (cfg.value_type == "bool") {             /* TOGGLE  */
-      QToolButton * t = new QToolButton
-                          (rowWidget);
-      t->setCheckable
-        (true);
+      QToolButton * t = new QToolButton(rowWidget);
+      t->setCheckable(true);
       if (cfg.widget_width > 0) {
-        t->setFixedWidth
-          (cfg.widget_width);
+        t->setFixedWidth(cfg.widget_width);
       }
       else {
-        t->setSizePolicy
-          (QSizePolicy::Expanding,
+        t->setSizePolicy(
+          QSizePolicy::Expanding,
           QSizePolicy::Fixed);
       }
-      t->setFixedHeight
-        (70);
-      t->setText
-        ("ROBOT CYCLE OFF");
-      t->setStyleSheet
-        ("QToolButton { background-color: darkred; }"
+      t->setFixedHeight(70);
+      t->setText("ROBOT CYCLE OFF");
+      t->setStyleSheet(
+        "QToolButton { background-color: darkred; }"
         "QToolButton:checked { background-color: green; }");
 
-      connect
-        (t,
+      connect(
+        t,
         &QToolButton::toggled,
         this,
         [this, cfg, t](bool on)
       {
-        t->setText
-          (on ? "ROBOT CYCLE ON" : "ROBOT CYCLE OFF");
+        t->setText(on ? "ROBOT CYCLE ON" : "ROBOT CYCLE OFF");
         const QString v = on ? "true" : "false";
         userOverrides_[cfg.key] = v;
         editableValues_[cfg.key] = v;
-        updateComputedFields
-          ();
-        updateSendButtonState
-          ();
+        updateComputedFields();
+        updateSendButtonState();
         if (cfg.key == "cycle_on_key") {
-          emit keyUpdateRequested
-            (cfg.key,
+          emit keyUpdateRequested(
+            cfg.key,
             cfg.value_type,
             v);
         }
       });
 
-      row->addWidget
-        (t);
+      row->addWidget(t);
       keyWidgets_[cfg.key] = t;
     }
     else if (cfg.editable) {             /* LINE EDIT */
-      QLineEdit * le = new QLineEdit
-                         ("N/A",
-                         rowWidget);
-      le->setAlignment
-        (Qt::AlignRight);
-      le->setFixedHeight
-        (50);
-      QFont font = le->font
-                     ();
-      font.setPointSize
-        (20);
-      le->setFont
-        (font);
-      le->setFixedWidth
-        (cfg.widget_width);
-      QPalette pal = le->palette
-                       ();
-      pal.setColor
-        (QPalette::Text,
+      QLineEdit * le = new QLineEdit(
+        "N/A",
+        rowWidget);
+      le->setAlignment(Qt::AlignRight);
+      le->setFixedHeight(50);
+      QFont font = le->font();
+      font.setPointSize(20);
+      le->setFont(font);
+      le->setFixedWidth(cfg.widget_width);
+      QPalette pal = le->palette();
+      pal.setColor(
+        QPalette::Text,
         Qt::gray);
-      le->setPalette
-        (pal);
+      le->setPalette(pal);
 
-      connect
-        (le,
+      connect(
+        le,
         &QLineEdit::textChanged,
         this,
         &AppModule::onEditableChanged);
 
-      le->installEventFilter
-        (this);
-      row->addWidget
-        (le);
+      le->installEventFilter(this);
+      row->addWidget(le);
       keyWidgets_[cfg.key] = le;
     }
     else {             /* COMPUTED  */
-      QLabel * v = new QLabel
-                     ("N/A",
-                     rowWidget);
-      v->setAlignment
-        (Qt::AlignRight);
-      v->setFixedWidth
-        (cfg.widget_width);
-      row->addWidget
-        (v);
+      QLabel * v = new QLabel(
+        "N/A",
+        rowWidget);
+      v->setAlignment(Qt::AlignRight);
+      v->setFixedWidth(cfg.widget_width);
+      row->addWidget(v);
       keyWidgets_[cfg.key] = v;
     }
 
-    layout_->addWidget
-      (rowWidget);
+    layout_->addWidget(rowWidget);
     keyRowWidgets_[cfg.key] = rowWidget;
-    rowWidget->setVisible
-      (cfg.visible);
+    rowWidget->setVisible(cfg.visible);
   }
 
-  sendButton_ = new QPushButton
-                  ("SEND",
-                  this);
-  layout_->addWidget
-    (sendButton_);
-  connect
-    (sendButton_,
+  sendButton_ = new QPushButton(
+    "SEND",
+    this);
+  layout_->addWidget(sendButton_);
+  connect(
+    sendButton_,
     &QPushButton::clicked,
     this,
     &AppModule::onSendClicked);
 
-  generalMessage_ = new QLabel
-                      (this);
-  generalMessage_->setFixedHeight
-    (50);
-  QFont genFont = generalMessage_->font
-                    ();
-  genFont.setPointSize
-    (14);
-  generalMessage_->setFont
-    (genFont);
-  layout_->addWidget
-    (generalMessage_);
+  generalMessage_ = new QLabel(this);
+  generalMessage_->setFixedHeight(50);
+  QFont genFont = generalMessage_->font();
+  genFont.setPointSize(14);
+  generalMessage_->setFont(genFont);
+  layout_->addWidget(generalMessage_);
 
-  updateSendButtonState
-    ();
+  updateSendButtonState();
 }
 
 /* ------------------------------------------------------------------ */
@@ -302,60 +253,46 @@ void AppModule::updateGeneralMessage(const QString & message, const QString & co
   if (!generalMessage_) {
     return;
   }
-  generalMessage_->setText
-    (message);
-  if (!color.isEmpty
-        ()) {
-    generalMessage_->setStyleSheet
-      (QString
-        ("color: %1; border: 2px solid %1; padding:2px;").arg
-      (
+  generalMessage_->setText(message);
+  if (!color.isEmpty()) {
+    generalMessage_->setStyleSheet(
+      QString("color: %1; border: 2px solid %1; padding:2px;").arg(
         color));
   }
   else {
-    generalMessage_->setStyleSheet
-      ("");
+    generalMessage_->setStyleSheet("");
   }
 }
 
 /* ------------------------------------------------------------------ */
 void AppModule::onEditableChanged(const QString &)
 {
-  auto * le = qobject_cast<QLineEdit*>
-                (sender
-                  ());
+  auto * le = qobject_cast<QLineEdit*>(
+    sender());
   if (!le) {
     return;
   }
 
   /* which key? */
   QString key;
-  for (auto it = keyWidgets_.cbegin
-                   (); it != keyWidgets_.cend
-         (); ++it) {
-    if (it.value
-          () == le) {
-      key = it.key
-              ();
+  for (auto it = keyWidgets_.cbegin(); it != keyWidgets_.cend(); ++it) {
+    if (it.value() == le) {
+      key = it.key();
       break;
     }
   }
 
-  if (key.isEmpty
-        ()) {
+  if (key.isEmpty()) {
     return;
   }
 
-  const QString txt = le->text
-                        ();
-  QString in_m = toInternal
-                   (key,
-                   txt);
+  const QString txt = le->text();
+  QString in_m = toInternal(
+    key,
+    txt);
   if (in_m == currentValues_[key]) {
-    userOverrides_[key].clear
-      ();
-    editableValues_[key].clear
-      ();
+    userOverrides_[key].clear();
+    editableValues_[key].clear();
   }
   else {
     userOverrides_[key] = in_m;
@@ -363,49 +300,44 @@ void AppModule::onEditableChanged(const QString &)
   }
 
   /* colouring ---------------------------------------------------- */
-  QPalette pal = le->palette
-                   ();
-  FieldStatus st = validateField
-                     (key,
-                     in_m);
-  if (!txt.isEmpty
-        () && txt != "N/A") {
+  QPalette pal = le->palette();
+  FieldStatus st = validateField(
+    key,
+    in_m);
+  if (!txt.isEmpty() && txt != "N/A") {
     switch (st) {
     case FieldStatus::Invalid:
-      pal.setColor
-        (QPalette::Text,
+      pal.setColor(
+        QPalette::Text,
         Qt::red);
       break;
     case FieldStatus::BelowLimit:
-      pal.setColor
-        (QPalette::Text,
+      pal.setColor(
+        QPalette::Text,
         Qt::cyan);
       break;
     case FieldStatus::AboveLimit:
-      pal.setColor
-        (QPalette::Text,
+      pal.setColor(
+        QPalette::Text,
         Qt::magenta);
       break;
     case FieldStatus::Valid:
     default:
-      pal.setColor
-        (QPalette::Text,
+      pal.setColor(
+        QPalette::Text,
         Qt::white);
       break;
     }
   }
   else {
-    pal.setColor
-      (QPalette::Text,
+    pal.setColor(
+      QPalette::Text,
       Qt::white);
   }
-  le->setPalette
-    (pal);
+  le->setPalette(pal);
 
-  updateComputedFields
-    ();
-  updateSendButtonState
-    ();
+  updateComputedFields();
+  updateSendButtonState();
 }
 
 /* ------------------------------------------------------------------ */
@@ -414,9 +346,7 @@ void AppModule::updateComputedFields()
   /* Build a map that already contains fall-backs to current values */
   QMap<QString, QString> merged = editableValues_;
   for (const auto & c : keyConfigs_) {
-    if (merged.value
-          (c.key).isEmpty
-          ()) {
+    if (merged.value(c.key).isEmpty()) {
       merged[c.key] = currentValues_[c.key];
     }
   }
@@ -425,41 +355,36 @@ void AppModule::updateComputedFields()
     if (cfg.editable) {
       continue;
     }
-    QLabel * lbl = qobject_cast<QLabel*>
-                     (keyWidgets_.value
-                       (cfg.key));
+    QLabel * lbl = qobject_cast<QLabel*>(
+      keyWidgets_.value(cfg.key));
     if (!lbl) {
       continue;
     }
 
-    QString val = cfg.computeFunction ? cfg.computeFunction
-                    (merged) : "";
-    QPalette pal = lbl->palette
-                     ();
-    if (!val.isEmpty
-          ()) {
+    QString val = cfg.computeFunction ? cfg.computeFunction(merged) : "";
+    QPalette pal = lbl->palette();
+    if (!val.isEmpty()) {
       currentValues_[cfg.key] = val;
-      lbl->setText
-        (toDisplay
-          (cfg.key,
+      lbl->setText(
+        toDisplay(
+          cfg.key,
           val));
-      pal.setColor
-        (QPalette::WindowText,
+      pal.setColor(
+        QPalette::WindowText,
         Qt::white);
     }
     else {
-      lbl->setText
-        (toDisplay
-          (cfg.key,
-          currentValues_.value
-            (cfg.key,
+      lbl->setText(
+        toDisplay(
+          cfg.key,
+          currentValues_.value(
+            cfg.key,
             "N/A")));
-      pal.setColor
-        (QPalette::WindowText,
+      pal.setColor(
+        QPalette::WindowText,
         Qt::gray);
     }
-    lbl->setPalette
-      (pal);
+    lbl->setPalette(pal);
   }
 }
 
@@ -467,13 +392,10 @@ void AppModule::updateComputedFields()
 void AppModule::updateSendButtonState()
 {
   /* 1) ‘cycle_on_key’ must be off -------------------------------- */
-  if (auto * btn = qobject_cast<QAbstractButton*>
-                     (keyWidgets_.value
-                       ("cycle_on_key"))) {
-    if (btn->isChecked
-          ()) {
-      sendButton_->setEnabled
-        (false);
+  if (auto * btn = qobject_cast<QAbstractButton*>(
+    keyWidgets_.value("cycle_on_key"))) {
+    if (btn->isChecked()) {
+      sendButton_->setEnabled(false);
       return;
     }
   }
@@ -484,15 +406,13 @@ void AppModule::updateSendButtonState()
     if (!cfg.editable) {
       continue;
     }
-    const QString txt = userOverrides_.value
-                          (cfg.key);
-    if (txt.isEmpty
-          () || txt == currentValues_[cfg.key]) {
+    const QString txt = userOverrides_.value(cfg.key);
+    if (txt.isEmpty() || txt == currentValues_[cfg.key]) {
       continue;
     }
-    if (isFieldValid
-          (cfg.key,
-          txt)) {
+    if (isFieldValid(
+      cfg.key,
+      txt)) {
       good = true;
     }
     else {
@@ -500,50 +420,44 @@ void AppModule::updateSendButtonState()
       break;
     }
   }
-  sendButton_->setEnabled
-    (good && !bad);
+  sendButton_->setEnabled(good && !bad);
 }
 
 /* ------------------------------------------------------------------ */
 FieldStatus AppModule::validateField(const QString & key, const QString & txt) const
 {
-  if (txt.isEmpty
-        () || txt == "N/A" || txt == currentValues_.value
-        (key)) {
+  if (txt.isEmpty() || txt == "N/A" || txt == currentValues_.value(
+    key)) {
     return FieldStatus::Invalid;
   }
 
   for (const auto & c : keyConfigs_) {
     if (c.key == key && c.value_type == "double") {
       bool ok = false;
-      double v = txt.toDouble
-                   (&ok);
+      double v = txt.toDouble(&ok);
       if (!ok) {
         return FieldStatus::Invalid;
       }
 
-      if (!std::isnan
-            (c.lower_limit) && v < c.lower_limit) {
+      if (!std::isnan(c.lower_limit) && v < c.lower_limit) {
         return FieldStatus::BelowLimit;
       }
-      if (!std::isnan
-            (c.upper_limit) && v > c.upper_limit) {
+      if (!std::isnan(c.upper_limit) && v > c.upper_limit) {
         return FieldStatus::AboveLimit;
       }
       return FieldStatus::Valid;
     }
   }
 
-  return txt.isEmpty
-           () ? FieldStatus::Invalid : FieldStatus::Valid;
+  return txt.isEmpty() ? FieldStatus::Invalid : FieldStatus::Valid;
 }
 
 /* ------------------------------------------------------------------ */
 bool AppModule::isFieldValid(const QString & key, const QString & txt) const
 {
-  return validateField
-           (key,
-           txt) == FieldStatus::Valid;
+  return validateField(
+    key,
+    txt) == FieldStatus::Valid;
 }
 
 /* ------------------------------------------------------------------ */
@@ -552,28 +466,22 @@ void AppModule::onSendClicked()
   for (const auto & cfg : keyConfigs_) {
     QString final;
     if (cfg.editable) {
-      QString raw = userOverrides_.value
-                      (cfg.key);
-      if (raw.isEmpty
-            () || raw == currentValues_[cfg.key] || !isFieldValid
-            (cfg.key,
-            raw)) {
+      QString raw = userOverrides_.value(cfg.key);
+      if (raw.isEmpty() || raw == currentValues_[cfg.key] || !isFieldValid(
+        cfg.key,
+        raw)) {
         continue;
       }
-      final = cfg.computeFunction ? cfg.computeFunction
-                (editableValues_) : raw;
+      final = cfg.computeFunction ? cfg.computeFunction(editableValues_) : raw;
     }
     else {
-      auto * lbl = qobject_cast<QLabel*>
-                     (keyWidgets_.value
-                       (cfg.key));
+      auto * lbl = qobject_cast<QLabel*>(
+        keyWidgets_.value(cfg.key));
       if (!lbl) {
         continue;
       }
-      final = lbl->text
-                ();
-      if (final == "N/A" || final.isEmpty
-            ()) {
+      final = lbl->text();
+      if (final == "N/A" || final.isEmpty()) {
         continue;
       }
     }
@@ -584,190 +492,147 @@ void AppModule::onSendClicked()
   /* clear overrides --------------------------------------------- */
   for (const auto & cfg : keyConfigs_) {
     if (cfg.editable) {
-      userOverrides_[cfg.key].clear
-        ();
-      if (auto * le = qobject_cast<QLineEdit*>
-                        (keyWidgets_[cfg.key])) {
-        QString displayVal = toDisplay
-                               (cfg.key,
-                               currentValues_[cfg.key]);
-        le->setText
-          (displayVal);
-        QPalette pal = le->palette
-                         ();
-        pal.setColor
-          (QPalette::Text,
+      userOverrides_[cfg.key].clear();
+      if (auto * le = qobject_cast<QLineEdit*>(keyWidgets_[cfg.key])) {
+        QString displayVal = toDisplay(
+          cfg.key,
+          currentValues_[cfg.key]);
+        le->setText(displayVal);
+        QPalette pal = le->palette();
+        pal.setColor(
+          QPalette::Text,
           Qt::gray);
-        le->setPalette
-          (pal);
+        le->setPalette(pal);
       }
     }
   }
-  updateComputedFields
-    ();
-  updateSendButtonState
-    ();
+  updateComputedFields();
+  updateSendButtonState();
 }
 
 /* ------------------------------------------------------------------ */
 void AppModule::setKeyVisibility(const QString & key, bool v)
 {
-  if (keyRowWidgets_.contains
-        (key)) {
-    keyRowWidgets_[key]->setVisible
-      (v);
+  if (keyRowWidgets_.contains(key)) {
+    keyRowWidgets_[key]->setVisible(v);
   }
 }
 
 /* ------------------------------------------------------------------ */
 void AppModule::updateField(const QString & key, const QString & newVal)
 {
-  if (!keyWidgets_.contains
-        (key)) {
+  if (!keyWidgets_.contains(key)) {
     return;
   }
 
   // Normalize numeric values so that comparisons with user edits are stable
   QString normalized = newVal;
-  if (!normalized.isEmpty
-        ()) {
+  if (!normalized.isEmpty()) {
     for (const auto & cfg : keyConfigs_) {
       if (cfg.key == key && cfg.value_type == "double") {
         bool ok = false;
-        double d = newVal.toDouble
-                     (&ok);
+        double d = newVal.toDouble(&ok);
         if (ok) {
-          normalized = QString::number
-                         (d);
+          normalized = QString::number(d);
         }
         break;
       }
     }
   }
 
-  currentValues_[key] = normalized.isEmpty
-                          () ? "N/A" : normalized;
+  currentValues_[key] = normalized.isEmpty() ? "N/A" : normalized;
 
-  if (auto * le = qobject_cast<QLineEdit*>
-                    (keyWidgets_[key])) {
-    if (le->hasFocus
-          () ||
-        (!userOverrides_[key].isEmpty
-           () && userOverrides_[key] != currentValues_[key])) {
+  if (auto * le = qobject_cast<QLineEdit*>(keyWidgets_[key])) {
+    if (le->hasFocus() ||
+        (!userOverrides_[key].isEmpty() && userOverrides_[key] !=
+         currentValues_[key])) {
       return;
     }
-    QString displayVal = toDisplay
-                           (key,
-                           currentValues_[key]);
+    QString displayVal = toDisplay(
+      key,
+      currentValues_[key]);
 
-    le->blockSignals
-      (true);
-    le->setText
-      (displayVal);
-    le->blockSignals
-      (false);
+    le->blockSignals(true);
+    le->setText(displayVal);
+    le->blockSignals(false);
 
-    QPalette pal = le->palette
-                     ();
-    pal.setColor
-      (QPalette::Text,
+    QPalette pal = le->palette();
+    pal.setColor(
+      QPalette::Text,
       Qt::gray);
-    le->setPalette
-      (pal);
+    le->setPalette(pal);
   }
-  else if (auto * lbl = qobject_cast<QLabel*>
-                          (keyWidgets_[key])) {
-    QString displayVal = toDisplay
-                           (key,
-                           currentValues_[key]);
-    lbl->setText
-      (displayVal);
+  else if (auto * lbl = qobject_cast<QLabel*>(keyWidgets_[key])) {
+    QString displayVal = toDisplay(
+      key,
+      currentValues_[key]);
+    lbl->setText(displayVal);
   }
 
-  updateComputedFields
-    ();
-  updateSendButtonState
-    ();
+  updateComputedFields();
+  updateSendButtonState();
 }
 
 /* ------------------------------------------------------------------ */
 bool AppModule::eventFilter(QObject * o, QEvent * e)
 {
-  if (auto * le = qobject_cast<QLineEdit*>
-                    (o)) {
+  if (auto * le = qobject_cast<QLineEdit*>(o)) {
     QString key;
-    for (auto it = keyWidgets_.cbegin
-                     (); it != keyWidgets_.cend
-           (); ++it) {
-      if (it.value
-            () == le) {
-        key = it.key
-                ();
+    for (auto it = keyWidgets_.cbegin(); it != keyWidgets_.cend(); ++it) {
+      if (it.value() == le) {
+        key = it.key();
         break;
       }
     }
 
-    if (e->type
-          () == QEvent::FocusIn) {
-      QString displayVal = toDisplay
-                             (key,
-                             currentValues_[key]);
-      if (le->text
-            () == displayVal) {
-        le->clear
-          ();
+    if (e->type() == QEvent::FocusIn) {
+      QString displayVal = toDisplay(
+        key,
+        currentValues_[key]);
+      if (le->text() == displayVal) {
+        le->clear();
       }
-      QPalette p = le->palette
-                     ();
-      p.setColor
-        (QPalette::Text,
+      QPalette p = le->palette();
+      p.setColor(
+        QPalette::Text,
         Qt::white);
-      le->setPalette
-        (p);
+      le->setPalette(p);
     }
-    else if (e->type
-               () == QEvent::FocusOut) {
-      if (le->text
-            ().isEmpty
-            ()) {
-        QString displayVal = toDisplay
-                               (key,
-                               currentValues_[key]);
-        le->setText
-          (displayVal);
-        QPalette p = le->palette
-                       ();
-        p.setColor
-          (QPalette::Text,
+    else if (e->type() == QEvent::FocusOut) {
+      if (le->text().isEmpty()) {
+        QString displayVal = toDisplay(
+          key,
+          currentValues_[key]);
+        le->setText(displayVal);
+        QPalette p = le->palette();
+        p.setColor(
+          QPalette::Text,
           Qt::gray);
-        le->setPalette
-          (p);
-        userOverrides_[key].clear
-          ();
+        le->setPalette(p);
+        userOverrides_[key].clear();
       }
-      updateSendButtonState
-        ();
+      updateSendButtonState();
     }
   }
-  return QWidget::eventFilter
-           (o,
-           e);
+  return QWidget::eventFilter(
+    o,
+    e);
 }
 
 /* ------------------------------------------------------------------ */
 QString AppModule::toDisplay(const QString & key, const QString & val) const
 {
-  return convertFromInternal
-           (keyConfigs_,
-           key,
-           val);
+  return convertFromInternal(
+    keyConfigs_,
+    key,
+    val);
 }
 
 /* ------------------------------------------------------------------ */
 QString AppModule::toInternal(const QString & key, const QString & val) const
 {
-  return convertToInternal
-           (keyConfigs_,
-           key,
-           val);
+  return convertToInternal(
+    keyConfigs_,
+    key,
+    val);
 }

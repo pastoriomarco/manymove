@@ -75,20 +75,20 @@ public:
   {
     return
       {
-        BT::InputPort<std::string>
-          ("io_type",
+        BT::InputPort<std::string>(
+          "io_type",
           "IO type: 'tool' or 'controller'"),
-        BT::InputPort<int>
-          ("ionum",
+        BT::InputPort<int>(
+          "ionum",
           "Which IO channel number"),
-        BT::InputPort<int>
-          ("value",
+        BT::InputPort<int>(
+          "value",
           "Desired output value (0 or 1)"),
-        BT::InputPort<std::string>
-          ("robot_prefix",
+        BT::InputPort<std::string>(
+          "robot_prefix",
           "Optional robot namespace prefix, e.g. 'R_' or 'L_'."),
-        BT::OutputPort<bool>
-          ("success",
+        BT::OutputPort<bool>(
+          "success",
           "Whether set_output succeeded"),
       };
   }
@@ -133,17 +133,17 @@ public:
   {
     return
       {
-        BT::InputPort<std::string>
-          ("io_type",
+        BT::InputPort<std::string>(
+          "io_type",
           "IO type: 'tool' or 'controller'"),
-        BT::InputPort<int>
-          ("ionum",
+        BT::InputPort<int>(
+          "ionum",
           "Which IO channel to read"),
-        BT::InputPort<std::string>
-          ("robot_prefix",
+        BT::InputPort<std::string>(
+          "robot_prefix",
           "Optional robot namespace prefix, e.g. 'R_' or 'L_'."),
-        BT::OutputPort<int>
-          ("value",
+        BT::OutputPort<int>(
+          "value",
           "Read value from the input (0 or 1)"),
       };
   }
@@ -188,23 +188,23 @@ public:
   {
     return
       {
-        BT::InputPort<std::string>
-          ("robot_prefix",
+        BT::InputPort<std::string>(
+          "robot_prefix",
           "Optional robot namespace prefix, e.g. 'R_' or 'L_'."),
-        BT::OutputPort<bool>
-          ("ready",
+        BT::OutputPort<bool>(
+          "ready",
           "True if robot is ready"),
-        BT::OutputPort<int>
-          ("err",
+        BT::OutputPort<int>(
+          "err",
           "Current error code"),
-        BT::OutputPort<int>
-          ("mode",
+        BT::OutputPort<int>(
+          "mode",
           "Robot mode"),
-        BT::OutputPort<int>
-          ("state",
+        BT::OutputPort<int>(
+          "state",
           "Robot state"),
-        BT::OutputPort<std::string>
-          ("message",
+        BT::OutputPort<std::string>(
+          "message",
           "Status message")
       };
   }
@@ -250,14 +250,14 @@ public:
   {
     return
       {
-        BT::InputPort<std::string>
-          ("robot_prefix",
+        BT::InputPort<std::string>(
+          "robot_prefix",
           "Optional robot namespace prefix, e.g. 'R_' or 'L_'."),
-        BT::InputPort<std::string>
-          ("robot_model",
+        BT::InputPort<std::string>(
+          "robot_model",
           "Name of the robot model, e.g. 'lite6'."),
-        BT::OutputPort<bool>
-          ("success",
+        BT::OutputPort<bool>(
+          "success",
           "True if robot reset is successful"),
       };
   }
@@ -313,30 +313,30 @@ public:
   {
     return
       {
-        BT::InputPort<std::string>
-          ("io_type",
+        BT::InputPort<std::string>(
+          "io_type",
           "IO type: 'tool' or 'controller'"),
-        BT::InputPort<int>
-          ("ionum",
+        BT::InputPort<int>(
+          "ionum",
           "Which IO channel to read"),
-        BT::InputPort<int>
-          ("desired_value",
+        BT::InputPort<int>(
+          "desired_value",
           1,
           "Desired input value (0 or 1)"),
-        BT::InputPort<double>
-          ("timeout",
+        BT::InputPort<double>(
+          "timeout",
           10.0,
           "Seconds before giving up (0 => infinite)"),
-        BT::InputPort<double>
-          ("poll_rate",
+        BT::InputPort<double>(
+          "poll_rate",
           0.25,
           "Check frequency (s)"),
-        BT::InputPort<std::string>
-          ("robot_prefix",
+        BT::InputPort<std::string>(
+          "robot_prefix",
           "",
           "Optional namespace prefix"),
-        BT::OutputPort<int>
-          ("value",
+        BT::OutputPort<int>(
+          "value",
           "Final read value (0 or 1)")
       };
   }

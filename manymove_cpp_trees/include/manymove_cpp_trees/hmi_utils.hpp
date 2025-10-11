@@ -54,10 +54,8 @@ inline void setHMIMessage(
   };
 
   static std::unordered_map<std::string, State> states;
-  auto now = clock::now
-               ();
-  auto period = std::chrono::duration<double>
-                  (1.0 / rate_hz);
+  auto now = clock::now();
+  auto period = std::chrono::duration<double>(1.0 / rate_hz);
 
   State & st = states[key];
   bool should_update = false;
@@ -69,11 +67,11 @@ inline void setHMIMessage(
   }
 
   if (should_update) {
-    blackboard->set
-      (key + "message",
+    blackboard->set(
+      key + "message",
       value);
-    blackboard->set
-      (key + "message_color",
+    blackboard->set(
+      key + "message_color",
       color);
     st.last_time = now;
     st.last_value = value;

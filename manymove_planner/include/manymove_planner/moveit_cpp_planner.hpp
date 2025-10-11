@@ -149,8 +149,7 @@ public:
  * the movement required to decelerate.
  */
   bool sendControlledStop(const manymove_msgs::msg::MovementConfig & move_cfg,
-    const moveit_msgs::msg::RobotTrajectory & running_traj = moveit_msgs::msg::RobotTrajectory
-      (),
+    const moveit_msgs::msg::RobotTrajectory & running_traj = moveit_msgs::msg::RobotTrajectory(),
     double elapsed_s = 0.0);
 
 /**

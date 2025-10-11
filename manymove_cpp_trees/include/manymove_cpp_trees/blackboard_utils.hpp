@@ -53,23 +53,20 @@ void defineVariableKey(
   const T & value)
 {
   // Set the blackboard key with initial value
-  blackboard->set
-    (key_name,
+  blackboard->set(
+    key_name,
     value);
 
   // These keys need to be published for the HMI, adding them here:
-  keys.push_back
-  (
+  keys.push_back(
     {
       key_name, key_type
     });
 
-  RCLCPP_INFO
-    (node_ptr->get_logger
-      (),
+  RCLCPP_INFO(
+    node_ptr->get_logger(),
     "%s key added to 'blackboard_status' service.",
-    key_name.c_str
-      ());
+    key_name.c_str());
 }
 }
 

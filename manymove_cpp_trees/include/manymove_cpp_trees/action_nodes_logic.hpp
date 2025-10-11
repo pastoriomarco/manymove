@@ -58,20 +58,20 @@ public:
   {
     return
       {
-        BT::InputPort<bool>
-          ("stop_execution",
+        BT::InputPort<bool>(
+          "stop_execution",
           false,
           "Pause execution when true"),
-        BT::InputPort<bool>
-          ("collision_detected",
+        BT::InputPort<bool>(
+          "collision_detected",
           false,
           "Stops current move when true, then retries planning"),
-        BT::InputPort<bool>
-          ("reset",
+        BT::InputPort<bool>(
+          "reset",
           false,
           "Reset branch when true"),
-        BT::InputPort<std::string>
-          ("robot_prefix",
+        BT::InputPort<std::string>(
+          "robot_prefix",
           "Robot prefix for setting correct blackboard key")
       };
   }
@@ -103,17 +103,17 @@ public:
   {
     return
       {
-        BT::InputPort<std::string>
-          ("robot_prefix",
+        BT::InputPort<std::string>(
+          "robot_prefix",
           "Prefix only for the HMI output, use \"hmi_\" for generic output"),
-        BT::InputPort<std::string>
-          ("key",
+        BT::InputPort<std::string>(
+          "key",
           "Name of the blackboard key to check"),
-        BT::InputPort<bool>
-          ("value",
+        BT::InputPort<bool>(
+          "value",
           "Expected value"),
-        BT::InputPort<bool>
-          ("hmi_message_logic",
+        BT::InputPort<bool>(
+          "hmi_message_logic",
           "If true, outputs on hmi when check succeeds. If false, when it fails"),
       };
   }
@@ -147,14 +147,14 @@ public:
   {
     return
       {
-        BT::InputPort<std::string>
-          ("robot_prefix",
+        BT::InputPort<std::string>(
+          "robot_prefix",
           "Prefix only for the HMI output, use \"hmi_\" for generic output"),
-        BT::InputPort<std::string>
-          ("key",
+        BT::InputPort<std::string>(
+          "key",
           "Blackboard key to set"),
-        BT::InputPort<bool>
-          ("value",
+        BT::InputPort<bool>(
+          "value",
           "Value to set (as a bool)")
       };
   }
@@ -185,22 +185,22 @@ public:
   {
     return
       {
-        BT::InputPort<std::string>
-          ("key",
+        BT::InputPort<std::string>(
+          "key",
           "Blackboard key to read"),
-        BT::InputPort<bool>
-          ("expected_value",
+        BT::InputPort<bool>(
+          "expected_value",
           "Desired bool value"),
-        BT::InputPort<double>
-          ("timeout",
+        BT::InputPort<double>(
+          "timeout",
           10.0,
           "Seconds before giving up (0 => infinite)"),
-        BT::InputPort<double>
-          ("poll_rate",
+        BT::InputPort<double>(
+          "poll_rate",
           0.25,
           "Check frequency (seconds)"),
-        BT::InputPort<std::string>
-          ("prefix",
+        BT::InputPort<std::string>(
+          "prefix",
           "Prefix for HMI messages, optional")
       };
   }
@@ -253,25 +253,25 @@ public:
   {
     return
       {
-        BT::InputPort<std::string>
-          ("link_name",
+        BT::InputPort<std::string>(
+          "link_name",
           "Source link / frame"),
-        BT::InputPort<std::string>
-          ("reference_frame",
+        BT::InputPort<std::string>(
+          "reference_frame",
           "",
           "Target frame (default world)"),
-        BT::InputPort<std::vector<double> >
-          ("pre_transform_xyz_rpy",
+        BT::InputPort<std::vector<double> >(
+          "pre_transform_xyz_rpy",
           "6-tuple applied FIRST"),
-        BT::InputPort<std::vector<double> >
-          ("post_transform_xyz_rpy",
+        BT::InputPort<std::vector<double> >(
+          "post_transform_xyz_rpy",
           "6-tuple applied AFTER link pose"),
-        BT::InputPort<std::string>
-          ("pose_key",
+        BT::InputPort<std::string>(
+          "pose_key",
           "",
           "If set, store pose in blackboard"),
-        BT::OutputPort<geometry_msgs::msg::Pose>
-          ("pose",
+        BT::OutputPort<geometry_msgs::msg::Pose>(
+          "pose",
           "Final pose")
       };
   }
@@ -303,14 +303,14 @@ public:
   {
     return
       {
-        BT::InputPort<std::string>
-          ("reference_pose_key",
+        BT::InputPort<std::string>(
+          "reference_pose_key",
           "Blackboard key for reference pose"),
-        BT::InputPort<std::string>
-          ("target_pose_key",
+        BT::InputPort<std::string>(
+          "target_pose_key",
           "Blackboard key for target pose"),
-        BT::InputPort<double>
-          ("tolerance",
+        BT::InputPort<double>(
+          "tolerance",
           0.01,
           "Distance tolerance")
       };
@@ -339,14 +339,14 @@ public:
   {
     return
       {
-        BT::InputPort<std::string>
-          ("pose_key",
+        BT::InputPort<std::string>(
+          "pose_key",
           "Blackboard key for pose to check"),
-        BT::InputPort<std::vector<double> >
-          ("bounds",
+        BT::InputPort<std::vector<double> >(
+          "bounds",
           "[min_x, min_y, min_z, max_x, max_y, max_z]"),
-        BT::InputPort<bool>
-          ("inclusive",
+        BT::InputPort<bool>(
+          "inclusive",
           true,
           "Inclusive bounds check")
       };
@@ -379,14 +379,14 @@ public:
   {
     return
       {
-        BT::InputPort<std::string>
-          ("source_key",
+        BT::InputPort<std::string>(
+          "source_key",
           "Blackboard key (Pose) to read"),
-        BT::InputPort<std::string>
-          ("target_key",
+        BT::InputPort<std::string>(
+          "target_key",
           "Blackboard key (Pose) to write"),
-        BT::InputPort<std::string>
-          ("robot_prefix",
+        BT::InputPort<std::string>(
+          "robot_prefix",
           "Prefix for HMI messages, optional")
       };
   }

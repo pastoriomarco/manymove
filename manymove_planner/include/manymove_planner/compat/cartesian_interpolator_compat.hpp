@@ -73,34 +73,34 @@ inline double computeCartesianPathCompat(
     cfg.cartesian_precision_max_resolution
   };
 
-  return moveit::core::CartesianInterpolator::computeCartesianPath
-           (start_state,
-           jmg,
-           trajectory_states,
-           ee_link,
-           eigen_waypoints,
-           global_reference_frame,
-           max_eef_step,
-           cp,
-           validity_callback,
-           options,
-           ref_state);
+  return moveit::core::CartesianInterpolator::computeCartesianPath(
+    start_state,
+    jmg,
+    trajectory_states,
+    ee_link,
+    eigen_waypoints,
+    global_reference_frame,
+    max_eef_step,
+    cp,
+    validity_callback,
+    options,
+    ref_state);
     #else
-  return moveit::core::CartesianInterpolator::computeCartesianPath
-           (start_state,
-           jmg,
-           trajectory_states,
-           ee_link,
-           eigen_waypoints,
-           global_reference_frame,
-           max_eef_step,
-           moveit::core::JumpThreshold
-             (cfg
-             .
-             jump_threshold),
-           validity_callback,
-           options,
-           ref_state);
+  return moveit::core::CartesianInterpolator::computeCartesianPath(
+    start_state,
+    jmg,
+    trajectory_states,
+    ee_link,
+    eigen_waypoints,
+    global_reference_frame,
+    max_eef_step,
+    moveit::core::JumpThreshold(
+      cfg
+      .
+      jump_threshold),
+    validity_callback,
+    options,
+    ref_state);
     #endif
 }
 
