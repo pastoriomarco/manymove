@@ -52,238 +52,284 @@ ObjectManagerNode::ObjectManagerNode()
   : Node("object_manager_node")
 {
   // Declare and get the frame_id parameter
-  this->declare_parameter<std::string>("frame_id", "world");
-  frame_id_ = this->get_parameter("frame_id").as_string();
+  this->declare_parameter<std::string>
+    ("frame_id",
+    "world");
+  frame_id_ = this->get_parameter
+                ("frame_id").as_string
+                ();
 
   // Initialize publisher
-  collision_object_publisher_ = this->create_publisher<moveit_msgs::msg::CollisionObject>(
+  collision_object_publisher_ = this->create_publisher<moveit_msgs::msg::CollisionObject>
+                                (
     "/collision_object",
     10);
 
   // Publisher for attached collision objects
   attached_collision_object_publisher_ =
-    this->create_publisher<moveit_msgs::msg::AttachedCollisionObject>(
+    this->create_publisher<moveit_msgs::msg::AttachedCollisionObject>
+    (
       "/attached_collision_object",
       10);
 
   // Create a Reentrant callback group for the service client
-  service_callback_group_ = this->create_callback_group(rclcpp::CallbackGroupType::Reentrant);
-  get_planning_scene_client_ = this->create_client<moveit_msgs::srv::GetPlanningScene>(
+  service_callback_group_ = this->create_callback_group
+                              (rclcpp::CallbackGroupType::Reentrant);
+  get_planning_scene_client_ = this->create_client<moveit_msgs::srv::GetPlanningScene>
+                               (
     "/get_planning_scene",
     rmw_qos_profile_services_default,
     service_callback_group_);
 
-  RCLCPP_INFO(this->get_logger(), "Waiting for /get_planning_scene service...");
-  if (!get_planning_scene_client_->wait_for_service(std::chrono::seconds(10))) {
-    RCLCPP_ERROR(this->get_logger(), "/get_planning_scene service not available. Exiting.");
-    rclcpp::shutdown();
+  RCLCPP_INFO
+    (this->get_logger
+      (),
+    "Waiting for /get_planning_scene service...");
+  if (!get_planning_scene_client_->wait_for_service
+        (std::chrono::seconds
+          (10))) {
+    RCLCPP_ERROR
+      (this->get_logger
+        (),
+      "/get_planning_scene service not available. Exiting.");
+    rclcpp::shutdown
+      ();
     return;
   }
-  RCLCPP_INFO(this->get_logger(), "/get_planning_scene service is available.");
+  RCLCPP_INFO
+    (this->get_logger
+      (),
+    "/get_planning_scene service is available.");
 
   // Call the function to print the current planning scene
-  printPlanningScene();
+  printPlanningScene
+    ();
 
   // Create a separate callback group for action servers
   action_callback_group_ =
-    this->create_callback_group(rclcpp::CallbackGroupType::MutuallyExclusive);
+    this->create_callback_group
+      (rclcpp::CallbackGroupType::MutuallyExclusive);
 
   // Configure action server options
-  auto serverOptions = rcl_action_server_get_default_options();
+  auto serverOptions = rcl_action_server_get_default_options
+                         ();
   serverOptions.result_service_qos = rmw_qos_profile_services_default;
 
   // Initialize action servers
-  add_object_action_server_ = rclcpp_action::create_server<AddCollisionObject>(this,
-    "add_collision_object",
-    std::bind(&
-      ObjectManagerNode
-      ::
-      handleAddGoal,
-      this,
-      std::
-      placeholders
-      ::_1,
-      std::
-      placeholders
-      ::_2),
-    std::bind(&
-      ObjectManagerNode
-      ::
-      handleAddCancel,
-      this,
-      std::
-      placeholders
-      ::_1),
-    std::bind(&
-      ObjectManagerNode
-      ::
-      handleAddExecute,
-      this,
-      std::
-      placeholders
-      ::_1),
-    serverOptions,
-    action_callback_group_);
+  add_object_action_server_ = rclcpp_action::create_server<AddCollisionObject>
+                                (this,
+                                "add_collision_object",
+                                std::bind
+                                  (&
+                                  ObjectManagerNode
+                                  ::
+                                  handleAddGoal,
+                                  this,
+                                  std::
+                                  placeholders
+                                  ::_1,
+                                  std::
+                                  placeholders
+                                  ::_2),
+                                std::bind
+                                  (&
+                                  ObjectManagerNode
+                                  ::
+                                  handleAddCancel,
+                                  this,
+                                  std::
+                                  placeholders
+                                  ::_1),
+                                std::bind
+                                  (&
+                                  ObjectManagerNode
+                                  ::
+                                  handleAddExecute,
+                                  this,
+                                  std::
+                                  placeholders
+                                  ::_1),
+                                serverOptions,
+                                action_callback_group_);
 
-  remove_object_action_server_ = rclcpp_action::create_server<RemoveCollisionObject>(this,
-    "remove_collision_object",
-    std::bind(&
-      ObjectManagerNode
-      ::
-      handleRemoveGoal,
-      this,
-      std
-      ::
-      placeholders
-      ::
-      _1,
-      std
-      ::
-      placeholders
-      ::
-      _2),
-    std::bind(&
-      ObjectManagerNode
-      ::
-      handleRemoveCancel,
-      this,
-      std
-      ::
-      placeholders
-      ::
-      _1),
-    std::bind(&
-      ObjectManagerNode
-      ::
-      handleRemoveExecute,
-      this,
-      std
-      ::
-      placeholders
-      ::
-      _1),
-    serverOptions,
-    action_callback_group_);
+  remove_object_action_server_ = rclcpp_action::create_server<RemoveCollisionObject>
+                                   (this,
+                                   "remove_collision_object",
+                                   std::bind
+                                     (&
+                                     ObjectManagerNode
+                                     ::
+                                     handleRemoveGoal,
+                                     this,
+                                     std
+                                     ::
+                                     placeholders
+                                     ::
+                                     _1,
+                                     std
+                                     ::
+                                     placeholders
+                                     ::
+                                     _2),
+                                   std::bind
+                                     (&
+                                     ObjectManagerNode
+                                     ::
+                                     handleRemoveCancel,
+                                     this,
+                                     std
+                                     ::
+                                     placeholders
+                                     ::
+                                     _1),
+                                   std::bind
+                                     (&
+                                     ObjectManagerNode
+                                     ::
+                                     handleRemoveExecute,
+                                     this,
+                                     std
+                                     ::
+                                     placeholders
+                                     ::
+                                     _1),
+                                   serverOptions,
+                                   action_callback_group_);
 
   // Initialize CheckObjectExists action server (New Action Server)
-  check_object_exists_action_server_ = rclcpp_action::create_server<CheckObjectExists>(this,
-    "check_object_exists",
-    std::bind(&
-      ObjectManagerNode
-      ::
-      handleCheckExistGoal,
-      this,
-      std
-      ::
-      placeholders
-      ::
-      _1,
-      std
-      ::
-      placeholders
-      ::
-      _2),
-    std::bind(&
-      ObjectManagerNode
-      ::
-      handleCheckExistCancel,
-      this,
-      std
-      ::
-      placeholders
-      ::
-      _1),
-    std::bind(&
-      ObjectManagerNode
-      ::
-      handleCheckExistExecute,
-      this,
-      std
-      ::
-      placeholders
-      ::
-      _1),
-    serverOptions,
-    action_callback_group_);
+  check_object_exists_action_server_ = rclcpp_action::create_server<CheckObjectExists>
+                                         (this,
+                                         "check_object_exists",
+                                         std::bind
+                                           (&
+                                           ObjectManagerNode
+                                           ::
+                                           handleCheckExistGoal,
+                                           this,
+                                           std
+                                           ::
+                                           placeholders
+                                           ::
+                                           _1,
+                                           std
+                                           ::
+                                           placeholders
+                                           ::
+                                           _2),
+                                         std::bind
+                                           (&
+                                           ObjectManagerNode
+                                           ::
+                                           handleCheckExistCancel,
+                                           this,
+                                           std
+                                           ::
+                                           placeholders
+                                           ::
+                                           _1),
+                                         std::bind
+                                           (&
+                                           ObjectManagerNode
+                                           ::
+                                           handleCheckExistExecute,
+                                           this,
+                                           std
+                                           ::
+                                           placeholders
+                                           ::
+                                           _1),
+                                         serverOptions,
+                                         action_callback_group_);
 
-  attach_detach_object_action_server_ = rclcpp_action::create_server<AttachDetachObject>(this,
-    "attach_detach_object",
-    std::bind(
-      &
-      ObjectManagerNode
-      ::
-      handleAttachDetachGoal,
-      this,
-      std
-      ::
-      placeholders
-      ::
-      _1,
-      std
-      ::
-      placeholders
-      ::
-      _2),
-    std::bind(
-      &
-      ObjectManagerNode
-      ::
-      handleAttachDetachCancel,
-      this,
-      std
-      ::
-      placeholders
-      ::
-      _1),
-    std::bind(
-      &
-      ObjectManagerNode
-      ::
-      handleAttachDetachExecute,
-      this,
-      std
-      ::
-      placeholders
-      ::
-      _1),
-    serverOptions,
-    action_callback_group_);
+  attach_detach_object_action_server_ = rclcpp_action::create_server<AttachDetachObject>
+                                          (this,
+                                          "attach_detach_object",
+                                          std::bind
+                                          (
+                                            &
+                                            ObjectManagerNode
+                                            ::
+                                            handleAttachDetachGoal,
+                                            this,
+                                            std
+                                            ::
+                                            placeholders
+                                            ::
+                                            _1,
+                                            std
+                                            ::
+                                            placeholders
+                                            ::
+                                            _2),
+                                          std::bind
+                                          (
+                                            &
+                                            ObjectManagerNode
+                                            ::
+                                            handleAttachDetachCancel,
+                                            this,
+                                            std
+                                            ::
+                                            placeholders
+                                            ::
+                                            _1),
+                                          std::bind
+                                          (
+                                            &
+                                            ObjectManagerNode
+                                            ::
+                                            handleAttachDetachExecute,
+                                            this,
+                                            std
+                                            ::
+                                            placeholders
+                                            ::
+                                            _1),
+                                          serverOptions,
+                                          action_callback_group_);
 
-  get_object_pose_action_server_ = rclcpp_action::create_server<GetObjectPose>(this,
-    "get_object_pose",
-    std::bind(&
-      ObjectManagerNode
-      ::
-      handleGetObjectPoseGoal,
-      this,
-      std::
-      placeholders
-      ::_1,
-      std::
-      placeholders
-      ::_2),
-    std::bind(&
-      ObjectManagerNode
-      ::
-      handleGetObjectPoseCancel,
-      this,
-      std::
-      placeholders
-      ::_1),
-    std::bind(&
-      ObjectManagerNode
-      ::
-      handleGetObjectPoseExecute,
-      this,
-      std::
-      placeholders
-      ::_1),
-    serverOptions,
-    action_callback_group_);
+  get_object_pose_action_server_ = rclcpp_action::create_server<GetObjectPose>
+                                     (this,
+                                     "get_object_pose",
+                                     std::bind
+                                       (&
+                                       ObjectManagerNode
+                                       ::
+                                       handleGetObjectPoseGoal,
+                                       this,
+                                       std::
+                                       placeholders
+                                       ::_1,
+                                       std::
+                                       placeholders
+                                       ::_2),
+                                     std::bind
+                                       (&
+                                       ObjectManagerNode
+                                       ::
+                                       handleGetObjectPoseCancel,
+                                       this,
+                                       std::
+                                       placeholders
+                                       ::_1),
+                                     std::bind
+                                       (&
+                                       ObjectManagerNode
+                                       ::
+                                       handleGetObjectPoseExecute,
+                                       this,
+                                       std::
+                                       placeholders
+                                       ::_1),
+                                     serverOptions,
+                                     action_callback_group_);
 
-  RCLCPP_INFO(this->get_logger(),
+  RCLCPP_INFO
+    (this->get_logger
+      (),
     "Object Manager Node initialized with frame_id: %s.",
-    frame_id_.c_str());
+    frame_id_.c_str
+      ());
 }
 
 // ----------------------------------------------------------------------------
@@ -294,8 +340,12 @@ ObjectManagerNode::handleCheckExistGoal(
   [[maybe_unused]] const rclcpp_action::GoalUUID & uuid,
   std::shared_ptr<const CheckObjectExists::Goal> goal)
 {
-  RCLCPP_INFO(this->get_logger(), "Received request to check existence of object: %s",
-    goal->object_id.c_str());
+  RCLCPP_INFO
+    (this->get_logger
+      (),
+    "Received request to check existence of object: %s",
+    goal->object_id.c_str
+      ());
 
   // Always accept the goal as it's a simple check
   return rclcpp_action::GoalResponse::ACCEPT_AND_EXECUTE;
@@ -305,114 +355,183 @@ rclcpp_action::CancelResponse
 ObjectManagerNode::handleCheckExistCancel(const std::shared_ptr<CheckGoalHandle> goal_handle)
 {
   (void)goal_handle;       // Suppress unused parameter warning
-  RCLCPP_INFO(this->get_logger(), "CheckExist operation canceled.");
+  RCLCPP_INFO
+    (this->get_logger
+      (),
+    "CheckExist operation canceled.");
   return rclcpp_action::CancelResponse::ACCEPT;
 }
 
 void ObjectManagerNode::handleCheckExistExecute(
   const std::shared_ptr<CheckGoalHandle> goal_handle)
 {
-  auto goal = goal_handle->get_goal();
-  auto result = std::make_shared<CheckObjectExists::Result>();
+  auto goal = goal_handle->get_goal
+                ();
+  auto result = std::make_shared<CheckObjectExists::Result>
+                  ();
 
   // Check if the object exists
-  bool collision_object_exists = objectExists(goal->object_id);
-  bool attached_object_exists = attachedObjectExists(goal->object_id);
+  bool collision_object_exists = objectExists
+                                   (goal->object_id);
+  bool attached_object_exists = attachedObjectExists
+                                  (goal->object_id);
   bool exists = (collision_object_exists || attached_object_exists);
 
   result->exists = exists;
   result->is_attached = attached_object_exists;
 
   if (attached_object_exists) {
-    result->link_name = getAttachedObjectLinkById(goal->object_id)->c_str();
+    result->link_name = getAttachedObjectLinkById
+                          (goal->object_id)->c_str
+                          ();
 
     std::ostringstream result_message;
     result_message << "Object exists in the planning scene, attached to '" <<
-      result->link_name.c_str() << "'.";
+      result->link_name.c_str
+        () << "'.";
 
-    result->message = (result_message.str());
+    result->message = (result_message.str
+                         ());
 
-    RCLCPP_INFO(this->get_logger(), "CheckExist: Object '%s' exists attached to link '%s'.",
-      goal->object_id.c_str(),
-      result->link_name.c_str());
+    RCLCPP_INFO
+      (this->get_logger
+        (),
+      "CheckExist: Object '%s' exists attached to link '%s'.",
+      goal->object_id.c_str
+        (),
+      result->link_name.c_str
+        ());
   }
   else {
     result->link_name = "";
     result->message =
       exists ? "Object exists in the planning scene." : "Object not found in the planning scene.";
 
-    RCLCPP_INFO(this->get_logger(), "CheckExist: Object '%s' %s in the planning scene.",
-      goal->object_id.c_str(),
+    RCLCPP_INFO
+      (this->get_logger
+        (),
+      "CheckExist: Object '%s' %s in the planning scene.",
+      goal->object_id.c_str
+        (),
       exists ? "exists" : "does NOT exist");
   }
 
   // Set the result and succeed the goal
-  goal_handle->succeed(result);
+  goal_handle->succeed
+    (result);
 }
 
 void ObjectManagerNode::printPlanningScene()
 {
-  auto request = std::make_shared<moveit_msgs::srv::GetPlanningScene::Request>();
+  auto request = std::make_shared<moveit_msgs::srv::GetPlanningScene::Request>
+                   ();
   request->components.components = moveit_msgs::msg::PlanningSceneComponents::WORLD_OBJECT_NAMES |
                                    moveit_msgs::msg::PlanningSceneComponents::
                                    ROBOT_STATE_ATTACHED_OBJECTS;
 
-  RCLCPP_INFO(this->get_logger(), "Requesting Planning Scene with components: %d",
+  RCLCPP_INFO
+    (this->get_logger
+      (),
+    "Requesting Planning Scene with components: %d",
     request->components.components);
 
-  auto future_response = get_planning_scene_client_->async_send_request(request);
+  auto future_response = get_planning_scene_client_->async_send_request
+                           (request);
 
   // Spin the node manually to process service callbacks
-  auto start_time = std::chrono::steady_clock::now();
-  const auto timeout = std::chrono::seconds(5);
+  auto start_time = std::chrono::steady_clock::now
+                      ();
+  const auto timeout = std::chrono::seconds
+                         (5);
 
-  while (std::chrono::steady_clock::now() - start_time < timeout) {
-    rclcpp::spin_some(this->get_node_base_interface());
-    if (future_response.wait_for(std::chrono::milliseconds(100)) == std::future_status::ready) {
+  while (std::chrono::steady_clock::now
+           () - start_time < timeout) {
+    rclcpp::spin_some
+      (this->get_node_base_interface
+        ());
+    if (future_response.wait_for
+          (std::chrono::milliseconds
+            (100)) == std::future_status::ready) {
       break;
     }
   }
 
   // Handle the service response
-  if (future_response.wait_for(std::chrono::milliseconds(0)) == std::future_status::ready) {
-    auto response = future_response.get();
+  if (future_response.wait_for
+        (std::chrono::milliseconds
+          (0)) == std::future_status::ready) {
+    auto response = future_response.get
+                      ();
     if (response) {
-      RCLCPP_INFO(this->get_logger(), "Received Planning Scene:");
+      RCLCPP_INFO
+        (this->get_logger
+          (),
+        "Received Planning Scene:");
       const auto & collision_objects = response->scene.world.collision_objects;
 
-      if (collision_objects.empty()) {
-        RCLCPP_INFO(this->get_logger(), "  No collision objects found in the planning scene.");
+      if (collision_objects.empty
+            ()) {
+        RCLCPP_INFO
+          (this->get_logger
+            (),
+          "  No collision objects found in the planning scene.");
       }
       else {
-        RCLCPP_INFO(this->get_logger(), "  Found %zu collision object(s):",
-          collision_objects.size());
+        RCLCPP_INFO
+          (this->get_logger
+            (),
+          "  Found %zu collision object(s):",
+          collision_objects.size
+            ());
         for (const auto & obj : collision_objects) {
-          RCLCPP_INFO(this->get_logger(), "    - ID: '%s'", obj.id.c_str());
+          RCLCPP_INFO
+            (this->get_logger
+              (),
+            "    - ID: '%s'",
+            obj.id.c_str
+              ());
         }
       }
 
       const auto & attached_collision_object =
         response->scene.robot_state.attached_collision_objects;
 
-      if (attached_collision_object.empty()) {
-        RCLCPP_INFO(this->get_logger(),
+      if (attached_collision_object.empty
+            ()) {
+        RCLCPP_INFO
+          (this->get_logger
+            (),
           "  No attached collision objects found in the planning scene.");
       }
       else {
-        RCLCPP_INFO(this->get_logger(),
+        RCLCPP_INFO
+          (this->get_logger
+            (),
           "  Found %zu attached collision object(s):",
-          attached_collision_object.size());
+          attached_collision_object.size
+            ());
         for (const auto & attached_obj : attached_collision_object) {
-          RCLCPP_INFO(this->get_logger(), "    - ID: '%s'", attached_obj.object.id.c_str());
+          RCLCPP_INFO
+            (this->get_logger
+              (),
+            "    - ID: '%s'",
+            attached_obj.object.id.c_str
+              ());
         }
       }
     }
     else {
-      RCLCPP_ERROR(this->get_logger(), "Received null response from /get_planning_scene.");
+      RCLCPP_ERROR
+        (this->get_logger
+          (),
+        "Received null response from /get_planning_scene.");
     }
   }
   else {
-    RCLCPP_ERROR(this->get_logger(), "Timeout while waiting for /get_planning_scene response.");
+    RCLCPP_ERROR
+      (this->get_logger
+        (),
+      "Timeout while waiting for /get_planning_scene response.");
   }
 }
 
@@ -423,19 +542,40 @@ rclcpp_action::GoalResponse ObjectManagerNode::handleAddGoal(
   [[maybe_unused]] const rclcpp_action::GoalUUID & uuid,
   std::shared_ptr<const AddCollisionObject::Goal> goal)
 {
-  RCLCPP_INFO(this->get_logger(), "Received request to add object: %s", goal->id.c_str());
+  RCLCPP_INFO
+    (this->get_logger
+      (),
+    "Received request to add object: %s",
+    goal->id.c_str
+      ());
 
-  if (!validateShapeAndDimensions(goal->shape, goal->dimensions, goal->mesh_file)) {
-    RCLCPP_WARN(this->get_logger(), "Invalid shape/dimensions or missing mesh file for object.");
+  if (!validateShapeAndDimensions
+        (goal->shape,
+        goal->dimensions,
+        goal->mesh_file)) {
+    RCLCPP_WARN
+      (this->get_logger
+        (),
+      "Invalid shape/dimensions or missing mesh file for object.");
     return rclcpp_action::GoalResponse::REJECT;
   }
-  else if (objectExists(goal->id)) {
-    RCLCPP_WARN(this->get_logger(), "Object already in the planning scene.");
+  else if (objectExists
+             (goal->id)) {
+    RCLCPP_WARN
+      (this->get_logger
+        (),
+      "Object already in the planning scene.");
     return rclcpp_action::GoalResponse::REJECT;
   }
-  else if (attachedObjectExists(goal->id)) {
-    RCLCPP_WARN(this->get_logger(), "Object already in the planning scene, attached to %s.",
-      getAttachedObjectLinkById(goal->id)->c_str());
+  else if (attachedObjectExists
+             (goal->id)) {
+    RCLCPP_WARN
+      (this->get_logger
+        (),
+      "Object already in the planning scene, attached to %s.",
+      getAttachedObjectLinkById
+        (goal->id)->c_str
+        ());
     return rclcpp_action::GoalResponse::REJECT;
   }
 
@@ -446,26 +586,44 @@ rclcpp_action::CancelResponse
 ObjectManagerNode::handleAddCancel(
   [[maybe_unused]] const std::shared_ptr<AddGoalHandle> goal_handle)
 {
-  RCLCPP_INFO(this->get_logger(), "Add operation canceled.");
+  RCLCPP_INFO
+    (this->get_logger
+      (),
+    "Add operation canceled.");
   return rclcpp_action::CancelResponse::ACCEPT;
 }
 
 void ObjectManagerNode::handleAddExecute(const std::shared_ptr<AddGoalHandle> goal_handle)
 {
-  auto goal = goal_handle->get_goal();
-  auto result = std::make_shared<AddCollisionObject::Result>();
+  auto goal = goal_handle->get_goal
+                ();
+  auto result = std::make_shared<AddCollisionObject::Result>
+                  ();
 
   // Publish the collision object
   auto collision_object =
-    createCollisionObject(goal->id, goal->shape, goal->dimensions, goal->pose, goal->mesh_file,
+    createCollisionObject
+      (goal->id,
+      goal->shape,
+      goal->dimensions,
+      goal->pose,
+      goal->mesh_file,
       goal->scale_mesh);
-  collision_object_publisher_->publish(collision_object);
-  RCLCPP_INFO(this->get_logger(), "Published ADD operation for object '%s'.", goal->id.c_str());
+  collision_object_publisher_->publish
+    (collision_object);
+  RCLCPP_INFO
+    (this->get_logger
+      (),
+    "Published ADD operation for object '%s'.",
+    goal->id.c_str
+      ());
 
   // Publish feedback
-  auto feedback = std::make_shared<AddCollisionObject::Feedback>();
+  auto feedback = std::make_shared<AddCollisionObject::Feedback>
+                    ();
   feedback->status = "Collision object published.";
-  goal_handle->publish_feedback(feedback);
+  goal_handle->publish_feedback
+    (feedback);
 
   // Retry mechanism
   const int max_retries = 5;
@@ -473,33 +631,48 @@ void ObjectManagerNode::handleAddExecute(const std::shared_ptr<AddGoalHandle> go
   bool exists = false;
 
   for (int attempt = 1; attempt <= max_retries; ++attempt) {
-    rclcpp::sleep_for(std::chrono::milliseconds(delay_ms * attempt));
+    rclcpp::sleep_for
+      (std::chrono::milliseconds
+        (delay_ms * attempt));
 
     // Check if the object exists
-    exists = objectExists(goal->id);
+    exists = objectExists
+               (goal->id);
     if (exists) {
       result->success = true;
       result->message = "Object added successfully.";
-      goal_handle->succeed(result);
-      RCLCPP_INFO(this->get_logger(),
+      goal_handle->succeed
+        (result);
+      RCLCPP_INFO
+        (this->get_logger
+          (),
         "Object '%s' added successfully after %d attempt(s).",
-        goal->id.c_str(),
+        goal->id.c_str
+          (),
         attempt);
       return;
     }
 
-    RCLCPP_WARN(this->get_logger(),
+    RCLCPP_WARN
+      (this->get_logger
+        (),
       "Attempt %d: Object '%s' not found in planning scene yet.",
       attempt,
-      goal->id.c_str());
+      goal->id.c_str
+        ());
   }
 
   // If we reach here, the object was not found
   result->success = false;
   result->message = "Failed to verify addition of object.";
-  goal_handle->abort(result);
-  RCLCPP_ERROR(this->get_logger(), "Failed to verify addition of object '%s' after %d attempts.",
-    goal->id.c_str(),
+  goal_handle->abort
+    (result);
+  RCLCPP_ERROR
+    (this->get_logger
+      (),
+    "Failed to verify addition of object '%s' after %d attempts.",
+    goal->id.c_str
+      (),
     max_retries);
 }
 
@@ -511,7 +684,12 @@ ObjectManagerNode::handleRemoveGoal(
   [[maybe_unused]] const rclcpp_action::GoalUUID & uuid,
   std::shared_ptr<const RemoveCollisionObject::Goal> goal)
 {
-  RCLCPP_INFO(this->get_logger(), "Received request to remove object: %s", goal->id.c_str());
+  RCLCPP_INFO
+    (this->get_logger
+      (),
+    "Received request to remove object: %s",
+    goal->id.c_str
+      ());
 
   return rclcpp_action::GoalResponse::ACCEPT_AND_EXECUTE;
 }
@@ -520,29 +698,39 @@ rclcpp_action::CancelResponse
 ObjectManagerNode::handleRemoveCancel(const std::shared_ptr<RemoveGoalHandle> goal_handle)
 {
   (void)goal_handle;       // Suppress unused parameter warning
-  RCLCPP_INFO(this->get_logger(), "Remove operation canceled.");
+  RCLCPP_INFO
+    (this->get_logger
+      (),
+    "Remove operation canceled.");
   return rclcpp_action::CancelResponse::ACCEPT;
 }
 
 void ObjectManagerNode::handleRemoveExecute(const std::shared_ptr<RemoveGoalHandle> goal_handle)
 {
 
-  auto goal = goal_handle->get_goal();
-  auto result = std::make_shared<RemoveCollisionObject::Result>();
+  auto goal = goal_handle->get_goal
+                ();
+  auto result = std::make_shared<RemoveCollisionObject::Result>
+                  ();
 
   // Check if the object is attached before trying to remove
-  if (attachedObjectExists(goal->id)) {
+  if (attachedObjectExists
+        (goal->id)) {
     result->success = false;
     result->message = "Object attached, unable to remove.";
-    goal_handle->abort(result);
+    goal_handle->abort
+      (result);
     return;
   }
 
   // Check if the object exists before trying to remove
-  if ((!objectExists(goal->id)) && (!attachedObjectExists(goal->id))) {
+  if ((!objectExists
+         (goal->id)) && (!attachedObjectExists
+                           (goal->id))) {
     result->success = true;
     result->message = "Object not found in the scene.";
-    goal_handle->succeed(result);
+    goal_handle->succeed
+      (result);
     return;
   }
 
@@ -553,14 +741,21 @@ void ObjectManagerNode::handleRemoveExecute(const std::shared_ptr<RemoveGoalHand
   collision_object.operation = moveit_msgs::msg::CollisionObject::REMOVE;
 
   // Publish the remove operation
-  collision_object_publisher_->publish(collision_object);
-  RCLCPP_INFO(this->get_logger(), "Published REMOVE operation for object '%s'.",
-    goal->id.c_str());
+  collision_object_publisher_->publish
+    (collision_object);
+  RCLCPP_INFO
+    (this->get_logger
+      (),
+    "Published REMOVE operation for object '%s'.",
+    goal->id.c_str
+      ());
 
   // Publish feedback
-  auto feedback = std::make_shared<RemoveCollisionObject::Feedback>();
+  auto feedback = std::make_shared<RemoveCollisionObject::Feedback>
+                    ();
   feedback->status = "Collision object remove command published.";
-  goal_handle->publish_feedback(feedback);
+  goal_handle->publish_feedback
+    (feedback);
 
   // Retry mechanism
   const int max_retries = 5;
@@ -569,24 +764,35 @@ void ObjectManagerNode::handleRemoveExecute(const std::shared_ptr<RemoveGoalHand
   bool exists = true;
 
   for (int attempt = 1; attempt <= max_retries; ++attempt) {
-    rclcpp::sleep_for(std::chrono::milliseconds(delay_ms));
+    rclcpp::sleep_for
+      (std::chrono::milliseconds
+        (delay_ms));
 
     // Check if the object still exists
-    exists = objectExists(goal->id);
+    exists = objectExists
+               (goal->id);
     if (!exists) {
       result->success = true;
       result->message = "Object removed successfully.";
-      goal_handle->succeed(result);
-      RCLCPP_INFO(this->get_logger(), "Object '%s' removed successfully after %d attempt(s).",
-        goal->id.c_str(),
+      goal_handle->succeed
+        (result);
+      RCLCPP_INFO
+        (this->get_logger
+          (),
+        "Object '%s' removed successfully after %d attempt(s).",
+        goal->id.c_str
+          (),
         attempt);
       return;
     }
 
-    RCLCPP_WARN(this->get_logger(),
+    RCLCPP_WARN
+      (this->get_logger
+        (),
       "Attempt %d: Object '%s' still exists in planning scene.",
       attempt,
-      goal->id.c_str());
+      goal->id.c_str
+        ());
 
     // Exponential backoff
     delay_ms *= 2;
@@ -595,9 +801,14 @@ void ObjectManagerNode::handleRemoveExecute(const std::shared_ptr<RemoveGoalHand
   // If we reach here, the object was not removed
   result->success = false;
   result->message = "Failed to verify removal of object.";
-  goal_handle->abort(result);
-  RCLCPP_ERROR(this->get_logger(), "Failed to verify removal of object '%s' after %d attempts.",
-    goal->id.c_str(),
+  goal_handle->abort
+    (result);
+  RCLCPP_ERROR
+    (this->get_logger
+      (),
+    "Failed to verify removal of object '%s' after %d attempts.",
+    goal->id.c_str
+      (),
     max_retries);
 }
 
@@ -610,13 +821,24 @@ ObjectManagerNode::handleAttachDetachGoal(
   std::shared_ptr<const AttachDetachObject::Goal> goal)
 {
 
-  RCLCPP_INFO(this->get_logger(), "Received request to %s object: %s to link: %s",
+  RCLCPP_INFO
+    (this->get_logger
+      (),
+    "Received request to %s object: %s to link: %s",
     goal->attach ? "attach" : "detach",
-    goal->object_id.c_str(), goal->link_name.c_str());
+    goal->object_id.c_str
+      (),
+    goal->link_name.c_str
+      ());
 
   // Basic validation
-  if (goal->object_id.empty() || (goal->attach && goal->link_name.empty())) {
-    RCLCPP_WARN(this->get_logger(), "Invalid object_id or link_name in the request.");
+  if (goal->object_id.empty
+        () || (goal->attach && goal->link_name.empty
+                 ())) {
+    RCLCPP_WARN
+      (this->get_logger
+        (),
+      "Invalid object_id or link_name in the request.");
     return rclcpp_action::GoalResponse::REJECT;
   }
 
@@ -626,45 +848,63 @@ ObjectManagerNode::handleAttachDetachGoal(
 rclcpp_action::CancelResponse ObjectManagerNode::handleAttachDetachCancel(
   [[maybe_unused]] const std::shared_ptr<AttachDetachGoalHandle> goal_handle)
 {
-  RCLCPP_INFO(this->get_logger(), "AttachDetach operation canceled.");
+  RCLCPP_INFO
+    (this->get_logger
+      (),
+    "AttachDetach operation canceled.");
   return rclcpp_action::CancelResponse::ACCEPT;
 }
 
 void ObjectManagerNode::handleAttachDetachExecute(
   const std::shared_ptr<AttachDetachGoalHandle> goal_handle)
 {
-  auto goal = goal_handle->get_goal();
-  auto result = std::make_shared<AttachDetachObject::Result>();
+  auto goal = goal_handle->get_goal
+                ();
+  auto result = std::make_shared<AttachDetachObject::Result>
+                  ();
 
   // I call once the search functions to avoid dalays
-  auto attached_object_exists = attachedObjectExists(goal->object_id);
-  auto collision_object_exists = objectExists(goal->object_id);
+  auto attached_object_exists = attachedObjectExists
+                                  (goal->object_id);
+  auto collision_object_exists = objectExists
+                                   (goal->object_id);
 
   // Check if object exists at all, if not it wouldn't make sense to continue either for attaching
   // or detaching
   if ((!attached_object_exists && !collision_object_exists)) {
     result->success = false;
-    result->message = std::string("'") + goal->object_id +
+    result->message = std::string
+                        ("'") + goal->object_id +
                       "' does not exist in the planning scene.";
-    goal_handle->abort(result);
+    goal_handle->abort
+      (result);
     return;
   }
 
   // Check if the object is already attached
   if (goal->attach && (attached_object_exists)) {
 
-    if (goal->link_name == getAttachedObjectLinkById(goal->object_id)) {
+    if (goal->link_name == getAttachedObjectLinkById
+          (goal->object_id)) {
       result->success = true;
-      result->message = std::string("'") + goal->object_id + "' already attached to " +
-                        getAttachedObjectLinkById(goal->object_id)->c_str() + ".";
-      goal_handle->succeed(result);
+      result->message = std::string
+                          ("'") + goal->object_id + "' already attached to " +
+                        getAttachedObjectLinkById
+                          (goal->object_id)->c_str
+                          () + ".";
+      goal_handle->succeed
+        (result);
       return;
     }
     else {
       result->success = false;
-      result->message = std::string("'") + goal->object_id + "' already attached to " +
-                        getAttachedObjectLinkById(goal->object_id)->c_str() + ".";
-      goal_handle->abort(result);
+      result->message = std::string
+                          ("'") + goal->object_id + "' already attached to " +
+                        getAttachedObjectLinkById
+                          (goal->object_id)->c_str
+                          () + ".";
+      goal_handle->abort
+        (result);
       return;
     }
   }
@@ -672,9 +912,13 @@ void ObjectManagerNode::handleAttachDetachExecute(
   // Check if the object is attached for detach operation
   if (!goal->attach && !attached_object_exists) {
     result->success = false;
-    result->message = std::string("'") + goal->object_id + "' not attached to " +
-                      getAttachedObjectLinkById(goal->object_id)->c_str() + ".";
-    goal_handle->abort(result);
+    result->message = std::string
+                        ("'") + goal->object_id + "' not attached to " +
+                      getAttachedObjectLinkById
+                        (goal->object_id)->c_str
+                        () + ".";
+    goal_handle->abort
+      (result);
     return;
   }
 
@@ -688,9 +932,11 @@ void ObjectManagerNode::handleAttachDetachExecute(
 
   if (goal->attach) {
     attached_object.object.operation = moveit_msgs::msg::CollisionObject::ADD;
-    attached_object.detach_posture = trajectory_msgs::msg::JointTrajectory();
+    attached_object.detach_posture = trajectory_msgs::msg::JointTrajectory
+                                       ();
 
-    if (!goal->touch_links.empty()) {
+    if (!goal->touch_links.empty
+          ()) {
       attached_object.touch_links = goal->touch_links;
     }
   }
@@ -698,33 +944,52 @@ void ObjectManagerNode::handleAttachDetachExecute(
     attached_object.object.operation = moveit_msgs::msg::CollisionObject::REMOVE;
 
     // Retrieve object data from planning scene
-    collision_object_opt = getObjectDataById(goal->object_id);
+    collision_object_opt = getObjectDataById
+                             (goal->object_id);
     if (!collision_object_opt) {
-      RCLCPP_ERROR(this->get_logger(), "Failed to retrieve object '%s' data.",
-        goal->object_id.c_str());
+      RCLCPP_ERROR
+        (this->get_logger
+          (),
+        "Failed to retrieve object '%s' data.",
+        goal->object_id.c_str
+          ());
 
       result->success = false;
       result->message = goal->attach ? "Failed to attach object." : "Failed to detach object.";
-      goal_handle->abort(result);
-      RCLCPP_ERROR(this->get_logger(),
+      goal_handle->abort
+        (result);
+      RCLCPP_ERROR
+        (this->get_logger
+          (),
         "%s operation failed for object '%s' and link '%s'.",
         goal->attach ? "Attach" : "Detach",
-        goal->object_id.c_str(),
-        goal->link_name.c_str());
+        goal->object_id.c_str
+          (),
+        goal->link_name.c_str
+          ());
       return;
     }
   }
 
   // Publish the attach/detach command
-  attached_collision_object_publisher_->publish(attached_object);
-  RCLCPP_INFO(this->get_logger(), "%s operation published for object '%s' to link '%s'.",
-    goal->attach ? "Attach" : "Detach", goal->object_id.c_str(),
-    goal->link_name.c_str());
+  attached_collision_object_publisher_->publish
+    (attached_object);
+  RCLCPP_INFO
+    (this->get_logger
+      (),
+    "%s operation published for object '%s' to link '%s'.",
+    goal->attach ? "Attach" : "Detach",
+    goal->object_id.c_str
+      (),
+    goal->link_name.c_str
+      ());
 
   // Publish feedback
-  auto feedback = std::make_shared<AttachDetachObject::Feedback>();
+  auto feedback = std::make_shared<AttachDetachObject::Feedback>
+                    ();
   feedback->status = goal->attach ? "Attach command published." : "Detach command published.";
-  goal_handle->publish_feedback(feedback);
+  goal_handle->publish_feedback
+    (feedback);
 
   // Retry mechanism to verify the operation
   const int max_retries = 5;
@@ -732,61 +997,99 @@ void ObjectManagerNode::handleAttachDetachExecute(
   bool operation_successful = false;
 
   for (int attempt = 1; attempt <= max_retries; ++attempt) {
-    rclcpp::sleep_for(std::chrono::milliseconds(delay_ms * attempt));
+    rclcpp::sleep_for
+      (std::chrono::milliseconds
+        (delay_ms * attempt));
 
     // Check the planning scene
-    auto request = std::make_shared<moveit_msgs::srv::GetPlanningScene::Request>();
+    auto request = std::make_shared<moveit_msgs::srv::GetPlanningScene::Request>
+                     ();
     request->components.components =
       moveit_msgs::msg::PlanningSceneComponents::ROBOT_STATE_ATTACHED_OBJECTS;
 
-    auto future_response = get_planning_scene_client_->async_send_request(request);
+    auto future_response = get_planning_scene_client_->async_send_request
+                             (request);
 
     // Wait for the response with timeout
-    if (future_response.wait_for(std::chrono::milliseconds(500)) == std::future_status::ready) {
-      auto response = future_response.get();
+    if (future_response.wait_for
+          (std::chrono::milliseconds
+            (500)) == std::future_status::ready) {
+      auto response = future_response.get
+                        ();
       if (response) {
-        bool found = attachedObjectExists(goal->object_id);
+        bool found = attachedObjectExists
+                       (goal->object_id);
 
         if (goal->attach && found) {
-          RCLCPP_INFO(this->get_logger(), "Object '%s' successfully attached to link '%s'.",
-            goal->object_id.c_str(),
-            goal->link_name.c_str());
+          RCLCPP_INFO
+            (this->get_logger
+              (),
+            "Object '%s' successfully attached to link '%s'.",
+            goal->object_id.c_str
+              (),
+            goal->link_name.c_str
+              ());
           operation_successful = true;
           break;
         }
         else if (!goal->attach && !found) {
-          RCLCPP_INFO(this->get_logger(), "Object '%s' successfully detached from link '%s'.",
-            goal->object_id.c_str(), goal->link_name.c_str());
+          RCLCPP_INFO
+            (this->get_logger
+              (),
+            "Object '%s' successfully detached from link '%s'.",
+            goal->object_id.c_str
+              (),
+            goal->link_name.c_str
+              ());
 
           // If detaching, ensure the object is back in the planning scene
-          if (!objectExists(goal->object_id)) {
-            RCLCPP_INFO(
-              this->get_logger(),
+          if (!objectExists
+                (goal->object_id)) {
+            RCLCPP_INFO
+            (
+              this->get_logger
+                (),
               "Object '%s' not found in the planning scene after detaching. Adding it back.",
-              goal->object_id.c_str());
+              goal->object_id.c_str
+                ());
 
-            const auto & collision_object = collision_object_opt.value();
+            const auto & collision_object = collision_object_opt.value
+                                              ();
 
             // Publisher for collision objects
-            collision_object_publisher_->publish(collision_object);
-            RCLCPP_INFO(this->get_logger(), "Re-added object '%s' to the planning scene.",
-              goal->object_id.c_str());
+            collision_object_publisher_->publish
+              (collision_object);
+            RCLCPP_INFO
+              (this->get_logger
+                (),
+              "Re-added object '%s' to the planning scene.",
+              goal->object_id.c_str
+                ());
 
             // Wait briefly to allow the planning scene to update
-            rclcpp::sleep_for(std::chrono::milliseconds(500));
+            rclcpp::sleep_for
+              (std::chrono::milliseconds
+                (500));
 
             // Verify the object is added
-            if (objectExists(goal->object_id)) {
-              RCLCPP_INFO(this->get_logger(),
+            if (objectExists
+                  (goal->object_id)) {
+              RCLCPP_INFO
+                (this->get_logger
+                  (),
                 "Object '%s' re-added to the planning scene successfully.",
-                goal->object_id.c_str());
+                goal->object_id.c_str
+                  ());
               operation_successful = true;
               break;
             }
             else {
-              RCLCPP_WARN(this->get_logger(),
+              RCLCPP_WARN
+                (this->get_logger
+                  (),
                 "Failed to re-add object '%s' to the planning scene.",
-                goal->object_id.c_str());
+                goal->object_id.c_str
+                  ());
             }
           }
           else {
@@ -796,36 +1099,56 @@ void ObjectManagerNode::handleAttachDetachExecute(
         }
       }
       else {
-        RCLCPP_ERROR(this->get_logger(), "Received null response from /get_planning_scene.");
+        RCLCPP_ERROR
+          (this->get_logger
+            (),
+          "Received null response from /get_planning_scene.");
       }
     }
     else {
-      RCLCPP_ERROR(this->get_logger(), "Timeout while waiting for /get_planning_scene response.");
+      RCLCPP_ERROR
+        (this->get_logger
+          (),
+        "Timeout while waiting for /get_planning_scene response.");
     }
 
-    RCLCPP_WARN(this->get_logger(), "Attempt %d: Operation not confirmed yet.", attempt);
+    RCLCPP_WARN
+      (this->get_logger
+        (),
+      "Attempt %d: Operation not confirmed yet.",
+      attempt);
   }
 
   if (operation_successful) {
     result->success = true;
     result->message =
       goal->attach ? "Object attached successfully." : "Object detached successfully.";
-    goal_handle->succeed(result);
-    RCLCPP_INFO(this->get_logger(),
+    goal_handle->succeed
+      (result);
+    RCLCPP_INFO
+      (this->get_logger
+        (),
       "%s operation completed successfully for object '%s' and link '%s'.",
       goal->attach ? "Attach" : "Detach",
-      goal->object_id.c_str(),
-      goal->link_name.c_str());
+      goal->object_id.c_str
+        (),
+      goal->link_name.c_str
+        ());
   }
   else {
     result->success = false;
     result->message = goal->attach ? "Failed to attach object." : "Failed to detach object.";
-    goal_handle->abort(result);
-    RCLCPP_ERROR(this->get_logger(),
+    goal_handle->abort
+      (result);
+    RCLCPP_ERROR
+      (this->get_logger
+        (),
       "%s operation failed for object '%s' and link '%s'.",
       goal->attach ? "Attach" : "Detach",
-      goal->object_id.c_str(),
-      goal->link_name.c_str());
+      goal->object_id.c_str
+        (),
+      goal->link_name.c_str
+        ());
   }
 }
 
@@ -834,13 +1157,21 @@ ObjectManagerNode::handleGetObjectPoseGoal(
   [[maybe_unused]] const rclcpp_action::GoalUUID & uuid,
   std::shared_ptr<const GetObjectPose::Goal> goal)
 {
-  RCLCPP_INFO(this->get_logger(),
+  RCLCPP_INFO
+    (this->get_logger
+      (),
     "Received GetObjectPose goal for object: %s, reference link: %s",
-    goal->object_id.c_str(),
-    goal->link_name.c_str());
+    goal->object_id.c_str
+      (),
+    goal->link_name.c_str
+      ());
 
-  if (goal->object_id.empty()) {
-    RCLCPP_WARN(this->get_logger(), "Invalid object_id: cannot be empty.");
+  if (goal->object_id.empty
+        ()) {
+    RCLCPP_WARN
+      (this->get_logger
+        (),
+      "Invalid object_id: cannot be empty.");
     return rclcpp_action::GoalResponse::REJECT;
   }
 
@@ -850,24 +1181,35 @@ ObjectManagerNode::handleGetObjectPoseGoal(
 rclcpp_action::CancelResponse ObjectManagerNode::handleGetObjectPoseCancel(
   [[maybe_unused]] const std::shared_ptr<GetObjectPoseGoalHandle> goal_handle)
 {
-  RCLCPP_INFO(this->get_logger(), "GetObjectPose operation canceled.");
+  RCLCPP_INFO
+    (this->get_logger
+      (),
+    "GetObjectPose operation canceled.");
   return rclcpp_action::CancelResponse::ACCEPT;
 }
 
 void ObjectManagerNode::handleGetObjectPoseExecute(
   const std::shared_ptr<GetObjectPoseGoalHandle> goal_handle)
 {
-  auto goal = goal_handle->get_goal();
-  auto result = std::make_shared<GetObjectPose::Result>();
+  auto goal = goal_handle->get_goal
+                ();
+  auto result = std::make_shared<GetObjectPose::Result>
+                  ();
 
   // 1. Retrieve the CollisionObject from the planning scene
-  auto collision_object_opt = getObjectDataById(goal->object_id);
+  auto collision_object_opt = getObjectDataById
+                                (goal->object_id);
   if (!collision_object_opt) {
-    RCLCPP_ERROR(this->get_logger(), "Failed to retrieve object '%s' from planning scene.",
-      goal->object_id.c_str());
+    RCLCPP_ERROR
+      (this->get_logger
+        (),
+      "Failed to retrieve object '%s' from planning scene.",
+      goal->object_id.c_str
+        ());
     result->success = false;
     result->message = "Object not found in planning scene.";
-    goal_handle->abort(result);
+    goal_handle->abort
+      (result);
     return;
   }
 
@@ -875,45 +1217,69 @@ void ObjectManagerNode::handleGetObjectPoseExecute(
   //    the attached link's frame if attached
   geometry_msgs::msg::Pose object_pose = collision_object_opt->pose;
 
-  bool is_attached = attachedObjectExists(goal->object_id);
+  bool is_attached = attachedObjectExists
+                       (goal->object_id);
   std::string object_frame = frame_id_;       // assume 'world' by default
   if (is_attached) {
-    auto maybe_link = getAttachedObjectLinkById(goal->object_id);
+    auto maybe_link = getAttachedObjectLinkById
+                        (goal->object_id);
     if (!maybe_link) {
-      RCLCPP_ERROR(this->get_logger(), "Failed to get attached link for object '%s'.",
-        goal->object_id.c_str());
+      RCLCPP_ERROR
+        (this->get_logger
+          (),
+        "Failed to get attached link for object '%s'.",
+        goal->object_id.c_str
+          ());
       result->success = false;
       result->message = "Failed to determine attached link.";
-      goal_handle->abort(result);
+      goal_handle->abort
+        (result);
       return;
     }
     // If attached, the object_pose is in this link's frame
-    object_frame = maybe_link.value();
+    object_frame = maybe_link.value
+                     ();
   }
 
   // 3. If needed, transform from 'object_frame' => 'goal->link_name'
   //    only if the user specifies a different link_name
-  if (!goal->link_name.empty() && goal->link_name != object_frame) {
-    tf2_ros::Buffer tfBuffer(this->get_clock());
+  if (!goal->link_name.empty
+        () && goal->link_name != object_frame) {
+    tf2_ros::Buffer tfBuffer(this->get_clock
+                               ());
     tf2_ros::TransformListener tfListener(tfBuffer, this, true);
 
     try {
       geometry_msgs::msg::TransformStamped transformStamped =
-        tfBuffer.lookupTransform(goal->link_name,                         // target frame
+        tfBuffer.lookupTransform
+          (goal->link_name,                                               // target frame
           object_frame,                                                // source frame
-          tf2::TimePointZero, tf2::durationFromSec(1.0));
+          tf2::TimePointZero,
+          tf2::durationFromSec
+            (1.0));
 
       // Apply that transform
       geometry_msgs::msg::Pose transformed_pose;
-      tf2::doTransform(object_pose, transformed_pose, transformStamped);
+      tf2::doTransform
+        (object_pose,
+        transformed_pose,
+        transformStamped);
       object_pose = transformed_pose;
     } catch (const tf2::TransformException & ex) {
-      RCLCPP_ERROR(this->get_logger(), "Failed to lookup transform from '%s' to '%s': %s",
-        object_frame.c_str(),
-        goal->link_name.c_str(), ex.what());
+      RCLCPP_ERROR
+        (this->get_logger
+          (),
+        "Failed to lookup transform from '%s' to '%s': %s",
+        object_frame.c_str
+          (),
+        goal->link_name.c_str
+          (),
+        ex.what
+          ());
       result->success = false;
       result->message = "Transform error.";
-      goal_handle->abort(result);
+      goal_handle->abort
+        (result);
       return;
     }
   }
@@ -922,12 +1288,16 @@ void ObjectManagerNode::handleGetObjectPoseExecute(
 
   try {
     // Validate arrays
-    if (goal->pre_transform_xyz_rpy.size() != 6) {
-      throw std::invalid_argument(
+    if (goal->pre_transform_xyz_rpy.size
+          () != 6) {
+      throw std::invalid_argument
+            (
         "pre_transform_xyz_rpy must have exactly 6 elements (x,y,z,roll,pitch,yaw).");
     }
-    if (goal->post_transform_xyz_rpy.size() != 6) {
-      throw std::invalid_argument(
+    if (goal->post_transform_xyz_rpy.size
+          () != 6) {
+      throw std::invalid_argument
+            (
         "post_transform_xyz_rpy must have exactly 6 elements (x,y,z,roll,pitch,yaw).");
     }
 
@@ -935,40 +1305,59 @@ void ObjectManagerNode::handleGetObjectPoseExecute(
     // ------------------------------------
     // Step 1: Start with identity
     tf2::Transform combined_transform;
-    combined_transform.setIdentity();
+    combined_transform.setIdentity
+      ();
 
     // Step 2: Rotation from pre_transform_xyz_rpy (roll, pitch, yaw)
     tf2::Quaternion pre_rot;
-    pre_rot.setRPY(goal->pre_transform_xyz_rpy[3], goal->pre_transform_xyz_rpy[4],
+    pre_rot.setRPY
+      (goal->pre_transform_xyz_rpy[3],
+      goal->pre_transform_xyz_rpy[4],
       goal->pre_transform_xyz_rpy[5]);
     tf2::Transform pre_rot_tf;
-    pre_rot_tf.setRotation(pre_rot);
-    pre_rot_tf.setOrigin(tf2::Vector3(0, 0, 0));
+    pre_rot_tf.setRotation
+      (pre_rot);
+    pre_rot_tf.setOrigin
+      (tf2::Vector3
+        (0,
+        0,
+        0));
     combined_transform = pre_rot_tf * combined_transform;
 
     // Step 3: Translation from pre_transform_xyz_rpy (x, y, z)
     tf2::Vector3 pre_trans(goal->pre_transform_xyz_rpy[0], goal->pre_transform_xyz_rpy[1],
                            goal->pre_transform_xyz_rpy[2]);
     tf2::Transform pre_trans_tf;
-    pre_trans_tf.setIdentity();
-    pre_trans_tf.setOrigin(pre_trans);
+    pre_trans_tf.setIdentity
+      ();
+    pre_trans_tf.setOrigin
+      (pre_trans);
     combined_transform = pre_trans_tf * combined_transform;
 
     // Step 4: Rotation from post_transform_xyz_rpy (roll, pitch, yaw)
     tf2::Quaternion post_rot;
-    post_rot.setRPY(goal->post_transform_xyz_rpy[3], goal->post_transform_xyz_rpy[4],
+    post_rot.setRPY
+      (goal->post_transform_xyz_rpy[3],
+      goal->post_transform_xyz_rpy[4],
       goal->post_transform_xyz_rpy[5]);
     tf2::Transform post_rot_tf;
-    post_rot_tf.setRotation(post_rot);
-    post_rot_tf.setOrigin(tf2::Vector3(0, 0, 0));
+    post_rot_tf.setRotation
+      (post_rot);
+    post_rot_tf.setOrigin
+      (tf2::Vector3
+        (0,
+        0,
+        0));
     combined_transform = post_rot_tf * combined_transform;
 
     // Step 7: Translation from post_transform_xyz_rpy (x, y, z)
     tf2::Vector3 post_trans(goal->post_transform_xyz_rpy[0], goal->post_transform_xyz_rpy[1],
                             goal->post_transform_xyz_rpy[2]);
     tf2::Transform post_trans_tf;
-    post_trans_tf.setIdentity();
-    post_trans_tf.setOrigin(post_trans);
+    post_trans_tf.setIdentity
+      ();
+    post_trans_tf.setOrigin
+      (post_trans);
     combined_transform = post_trans_tf * combined_transform;
 
     // Step 5: Rotation from the object's original orientation
@@ -976,41 +1365,64 @@ void ObjectManagerNode::handleGetObjectPoseExecute(
                              object_pose.orientation.z,
                              object_pose.orientation.w);
     tf2::Transform obj_rot_tf;
-    obj_rot_tf.setRotation(obj_quat);
-    obj_rot_tf.setOrigin(tf2::Vector3(0, 0, 0));
+    obj_rot_tf.setRotation
+      (obj_quat);
+    obj_rot_tf.setOrigin
+      (tf2::Vector3
+        (0,
+        0,
+        0));
     combined_transform = obj_rot_tf * combined_transform;
 
     // Step 6: Translation from the object's original position
     tf2::Vector3 obj_trans(object_pose.position.x, object_pose.position.y,
                            object_pose.position.z);
     tf2::Transform obj_trans_tf;
-    obj_trans_tf.setIdentity();
-    obj_trans_tf.setOrigin(obj_trans);
+    obj_trans_tf.setIdentity
+      ();
+    obj_trans_tf.setOrigin
+      (obj_trans);
     combined_transform = obj_trans_tf * combined_transform;
 
     // Step 8: Extract final pose
     geometry_msgs::msg::Pose final_pose;
-    final_pose.position.x = combined_transform.getOrigin().x();
-    final_pose.position.y = combined_transform.getOrigin().y();
-    final_pose.position.z = combined_transform.getOrigin().z();
+    final_pose.position.x = combined_transform.getOrigin
+                              ().x
+                              ();
+    final_pose.position.y = combined_transform.getOrigin
+                              ().y
+                              ();
+    final_pose.position.z = combined_transform.getOrigin
+                              ().z
+                              ();
 
-    tf2::Quaternion final_quat = combined_transform.getRotation();
-    final_quat.normalize();
-    final_pose.orientation.x = final_quat.x();
-    final_pose.orientation.y = final_quat.y();
-    final_pose.orientation.z = final_quat.z();
-    final_pose.orientation.w = final_quat.w();
+    tf2::Quaternion final_quat = combined_transform.getRotation
+                                   ();
+    final_quat.normalize
+      ();
+    final_pose.orientation.x = final_quat.x
+                                 ();
+    final_pose.orientation.y = final_quat.y
+                                 ();
+    final_pose.orientation.z = final_quat.z
+                                 ();
+    final_pose.orientation.w = final_quat.w
+                                 ();
 
     // 5. Set and return result
     result->pose = final_pose;
     result->success = true;
     result->message = "Pose updated successfully with updated transformation logic.";
-    goal_handle->succeed(result);
+    goal_handle->succeed
+      (result);
 
-    RCLCPP_INFO(this->get_logger(),
+    RCLCPP_INFO
+      (this->get_logger
+        (),
       "Object '%s' updated successfully. Final pose: "
       "position (%.3f, %.3f, %.3f), orientation (%.3f, %.3f, %.3f, %.3f)",
-      goal->object_id.c_str(),
+      goal->object_id.c_str
+        (),
       final_pose.position.x,
       final_pose.position.y,
       final_pose.position.z,
@@ -1019,10 +1431,17 @@ void ObjectManagerNode::handleGetObjectPoseExecute(
       final_pose.orientation.z,
       final_pose.orientation.w);
   } catch (const std::exception & e) {
-    RCLCPP_ERROR(this->get_logger(), "%s", e.what());
+    RCLCPP_ERROR
+      (this->get_logger
+        (),
+      "%s",
+      e.what
+        ());
     result->success = false;
-    result->message = e.what();
-    goal_handle->abort(result);
+    result->message = e.what
+                        ();
+    goal_handle->abort
+      (result);
   }
 }
 
@@ -1031,35 +1450,59 @@ void ObjectManagerNode::handleGetObjectPoseExecute(
 // ----------------------------------------------------------------------------
 bool ObjectManagerNode::objectExists(const std::string & id)
 {
-  auto request = std::make_shared<moveit_msgs::srv::GetPlanningScene::Request>();
+  auto request = std::make_shared<moveit_msgs::srv::GetPlanningScene::Request>
+                   ();
   request->components.components = moveit_msgs::msg::PlanningSceneComponents::WORLD_OBJECT_NAMES;
 
-  RCLCPP_INFO(this->get_logger(),
+  RCLCPP_INFO
+    (this->get_logger
+      (),
     "Checking if object '%s' exists in the planning scene...",
-    id.c_str());
+    id.c_str
+      ());
 
-  auto future_response = get_planning_scene_client_->async_send_request(request);
+  auto future_response = get_planning_scene_client_->async_send_request
+                           (request);
 
   // Wait for the future to complete without additional spinning
-  if (future_response.wait_for(std::chrono::seconds(5)) == std::future_status::ready) {
-    auto response = future_response.get();
+  if (future_response.wait_for
+        (std::chrono::seconds
+          (5)) == std::future_status::ready) {
+    auto response = future_response.get
+                      ();
     if (response) {
       for (const auto & obj : response->scene.world.collision_objects) {
         if (obj.id == id) {
-          RCLCPP_INFO(this->get_logger(), "Object '%s' found in the planning scene.", id.c_str());
+          RCLCPP_INFO
+            (this->get_logger
+              (),
+            "Object '%s' found in the planning scene.",
+            id.c_str
+              ());
           return true;
         }
       }
     }
     else {
-      RCLCPP_ERROR(this->get_logger(), "Received null response from /get_planning_scene.");
+      RCLCPP_ERROR
+        (this->get_logger
+          (),
+        "Received null response from /get_planning_scene.");
     }
   }
   else {
-    RCLCPP_ERROR(this->get_logger(), "Timeout while waiting for /get_planning_scene response.");
+    RCLCPP_ERROR
+      (this->get_logger
+        (),
+      "Timeout while waiting for /get_planning_scene response.");
   }
 
-  RCLCPP_INFO(this->get_logger(), "Object '%s' not found in the planning scene.", id.c_str());
+  RCLCPP_INFO
+    (this->get_logger
+      (),
+    "Object '%s' not found in the planning scene.",
+    id.c_str
+      ());
   return false;
 }
 
@@ -1068,46 +1511,80 @@ bool ObjectManagerNode::objectExists(const std::string & id)
 // ----------------------------------------------------------------------------
 bool ObjectManagerNode::attachedObjectExists(const std::string & id, const std::string & link_name)
 {
-  auto request = std::make_shared<moveit_msgs::srv::GetPlanningScene::Request>();
+  auto request = std::make_shared<moveit_msgs::srv::GetPlanningScene::Request>
+                   ();
   request->components.components =
     moveit_msgs::msg::PlanningSceneComponents::ROBOT_STATE_ATTACHED_OBJECTS;
 
-  if (link_name.size() > 0) {
-    RCLCPP_INFO(this->get_logger(),
+  if (link_name.size
+        () > 0) {
+    RCLCPP_INFO
+      (this->get_logger
+        (),
       "Checking if object '%s' is attached to link '%s'...",
-      id.c_str(),
-      link_name.c_str());
+      id.c_str
+        (),
+      link_name.c_str
+        ());
   }
   else {
-    RCLCPP_INFO(this->get_logger(), "Checking if object '%s' is attached to any link...",
-      id.c_str());
+    RCLCPP_INFO
+      (this->get_logger
+        (),
+      "Checking if object '%s' is attached to any link...",
+      id.c_str
+        ());
   }
 
-  auto future_response = get_planning_scene_client_->async_send_request(request);
+  auto future_response = get_planning_scene_client_->async_send_request
+                           (request);
 
-  if (future_response.wait_for(std::chrono::seconds(5)) == std::future_status::ready) {
-    auto response = future_response.get();
+  if (future_response.wait_for
+        (std::chrono::seconds
+          (5)) == std::future_status::ready) {
+    auto response = future_response.get
+                      ();
     if (response) {
       for (const auto & attached_obj : response->scene.robot_state.attached_collision_objects) {
         if (attached_obj.object.id == id) {
-          if (link_name.empty() || attached_obj.link_name == link_name) {
-            RCLCPP_INFO(this->get_logger(), "Object '%s' is attached to link '%s'.", id.c_str(),
-              attached_obj.link_name.c_str());
+          if (link_name.empty
+                () || attached_obj.link_name == link_name) {
+            RCLCPP_INFO
+              (this->get_logger
+                (),
+              "Object '%s' is attached to link '%s'.",
+              id.c_str
+                (),
+              attached_obj.link_name.c_str
+                ());
             return true;
           }
         }
       }
     }
     else {
-      RCLCPP_ERROR(this->get_logger(), "Received null response from /get_planning_scene.");
+      RCLCPP_ERROR
+        (this->get_logger
+          (),
+        "Received null response from /get_planning_scene.");
     }
   }
   else {
-    RCLCPP_ERROR(this->get_logger(), "Timeout while waiting for /get_planning_scene response.");
+    RCLCPP_ERROR
+      (this->get_logger
+        (),
+      "Timeout while waiting for /get_planning_scene response.");
   }
 
-  RCLCPP_INFO(this->get_logger(), "Object '%s' is not attached to link '%s'.", id.c_str(),
-    link_name.empty() ? "any link" : link_name.c_str());
+  RCLCPP_INFO
+    (this->get_logger
+      (),
+    "Object '%s' is not attached to link '%s'.",
+    id.c_str
+      (),
+    link_name.empty
+      () ? "any link" : link_name.c_str
+      ());
   return false;
 }
 
@@ -1118,22 +1595,31 @@ std::optional<moveit_msgs::msg::CollisionObject> ObjectManagerNode::getObjectDat
   const std::string & object_id)
 {
   // Request planning scene world data
-  auto request = std::make_shared<moveit_msgs::srv::GetPlanningScene::Request>();
+  auto request = std::make_shared<moveit_msgs::srv::GetPlanningScene::Request>
+                   ();
   request->components.components =
     moveit_msgs::msg::PlanningSceneComponents::WORLD_OBJECT_GEOMETRY |
     moveit_msgs::msg::PlanningSceneComponents::ROBOT_STATE_ATTACHED_OBJECTS;
 
-  auto future_response = get_planning_scene_client_->async_send_request(request);
+  auto future_response = get_planning_scene_client_->async_send_request
+                           (request);
 
   // Wait for the service response
-  if (future_response.wait_for(std::chrono::seconds(5)) == std::future_status::ready) {
-    auto response = future_response.get();
+  if (future_response.wait_for
+        (std::chrono::seconds
+          (5)) == std::future_status::ready) {
+    auto response = future_response.get
+                      ();
     if (response) {
       for (const auto & collision_object : response->scene.world.collision_objects) {
         if (collision_object.id == object_id) {
           // Object found, return it
-          RCLCPP_INFO(this->get_logger(), "Object '%s' data retrieved from planning scene.",
-            object_id.c_str());
+          RCLCPP_INFO
+            (this->get_logger
+              (),
+            "Object '%s' data retrieved from planning scene.",
+            object_id.c_str
+              ());
           return collision_object;
         }
       }
@@ -1141,21 +1627,34 @@ std::optional<moveit_msgs::msg::CollisionObject> ObjectManagerNode::getObjectDat
            response->scene.robot_state.attached_collision_objects) {
         if (attached_collision_object.object.id == object_id) {
           // Object found, return it
-          RCLCPP_INFO(this->get_logger(),
+          RCLCPP_INFO
+            (this->get_logger
+              (),
             "Object '%s' data retrieved from attached objects in planning scene.",
-            object_id.c_str());
+            object_id.c_str
+              ());
           return attached_collision_object.object;
         }
       }
-      RCLCPP_WARN(this->get_logger(), "Object '%s' not found in planning scene.",
-        object_id.c_str());
+      RCLCPP_WARN
+        (this->get_logger
+          (),
+        "Object '%s' not found in planning scene.",
+        object_id.c_str
+          ());
     }
     else {
-      RCLCPP_ERROR(this->get_logger(), "Null response received from /get_planning_scene.");
+      RCLCPP_ERROR
+        (this->get_logger
+          (),
+        "Null response received from /get_planning_scene.");
     }
   }
   else {
-    RCLCPP_ERROR(this->get_logger(), "Timeout while waiting for /get_planning_scene response.");
+    RCLCPP_ERROR
+      (this->get_logger
+        (),
+      "Timeout while waiting for /get_planning_scene response.");
   }
 
   // Return empty if not found
@@ -1169,35 +1668,53 @@ std::optional<std::string> ObjectManagerNode::getAttachedObjectLinkById(
   const std::string & object_id)
 {
   // Request planning scene world data
-  auto request = std::make_shared<moveit_msgs::srv::GetPlanningScene::Request>();
+  auto request = std::make_shared<moveit_msgs::srv::GetPlanningScene::Request>
+                   ();
   request->components.components =
     moveit_msgs::msg::PlanningSceneComponents::ROBOT_STATE_ATTACHED_OBJECTS;
 
-  auto future_response = get_planning_scene_client_->async_send_request(request);
+  auto future_response = get_planning_scene_client_->async_send_request
+                           (request);
 
   // Wait for the service response
-  if (future_response.wait_for(std::chrono::seconds(5)) == std::future_status::ready) {
-    auto response = future_response.get();
+  if (future_response.wait_for
+        (std::chrono::seconds
+          (5)) == std::future_status::ready) {
+    auto response = future_response.get
+                      ();
     if (response) {
       for (const auto & attached_collision_object :
            response->scene.robot_state.attached_collision_objects) {
         if (attached_collision_object.object.id == object_id) {
           // Object found, return it
-          RCLCPP_INFO(this->get_logger(),
+          RCLCPP_INFO
+            (this->get_logger
+              (),
             "Object '%s' link retrieved from attached objects in planning scene.",
-            object_id.c_str());
+            object_id.c_str
+              ());
           return attached_collision_object.link_name;
         }
       }
-      RCLCPP_WARN(this->get_logger(), "Link '%s' not found in planning scene.",
-        object_id.c_str());
+      RCLCPP_WARN
+        (this->get_logger
+          (),
+        "Link '%s' not found in planning scene.",
+        object_id.c_str
+          ());
     }
     else {
-      RCLCPP_ERROR(this->get_logger(), "Null response received from /get_planning_scene.");
+      RCLCPP_ERROR
+        (this->get_logger
+          (),
+        "Null response received from /get_planning_scene.");
     }
   }
   else {
-    RCLCPP_ERROR(this->get_logger(), "Timeout while waiting for /get_planning_scene response.");
+    RCLCPP_ERROR
+      (this->get_logger
+        (),
+      "Timeout while waiting for /get_planning_scene response.");
   }
 
   // Return empty if not found
@@ -1219,9 +1736,15 @@ ObjectManagerNode::createCollisionObject(
 
   if (shape == "mesh") {
     // Attempt to load the mesh from the specified resource
-    shapes::Mesh * mesh = shapes::createMeshFromResource(mesh_file);
+    shapes::Mesh * mesh = shapes::createMeshFromResource
+                            (mesh_file);
     if (!mesh) {
-      RCLCPP_ERROR(this->get_logger(), "Failed to load mesh from file: %s", mesh_file.c_str());
+      RCLCPP_ERROR
+        (this->get_logger
+          (),
+        "Failed to load mesh from file: %s",
+        mesh_file.c_str
+          ());
       return collision_object;                   // Exit early if mesh loading fails
     }
 
@@ -1237,21 +1760,35 @@ ObjectManagerNode::createCollisionObject(
       shapes::ShapeMsg shape_msg;
 
       // Convert the shapes::Mesh into a ShapeMsg (a Boost variant)
-      shapes::constructMsgFromShape(mesh, shape_msg);
+      shapes::constructMsgFromShape
+        (mesh,
+        shape_msg);
 
       // Extract the shape_msgs::msg::Mesh from the ShapeMsg
-      if (auto mesh_ptr = boost::get<shape_msgs::msg::Mesh>(&shape_msg)) {
+      if (auto mesh_ptr = boost::get<shape_msgs::msg::Mesh>
+                            (&shape_msg)) {
         // Successfully extracted the mesh
         mesh_msg = *mesh_ptr;
-        collision_object.meshes.push_back(mesh_msg);
-        collision_object.mesh_poses.push_back(pose);
+        collision_object.meshes.push_back
+          (mesh_msg);
+        collision_object.mesh_poses.push_back
+          (pose);
       }
       else {
-        RCLCPP_ERROR(this->get_logger(), "Failed to extract mesh from ShapeMsg for object '%s'.",
-          id.c_str());
+        RCLCPP_ERROR
+          (this->get_logger
+            (),
+          "Failed to extract mesh from ShapeMsg for object '%s'.",
+          id.c_str
+            ());
       }
     } catch (const std::exception & e) {
-      RCLCPP_ERROR(this->get_logger(), "Exception while processing mesh: %s", e.what());
+      RCLCPP_ERROR
+        (this->get_logger
+          (),
+        "Exception while processing mesh: %s",
+        e.what
+          ());
     }
 
     // Clean up dynamically allocated mesh to prevent memory leaks
@@ -1261,14 +1798,19 @@ ObjectManagerNode::createCollisionObject(
     shape_msgs::msg::SolidPrimitive primitive;
     if (shape == "box") {
       primitive.type = primitive.BOX;
-      primitive.dimensions.resize(3);
-      if (dimensions.size() >= 3) {
+      primitive.dimensions.resize
+        (3);
+      if (dimensions.size
+            () >= 3) {
         primitive.dimensions[0] = dimensions[0];
         primitive.dimensions[1] = dimensions[1];
         primitive.dimensions[2] = dimensions[2];
       }
       else {
-        RCLCPP_WARN(this->get_logger(), "Insufficient dimensions for box. Using default size.");
+        RCLCPP_WARN
+          (this->get_logger
+            (),
+          "Insufficient dimensions for box. Using default size.");
         primitive.dimensions[0] = 0.1;
         primitive.dimensions[1] = 0.1;
         primitive.dimensions[2] = 0.1;
@@ -1276,13 +1818,17 @@ ObjectManagerNode::createCollisionObject(
     }
     else if (shape == "cylinder") {
       primitive.type = primitive.CYLINDER;
-      primitive.dimensions.resize(2);
-      if (dimensions.size() >= 2) {
+      primitive.dimensions.resize
+        (2);
+      if (dimensions.size
+            () >= 2) {
         primitive.dimensions[0] = dimensions[0];                         // height
         primitive.dimensions[1] = dimensions[1];                         // radius
       }
       else {
-        RCLCPP_WARN(this->get_logger(),
+        RCLCPP_WARN
+          (this->get_logger
+            (),
           "Insufficient dimensions for cylinder. Using default size.");
         primitive.dimensions[0] = 0.1;
         primitive.dimensions[1] = 0.05;
@@ -1290,28 +1836,39 @@ ObjectManagerNode::createCollisionObject(
     }
     else if (shape == "sphere") {
       primitive.type = primitive.SPHERE;
-      primitive.dimensions.resize(1);
-      if (dimensions.size() >= 1) {
+      primitive.dimensions.resize
+        (1);
+      if (dimensions.size
+            () >= 1) {
         primitive.dimensions[0] = dimensions[0];                         // radius
       }
       else {
-        RCLCPP_WARN(this->get_logger(),
+        RCLCPP_WARN
+          (this->get_logger
+            (),
           "Insufficient dimensions for sphere. Using default size.");
         primitive.dimensions[0] = 0.05;
       }
     }
     else {
-      RCLCPP_WARN(this->get_logger(), "Unsupported shape type: %s. Defaulting to box.",
-        shape.c_str());
+      RCLCPP_WARN
+        (this->get_logger
+          (),
+        "Unsupported shape type: %s. Defaulting to box.",
+        shape.c_str
+          ());
       primitive.type = primitive.BOX;
-      primitive.dimensions.resize(3);
+      primitive.dimensions.resize
+        (3);
       primitive.dimensions[0] = 0.1;
       primitive.dimensions[1] = 0.1;
       primitive.dimensions[2] = 0.1;
     }
 
-    collision_object.primitives.push_back(primitive);
-    collision_object.primitive_poses.push_back(pose);
+    collision_object.primitives.push_back
+      (primitive);
+    collision_object.primitive_poses.push_back
+      (pose);
     collision_object.operation = moveit_msgs::msg::CollisionObject::ADD;
   }
 
@@ -1325,22 +1882,35 @@ bool ObjectManagerNode::validateShapeAndDimensions(
   const std::string & shape, const std::vector<double> & dimensions,
   const std::optional<std::string> & mesh_file) const
 {
-  if (shape == "box" && dimensions.size() == 3) {
+  if (shape == "box" && dimensions.size
+        () == 3) {
     return true;
   }
-  if (shape == "cylinder" && dimensions.size() == 2) {
+  if (shape == "cylinder" && dimensions.size
+        () == 2) {
     return true;
   }
-  if (shape == "sphere" && dimensions.size() == 1) {
+  if (shape == "sphere" && dimensions.size
+        () == 1) {
     return true;
   }
-  if (shape == "mesh" && mesh_file.has_value()) {
+  if (shape == "mesh" && mesh_file.has_value
+        ()) {
     return true;
   }
 
-  RCLCPP_WARN(this->get_logger(), "Invalid shape '%s' or missing required dimensions/mesh file.",
-    shape.c_str());
-  RCLCPP_WARN(this->get_logger(), "Dimensions size '%li'.", dimensions.size());
+  RCLCPP_WARN
+    (this->get_logger
+      (),
+    "Invalid shape '%s' or missing required dimensions/mesh file.",
+    shape.c_str
+      ());
+  RCLCPP_WARN
+    (this->get_logger
+      (),
+    "Dimensions size '%li'.",
+    dimensions.size
+      ());
   return false;
 }
 
@@ -1351,17 +1921,23 @@ bool ObjectManagerNode::validateShapeAndDimensions(
 // ----------------------------------------------------------------------------
 int main(int argc, char ** argv)
 {
-  rclcpp::init(argc, argv);
+  rclcpp::init
+    (argc,
+    argv);
 
-  auto node = std::make_shared<manymove_object_manager::ObjectManagerNode>();
+  auto node = std::make_shared<manymove_object_manager::ObjectManagerNode>
+                ();
 
   // Use a MultiThreadedExecutor with multiple threads
   // rclcpp::executors::MultiThreadedExecutor executor(rclcpp::ExecutorOptions(), 4); // 4 threads
   rclcpp::executors::MultiThreadedExecutor executor;
-  executor.add_node(node);
+  executor.add_node
+    (node);
 
-  executor.spin();
+  executor.spin
+    ();
 
-  rclcpp::shutdown();
+  rclcpp::shutdown
+    ();
   return 0;
 }

@@ -63,99 +63,148 @@ ObjectSnippets createObjectSnippets(
 
   // Fail if the object was already defined
   std::string tmp;
-  if (blackboard->get(id_key, tmp)) {
-    throw BT::RuntimeError("Object '" + name + "' already exists");
+  if (blackboard->get
+        (id_key,
+        tmp)) {
+    throw BT::RuntimeError
+            ("Object '" + name + "' already exists");
   }
 
   // Input validation
   if (shape == "box" || shape == "cylinder" || shape == "sphere") {
-    if (dimensions.empty()) {
-      throw BT::RuntimeError(
+    if (dimensions.empty
+          ()) {
+      throw BT::RuntimeError
+            (
         "createObjectSnippets: missing dimensions for primitive '" + shape + "'");
     }
 
-    bool size_ok = (shape == "box" && dimensions.size() == 3) ||
-                   (shape == "cylinder" && dimensions.size() == 2) ||
-                   (shape == "sphere" && dimensions.size() == 1);
+    bool size_ok = (shape == "box" && dimensions.size
+                      () == 3) ||
+                   (shape == "cylinder" && dimensions.size
+                      () == 2) ||
+                   (shape == "sphere" && dimensions.size
+                      () == 1);
 
     if (!size_ok) {
-      throw BT::RuntimeError("createObjectSnippets: wrong number of dimensions for '" + shape +
-        "'");
+      throw BT::RuntimeError
+              ("createObjectSnippets: wrong number of dimensions for '" + shape +
+              "'");
     }
 
     for (double d : dimensions) {
       if (d <= 0.0) {
-        throw BT::RuntimeError("createObjectSnippets: dimension values must be positive");
+        throw BT::RuntimeError
+                ("createObjectSnippets: dimension values must be positive");
       }
     }
   }
   else if (shape == "mesh") {
-    if (mesh_file.empty()) {
-      throw BT::RuntimeError("createObjectSnippets: mesh_file must be provided for mesh shape");
+    if (mesh_file.empty
+          ()) {
+      throw BT::RuntimeError
+              ("createObjectSnippets: mesh_file must be provided for mesh shape");
     }
   }
   else {
-    throw BT::RuntimeError("createObjectSnippets: unsupported shape '" + shape + "'");
+    throw BT::RuntimeError
+            ("createObjectSnippets: unsupported shape '" + shape + "'");
   }
 
-  if (scale.size() != 3) {
-    throw BT::RuntimeError("createObjectSnippets: scale vector must contain 3 elements");
+  if (scale.size
+        () != 3) {
+    throw BT::RuntimeError
+            ("createObjectSnippets: scale vector must contain 3 elements");
   }
   for (double s : scale) {
     if (s < 0.0) {
-      throw BT::RuntimeError("createObjectSnippets: scale values must be non-negative");
+      throw BT::RuntimeError
+              ("createObjectSnippets: scale values must be non-negative");
     }
   }
 
-  blackboard->set(id_key, name);
-  blackboard->set(shape_key, shape);
+  blackboard->set
+    (id_key,
+    name);
+  blackboard->set
+    (shape_key,
+    shape);
 
-  blackboard->set(pose_key, pose);
-  keys.push_back(
+  blackboard->set
+    (pose_key,
+    pose);
+  keys.push_back
+  (
     {
       pose_key, "pose"
     });
 
-  if (!dimensions.empty()) {
-    blackboard->set(dim_key, dimensions);
+  if (!dimensions.empty
+        ()) {
+    blackboard->set
+      (dim_key,
+      dimensions);
   }
 
-  if (!mesh_file.empty()) {
-    blackboard->set(mesh_key, mesh_file);
+  if (!mesh_file.empty
+        ()) {
+    blackboard->set
+      (mesh_key,
+      mesh_file);
   }
 
-  blackboard->set(scale_key, scale);
-  keys.push_back(
+  blackboard->set
+    (scale_key,
+    scale);
+  keys.push_back
+  (
     {
       scale_key, "double_array"
     });
 
-  snip.check_xml = buildObjectActionXML("check_" + name, createCheckObjectExists(id_key));
-  snip.add_xml = buildObjectActionXML("add_" + name,
-    createAddObject(id_key,
-      shape_key,
-      dimensions.empty() ? "" : dim_key,
-      pose_key,
-      scale_key,
-      mesh_file.empty() ? "" : mesh_key));
-  snip.init_xml = fallbackWrapperXML("init_" + name + "_obj",
+  snip.check_xml = buildObjectActionXML
+                     ("check_" + name,
+                     createCheckObjectExists
+                       (id_key));
+  snip.add_xml = buildObjectActionXML
+                   ("add_" + name,
+                   createAddObject
+                     (id_key,
+                     shape_key,
+                     dimensions.empty
+                       () ? "" : dim_key,
+                     pose_key,
+                     scale_key,
+                     mesh_file.empty
+                       () ? "" : mesh_key));
+  snip.init_xml = fallbackWrapperXML
+                    ("init_" + name + "_obj",
     {
       snip.check_xml, snip.add_xml
     });
-  snip.remove_xml = fallbackWrapperXML("remove_" + name + "_obj_always_success",
+  snip.remove_xml = fallbackWrapperXML
+                      ("remove_" + name + "_obj_always_success",
     {
-      buildObjectActionXML("remove_" + name,
-        createRemoveObject(id_key)),
+      buildObjectActionXML
+        ("remove_" + name,
+        createRemoveObject
+          (id_key)),
       "<AlwaysSuccess />"
     });
 
-  snip.attach_xml = buildObjectActionXML("attach_" + name,
-    createAttachObject(id_key, link_name_key,
-      touch_links_key));
-  snip.detach_xml = fallbackWrapperXML("detach_" + name + "_always_success",
+  snip.attach_xml = buildObjectActionXML
+                      ("attach_" + name,
+                      createAttachObject
+                        (id_key,
+                        link_name_key,
+                        touch_links_key));
+  snip.detach_xml = fallbackWrapperXML
+                      ("detach_" + name + "_always_success",
     {
-      buildObjectActionXML("detach_" + name,
-        createDetachObject(id_key,
+      buildObjectActionXML
+        ("detach_" + name,
+        createDetachObject
+          (id_key,
           link_name_key)),
       "<AlwaysSuccess />"
     });
@@ -182,32 +231,52 @@ std::string buildMoveXML(
 
   // Collect the move IDs for later reset
   std::vector<int> move_ids;
-  move_ids.reserve(moves.size());
+  move_ids.reserve
+    (moves.size
+      ());
 
   // Build a Sequence node that will run each move in order
   std::ostringstream execution_seq;
 
   for (const auto & move : moves) {
     int this_move_id = g_global_move_id;             // unique ID for this move
-    move_ids.push_back(this_move_id);
+    move_ids.push_back
+      (this_move_id);
 
     // Check that the move's robot prefix is compatible
-    if (!move.robot_prefix.empty() && (move.robot_prefix != robot_prefix)) {
-      RCLCPP_ERROR(rclcpp::get_logger(
-        "bt_client_node"),
+    if (!move.robot_prefix.empty
+          () && (move.robot_prefix != robot_prefix)) {
+      RCLCPP_ERROR
+        (rclcpp::get_logger
+        (
+          "bt_client_node"),
         "buildMoveXML: Move has prefix=%s, but user gave robot_prefix=%s: INVALID MOVE.",
-        move.robot_prefix.c_str(),
-        robot_prefix.c_str());
+        move.robot_prefix.c_str
+          (),
+        robot_prefix.c_str
+          ());
       return "<INVALID TREE: MISMATCHING ROBOT PREFIX>";
     }
 
     // Populate the blackboard with the Move struct under key "move_<id>"
-    std::string key = "move_" + std::to_string(this_move_id);
-    blackboard->set(key, std::make_shared<Move>(move));
-    blackboard->set("trajectory_" + std::to_string(this_move_id),
-      moveit_msgs::msg::RobotTrajectory());
+    std::string key = "move_" + std::to_string
+                        (this_move_id);
+    blackboard->set
+      (key,
+      std::make_shared<Move>
+        (move));
+    blackboard->set
+      ("trajectory_" + std::to_string
+        (this_move_id),
+      moveit_msgs::msg::RobotTrajectory
+        ());
 
-    RCLCPP_INFO(rclcpp::get_logger("bt_client_node"), "BB set: %s", key.c_str());
+    RCLCPP_INFO
+      (rclcpp::get_logger
+        ("bt_client_node"),
+      "BB set: %s",
+      key.c_str
+        ());
 
     // Build a RetryPauseAbort node that wraps a single MoveManipulatorAction.
     // This node is expected to either execute an existing trajectory or trigger a re–plan.
@@ -241,9 +310,11 @@ std::string buildMoveXML(
   if (reset_trajs) {
     execution_seq << "    <ResetTrajectories name=\"ResetTrajectories_" << node_prefix << "_" <<
       blockStartID << "\" move_ids=\"";
-    for (size_t i = 0; i < move_ids.size(); i++) {
+    for (size_t i = 0; i < move_ids.size
+           (); i++) {
       execution_seq << move_ids[i];
-      if (i < move_ids.size() - 1) {
+      if (i < move_ids.size
+            () - 1) {
         execution_seq << ",";
       }
     }
@@ -253,9 +324,12 @@ std::string buildMoveXML(
   std::ostringstream final_sequence_name;
   final_sequence_name << "ExecutionSequence_" << node_prefix << "_" << blockStartID << "-" <<
     blockEndID;
-  std::string final_sequence_xml = sequenceWrapperXML(final_sequence_name.str(),
+  std::string final_sequence_xml = sequenceWrapperXML
+                                     (final_sequence_name.str
+                                       (),
     {
-      execution_seq.str()
+      execution_seq.str
+        ()
     });
 
   return final_sequence_xml;
@@ -264,11 +338,13 @@ std::string buildMoveXML(
 std::string buildObjectActionXML(const std::string & node_prefix, const ObjectAction & action)
 {
   // Generate a unique node name using the node_prefix and object_id
-  std::string node_name = node_prefix + "_" + objectActionTypeToString(action.type);
+  std::string node_name = node_prefix + "_" + objectActionTypeToString
+                            (action.type);
 
   // Start constructing the XML node
   std::ostringstream xml;
-  xml << "<" << objectActionTypeToString(action.type) << " ";
+  xml << "<" << objectActionTypeToString
+      (action.type) << " ";
   xml << "name=\"" << node_name << "\" ";
   xml << "object_id=\"{" << action.object_id_key_st << "}\" ";
 
@@ -299,7 +375,8 @@ std::string buildObjectActionXML(const std::string & node_prefix, const ObjectAc
     xml << "link_name=\"{" << action.link_name_key_st << "}\" ";
     xml << "attach=\"" << "true" << "\" ";
 
-    if (!action.touch_links_key_st_a.empty()) {
+    if (!action.touch_links_key_st_a.empty
+          ()) {
       xml << "touch_links=\"{" << action.touch_links_key_st_a << "}\" ";
     }
     break;
@@ -311,7 +388,8 @@ std::string buildObjectActionXML(const std::string & node_prefix, const ObjectAc
     xml << "attach=\"" << "false" << "\" ";
 
     // If touch_links is not empty, serialize it as a comma-separated list.
-    if (!action.touch_links_key_st_a.empty()) {
+    if (!action.touch_links_key_st_a.empty
+          ()) {
       xml << "touch_links=\"{" << action.touch_links_key_st_a << "}\" ";
     }
     break;
@@ -331,13 +409,15 @@ std::string buildObjectActionXML(const std::string & node_prefix, const ObjectAc
     break;
   }
   default:
-    throw std::invalid_argument("Unsupported ObjectActionType in buildObjectActionXML");
+    throw std::invalid_argument
+            ("Unsupported ObjectActionType in buildObjectActionXML");
   }
 
   // Close the XML node
   xml << "/>";
 
-  return xml.str();
+  return xml.str
+           ();
 }
 
 std::string buildFoundationPoseSequenceXML(
@@ -368,8 +448,10 @@ std::string buildFoundationPoseSequenceXML(
       << " timeout=\"" << timeout << "\""
       << " object_pose_key=\"" << object_pose_key << "\""
       << " header_key=\"" << header_key << "\""
-      << " pick_transform=\"" << BT::convertToString(pick_transform) << "\""
-      << " approach_transform=\"" << BT::convertToString(approach_transform) << "\""
+      << " pick_transform=\"" << BT::convertToString
+      (pick_transform) << "\""
+      << " approach_transform=\"" << BT::convertToString
+      (approach_transform) << "\""
       << " z_threshold_activation=\"" << (z_threshold_activation ? "true" : "false") << "\""
       << " z_threshold=\"" << z_threshold << "\""
       << " normalize_pose=\"" << (normalize_pose ? "true" : "false") << "\""
@@ -377,15 +459,22 @@ std::string buildFoundationPoseSequenceXML(
   xml << " />";
 
   if (bounds_check) {
-    if (bounds.size() != 6) {
-      throw BT::RuntimeError(
+    if (bounds.size
+          () != 6) {
+      throw BT::RuntimeError
+            (
         "buildFoundationPoseSequenceXML: 'bounds' must have 6 elements [min_x,min_y,min_z,max_x,max_y,max_z]");
     }
-    xml << "\n" << buildCheckPoseBoundsXML("FoundationPoseBounds", pick_pose_key, bounds, true);
+    xml << "\n" << buildCheckPoseBoundsXML
+        ("FoundationPoseBounds",
+      pick_pose_key,
+      bounds,
+      true);
   }
 
   xml << "</Sequence>";
-  return xml.str();
+  return xml.str
+           ();
 }
 
 std::string buildSetOutputXML(
@@ -410,7 +499,8 @@ std::string buildSetOutputXML(
   xml << " success=\"{" << robot_prefix << io_type << "_" << ionum << "_success" << "}\"";
 
   xml << "/>";
-  return xml.str();
+  return xml.str
+           ();
 }
 
 std::string buildGetInputXML(
@@ -433,7 +523,8 @@ std::string buildGetInputXML(
   xml << " value=\"{" << robot_prefix << io_type << "_" << ionum << "}\"";
 
   xml << "/>";
-  return xml.str();
+  return xml.str
+           ();
 }
 
 std::string buildCheckInputXML(
@@ -451,12 +542,21 @@ std::string buildCheckInputXML(
   bool value_to_check = (value != 0);
 
   // Build GetInputAction
-  std::string check_input_xml = buildGetInputXML(robot_prefix, node_name, io_type, ionum);
+  std::string check_input_xml = buildGetInputXML
+                                  (robot_prefix,
+                                  node_name,
+                                  io_type,
+                                  ionum);
 
-  std::string key_to_check = robot_prefix + io_type + "_" + std::to_string(ionum);
+  std::string key_to_check = robot_prefix + io_type + "_" + std::to_string
+                               (ionum);
 
-  std::string check_key_bool_xml = buildCheckKeyBool(robot_prefix, node_name, key_to_check, value,
-    !value_to_check);
+  std::string check_key_bool_xml = buildCheckKeyBool
+                                     (robot_prefix,
+                                     node_name,
+                                     key_to_check,
+                                     value,
+                                     !value_to_check);
 
   // // Build the CheckKeyBoolValue node
   // std::ostringstream inner_xml;
@@ -473,7 +573,8 @@ std::string buildCheckInputXML(
 
   // return sequence_xml.str();
 
-  return sequenceWrapperXML(node_name + "_Sequence",
+  return sequenceWrapperXML
+           (node_name + "_Sequence",
     {
       check_input_xml, check_key_bool_xml
     });
@@ -503,7 +604,8 @@ std::string buildWaitForInput(
       << " timeout=\"" << timeout_sec << "\""
       << " poll_rate=\"" << poll_sec << "\""
       << "/>";
-  return xml.str();
+  return xml.str
+           ();
 }
 
 std::string buildWaitForObject(
@@ -529,7 +631,8 @@ std::string buildWaitForObject(
       << " prefix=\"" << robot_prefix << "\""
       << "/>";
 
-  return xml.str();
+  return xml.str
+           ();
 }
 
 std::string buildCheckKeyBool(
@@ -550,7 +653,8 @@ std::string buildCheckKeyBool(
       << " robot_prefix=\"" << robot_prefix << "\""
       << " hmi_message_logic=\"" << hmi_message_logic << "\" />";
 
-  return xml.str();
+  return xml.str
+           ();
 }
 
 std::string buildWaitForKeyBool(
@@ -575,7 +679,8 @@ std::string buildWaitForKeyBool(
       << " poll_rate=\"" << poll_sec << "\""
       << " prefix=\"" << robot_prefix << "\""
       << "/>";
-  return xml.str();
+  return xml.str
+           ();
 }
 
 std::string buildSetKeyBool(
@@ -595,7 +700,8 @@ std::string buildSetKeyBool(
       << "key=\"" << key << "\" "
       << "value=\"" << (value ? "true" : "false") << "\"/>";
 
-  return xml.str();
+  return xml.str
+           ();
 }
 
 std::string buildCheckRobotStateXML(
@@ -616,24 +722,30 @@ std::string buildCheckRobotStateXML(
       << "robot_prefix=\"" << robot_prefix << "\" ";
 
   // Optional outputs
-  if (!ready_key.empty()) {
+  if (!ready_key.empty
+        ()) {
     xml << " ready=\"{" << ready_key << "}\"";
   }
-  if (!err_key.empty()) {
+  if (!err_key.empty
+        ()) {
     xml << " err=\"{" << err_key << "}\"";
   }
-  if (!mode_key.empty()) {
+  if (!mode_key.empty
+        ()) {
     xml << " mode=\"{" << mode_key << "}\"";
   }
-  if (!state_key.empty()) {
+  if (!state_key.empty
+        ()) {
     xml << " state=\"{" << state_key << "}\"";
   }
-  if (!message_key.empty()) {
+  if (!message_key.empty
+        ()) {
     xml << " message=\"{" << message_key << "}\"";
   }
 
   xml << "/>";
-  return xml.str();
+  return xml.str
+           ();
 }
 
 std::string buildResetRobotStateXML(
@@ -655,14 +767,20 @@ std::string buildResetRobotStateXML(
 
   xml << "/>";
 
-  return sequenceWrapperXML(node_name + "_WaitTimeout",
+  return sequenceWrapperXML
+           (node_name + "_WaitTimeout",
     {
-      xml.str(),
-      buildSetKeyBool(robot_prefix, node_prefix,
-        robot_prefix + "stop_execution", true)
+      xml.str
+        (),
+      buildSetKeyBool
+        (robot_prefix,
+        node_prefix,
+        robot_prefix + "stop_execution",
+        true)
     });
 
-  return xml.str();
+  return xml.str
+           ();
 }
 
 std::string buildGetLinkPoseXML(
@@ -680,7 +798,8 @@ std::string buildGetLinkPoseXML(
       << "pre_transform_xyz_rpy=\"{" << pre_key << "}\" "
       << "post_transform_xyz_rpy=\"{" << post_key << "}\" "
       << "pose_key=\"" << pose_key << "\"/>";
-  return xml.str();
+  return xml.str
+           ();
 }
 
 std::string buildCopyPoseXML(
@@ -698,7 +817,8 @@ std::string buildCopyPoseXML(
       << "source_key=\"" << source_key << "\" "
       << "target_key=\"" << target_key << "\" "
       << "robot_prefix=\"" << robot_prefix << "\"/>";
-  return xml.str();
+  return xml.str
+           ();
 }
 
 std::string buildCheckPoseDistanceXML(
@@ -712,7 +832,8 @@ std::string buildCheckPoseDistanceXML(
       << "reference_pose_key=\"" << reference_pose_key << "\" "
       << "target_pose_key=\"" << target_pose_key << "\" "
       << "tolerance=\"" << tolerance << "\"/>";
-  return xml.str();
+  return xml.str
+           ();
 }
 
 std::string buildCheckPoseBoundsXML(
@@ -724,9 +845,11 @@ std::string buildCheckPoseBoundsXML(
   std::ostringstream xml;
   xml << "<CheckPoseBounds name=\"" << node_prefix << "_CheckPoseBounds\" "
       << "pose_key=\"" << pose_key << "\" "
-      << "bounds=\"" << BT::convertToString(bounds) << "\" "
+      << "bounds=\"" << BT::convertToString
+      (bounds) << "\" "
       << "inclusive=\"" << (inclusive ? "true" : "false") << "\"/>";
-  return xml.str();
+  return xml.str
+           ();
 }
 
 // ----------------------------------------------------------------------------
@@ -743,7 +866,8 @@ std::string sequenceWrapperXML(
     xml << b << "\n";
   }
   xml << "  </Sequence>\n";
-  return xml.str();
+  return xml.str
+           ();
 }
 
 std::string parallelWrapperXML(
@@ -760,7 +884,8 @@ std::string parallelWrapperXML(
     xml << b << "\n";
   }
   xml << "  </Parallel>\n";
-  return xml.str();
+  return xml.str
+           ();
 }
 
 std::string reactiveWrapperXML(
@@ -773,7 +898,8 @@ std::string reactiveWrapperXML(
     xml << b << "\n";
   }
   xml << "  </ReactiveSequence>\n";
-  return xml.str();
+  return xml.str
+           ();
 }
 
 std::string repeatSequenceWrapperXML(
@@ -789,7 +915,8 @@ std::string repeatSequenceWrapperXML(
   }
   xml << "    </Sequence>\n";
   xml << "  </Repeat>\n";
-  return xml.str();
+  return xml.str
+           ();
 }
 
 std::string repeatFallbackWrapperXML(
@@ -805,7 +932,8 @@ std::string repeatFallbackWrapperXML(
   }
   xml << "    </Fallback>\n";
   xml << "  </Repeat>\n";
-  return xml.str();
+  return xml.str
+           ();
 }
 
 std::string retrySequenceWrapperXML(
@@ -822,7 +950,8 @@ std::string retrySequenceWrapperXML(
   }
   xml << "    </Sequence>\n";
   xml << "  </RetryNode>\n";
-  return xml.str();
+  return xml.str
+           ();
 }
 
 std::string fallbackWrapperXML(
@@ -835,7 +964,8 @@ std::string fallbackWrapperXML(
     xml << b << "\n";
   }
   xml << "  </Fallback>\n";
-  return xml.str();
+  return xml.str
+           ();
 }
 
 std::string mainTreeWrapperXML(
@@ -849,7 +979,8 @@ std::string mainTreeWrapperXML(
   xml << content << "\n";
   xml << "  </BehaviorTree>\n";
   xml << "</root>\n";
-  return xml.str();
+  return xml.str
+           ();
 }
 
 // ----------------------------------------------------------------------------
@@ -879,7 +1010,8 @@ geometry_msgs::msg::Pose createPoseRPY(
   const double & pitch,
   const double & yaw)
 {
-  auto pose = geometry_msgs::msg::Pose();
+  auto pose = geometry_msgs::msg::Pose
+                ();
 
   // Set position
   pose.position.x = x;
@@ -888,13 +1020,20 @@ geometry_msgs::msg::Pose createPoseRPY(
 
   // Convert roll, pitch, yaw to a quaternion
   tf2::Quaternion quaternion;
-  quaternion.setRPY(roll, pitch, yaw);
+  quaternion.setRPY
+    (roll,
+    pitch,
+    yaw);
 
   // Set orientation
-  pose.orientation.x = quaternion.x();
-  pose.orientation.y = quaternion.y();
-  pose.orientation.z = quaternion.z();
-  pose.orientation.w = quaternion.w();
+  pose.orientation.x = quaternion.x
+                         ();
+  pose.orientation.y = quaternion.y
+                         ();
+  pose.orientation.z = quaternion.z
+                         ();
+  pose.orientation.w = quaternion.w
+                         ();
 
   return pose;
 }
@@ -914,7 +1053,8 @@ std::string objectActionTypeToString(ObjectActionType type)
   case ObjectActionType::GET_POSE:
     return "GetObjectPoseAction";
   default:
-    throw std::invalid_argument("Unsupported ObjectActionType");
+    throw std::invalid_argument
+            ("Unsupported ObjectActionType");
   }
 }
 
@@ -929,7 +1069,8 @@ std::string serializePose(const geometry_msgs::msg::Pose & pose)
       << ", z: " << pose.orientation.z
       << ", w: " << pose.orientation.w
       << "}";
-  return oss.str();
+  return oss.str
+           ();
 }
 
 void setHmiMessage(
@@ -938,8 +1079,12 @@ void setHmiMessage(
   const std::string message,
   const std::string color)
 {
-  blackboard->set(prefix + "message", message);
-  blackboard->set(prefix + "message_color", color);
+  blackboard->set
+    (prefix + "message",
+    message);
+  blackboard->set
+    (prefix + "message_color",
+    color);
 }
 
 } // namespace manymove_cpp_trees

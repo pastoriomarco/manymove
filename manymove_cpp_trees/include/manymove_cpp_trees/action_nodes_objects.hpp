@@ -84,12 +84,25 @@ class AddCollisionObjectAction : public BT::StatefulActionNode
   {
     return
       {
-        BT::InputPort<std::string>("object_id", "Unique identifier for the object"),
-        BT::InputPort<std::string>("shape", "Shape type (e.g., box, mesh)"),
-        BT::InputPort<std::vector<double> >("dimensions", "Dimensions for primitive shapes"),
-        BT::InputPort<geometry_msgs::msg::Pose>("pose", "Pose of the object"),
-        BT::InputPort<std::string>("mesh_file", "", "Mesh file path (for mesh objects)"),
-        BT::InputPort<std::vector<double> >("scale_mesh", "Scale factor along X-axis (for mesh)")
+        BT::InputPort<std::string>
+          ("object_id",
+          "Unique identifier for the object"),
+        BT::InputPort<std::string>
+          ("shape",
+          "Shape type (e.g., box, mesh)"),
+        BT::InputPort<std::vector<double> >
+          ("dimensions",
+          "Dimensions for primitive shapes"),
+        BT::InputPort<geometry_msgs::msg::Pose>
+          ("pose",
+          "Pose of the object"),
+        BT::InputPort<std::string>
+          ("mesh_file",
+          "",
+          "Mesh file path (for mesh objects)"),
+        BT::InputPort<std::vector<double> >
+          ("scale_mesh",
+          "Scale factor along X-axis (for mesh)")
       };
   }
 
@@ -154,7 +167,9 @@ class RemoveCollisionObjectAction : public BT::StatefulActionNode
   {
     return
       {
-        BT::InputPort<std::string>("object_id", "Unique identifier for the object to remove")
+        BT::InputPort<std::string>
+          ("object_id",
+          "Unique identifier for the object to remove")
       };
   }
 
@@ -219,10 +234,18 @@ class AttachDetachObjectAction : public BT::StatefulActionNode
   {
     return
       {
-        BT::InputPort<std::string>("object_id", "Unique identifier for the object"),
-        BT::InputPort<std::string>("link_name", "Name of the link to attach/detach the object"),
-        BT::InputPort<bool>("attach", true, "True to attach, False to detach"),
-        BT::InputPort<std::vector<std::string> >("touch_links",
+        BT::InputPort<std::string>
+          ("object_id",
+          "Unique identifier for the object"),
+        BT::InputPort<std::string>
+          ("link_name",
+          "Name of the link to attach/detach the object"),
+        BT::InputPort<bool>
+          ("attach",
+          true,
+          "True to attach, False to detach"),
+        BT::InputPort<std::vector<std::string> >
+          ("touch_links",
           std::vector<std::string>
         {
         },
@@ -293,10 +316,17 @@ class CheckObjectExistsAction : public BT::StatefulActionNode
   {
     return
       {
-        BT::InputPort<std::string>("object_id", "Unique identifier for the object"),
-        BT::OutputPort<bool>("exists", "Indicates if the object exists"),
-        BT::OutputPort<bool>("is_attached", "Indicates if the object is attached to a link"),
-        BT::OutputPort<std::string>("link_name",
+        BT::InputPort<std::string>
+          ("object_id",
+          "Unique identifier for the object"),
+        BT::OutputPort<bool>
+          ("exists",
+          "Indicates if the object exists"),
+        BT::OutputPort<bool>
+          ("is_attached",
+          "Indicates if the object is attached to a link"),
+        BT::OutputPort<std::string>
+          ("link_name",
           "Name of the link the object is attached to, if any")
       };
   }
@@ -362,14 +392,24 @@ class GetObjectPoseAction : public BT::StatefulActionNode
   {
     return
       {
-        BT::InputPort<std::string>("object_id", "Identifier of the object"),
-        BT::InputPort<std::vector<double> >("pre_transform_xyz_rpy",
+        BT::InputPort<std::string>
+          ("object_id",
+          "Identifier of the object"),
+        BT::InputPort<std::vector<double> >
+          ("pre_transform_xyz_rpy",
           "First offset and rotation {x, y, z, roll, pitch, yaw}"),
-        BT::InputPort<std::vector<double> >("post_transform_xyz_rpy",
+        BT::InputPort<std::vector<double> >
+          ("post_transform_xyz_rpy",
           "Second offset and orientation {x, y, z, roll, pitch, yaw}"),
-        BT::InputPort<std::string>("pose_key", "Blackboard key to store the retrieved pose"),
-        BT::InputPort<std::string>("link_name", ""),
-        BT::OutputPort<geometry_msgs::msg::Pose>("pose", "Pose after transformations")
+        BT::InputPort<std::string>
+          ("pose_key",
+          "Blackboard key to store the retrieved pose"),
+        BT::InputPort<std::string>
+          ("link_name",
+          ""),
+        BT::OutputPort<geometry_msgs::msg::Pose>
+          ("pose",
+          "Pose after transformations")
       };
   }
 
@@ -437,14 +477,33 @@ class WaitForObjectAction : public BT::StatefulActionNode
   {
     return
       {
-        BT::InputPort<std::string>("object_id", "ID of the object to check"),
-        BT::InputPort<bool>("exists", true, "Wait for object to exist (true) or not exist (false)"),
-        BT::InputPort<double>("timeout", 10.0, "Time (seconds) before giving up (0 => infinite)"),
-        BT::InputPort<double>("poll_rate", 0.25, "Check frequency (seconds)"),
-        BT::InputPort<std::string>("prefix", "Prefix for HMI messages, optional"),
-        BT::OutputPort<bool>("exists", "Final check: was the object found?"),
-        BT::OutputPort<bool>("is_attached", "Is the object attached?"),
-        BT::OutputPort<std::string>("link_name", "Link name if attached")
+        BT::InputPort<std::string>
+          ("object_id",
+          "ID of the object to check"),
+        BT::InputPort<bool>
+          ("exists",
+          true,
+          "Wait for object to exist (true) or not exist (false)"),
+        BT::InputPort<double>
+          ("timeout",
+          10.0,
+          "Time (seconds) before giving up (0 => infinite)"),
+        BT::InputPort<double>
+          ("poll_rate",
+          0.25,
+          "Check frequency (seconds)"),
+        BT::InputPort<std::string>
+          ("prefix",
+          "Prefix for HMI messages, optional"),
+        BT::OutputPort<bool>
+          ("exists",
+          "Final check: was the object found?"),
+        BT::OutputPort<bool>
+          ("is_attached",
+          "Is the object attached?"),
+        BT::OutputPort<std::string>
+          ("link_name",
+          "Link name if attached")
       };
   }
 

@@ -93,17 +93,22 @@ class GetEntityPoseNode : public BT::StatefulActionNode
   {
     return
       {
-        BT::InputPort<std::string>("service_name",
+        BT::InputPort<std::string>
+          ("service_name",
           "/isaacsim/GetEntityState",
           "GetEntityState service name"),
         // name of a BB key that stores the entity path string
-        BT::InputPort<std::string>("entity_path_key",
+        BT::InputPort<std::string>
+          ("entity_path_key",
           "Blackboard key holding the entity path string"),
         // name of a BB key where we should store the retrieved Pose
-        BT::InputPort<std::string>("pose_key",
+        BT::InputPort<std::string>
+          ("pose_key",
           "Blackboard key to write the retrieved Pose"),
         // optional direct output
-        BT::OutputPort<geometry_msgs::msg::Pose>("pose", "Retrieved Pose")
+        BT::OutputPort<geometry_msgs::msg::Pose>
+          ("pose",
+          "Retrieved Pose")
       };
   }
 
@@ -164,14 +169,17 @@ class SetEntityPoseNode : public BT::StatefulActionNode
   {
     return
       {
-        BT::InputPort<std::string>("service_name",
+        BT::InputPort<std::string>
+          ("service_name",
           "/isaacsim/SetEntityState",
           "SetEntityState service name"),
         // name of a BB key that stores the entity path string
-        BT::InputPort<std::string>("entity_path_key",
+        BT::InputPort<std::string>
+          ("entity_path_key",
           "Blackboard key holding the entity path string"),
         // name of a BB key that stores the Pose to set
-        BT::InputPort<std::string>("pose_key",
+        BT::InputPort<std::string>
+          ("pose_key",
           "Blackboard key holding the Pose to set")
       };
   }
@@ -284,44 +292,75 @@ class FoundationPoseAlignmentNode : public BT::StatefulActionNode
   {
     return
       {
-        BT::InputPort<std::string>("input_topic",
+        BT::InputPort<std::string>
+          ("input_topic",
           "pose_estimation/output",
           "Detection3DArray topic from FoundationPose"),
-        BT::InputPort<std::string>("pick_pose_key",
+        BT::InputPort<std::string>
+          ("pick_pose_key",
           "Blackboard key to write the aligned pick pose"),
-        BT::InputPort<std::string>("header_key", "",
+        BT::InputPort<std::string>
+          ("header_key",
+          "",
           "Blackboard key to write the detection header"),
-        BT::InputPort<std::string>("target_id", "",
+        BT::InputPort<std::string>
+          ("target_id",
+          "",
           "Filter detections by class id (empty = any)"),
-        BT::InputPort<double>("minimum_score", 0.0,
+        BT::InputPort<double>
+          ("minimum_score",
+          0.0,
           "Minimum hypothesis score to accept"),
-        BT::InputPort<double>("timeout", 1.0,
+        BT::InputPort<double>
+          ("timeout",
+          1.0,
           "Seconds to wait for a valid detection (<=0: wait forever)"),
-        BT::InputPort<std::vector<double> >("pick_transform",
+        BT::InputPort<std::vector<double> >
+          ("pick_transform",
           "Local transform [x,y,z,r,p,y] applied after alignment to 'pose'"),
-        BT::InputPort<std::vector<double> >("approach_transform",
+        BT::InputPort<std::vector<double> >
+          ("approach_transform",
           "Local transform [x,y,z,r,p,y] applied after alignment to 'approach_pose'"),
-        BT::InputPort<std::string>("approach_pose_key", "",
+        BT::InputPort<std::string>
+          ("approach_pose_key",
+          "",
           "Blackboard key to write computed approach pose"),
-        BT::InputPort<std::string>("object_pose_key", "",
+        BT::InputPort<std::string>
+          ("object_pose_key",
+          "",
           "Blackboard key to write the aligned pose for planning scene"),
-        BT::InputPort<std::string>("planning_frame", "world",
+        BT::InputPort<std::string>
+          ("planning_frame",
+          "world",
           "Frame where the aligned pose should be expressed"),
-        BT::InputPort<double>("transform_timeout", 0.1,
+        BT::InputPort<double>
+          ("transform_timeout",
+          0.1,
           "Timeout (s) when waiting for TF transform to the planning frame"),
-        BT::InputPort<bool>("z_threshold_activation", false,
+        BT::InputPort<bool>
+          ("z_threshold_activation",
+          false,
           "Enable enforcement of a minimum Z value for the pose"),
-        BT::InputPort<double>("z_threshold", 0.0,
+        BT::InputPort<double>
+          ("z_threshold",
+          0.0,
           "Minimum allowed Z value when the threshold is enabled"),
-        BT::InputPort<bool>("normalize_pose", false,
+        BT::InputPort<bool>
+          ("normalize_pose",
+          false,
           "If false, skip orientation normalization; if true, apply alignment"),
-        BT::InputPort<bool>("force_z_vertical", false,
+        BT::InputPort<bool>
+          ("force_z_vertical",
+          false,
           "If true, align the pose so its Z axis is perfectly vertical"),
-        BT::OutputPort<geometry_msgs::msg::Pose>("pose",
+        BT::OutputPort<geometry_msgs::msg::Pose>
+          ("pose",
           "Aligned pose output"),
-        BT::OutputPort<geometry_msgs::msg::Pose>("approach_pose",
+        BT::OutputPort<geometry_msgs::msg::Pose>
+          ("approach_pose",
           "Aligned approach pose output"),
-        BT::OutputPort<std_msgs::msg::Header>("header",
+        BT::OutputPort<std_msgs::msg::Header>
+          ("header",
           "Header associated with the aligned detection")
       };
   }

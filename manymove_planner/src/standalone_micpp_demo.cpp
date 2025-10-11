@@ -57,29 +57,42 @@ namespace rvt = rviz_visual_tools;
 // All source files that use ROS logging should define a file-specific
 // static const rclcpp::Logger named LOGGER, located at the top of the file
 // and inside the namespace with the narrowest scope (if there is one)
-static const rclcpp::Logger LOGGER = rclcpp::get_logger("moveit_cpp_tutorial");
+static const rclcpp::Logger LOGGER = rclcpp::get_logger
+                                       ("moveit_cpp_tutorial");
 
 int main(int argc, char ** argv)
 {
-  rclcpp::init(argc, argv);
+  rclcpp::init
+    (argc,
+    argv);
   rclcpp::NodeOptions node_options;
-  RCLCPP_INFO(LOGGER, "Initialize node");
+  RCLCPP_INFO
+    (LOGGER,
+    "Initialize node");
 
   // This enables loading undeclared parameters
   // best practice would be to declare parameters in the corresponding classes
   // and provide descriptions about expected use
-  node_options.automatically_declare_parameters_from_overrides(true);
-  rclcpp::Node::SharedPtr node = rclcpp::Node::make_shared("run_moveit_cpp", "", node_options);
+  node_options.automatically_declare_parameters_from_overrides
+    (true);
+  rclcpp::Node::SharedPtr node = rclcpp::Node::make_shared
+                                   ("run_moveit_cpp",
+                                   "",
+                                   node_options);
 
   // We spin up a SingleThreadedExecutor for the current state monitor to get information
   // about the robot's state.
   rclcpp::executors::SingleThreadedExecutor executor;
-  executor.add_node(node);
-  std::thread([&executor]()
+  executor.add_node
+    (node);
+  std::thread
+    ([&executor]()
   {
-    executor.spin();
+    executor.spin
+      ();
   })
-  .detach();
+  .detach
+    ();
 
   // BEGIN_TUTORIAL
   //
@@ -94,21 +107,32 @@ int main(int argc, char ** argv)
   };
 
   /* Otherwise robot with zeros joint_states */
-  rclcpp::sleep_for(std::chrono::seconds(1));
+  rclcpp::sleep_for
+    (std::chrono::seconds
+      (1));
 
-  RCLCPP_INFO(LOGGER, "Starting MoveIt Tutorials...");
+  RCLCPP_INFO
+    (LOGGER,
+    "Starting MoveIt Tutorials...");
 
-  auto moveit_cpp_ptr = std::make_shared<moveit_cpp::MoveItCpp>(node);
-  auto planning_scene_monitor = manymove_planner_compat::getPlanningSceneMonitorRw(moveit_cpp_ptr);
+  auto moveit_cpp_ptr = std::make_shared<moveit_cpp::MoveItCpp>
+                          (node);
+  auto planning_scene_monitor = manymove_planner_compat::getPlanningSceneMonitorRw
+                                  (moveit_cpp_ptr);
   if (planning_scene_monitor) {
-    planning_scene_monitor->providePlanningSceneService();
+    planning_scene_monitor->providePlanningSceneService
+      ();
   }
 
-  auto planning_components = std::make_shared<moveit_cpp::PlanningComponent>(PLANNING_GROUP,
-    moveit_cpp_ptr);
-  auto robot_model_ptr = moveit_cpp_ptr->getRobotModel();
-  auto robot_start_state = planning_components->getStartState();
-  auto joint_model_group_ptr = robot_model_ptr->getJointModelGroup(PLANNING_GROUP);
+  auto planning_components = std::make_shared<moveit_cpp::PlanningComponent>
+                               (PLANNING_GROUP,
+                               moveit_cpp_ptr);
+  auto robot_model_ptr = moveit_cpp_ptr->getRobotModel
+                           ();
+  auto robot_start_state = planning_components->getStartState
+                             ();
+  auto joint_model_group_ptr = robot_model_ptr->getJointModelGroup
+                                 (PLANNING_GROUP);
 
   // Visualization
   // ^^^^^^^^^^^^^
@@ -118,17 +142,28 @@ int main(int argc, char ** argv)
   // script
   moveit_visual_tools::MoveItVisualTools visual_tools(node, "link_base", "moveit_cpp_tutorial",
                                                       planning_scene_monitor);
-  visual_tools.deleteAllMarkers();
-  visual_tools.loadRemoteControl();
+  visual_tools.deleteAllMarkers
+    ();
+  visual_tools.loadRemoteControl
+    ();
 
-  Eigen::Isometry3d text_pose = Eigen::Isometry3d::Identity();
-  text_pose.translation().z() = 1.0;
-  visual_tools.publishText(text_pose, "MoveItCpp_Demo", rvt::WHITE, rvt::XLARGE);
-  visual_tools.trigger();
+  Eigen::Isometry3d text_pose = Eigen::Isometry3d::Identity
+                                  ();
+  text_pose.translation
+    ().z
+    () = 1.0;
+  visual_tools.publishText
+    (text_pose,
+    "MoveItCpp_Demo",
+    rvt::WHITE,
+    rvt::XLARGE);
+  visual_tools.trigger
+    ();
 
   // Start the demo
   // ^^^^^^^^^^^^^^^^^^^^^^^^^
-  visual_tools.prompt("Press 'next' in the RvizVisualToolsGui window to start the demo");
+  visual_tools.prompt
+    ("Press 'next' in the RvizVisualToolsGui window to start the demo");
 
   // Define possible joint moves:
   std::vector<double> rest_joint_values =
@@ -153,7 +188,8 @@ int main(int argc, char ** argv)
   // ^^^^^^^
   //
   // We can set the start state of the plan to the current state of the robot
-  planning_components->setStartStateToCurrentState();
+  planning_components->setStartStateToCurrentState
+    ();
 
   // The first way to set the goal of the plan is by using geometry_msgs::PoseStamped ROS message
   // type as follow
@@ -166,26 +202,41 @@ int main(int argc, char ** argv)
   target_pose1.pose.position.x = 0.20;
   target_pose1.pose.position.y = -0.15;
   target_pose1.pose.position.z = 0.15;
-  planning_components->setGoal(target_pose1, "link_tcp");
+  planning_components->setGoal
+    (target_pose1,
+    "link_tcp");
 
   // Now, we call the PlanningComponents to compute the plan and visualize it.
   // Note that we are just planning
-  auto plan_solution1 = planning_components->plan();
+  auto plan_solution1 = planning_components->plan
+                          ();
 
   // Check if PlanningComponents succeeded in finding the plan
   if (plan_solution1) {
     // Visualize the start pose in Rviz
-    visual_tools.publishAxisLabeled(robot_start_state->getGlobalLinkTransform("link_tcp"),
+    visual_tools.publishAxisLabeled
+      (robot_start_state->getGlobalLinkTransform
+        ("link_tcp"),
       "start_pose");
     // Visualize the goal pose in Rviz
-    visual_tools.publishAxisLabeled(target_pose1.pose, "target_pose");
-    visual_tools.publishText(text_pose, "setStartStateToCurrentState", rvt::WHITE, rvt::XLARGE);
+    visual_tools.publishAxisLabeled
+      (target_pose1.pose,
+      "target_pose");
+    visual_tools.publishText
+      (text_pose,
+      "setStartStateToCurrentState",
+      rvt::WHITE,
+      rvt::XLARGE);
     // Visualize the trajectory in Rviz
-    visual_tools.publishTrajectoryLine(plan_solution1.trajectory, joint_model_group_ptr);
-    visual_tools.trigger();
+    visual_tools.publishTrajectoryLine
+      (plan_solution1.trajectory,
+      joint_model_group_ptr);
+    visual_tools.trigger
+      ();
 
     /* Uncomment if you want to execute the plan */
-    manymove_planner_compat::executePlanningComponent(*planning_components);             // Execute
+    manymove_planner_compat::executePlanningComponent
+      (*planning_components);                                                            // Execute
                                                                                          // the plan
   }
 
@@ -196,52 +247,76 @@ int main(int argc, char ** argv)
   //    :align: center
   //
   // Start the next plan
-  visual_tools.prompt("Press 'next' in the RvizVisualToolsGui window to continue the demo");
-  visual_tools.deleteAllMarkers();
-  visual_tools.trigger();
+  visual_tools.prompt
+    ("Press 'next' in the RvizVisualToolsGui window to continue the demo");
+  visual_tools.deleteAllMarkers
+    ();
+  visual_tools.trigger
+    ();
 
   // --------------------------------------------------
   // Plan #2: Move to Joint Target Position (rest_joint_values)
   // --------------------------------------------------
 
-  planning_components->setStartStateToCurrentState();
+  planning_components->setStartStateToCurrentState
+    ();
 
   // Define the joint target
   // std::vector<double> rest_joint_values = {0.0, -0.785, 0.785, 0.0, 1.57, 0.0};
 
   // Create a RobotState object and set the joint values
   moveit::core::RobotState goal_joint_state(robot_model_ptr);
-  goal_joint_state.setJointGroupPositions(joint_model_group_ptr, rest_joint_values);
+  goal_joint_state.setJointGroupPositions
+    (joint_model_group_ptr,
+    rest_joint_values);
 
   // Set the joint target as the goal
-  planning_components->setGoal(goal_joint_state);
+  planning_components->setGoal
+    (goal_joint_state);
 
   // Plan to the joint target
-  auto plan_solution6 = planning_components->plan();
+  auto plan_solution6 = planning_components->plan
+                          ();
   if (plan_solution6) {
     // Visualize the start and goal joint states
     moveit::core::RobotState current_state(robot_model_ptr);
-    moveit::core::robotStateMsgToRobotState(plan_solution6.start_state, current_state);
+    moveit::core::robotStateMsgToRobotState
+      (plan_solution6.start_state,
+      current_state);
 
-    visual_tools.publishAxisLabeled(current_state.getGlobalLinkTransform("link_tcp"), "start_pose");
+    visual_tools.publishAxisLabeled
+      (current_state.getGlobalLinkTransform
+        ("link_tcp"),
+      "start_pose");
     // Publish the robot state with a specified color
     // visual_tools.publishRobotState(goal_joint_state, rvt::GREEN);
     // Publish a text label near the robot state
-    visual_tools.publishText(text_pose, "Goal Joint State", rvt::WHITE, rvt::XLARGE);
+    visual_tools.publishText
+      (text_pose,
+      "Goal Joint State",
+      rvt::WHITE,
+      rvt::XLARGE);
 
     // Visualize the trajectory
-    visual_tools.publishTrajectoryLine(plan_solution6.trajectory, joint_model_group_ptr);
-    visual_tools.trigger();
+    visual_tools.publishTrajectoryLine
+      (plan_solution6.trajectory,
+      joint_model_group_ptr);
+    visual_tools.trigger
+      ();
 
     // Execute the plan
-    manymove_planner_compat::executePlanningComponent(*planning_components);             // Execute
+    manymove_planner_compat::executePlanningComponent
+      (*planning_components);                                                            // Execute
                                                                                          // the plan
   }
 
   // Visualization
-  visual_tools.prompt("Press 'next' in the RvizVisualToolsGui window to continue the demo");
-  visual_tools.deleteAllMarkers();
-  visual_tools.trigger();
+  visual_tools.prompt
+    ("Press 'next' in the RvizVisualToolsGui window to continue the demo");
+  visual_tools.deleteAllMarkers
+    ();
+  visual_tools.trigger
+    ();
 
   // Plan #3
   // ^^^^^^^
@@ -249,9 +324,11 @@ int main(int argc, char ** argv)
   // Here we will set the current state of the plan using
   // moveit::core::RobotState
 
-  planning_components->setStartStateToCurrentState();
+  planning_components->setStartStateToCurrentState
+    ();
 
-  auto start_state = *(moveit_cpp_ptr->getCurrentState());
+  auto start_state = *(moveit_cpp_ptr->getCurrentState
+                         ());
   geometry_msgs::msg::Pose start_pose;
   start_pose.orientation.x = 1.0;
   start_pose.orientation.y = 0.0;
@@ -261,27 +338,46 @@ int main(int argc, char ** argv)
   start_pose.position.y = 0.0;
   start_pose.position.z = 0.25;
 
-  start_state.setFromIK(joint_model_group_ptr, start_pose);
+  start_state.setFromIK
+    (joint_model_group_ptr,
+    start_pose);
 
   // TO PLAN FROM A DETERMINED START STATE:
-  planning_components->setStartState(start_state);
+  planning_components->setStartState
+    (start_state);
 
   // We will reuse the old goal that we had and plan to it. << NOPE! I activated execution, so
   // change of plans!
   target_pose1.pose.position.z = 0.15;
-  planning_components->setGoal(target_pose1, "link_tcp");
+  planning_components->setGoal
+    (target_pose1,
+    "link_tcp");
 
-  auto plan_solution2 = planning_components->plan();
+  auto plan_solution2 = planning_components->plan
+                          ();
   if (plan_solution2) {
     moveit::core::RobotState robot_state(robot_model_ptr);
-    moveit::core::robotStateMsgToRobotState(plan_solution2.start_state, robot_state);
+    moveit::core::robotStateMsgToRobotState
+      (plan_solution2.start_state,
+      robot_state);
 
-    visual_tools.publishAxisLabeled(robot_state.getGlobalLinkTransform("link_tcp"), "start_pose");
-    visual_tools.publishAxisLabeled(target_pose1.pose, "target_pose");
-    visual_tools.publishText(text_pose, "moveit::core::RobotState_Start_State", rvt::WHITE,
+    visual_tools.publishAxisLabeled
+      (robot_state.getGlobalLinkTransform
+        ("link_tcp"),
+      "start_pose");
+    visual_tools.publishAxisLabeled
+      (target_pose1.pose,
+      "target_pose");
+    visual_tools.publishText
+      (text_pose,
+      "moveit::core::RobotState_Start_State",
+      rvt::WHITE,
       rvt::XLARGE);
-    visual_tools.publishTrajectoryLine(plan_solution2.trajectory, joint_model_group_ptr);
-    visual_tools.trigger();
+    visual_tools.publishTrajectoryLine
+      (plan_solution2.trajectory,
+      joint_model_group_ptr);
+    visual_tools.trigger
+      ();
 
     /* Uncomment if you want to execute the plan */
     // manymove_planner_compat::executePlanningComponent(*planning_components); // Execute the plan
@@ -294,9 +390,12 @@ int main(int argc, char ** argv)
   //    :align: center
   //
   // Start the next plan
-  visual_tools.prompt("Press 'next' in the RvizVisualToolsGui window to continue the demo");
-  visual_tools.deleteAllMarkers();
-  visual_tools.trigger();
+  visual_tools.prompt
+    ("Press 'next' in the RvizVisualToolsGui window to continue the demo");
+  visual_tools.deleteAllMarkers
+    ();
+  visual_tools.trigger
+    ();
 
   // Plan #4
   // ^^^^^^^
@@ -304,7 +403,8 @@ int main(int argc, char ** argv)
   // We can also set the goal of the plan using
   // moveit::core::RobotState
 
-  planning_components->setStartStateToCurrentState();
+  planning_components->setStartStateToCurrentState
+    ();
 
   auto target_state = *robot_start_state;
   geometry_msgs::msg::Pose target_pose2;
@@ -316,38 +416,63 @@ int main(int argc, char ** argv)
   target_pose2.position.y = -0.05;
   target_pose2.position.z = 0.3;
 
-  target_state.setFromIK(joint_model_group_ptr, target_pose2);
+  target_state.setFromIK
+    (joint_model_group_ptr,
+    target_pose2);
 
-  planning_components->setGoal(target_state);
+  planning_components->setGoal
+    (target_state);
 
-  auto plan_solution3 = planning_components->plan();
+  auto plan_solution3 = planning_components->plan
+                          ();
   if (plan_solution3) {
     moveit::core::RobotState robot_state(robot_model_ptr);
-    moveit::core::robotStateMsgToRobotState(plan_solution3.start_state, robot_state);
+    moveit::core::robotStateMsgToRobotState
+      (plan_solution3.start_state,
+      robot_state);
 
-    visual_tools.publishAxisLabeled(robot_state.getGlobalLinkTransform("link_tcp"), "start_pose");
+    visual_tools.publishAxisLabeled
+      (robot_state.getGlobalLinkTransform
+        ("link_tcp"),
+      "start_pose");
 
-    size_t num_waypoints = plan_solution3.trajectory->getWayPointCount();
+    size_t num_waypoints = plan_solution3.trajectory->getWayPointCount
+                             ();
     if (num_waypoints == 0) {
-      RCLCPP_WARN(LOGGER, "Planned trajectory has no waypoints.");
+      RCLCPP_WARN
+        (LOGGER,
+        "Planned trajectory has no waypoints.");
     }
     else {
-      const moveit::core::RobotState & last_waypoint = plan_solution3.trajectory->getWayPoint(
+      const moveit::core::RobotState & last_waypoint = plan_solution3.trajectory->getWayPoint
+                                                       (
         num_waypoints - 1);
-      Eigen::Isometry3d ee_transform = last_waypoint.getGlobalLinkTransform("link_tcp");
+      Eigen::Isometry3d ee_transform = last_waypoint.getGlobalLinkTransform
+                                         ("link_tcp");
 
       // Convert Eigen::Isometry3d to geometry_msgs::Pose
-      geometry_msgs::msg::Pose actual_goal_pose = tf2::toMsg(ee_transform);
+      geometry_msgs::msg::Pose actual_goal_pose = tf2::toMsg
+                                                    (ee_transform);
 
-      visual_tools.publishAxisLabeled(actual_goal_pose, "target_pose");
-      visual_tools.publishText(text_pose, "Actual Goal Pose", rvt::WHITE, rvt::XLARGE);
+      visual_tools.publishAxisLabeled
+        (actual_goal_pose,
+        "target_pose");
+      visual_tools.publishText
+        (text_pose,
+        "Actual Goal Pose",
+        rvt::WHITE,
+        rvt::XLARGE);
     }
 
-    visual_tools.publishTrajectoryLine(plan_solution3.trajectory, joint_model_group_ptr);
-    visual_tools.trigger();
+    visual_tools.publishTrajectoryLine
+      (plan_solution3.trajectory,
+      joint_model_group_ptr);
+    visual_tools.trigger
+      ();
 
     /* Uncomment if you want to execute the plan */
-    manymove_planner_compat::executePlanningComponent(*planning_components);             // Execute
+    manymove_planner_compat::executePlanningComponent
+      (*planning_components);                                                            // Execute
                                                                                          // the plan
   }
 
@@ -358,9 +483,12 @@ int main(int argc, char ** argv)
   //    :align: center
   //
   // Start the next plan
-  visual_tools.prompt("Press 'next' in the RvizVisualToolsGui window to continue the demo");
-  visual_tools.deleteAllMarkers();
-  visual_tools.trigger();
+  visual_tools.prompt
+    ("Press 'next' in the RvizVisualToolsGui window to continue the demo");
+  visual_tools.deleteAllMarkers
+    ();
+  visual_tools.trigger
+    ();
 
   // Plan #5
   // ^^^^^^^
@@ -375,28 +503,47 @@ int main(int argc, char ** argv)
   /* planning_components->setStartState("ready"); // Not implemented yet */
   // Set the goal state of the plan from a named robot state
 
-  planning_components->setStartStateToCurrentState();
+  planning_components->setStartStateToCurrentState
+    ();
 
   // setting the goal as the rest joint target to give a move to do for the next collision avoidance
   // planning_components->setGoal("home");
-  planning_components->setGoal(target_pose1, "link_tcp");       // WARNING: if modified it will have
+  planning_components->setGoal
+    (target_pose1,
+    "link_tcp");                                                // WARNING: if modified it will have
                                                                 // to
                                                                 // be set anew
 
   // Again we will reuse the old start that we had and plan from it.
-  auto plan_solution4 = planning_components->plan();
+  auto plan_solution4 = planning_components->plan
+                          ();
   if (plan_solution4) {
     moveit::core::RobotState robot_state(robot_model_ptr);
-    moveit::core::robotStateMsgToRobotState(plan_solution4.start_state, robot_state);
+    moveit::core::robotStateMsgToRobotState
+      (plan_solution4.start_state,
+      robot_state);
 
-    visual_tools.publishAxisLabeled(robot_state.getGlobalLinkTransform("link_tcp"), "start_pose");
-    visual_tools.publishAxisLabeled(target_pose1.pose, "target_pose");
-    visual_tools.publishText(text_pose, "Goal_Pose_From_Named_State", rvt::WHITE, rvt::XLARGE);
-    visual_tools.publishTrajectoryLine(plan_solution4.trajectory, joint_model_group_ptr);
-    visual_tools.trigger();
+    visual_tools.publishAxisLabeled
+      (robot_state.getGlobalLinkTransform
+        ("link_tcp"),
+      "start_pose");
+    visual_tools.publishAxisLabeled
+      (target_pose1.pose,
+      "target_pose");
+    visual_tools.publishText
+      (text_pose,
+      "Goal_Pose_From_Named_State",
+      rvt::WHITE,
+      rvt::XLARGE);
+    visual_tools.publishTrajectoryLine
+      (plan_solution4.trajectory,
+      joint_model_group_ptr);
+    visual_tools.trigger
+      ();
 
     /* Uncomment if you want to execute the plan */
-    manymove_planner_compat::executePlanningComponent(*planning_components);             // Execute
+    manymove_planner_compat::executePlanningComponent
+      (*planning_components);                                                            // Execute
                                                                                          // the plan
   }
 
@@ -407,9 +554,12 @@ int main(int argc, char ** argv)
   //    :align: center
   //
   // Start the next plan
-  visual_tools.prompt("Press 'next' in the RvizVisualToolsGui window to continue the demo");
-  visual_tools.deleteAllMarkers();
-  visual_tools.trigger();
+  visual_tools.prompt
+    ("Press 'next' in the RvizVisualToolsGui window to continue the demo");
+  visual_tools.deleteAllMarkers
+    ();
+  visual_tools.trigger
+    ();
 
   // Plan #6
   // ^^^^^^^
@@ -418,7 +568,8 @@ int main(int argc, char ** argv)
   //
   // First we create the collision object
 
-  planning_components->setStartStateToCurrentState();
+  planning_components->setStartStateToCurrentState
+    ();
 
   moveit_msgs::msg::CollisionObject collision_object;
   collision_object.header.frame_id = "link_base";
@@ -436,27 +587,40 @@ int main(int argc, char ** argv)
   box_pose.position.y = 0.0;
   box_pose.position.z = 0.3;
 
-  collision_object.primitives.push_back(box);
-  collision_object.primitive_poses.push_back(box_pose);
+  collision_object.primitives.push_back
+    (box);
+  collision_object.primitive_poses.push_back
+    (box_pose);
   collision_object.operation = collision_object.ADD;
 
   // Add object to planning scene
   {       // Lock PlanningScene
     planning_scene_monitor::LockedPlanningSceneRW scene(planning_scene_monitor);
-    scene->processCollisionObjectMsg(collision_object);
+    scene->processCollisionObjectMsg
+      (collision_object);
   }       // Unlock PlanningScene
-  planning_components->setStartStateToCurrentState();
-  planning_components->setGoal("home");
+  planning_components->setStartStateToCurrentState
+    ();
+  planning_components->setGoal
+    ("home");
 
-  auto plan_solution5 = planning_components->plan();
+  auto plan_solution5 = planning_components->plan
+                          ();
   if (plan_solution5) {
-    visual_tools.publishText(text_pose, "Planning_Around_Collision_Object", rvt::WHITE,
+    visual_tools.publishText
+      (text_pose,
+      "Planning_Around_Collision_Object",
+      rvt::WHITE,
       rvt::XLARGE);
-    visual_tools.publishTrajectoryLine(plan_solution5.trajectory, joint_model_group_ptr);
-    visual_tools.trigger();
+    visual_tools.publishTrajectoryLine
+      (plan_solution5.trajectory,
+      joint_model_group_ptr);
+    visual_tools.trigger
+      ();
 
     /* Uncomment if you want to execute the plan */
-    manymove_planner_compat::executePlanningComponent(*planning_components);             // Execute
+    manymove_planner_compat::executePlanningComponent
+      (*planning_components);                                                            // Execute
                                                                                          // the plan
   }
 
@@ -467,31 +631,49 @@ int main(int argc, char ** argv)
   //    :align: center
   //
   // END_TUTORIAL
-  visual_tools.prompt("Press 'next' in the RvizVisualToolsGui window to continue the demo");
-  visual_tools.deleteAllMarkers();
-  visual_tools.trigger();
+  visual_tools.prompt
+    ("Press 'next' in the RvizVisualToolsGui window to continue the demo");
+  visual_tools.deleteAllMarkers
+    ();
+  visual_tools.trigger
+    ();
 
   // Define the waypoints as EigenSTL::vector_Isometry3d
   EigenSTL::vector_Isometry3d waypoints;
 
-  Eigen::Isometry3d wp_start_pose = planning_components->getStartState()->getGlobalLinkTransform(
+  Eigen::Isometry3d wp_start_pose = planning_components->getStartState
+                                      ()->getGlobalLinkTransform
+                                    (
     "link_tcp");
-  waypoints.push_back(wp_start_pose);
+  waypoints.push_back
+    (wp_start_pose);
 
   Eigen::Isometry3d waypoint1 = wp_start_pose;
-  waypoint1.translate(Eigen::Vector3d(0.1, 0.0, 0.0));       // Move 10 cm upward
-  waypoints.push_back(waypoint1);
+  waypoint1.translate
+    (Eigen::Vector3d
+      (0.1,
+      0.0,
+      0.0));                                                 // Move 10 cm upward
+  waypoints.push_back
+    (waypoint1);
 
   Eigen::Isometry3d waypoint2 = waypoint1;
-  waypoint2.translate(Eigen::Vector3d(0.0, 0.1, 0.0));       // Move 10 cm sideways
-  waypoints.push_back(waypoint2);
+  waypoint2.translate
+    (Eigen::Vector3d
+      (0.0,
+      0.1,
+      0.0));                                                 // Move 10 cm sideways
+  waypoints.push_back
+    (waypoint2);
 
   // Retrieve joint_model_group and link_model
-  auto link_model = joint_model_group_ptr->getLinkModel("link_tcp");
+  auto link_model = joint_model_group_ptr->getLinkModel
+                      ("link_tcp");
 
   // Prepare a vector of RobotStatePtr for the resulting trajectory states
   std::vector<moveit::core::RobotStatePtr> trajectory_states;
-  moveit::core::RobotStatePtr wp_start_state = planning_components->getStartState();
+  moveit::core::RobotStatePtr wp_start_state = planning_components->getStartState
+                                                 ();
 
   // Compute Cartesian path using the correct signature
   manymove_msgs::msg::MovementConfig demo_cfg;
@@ -500,66 +682,92 @@ int main(int argc, char ** argv)
   demo_cfg.cartesian_precision_rotational = 0.05;
   demo_cfg.cartesian_precision_max_resolution = 0.005;
 
-  double fraction = manymove_planner_compat::computeCartesianPathCompat(wp_start_state.get(),
-    // Pass the raw pointer
-    joint_model_group_ptr,
-    // Joint model group
-    trajectory_states,
-    // Resulting trajectory
-    // states
-    link_model,
-    // Link to control
-    waypoints,
-    // Waypoints for Cartesian
-    // motion
-    true,
-    // Global reference frame
-    moveit::core::MaxEEFStep(
-      0.01),
-    // Maximum end-effector step
-    // size
-    demo_cfg,
-    // Config for precision /
-    // jump
-    moveit::core::GroupStateValidityCallbackFn(),
-    // No validity callback
-    kinematics::KinematicsQueryOptions(),
-    // Default kinematics
-    // options
-    nullptr                                                                           // No IK cost
+  double fraction = manymove_planner_compat::computeCartesianPathCompat
+                      (wp_start_state.get
+                        (),
+                      // Pass the raw pointer
+                      joint_model_group_ptr,
+                      // Joint model group
+                      trajectory_states,
+                      // Resulting trajectory
+                      // states
+                      link_model,
+                      // Link to control
+                      waypoints,
+                      // Waypoints for Cartesian
+                      // motion
+                      true,
+                      // Global reference frame
+                      moveit::core::MaxEEFStep
+                      (
+                        0.01),
+                      // Maximum end-effector step
+                      // size
+                      demo_cfg,
+                      // Config for precision /
+                      // jump
+                      moveit::core::GroupStateValidityCallbackFn
+                        (),
+                      // No validity callback
+                      kinematics::KinematicsQueryOptions
+                        (),
+                      // Default kinematics
+                      // options
+                      nullptr                                                         // No IK cost
                                                                                       // function
-    );
+                      );
 
   // Check if the path was successfully computed
   if (fraction > 0.99) {
-    RCLCPP_INFO(LOGGER, "Successfully computed Cartesian path. Executing...");
+    RCLCPP_INFO
+      (LOGGER,
+      "Successfully computed Cartesian path. Executing...");
 
     // Build a RobotTrajectory from the computed states
-    robot_trajectory::RobotTrajectory trajectory(moveit_cpp_ptr->getRobotModel(), PLANNING_GROUP);
+    robot_trajectory::RobotTrajectory trajectory(moveit_cpp_ptr->getRobotModel
+                                                   (), PLANNING_GROUP);
     double dt = 0.1;             // time interval between waypoints
     for (const auto & rs : trajectory_states) {
-      trajectory.addSuffixWayPoint(*rs, dt);
+      trajectory.addSuffixWayPoint
+        (*rs,
+        dt);
     }
 
     // Visualize the trajectory
-    visual_tools.publishTrajectoryLine(std::make_shared<robot_trajectory::RobotTrajectory>(
-      trajectory), joint_model_group_ptr);
-    visual_tools.trigger();
+    visual_tools.publishTrajectoryLine
+      (std::make_shared<robot_trajectory::RobotTrajectory>
+      (
+        trajectory),
+      joint_model_group_ptr);
+    visual_tools.trigger
+      ();
 
     // Execute the trajectory
-    auto trajectory_ptr = std::make_shared<robot_trajectory::RobotTrajectory>(trajectory);
-    manymove_planner_compat::executeTrajectory(*moveit_cpp_ptr, PLANNING_GROUP, trajectory_ptr,
+    auto trajectory_ptr = std::make_shared<robot_trajectory::RobotTrajectory>
+                            (trajectory);
+    manymove_planner_compat::executeTrajectory
+      (*moveit_cpp_ptr,
+      PLANNING_GROUP,
+      trajectory_ptr,
       CONTROLLERS);
   }
   else {
-    RCLCPP_WARN(LOGGER, "Could not compute full Cartesian path.");
+    RCLCPP_WARN
+      (LOGGER,
+      "Could not compute full Cartesian path.");
   }
 
-  visual_tools.prompt("Press 'next' to end the demo");
-  visual_tools.deleteAllMarkers();
-  visual_tools.trigger();
+  visual_tools.prompt
+    ("Press 'next' to end the demo");
+  visual_tools.deleteAllMarkers
+    ();
+  visual_tools.trigger
+    ();
 
-  RCLCPP_INFO(LOGGER, "Shutting down.");
-  rclcpp::shutdown();
+  RCLCPP_INFO
+    (LOGGER,
+    "Shutting down.");
+  rclcpp::shutdown
+    ();
   return 0;
 }

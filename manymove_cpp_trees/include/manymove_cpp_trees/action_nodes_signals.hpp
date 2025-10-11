@@ -75,12 +75,21 @@ class SetOutputAction : public BT::StatefulActionNode
   {
     return
       {
-        BT::InputPort<std::string>("io_type", "IO type: 'tool' or 'controller'"),
-        BT::InputPort<int>("ionum", "Which IO channel number"),
-        BT::InputPort<int>("value", "Desired output value (0 or 1)"),
-        BT::InputPort<std::string>("robot_prefix",
+        BT::InputPort<std::string>
+          ("io_type",
+          "IO type: 'tool' or 'controller'"),
+        BT::InputPort<int>
+          ("ionum",
+          "Which IO channel number"),
+        BT::InputPort<int>
+          ("value",
+          "Desired output value (0 or 1)"),
+        BT::InputPort<std::string>
+          ("robot_prefix",
           "Optional robot namespace prefix, e.g. 'R_' or 'L_'."),
-        BT::OutputPort<bool>("success", "Whether set_output succeeded"),
+        BT::OutputPort<bool>
+          ("success",
+          "Whether set_output succeeded"),
       };
   }
 
@@ -124,11 +133,18 @@ class GetInputAction : public BT::StatefulActionNode
   {
     return
       {
-        BT::InputPort<std::string>("io_type", "IO type: 'tool' or 'controller'"),
-        BT::InputPort<int>("ionum", "Which IO channel to read"),
-        BT::InputPort<std::string>("robot_prefix",
+        BT::InputPort<std::string>
+          ("io_type",
+          "IO type: 'tool' or 'controller'"),
+        BT::InputPort<int>
+          ("ionum",
+          "Which IO channel to read"),
+        BT::InputPort<std::string>
+          ("robot_prefix",
           "Optional robot namespace prefix, e.g. 'R_' or 'L_'."),
-        BT::OutputPort<int>("value", "Read value from the input (0 or 1)"),
+        BT::OutputPort<int>
+          ("value",
+          "Read value from the input (0 or 1)"),
       };
   }
 
@@ -172,13 +188,24 @@ class CheckRobotStateAction : public BT::StatefulActionNode
   {
     return
       {
-        BT::InputPort<std::string>("robot_prefix",
+        BT::InputPort<std::string>
+          ("robot_prefix",
           "Optional robot namespace prefix, e.g. 'R_' or 'L_'."),
-        BT::OutputPort<bool>("ready", "True if robot is ready"),
-        BT::OutputPort<int>("err", "Current error code"),
-        BT::OutputPort<int>("mode", "Robot mode"),
-        BT::OutputPort<int>("state", "Robot state"),
-        BT::OutputPort<std::string>("message", "Status message")
+        BT::OutputPort<bool>
+          ("ready",
+          "True if robot is ready"),
+        BT::OutputPort<int>
+          ("err",
+          "Current error code"),
+        BT::OutputPort<int>
+          ("mode",
+          "Robot mode"),
+        BT::OutputPort<int>
+          ("state",
+          "Robot state"),
+        BT::OutputPort<std::string>
+          ("message",
+          "Status message")
       };
   }
 
@@ -223,10 +250,15 @@ class ResetRobotStateAction : public BT::StatefulActionNode
   {
     return
       {
-        BT::InputPort<std::string>("robot_prefix",
+        BT::InputPort<std::string>
+          ("robot_prefix",
           "Optional robot namespace prefix, e.g. 'R_' or 'L_'."),
-        BT::InputPort<std::string>("robot_model", "Name of the robot model, e.g. 'lite6'."),
-        BT::OutputPort<bool>("success", "True if robot reset is successful"),
+        BT::InputPort<std::string>
+          ("robot_model",
+          "Name of the robot model, e.g. 'lite6'."),
+        BT::OutputPort<bool>
+          ("success",
+          "True if robot reset is successful"),
       };
   }
 
@@ -281,13 +313,30 @@ class WaitForInputAction : public BT::StatefulActionNode
   {
     return
       {
-        BT::InputPort<std::string>("io_type", "IO type: 'tool' or 'controller'"),
-        BT::InputPort<int>("ionum", "Which IO channel to read"),
-        BT::InputPort<int>("desired_value", 1, "Desired input value (0 or 1)"),
-        BT::InputPort<double>("timeout", 10.0, "Seconds before giving up (0 => infinite)"),
-        BT::InputPort<double>("poll_rate", 0.25, "Check frequency (s)"),
-        BT::InputPort<std::string>("robot_prefix", "", "Optional namespace prefix"),
-        BT::OutputPort<int>("value",
+        BT::InputPort<std::string>
+          ("io_type",
+          "IO type: 'tool' or 'controller'"),
+        BT::InputPort<int>
+          ("ionum",
+          "Which IO channel to read"),
+        BT::InputPort<int>
+          ("desired_value",
+          1,
+          "Desired input value (0 or 1)"),
+        BT::InputPort<double>
+          ("timeout",
+          10.0,
+          "Seconds before giving up (0 => infinite)"),
+        BT::InputPort<double>
+          ("poll_rate",
+          0.25,
+          "Check frequency (s)"),
+        BT::InputPort<std::string>
+          ("robot_prefix",
+          "",
+          "Optional namespace prefix"),
+        BT::OutputPort<int>
+          ("value",
           "Final read value (0 or 1)")
       };
   }

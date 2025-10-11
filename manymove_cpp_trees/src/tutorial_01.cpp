@@ -60,31 +60,53 @@ int main(int argc, char ** argv)
   // 0. Preparing the node, blackboard and robot params
   // ----------------------------------------------------------------------------
 
-  rclcpp::init(argc, argv);
+  rclcpp::init
+    (argc,
+    argv);
 
-  auto node = rclcpp::Node::make_shared("bt_client_node");
-  RCLCPP_INFO(node->get_logger(), "BT Client Node started (Purely Programmatic XML).");
+  auto node = rclcpp::Node::make_shared
+                ("bt_client_node");
+  RCLCPP_INFO
+    (node->get_logger
+      (),
+    "BT Client Node started (Purely Programmatic XML).");
 
   // Create a blackboard and set "node"
-  auto blackboard = BT::Blackboard::create();
-  blackboard->set("node", node);
-  RCLCPP_INFO(node->get_logger(), "Blackboard: set('node', <rclcpp::Node>)");
+  auto blackboard = BT::Blackboard::create
+                      ();
+  blackboard->set
+    ("node",
+    node);
+  RCLCPP_INFO
+    (node->get_logger
+      (),
+    "Blackboard: set('node', <rclcpp::Node>)");
 
   // Create the keys variable for HMI
   std::vector<manymove_cpp_trees::BlackboardEntry> keys;
 
   // Define all params and blackboard keys for the robot:
-  RobotParams rp = defineRobotParams(node, blackboard, keys);
-  auto move_configs = defineMovementConfigs();
+  RobotParams rp = defineRobotParams
+                     (node,
+                     blackboard,
+                     keys);
+  auto move_configs = defineMovementConfigs
+                        ();
 
   // UTILITY KEYS
 
-  blackboard->set("world_frame_key", "world");
-  blackboard->set("identity_transform_key", std::vector<double>
+  blackboard->set
+    ("world_frame_key",
+    "world");
+  blackboard->set
+    ("identity_transform_key",
+    std::vector<double>
   {
     0.0, 0.0, 0.0, 0.0, 0.0, 0.0
   });
-  blackboard->set("tcp_frame_name_key", "link_tcp");
+  blackboard->set
+    ("tcp_frame_name_key",
+    "link_tcp");
 
   // ----------------------------------------------------------------------------
   // 1. Create the scene
@@ -122,45 +144,62 @@ int main(int argc, char ** argv)
   // 5. Assembling the tree
   // ----------------------------------------------------------------------------
 
-  std::string startup_sequence_xml = sequenceWrapperXML("StartUpSequence",
+  std::string startup_sequence_xml = sequenceWrapperXML
+                                       ("StartUpSequence",
   {
     // OPTIONAL CODE FROM SECTION 1 HERE
   });
 
-  std::string retry_forever_wrapper_xml = retrySequenceWrapperXML("ResetHandler",
+  std::string retry_forever_wrapper_xml = retrySequenceWrapperXML
+                                            ("ResetHandler",
   {
     startup_sequence_xml,
     /*ADD CODE HERE*/
-  }, -1);
+  },
+                                            -1);
 
   // GlobalMasterSequence with RepeatForever as child to set BehaviorTree ID and root
   // main_tree_to_execute in the XML
-  std::string master_body = sequenceWrapperXML("GlobalMasterSequence",
+  std::string master_body = sequenceWrapperXML
+                              ("GlobalMasterSequence",
   {
     retry_forever_wrapper_xml
   });
 
   // Create the MasterTree
-  std::string final_tree_xml = mainTreeWrapperXML("MasterTree", master_body);
+  std::string final_tree_xml = mainTreeWrapperXML
+                                 ("MasterTree",
+                                 master_body);
 
   // ----------------------------------------------------------------------------
   // 6. Setting up the overall cycle
   // ----------------------------------------------------------------------------
 
-  RCLCPP_INFO(node->get_logger(),
+  RCLCPP_INFO
+    (node->get_logger
+      (),
     "=== Programmatically Generated Tree XML ===\n%s",
-    final_tree_xml.c_str());
+    final_tree_xml.c_str
+      ());
 
   // Register node types
   BT::BehaviorTreeFactory factory;
-  registerAllNodeTypes(factory);
+  registerAllNodeTypes
+    (factory);
 
   // Create the tree from final_tree_xml
   BT::Tree tree;
   try {
-    tree = factory.createTreeFromText(final_tree_xml, blackboard);
+    tree = factory.createTreeFromText
+             (final_tree_xml,
+             blackboard);
   } catch (const std::exception & ex) {
-    RCLCPP_ERROR(node->get_logger(), "Failed to create tree: %s", ex.what());
+    RCLCPP_ERROR
+      (node->get_logger
+        (),
+      "Failed to create tree: %s",
+      ex.what
+        ());
     return 1;
   }
 
@@ -168,33 +207,53 @@ int main(int argc, char ** argv)
   BT::PublisherZMQ publisher(tree);
 
   // Create the HMI Service Node and pass the same blackboard ***
-  auto hmi_node = std::make_shared<manymove_cpp_trees::HMIServiceNode>("hmi_service_node",
-    blackboard, keys);
-  RCLCPP_INFO(node->get_logger(), "HMI Service Node instantiated.");
+  auto hmi_node = std::make_shared<manymove_cpp_trees::HMIServiceNode>
+                    ("hmi_service_node",
+                    blackboard,
+                    keys);
+  RCLCPP_INFO
+    (node->get_logger
+      (),
+    "HMI Service Node instantiated.");
 
   // Create a MultiThreadedExecutor so that both nodes can be spun concurrently.
   rclcpp::executors::MultiThreadedExecutor executor;
-  executor.add_node(node);
-  executor.add_node(hmi_node);
+  executor.add_node
+    (node);
+  executor.add_node
+    (hmi_node);
 
   // Tick the tree in a loop.
   rclcpp::Rate rate(100);
-  while (rclcpp::ok()) {
-    executor.spin_some();
-    BT::NodeStatus status = tree.tickRoot();
+  while (rclcpp::ok
+           ()) {
+    executor.spin_some
+      ();
+    BT::NodeStatus status = tree.tickRoot
+                              ();
 
     if (status == BT::NodeStatus::SUCCESS) {
-      RCLCPP_INFO(node->get_logger(), "BT ended SUCCESS.");
+      RCLCPP_INFO
+        (node->get_logger
+          (),
+        "BT ended SUCCESS.");
       break;
     }
     else if (status == BT::NodeStatus::FAILURE) {
-      RCLCPP_ERROR(node->get_logger(), "BT ended FAILURE.");
+      RCLCPP_ERROR
+        (node->get_logger
+          (),
+        "BT ended FAILURE.");
       break;
     }
-    rate.sleep();
+    rate.sleep
+      ();
   }
 
-  tree.rootNode()->halt();
-  rclcpp::shutdown();
+  tree.rootNode
+    ()->halt
+    ();
+  rclcpp::shutdown
+    ();
   return 0;
 }

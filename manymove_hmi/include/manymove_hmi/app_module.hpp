@@ -54,13 +54,16 @@ struct KeyConfig // how one line of the HMI behaves
   QString value_type;       // bool | double | int | pose | …
   bool editable = false;       // user can type?
   bool visible = true;       // row shown?
-  std::function<QString(const QMap<QString, QString>&)> computeFunction;
+  std::function<QString
+                  (const QMap<QString, QString>&)> computeFunction;
   double display_scale = 1.0;       // multiply by this for GUI
   QString unit;                 // unit label shown in GUI
   bool show_label = true;       // display the key label?
   int widget_width = 500;       // width of the input/control widget
-  double lower_limit = std::numeric_limits<double>::quiet_NaN();
-  double upper_limit = std::numeric_limits<double>::quiet_NaN();
+  double lower_limit = std::numeric_limits<double>::quiet_NaN
+                         ();
+  double upper_limit = std::numeric_limits<double>::quiet_NaN
+                         ();
 
   KeyConfig(
     const QString & k,
@@ -77,8 +80,10 @@ struct KeyConfig // how one line of the HMI behaves
     : key(k), value_type(type), editable(ed), visible(vis), computeFunction(std::move(fn)),
     display_scale(scale), unit(u), show_label(show_lbl), widget_width(width)
   {
-    lower_limit = std::isnan(lower) ? lower : lower / scale;
-    upper_limit = std::isnan(upper) ? upper : upper / scale;
+    lower_limit = std::isnan
+                    (lower) ? lower : lower / scale;
+    upper_limit = std::isnan
+                    (upper) ? upper : upper / scale;
   }
 };
 
@@ -119,7 +124,8 @@ class AppModule : public QWidget
   public slots:
   void setKeyVisibility(const QString & key, bool visible);
   void updateField(const QString & key,
-    const QString & newValue = QString());
+    const QString & newValue = QString
+      ());
   void updateGeneralMessage(const QString & message,
     const QString & color);
 

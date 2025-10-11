@@ -136,15 +136,20 @@ class ManipulatorActionServer
 
 // Async controller management helpers
   void unloadControllerAsync(const std::string&,
-    std::function<void()>, std::function<void(const std::string&)> );
+    std::function<void
+                    ()>, std::function<void(const std::string&)> );
   void loadControllerAsync(const std::string&,
-    std::function<void()>, std::function<void(const std::string&)> );
+    std::function<void
+                    ()>, std::function<void(const std::string&)> );
   void activateControllerAsync(const std::string&,
-    std::function<void()>, std::function<void(const std::string&)> );
+    std::function<void
+                    ()>, std::function<void(const std::string&)> );
   void deactivateControllerAsync(const std::string&,
-    std::function<void()>, std::function<void(const std::string&)> );
+    std::function<void
+                    ()>, std::function<void(const std::string&)> );
   void configureControllerAsync(const std::string&,
-    std::function<void()>, std::function<void(const std::string&)> );
+    std::function<void
+                    ()>, std::function<void(const std::string&)> );
 
 // Helper functions
   bool executeTrajectoryWithCollisionChecks(
