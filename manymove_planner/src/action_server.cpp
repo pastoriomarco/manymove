@@ -864,7 +864,7 @@ bool ManipulatorActionServer::executeTrajectoryWithCollisionChecks(
   opts.feedback_callback =
     [this, &collision_detected, goal_handle, traj = traj.joint_trajectory, start_time,
       total_time_s](auto /*unused_handle*/,
-      const std::shared_ptr<const control_msgs::action::FollowJointTrajectory::Feedback> & feedback)
+    const std::shared_ptr<const control_msgs::action::FollowJointTrajectory::Feedback> & feedback)
     mutable
     {
       RCLCPP_DEBUG(

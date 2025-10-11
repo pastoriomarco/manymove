@@ -173,7 +173,8 @@ BT::NodeStatus MoveManipulatorAction::onRunning()
     if (move_ptr->type == "pose" || move_ptr->type == "cartesian") {
       if (!config().blackboard->get(move_ptr->pose_key, dynamic_pose)) {
         RCLCPP_ERROR(
-          node_->get_logger(), "[MoveManipulatorAction] Failed to retrieve pose from blackboard key '%s'",
+          node_->get_logger(),
+            "[MoveManipulatorAction] Failed to retrieve pose from blackboard key '%s'",
           move_ptr->pose_key.c_str());
         return BT::NodeStatus::FAILURE;
       } else {

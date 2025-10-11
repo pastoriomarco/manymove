@@ -488,7 +488,8 @@ std::pair<bool, moveit_msgs::msg::RobotTrajectory> MoveGroupPlanner::plan(
       moveit::planning_interface::MoveGroupInterface::Plan plan;
       RCLCPP_DEBUG_STREAM(
         logger_,
-        "Cartesian path planning attempt with step size " << goal_msg.goal.config.step_size << ", jump threshold " <<
+        "Cartesian path planning attempt with step size " << goal_msg.goal.config.step_size <<
+          ", jump threshold " <<
           goal_msg.goal.config.jump_threshold);
       double fraction = manymove_planner_compat::computeCartesianPathCompat(
         *move_group_interface_, waypoints, goal_msg.goal.config.step_size,
@@ -600,7 +601,8 @@ bool MoveGroupPlanner::sendControlledStop(
   if (remaining_time < move_cfg.min_stop_time) {
     RCLCPP_INFO(
       logger_,
-      "Remaining time (%.3f) in trajectory is less than min_stop_time (%.3f). Stopping motion naturally.", remaining_time,
+      "Remaining time (%.3f) in trajectory is less than min_stop_time (%.3f). Stopping motion naturally.",
+      remaining_time,
       move_cfg.min_stop_time);
     return true;     // Do nothing and succeed as the motion will stop naturally
   }

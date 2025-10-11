@@ -127,9 +127,9 @@ std::vector<KeyConfig> DefaultAppModule::buildKeys()
         double y = -0.6465;
         double z = 0.8055;
         return QString("{\"x\":%1,\"y\":%2,\"z\":%3,\"roll\":1.57,\"pitch\":2.05,\"yaw\":1.57}")
-        .arg(x)
-        .arg(y)
-        .arg(z);
+               .arg(x)
+               .arg(y)
+               .arg(z);
       }});
 
   /* slider_pose_key --------------------------------------------- */
@@ -144,7 +144,7 @@ std::vector<KeyConfig> DefaultAppModule::buildKeys()
         }
         double x = L + 0.01;
         return QString("{\"x\":%1,\"y\":0.0,\"z\":0.0,\"roll\":0.0,\"pitch\":0.0,\"yaw\":0.0}")
-        .arg(x);
+               .arg(x);
       }});
 
   return ks;

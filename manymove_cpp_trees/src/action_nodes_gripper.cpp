@@ -311,7 +311,8 @@ BT::NodeStatus PublishJointStateAction::tick()
 
   std::vector<std::string> names;
   if (!getInput("joint_names", names) || names.empty()) {
-    throw BT::RuntimeError("PublishJointStateAction: 'joint_names' must contain at least one joint");
+    throw BT::RuntimeError(
+        "PublishJointStateAction: 'joint_names' must contain at least one joint");
   }
 
   std::vector<double> pos, vel, eff;

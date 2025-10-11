@@ -91,7 +91,8 @@ BT::NodeStatus AddCollisionObjectAction::onStart()
   if (shape != "mesh") {
     if (!getInput<std::vector<double>>("dimensions", dimensions)) {
       RCLCPP_ERROR(
-        node_->get_logger(), "AddCollisionObjectAction: Missing required input 'dimensions' for shape '%s'.",
+        node_->get_logger(),
+          "AddCollisionObjectAction: Missing required input 'dimensions' for shape '%s'.",
         shape.c_str());
       return BT::NodeStatus::FAILURE;
     }
@@ -298,7 +299,8 @@ BT::NodeStatus RemoveCollisionObjectAction::onRunning()
       return BT::NodeStatus::SUCCESS;
     } else {
       RCLCPP_ERROR(
-        node_->get_logger(), "RemoveCollisionObjectAction: Failed to remove object '%s'. Message: %s",
+        node_->get_logger(),
+          "RemoveCollisionObjectAction: Failed to remove object '%s'. Message: %s",
         object_id_.c_str(), action_result_.message.c_str());
       return BT::NodeStatus::FAILURE;
     }
@@ -440,7 +442,8 @@ BT::NodeStatus AttachDetachObjectAction::onStart()
 
   std::string action = attach_ ? "attaching" : "detaching";
   RCLCPP_INFO(
-    node_->get_logger(), "AttachDetachObjectAction: Sending goal for %s object '%s' to link '%s'. Touch links size: '%li'",
+    node_->get_logger(),
+      "AttachDetachObjectAction: Sending goal for %s object '%s' to link '%s'. Touch links size: '%li'",
     action.c_str(), object_id_.c_str(), link_name_.c_str(), touch_links.size());
 
   auto send_goal_options = rclcpp_action::Client<AttachDetachObject>::SendGoalOptions();
@@ -467,7 +470,8 @@ BT::NodeStatus AttachDetachObjectAction::onRunning()
     } else {
       std::string action = attach_ ? "attach" : "detach";
       RCLCPP_ERROR(
-        node_->get_logger(), "AttachDetachObjectAction: Failed to %s object '%s' to link '%s'. Message: %s",
+        node_->get_logger(),
+          "AttachDetachObjectAction: Failed to %s object '%s' to link '%s'. Message: %s",
         action.c_str(), object_id_.c_str(), link_name_.c_str(), action_result_.message.c_str());
       return BT::NodeStatus::FAILURE;
     }
@@ -732,7 +736,8 @@ BT::NodeStatus GetObjectPoseAction::onStart()
     return BT::NodeStatus::FAILURE;
   } else {
     RCLCPP_INFO(
-      node_->get_logger(), "GetObjectPoseAction: 'pre_transform_xyz_rpy' = {%.3f, %.3f, %.3f, %.3f, %.3f, %.3f}",
+      node_->get_logger(),
+        "GetObjectPoseAction: 'pre_transform_xyz_rpy' = {%.3f, %.3f, %.3f, %.3f, %.3f, %.3f}",
       pre_transform_xyz_rpy_[0],
       pre_transform_xyz_rpy_[1],
       pre_transform_xyz_rpy_[2],
@@ -748,7 +753,8 @@ BT::NodeStatus GetObjectPoseAction::onStart()
     return BT::NodeStatus::FAILURE;
   } else {
     RCLCPP_INFO(
-      node_->get_logger(), "GetObjectPoseAction: 'post_transform_xyz_rpy' = {%.3f, %.3f, %.3f, %.3f, %.3f, %.3f}",
+      node_->get_logger(),
+        "GetObjectPoseAction: 'post_transform_xyz_rpy' = {%.3f, %.3f, %.3f, %.3f, %.3f, %.3f}",
       post_transform_xyz_rpy_[0],
       post_transform_xyz_rpy_[1],
       post_transform_xyz_rpy_[2],
@@ -825,7 +831,8 @@ BT::NodeStatus GetObjectPoseAction::onRunning()
 
       // Log the new pose
       RCLCPP_INFO(
-        node_->get_logger(), "GetObjectPoseAction: New pose for '%s': Position (%.3f, %.3f, %.3f), Orientation (%.3f, %.3f, %.3f, %.3f)",
+        node_->get_logger(),
+          "GetObjectPoseAction: New pose for '%s': Position (%.3f, %.3f, %.3f), Orientation (%.3f, %.3f, %.3f, %.3f)",
         pose_key_.c_str(),
         action_result_.pose.position.x,
         action_result_.pose.position.y,
@@ -838,7 +845,8 @@ BT::NodeStatus GetObjectPoseAction::onRunning()
       return BT::NodeStatus::SUCCESS;
     } else {
       RCLCPP_ERROR(
-        node_->get_logger(), "GetObjectPoseAction: Failed to retrieve pose for object '%s'. Message: %s",
+        node_->get_logger(),
+          "GetObjectPoseAction: Failed to retrieve pose for object '%s'. Message: %s",
         object_id_.c_str(), action_result_.message.c_str());
       return BT::NodeStatus::FAILURE;
     }

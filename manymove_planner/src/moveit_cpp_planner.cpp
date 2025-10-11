@@ -558,12 +558,14 @@ std::pair<bool, moveit_msgs::msg::RobotTrajectory> MoveItCppPlanner::plan(
         } else {
           RCLCPP_WARN_STREAM(
             logger_,
-            "Euclidean distance between theoretical target and calculated trajectory last point: " <<
+            "Euclidean distance between theoretical target and calculated trajectory last point: "
+              <<
               targets_euclidean_distance);
 
           RCLCPP_WARN_STREAM(
             logger_,
-            "The planner was not able to calculate trajectory with end point within tolerance. Difference:" <<
+            "The planner was not able to calculate trajectory with end point within tolerance. Difference:"
+              <<
               (targets_euclidean_distance - goal_msg.goal.config.linear_precision));
           RCLCPP_WARN(
             logger_, "%s target planning attempt %d failed: trajectory is empty.",
@@ -847,7 +849,8 @@ bool MoveItCppPlanner::sendControlledStop(
   if (remaining_time < move_cfg.min_stop_time) {
     RCLCPP_INFO(
       logger_,
-      "Remaining time (%.3f) in trajectory is less than min_stop_time (%.3f). Stopping motion naturally.", remaining_time,
+      "Remaining time (%.3f) in trajectory is less than min_stop_time (%.3f). Stopping motion naturally.",
+      remaining_time,
       move_cfg.min_stop_time);
     return true;
   }
