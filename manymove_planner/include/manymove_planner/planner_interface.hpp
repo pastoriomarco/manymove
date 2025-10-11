@@ -26,7 +26,6 @@
 // ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 // POSSIBILITY OF SUCH DAMAGE.
 
-
 #pragma once
 
 #include <vector>
@@ -64,53 +63,72 @@ public:
   /**
    * @brief Plan a trajectory to achieve a specified goal.
    * @param goal The target goal for the manipulator.
-   * @return A pair containing a success flag (true if planning succeeded) and the planned robot trajectory.
+   * @return A pair containing a success flag (true if planning succeeded) and the planned robot
+   *trajectory.
    */
   virtual std::pair<bool, moveit_msgs::msg::RobotTrajectory> plan(
-    const manymove_msgs::action::PlanManipulator::Goal & goal) = 0;
+    const manymove_msgs::action::PlanManipulator::Goal& goal) = 0;
 
   /**
    * @brief Apply time parameterization to a trajectory.
-   * @param input_traj The raw robot trajectory message (without time stamps) produced by the planner.
-   * @param config The movement configuration that specifies velocity and acceleration scaling factors,
+   * @param input_traj The raw robot trajectory message (without time stamps) produced by the
+   *planner.
+   * @param config The movement configuration that specifies velocity and acceleration scaling
+   *factors,
    * and the maximum allowed Cartesian speed.
-   * @return A pair where the first element is true if time parameterization succeeded and the second element is the
+   * @return A pair where the first element is true if time parameterization succeeded and the
+   *second element is the
    * resulting trajectory with computed time stamps.
    *
-   * @details Most of the industrial and collaborative robots have a maximum cartesian speed over which the robot will perform
-   * and emergency stop. Moreover, safety regulations in collaborative applications require the enforcement of maximum cartesian
-   * speed limits. While this package is not meant to provide functionalities compliant with safety regulations, most robots
-   * will come with such functionalities from factory, and they can't (or shouldn't) be overruled or removed.
-   * This function not only applies the time parametrization required for the trajectory to be executed with a smooth motion,
-   * but also reduces the velocity scaling if the calculated cartesian speed at any segment of the trajectory exceeds the
-   * cartesian limit set on the @p config parameter. Currently this function only limits the velocity scaling factor, not the
-   * acceleration scaling factor: this allows for faster movements as the acceleration is not reduced together with the
-   * velocity, but try to keep velocities and accelerations coherent with the cartesian speed you want to obtain. Having really
-   * slow moves with high accelerations may cause jerky and instable moves, so when you set the @p config param always try to
-   * keep the velocity and acceleration scaling factors coherent with the maximum cartesian speed you set.
+   * @details Most of the industrial and collaborative robots have a maximum cartesian speed over
+   *which the robot will perform
+   * and emergency stop. Moreover, safety regulations in collaborative applications require the
+   *enforcement of maximum cartesian
+   * speed limits. While this package is not meant to provide functionalities compliant with safety
+   *regulations, most robots
+   * will come with such functionalities from factory, and they can't (or shouldn't) be overruled or
+   *removed.
+   * This function not only applies the time parametrization required for the trajectory to be
+   *executed with a smooth motion,
+   * but also reduces the velocity scaling if the calculated cartesian speed at any segment of the
+   *trajectory exceeds the
+   * cartesian limit set on the @p config parameter. Currently this function only limits the
+   *velocity scaling factor, not the
+   * acceleration scaling factor: this allows for faster movements as the acceleration is not
+   *reduced together with the
+   * velocity, but try to keep velocities and accelerations coherent with the cartesian speed you
+   *want to obtain. Having really
+   * slow moves with high accelerations may cause jerky and instable moves, so when you set the @p
+   *config param always try to
+   * keep the velocity and acceleration scaling factors coherent with the maximum cartesian speed
+   *you set.
    */
   virtual std::pair<bool, moveit_msgs::msg::RobotTrajectory> applyTimeParameterization(
-    const moveit_msgs::msg::RobotTrajectory & input_traj,
-    const manymove_msgs::msg::MovementConfig & config) = 0;
+    const moveit_msgs::msg::RobotTrajectory& input_traj,
+    const manymove_msgs::msg::MovementConfig& config)
+  = 0;
 
   /**
    * @brief Send a controlled stop command to the robot.
-   * @param decel_time_s The duration (in seconds) over which the robot’s velocities should be ramped down to zero.
+   * @param decel_time_s The duration (in seconds) over which the robot’s velocities should be
+   *ramped down to zero.
    * @param running_traj Current traj to stop
    * @param elapsed_s Elapsed time from the start of the current traj
    * @return True if the stop command was sent and executed successfully, false otherwise.
    *
-   * @details If the running_traj is not set, this function sends a single-point trajectory to the robot’s trajectory controller that holds the current
-   * joint positions (with zero velocities) and gives the controller a deceleration window. The effect is a “spring-back”
+   * @details If the running_traj is not set, this function sends a single-point trajectory to the
+   *robot’s trajectory controller that holds the current
+   * joint positions (with zero velocities) and gives the controller a deceleration window. The
+   *effect is a “spring-back”
    * stop where the robot decelerates smoothly.
-   * If running_traj is valid the end point will be the point of the traj where the robot will be at decel_time_s from now.
+   * If running_traj is valid the end point will be the point of the traj where the robot will be at
+   *decel_time_s from now.
    * Increasing the deceleration_time leads to a smoother stop, but also increases
    * the movement required to decelerate.
    */
-  virtual bool sendControlledStop(
-    const manymove_msgs::msg::MovementConfig & move_cfg,
-    const moveit_msgs::msg::RobotTrajectory & running_traj = moveit_msgs::msg::RobotTrajectory(),
-    double elapsed_s = 0.0) = 0;
+  virtual bool sendControlledStop(const manymove_msgs::msg::MovementConfig& move_cfg,
+                                  const moveit_msgs::msg::RobotTrajectory& running_traj = moveit_msgs::msg::RobotTrajectory(),
+                                  double elapsed_s = 0.0) = 0;
 
   /**
    * @brief Retrieve the action client for FollowJointTrajectory.
@@ -124,7 +142,7 @@ public:
    * @param joint_positions A vector of joint positions.
    * @return True if the joint state is valid (no collisions), false otherwise.
    */
-  virtual bool isJointStateValid(const std::vector<double> & joint_positions) const = 0;
+  virtual bool isJointStateValid(const std::vector<double>& joint_positions) const = 0;
 
   /**
    * @brief Checks if the start of the trajectory (the first waypoint)
@@ -133,24 +151,21 @@ public:
    * @param current_joint_state A vector of doubles representing the current joint positions.
    * @return true if each joint position in the first waypoint is within tolerance, false otherwise.
    */
-  virtual bool isTrajectoryStartValid(
-    const moveit_msgs::msg::RobotTrajectory & traj,
-    const manymove_msgs::msg::MoveManipulatorGoal & move_request,
-    const std::vector<double> & current_joint_state) const = 0;
+  virtual bool isTrajectoryStartValid(const moveit_msgs::msg::RobotTrajectory& traj,
+                                      const manymove_msgs::msg::MoveManipulatorGoal& move_request,
+                                      const std::vector<double>& current_joint_state) const = 0;
 
-  virtual bool isTrajectoryEndValid(
-    const moveit_msgs::msg::RobotTrajectory & traj,
-    const manymove_msgs::msg::MoveManipulatorGoal & move_request) const = 0;
+  virtual bool isTrajectoryEndValid(const moveit_msgs::msg::RobotTrajectory& traj,
+                                    const manymove_msgs::msg::MoveManipulatorGoal& move_request)
+  const = 0;
 
-  virtual bool isTrajectoryValid(
-    const trajectory_msgs::msg::JointTrajectory & joint_traj_msg,
-    const moveit_msgs::msg::Constraints & path_constraints,
-    const double time_from_start = 0) const = 0;
+  virtual bool isTrajectoryValid(const trajectory_msgs::msg::JointTrajectory& joint_traj_msg,
+                                 const moveit_msgs::msg::Constraints& path_constraints,
+                                 const double time_from_start = 0) const = 0;
 
-  virtual bool isTrajectoryValid(
-    const robot_trajectory::RobotTrajectory & trajectory,
-    const moveit_msgs::msg::Constraints & path_constraints,
-    const double time_from_start = 0) const = 0;
+  virtual bool isTrajectoryValid(const robot_trajectory::RobotTrajectory& trajectory,
+                                 const moveit_msgs::msg::Constraints& path_constraints,
+                                 const double time_from_start = 0) const = 0;
 
 protected:
   /**

@@ -26,7 +26,6 @@
 // ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 // POSSIBILITY OF SUCH DAMAGE.
 
-
 #ifndef ROS2_WORKER_HPP
 #define ROS2_WORKER_HPP
 
@@ -47,18 +46,21 @@ class AppModule;
 class Ros2Worker : public rclcpp::Node
 {
 public:
-  Ros2Worker(const std::string & node_name, HmiGui * gui, const std::string & robot_prefix = "");
+  Ros2Worker(const std::string& node_name, HmiGui* gui, const std::string& robot_prefix = "");
 
   void callStartExecution();
   void callStopExecution();
   void callResetProgram();
 
-  const std::string & getRobotPrefix() const {return robot_prefix_;}
+  const std::string& getRobotPrefix() const
+  {
+    return robot_prefix_;
+  }
 
 private:
   void statusCallback(const std_msgs::msg::String::SharedPtr msg);
 
-  HmiGui * gui_;
+  HmiGui* gui_;
   rclcpp::Subscription<std_msgs::msg::String>::SharedPtr subscription_;
   rclcpp::Client<manymove_msgs::srv::SetBlackboardValues>::SharedPtr update_blackboard_client_;
 

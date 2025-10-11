@@ -26,7 +26,6 @@
 // ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 // POSSIBILITY OF SUCH DAMAGE.
 
-
 #ifndef HMI_GUI_HPP
 #define HMI_GUI_HPP
 
@@ -45,24 +44,21 @@ class HmiGui : public QMainWindow
 
 public:
   /// The new constructor accepts a list of robot prefixes.
-  explicit HmiGui(
-    const std::vector<std::string> & robotPrefixes,
-    std::vector<std::string> & robotNames, QWidget * parent = nullptr);
+  explicit HmiGui(const std::vector<std::string>& robotPrefixes,
+                  std::vector<std::string>& robotNames, QWidget* parent = nullptr);
   ~HmiGui();
 
 public slots:
   /// Update the GUI for a given robot (by prefix).
-  void updateStatus(
-    const QString & robotPrefix,
-    bool stop_execution,
-    bool reset,
-    bool collision_detected);
+  void updateStatus(const QString& robotPrefix,
+                    bool stop_execution,
+                    bool reset,
+                    bool collision_detected);
 
   /// Update a textual message for a given robot.
-  void updateRobotMessage(
-    const QString & robotPrefix,
-    const QString & message,
-    const QString & color);
+  void updateRobotMessage(const QString& robotPrefix,
+                          const QString& message,
+                          const QString& color);
 
   // TCP server slots
   void onNewConnection();
@@ -70,24 +66,24 @@ public slots:
 
 signals:
   /// Signals that include the robot prefix.
-  void startExecutionRequested(const std::string & robotPrefix);
-  void stopExecutionRequested(const std::string & robotPrefix);
-  void resetProgramRequested(const std::string & robotPrefix);
+  void startExecutionRequested(const std::string& robotPrefix);
+  void stopExecutionRequested(const std::string& robotPrefix);
+  void resetProgramRequested(const std::string& robotPrefix);
 
 private:
-  QWidget * centralWidget_;
-  QTcpServer * tcpServer_;
-  QTcpSocket * clientSocket_;
+  QWidget* centralWidget_;
+  QTcpServer* tcpServer_;
+  QTcpSocket* clientSocket_;
 
   // Structure holding one robot’s UI elements.
   struct RobotInterface
   {
     std::string prefix;
-    QLabel * prefixLabel;
-    QPushButton * startButton;
-    QPushButton * stopButton;
-    QPushButton * resetButton;
-    QLabel * messageLabel;
+    QLabel* prefixLabel;
+    QPushButton* startButton;
+    QPushButton* stopButton;
+    QPushButton* resetButton;
+    QLabel* messageLabel;
   };
 
   std::vector<RobotInterface> robotInterfaces_;

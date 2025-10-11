@@ -26,7 +26,6 @@
 // ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 // POSSIBILITY OF SUCH DAMAGE.
 
-
 #ifndef DEFAULT_APP_HMI_HPP
 #define DEFAULT_APP_HMI_HPP
 
@@ -37,8 +36,10 @@
 class DefaultAppModule : public AppModule
 {
 public:
-  explicit DefaultAppModule(QWidget * parent = nullptr)
-  : AppModule(buildKeys(), parent) {}
+  explicit DefaultAppModule(QWidget* parent = nullptr)
+    : AppModule(buildKeys(), parent)
+  {
+  }
 
 private:
   static std::vector<KeyConfig> buildKeys();

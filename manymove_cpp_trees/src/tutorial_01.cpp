@@ -26,7 +26,6 @@
 // ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 // POSSIBILITY OF SUCH DAMAGE.
 
-
 #include <rclcpp/rclcpp.hpp>
 #include <behaviortree_cpp_v3/bt_factory.h>
 #include <behaviortree_cpp_v3/behavior_tree.h>
@@ -55,7 +54,7 @@
 using geometry_msgs::msg::Pose;
 using namespace manymove_cpp_trees;
 
-int main(int argc, char ** argv)
+int main(int argc, char** argv)
 {
   // ----------------------------------------------------------------------------
   // 0. Preparing the node, blackboard and robot params
@@ -120,18 +119,17 @@ int main(int argc, char ** argv)
   // 5. Assembling the tree
   // ----------------------------------------------------------------------------
 
-  std::string startup_sequence_xml = sequenceWrapperXML(
-    "StartUpSequence",
+  std::string startup_sequence_xml = sequenceWrapperXML("StartUpSequence",
   {
     // OPTIONAL CODE FROM SECTION 1 HERE
   });
 
-  std::string retry_forever_wrapper_xml = retrySequenceWrapperXML(
-    "ResetHandler",
-    {startup_sequence_xml,
-      /*ADD CODE HERE*/}, -1);
+  std::string retry_forever_wrapper_xml = retrySequenceWrapperXML("ResetHandler",
+                                                                {startup_sequence_xml,
+                                                                 /*ADD CODE HERE*/}, -1);
 
-  // GlobalMasterSequence with RepeatForever as child to set BehaviorTree ID and root main_tree_to_execute in the XML
+  // GlobalMasterSequence with RepeatForever as child to set BehaviorTree ID and root
+  // main_tree_to_execute in the XML
   std::string master_body = sequenceWrapperXML("GlobalMasterSequence", {retry_forever_wrapper_xml});
 
   // Create the MasterTree
@@ -141,8 +139,9 @@ int main(int argc, char ** argv)
   // 6. Setting up the overall cycle
   // ----------------------------------------------------------------------------
 
-  RCLCPP_INFO(
-    node->get_logger(), "=== Programmatically Generated Tree XML ===\n%s", final_tree_xml.c_str());
+  RCLCPP_INFO(node->get_logger(),
+              "=== Programmatically Generated Tree XML ===\n%s",
+              final_tree_xml.c_str());
 
   // Register node types
   BT::BehaviorTreeFactory factory;
@@ -152,7 +151,7 @@ int main(int argc, char ** argv)
   BT::Tree tree;
   try {
     tree = factory.createTreeFromText(final_tree_xml, blackboard);
-  } catch (const std::exception & ex) {
+  } catch (const std::exception& ex) {
     RCLCPP_ERROR(node->get_logger(), "Failed to create tree: %s", ex.what());
     return 1;
   }
@@ -161,9 +160,8 @@ int main(int argc, char ** argv)
   BT::PublisherZMQ publisher(tree);
 
   // Create the HMI Service Node and pass the same blackboard ***
-  auto hmi_node = std::make_shared<manymove_cpp_trees::HMIServiceNode>(
-    "hmi_service_node",
-    blackboard, keys);
+  auto hmi_node = std::make_shared<manymove_cpp_trees::HMIServiceNode>("hmi_service_node",
+                                                                       blackboard, keys);
   RCLCPP_INFO(node->get_logger(), "HMI Service Node instantiated.");
 
   // Create a MultiThreadedExecutor so that both nodes can be spun concurrently.
@@ -180,7 +178,8 @@ int main(int argc, char ** argv)
     if (status == BT::NodeStatus::SUCCESS) {
       RCLCPP_INFO(node->get_logger(), "BT ended SUCCESS.");
       break;
-    } else if (status == BT::NodeStatus::FAILURE) {
+    }
+    else if (status == BT::NodeStatus::FAILURE) {
       RCLCPP_ERROR(node->get_logger(), "BT ended FAILURE.");
       break;
     }

@@ -26,13 +26,12 @@
 // ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 // POSSIBILITY OF SUCH DAMAGE.
 
-
 #include <rclcpp/rclcpp.hpp>
 #include "manymove_planner/move_group_planner.hpp"
 #include "manymove_planner/moveit_cpp_planner.hpp"
 #include "manymove_planner/action_server.hpp"
 
-int main(int argc, char ** argv)
+int main(int argc, char** argv)
 {
   rclcpp::init(argc, argv);
 
@@ -81,16 +80,17 @@ int main(int argc, char ** argv)
     RCLCPP_INFO(node->get_logger(), "===================================================");
     RCLCPP_INFO(node->get_logger(), "Using MoveItCppPlanner.");
     RCLCPP_INFO(node->get_logger(), "===================================================");
-  } else if (planner_type == "movegroup") {
+  }
+  else if (planner_type == "movegroup") {
     planner = std::make_shared<MoveGroupPlanner>(node, planning_group, base_frame, traj_controller);
     RCLCPP_INFO(node->get_logger(), "===================================================");
     RCLCPP_INFO(node->get_logger(), "Using MoveGroupPlanner.");
     RCLCPP_INFO(node->get_logger(), "===================================================");
-  } else {
-    RCLCPP_ERROR(
-      node->get_logger(),
-      "Unknown planner_type: %s. Valid options are 'moveitcpp' and 'movegroup'.",
-      planner_type.c_str());
+  }
+  else {
+    RCLCPP_ERROR(node->get_logger(),
+                 "Unknown planner_type: %s. Valid options are 'moveitcpp' and 'movegroup'.",
+                 planner_type.c_str());
     return 1;
   }
 

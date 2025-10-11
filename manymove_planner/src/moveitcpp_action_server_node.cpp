@@ -26,7 +26,6 @@
 // ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 // POSSIBILITY OF SUCH DAMAGE.
 
-
 #include <rclcpp/rclcpp.hpp>
 #include "manymove_planner/compat/moveit_includes_compat.hpp"
 #include "manymove_planner/compat/moveit_compat.hpp"
@@ -38,20 +37,21 @@ class MoveItCppActionServerNode : public rclcpp::Node
 {
 public:
   static std::shared_ptr<MoveItCppActionServerNode> create(
-    const std::shared_ptr<moveit_cpp::MoveItCpp> & moveit_cpp,
-    const rclcpp::NodeOptions & options = rclcpp::NodeOptions())
+    const std::shared_ptr<moveit_cpp::MoveItCpp>& moveit_cpp,
+    const rclcpp::NodeOptions& options = rclcpp::NodeOptions())
   {
-    auto node = std::shared_ptr<MoveItCppActionServerNode>(
-      new MoveItCppActionServerNode(moveit_cpp, options));
+    auto node =
+      std::shared_ptr<MoveItCppActionServerNode>(new MoveItCppActionServerNode(moveit_cpp,
+                                                                               options));
     node->initialize();
     return node;
   }
 
 private:
   MoveItCppActionServerNode(
-    const std::shared_ptr<moveit_cpp::MoveItCpp> & moveit_cpp,
-    const rclcpp::NodeOptions & options)
-  : Node("moveitcpp_action_server_node", options),
+    const std::shared_ptr<moveit_cpp::MoveItCpp>& moveit_cpp,
+    const rclcpp::NodeOptions& options)
+    : Node("moveitcpp_action_server_node", options),
     moveit_cpp_(moveit_cpp)
   {
     RCLCPP_INFO(get_logger(), "MoveItCppActionServerNode constructed.");
@@ -72,10 +72,9 @@ private:
       this->get_parameter("traj_controllers").as_string_array();
 
     if (robot_prefixes.size() != planning_groups.size() ||
-      robot_prefixes.size() != base_frames.size() ||
-      robot_prefixes.size() != tcp_frames.size() ||
-      robot_prefixes.size() != traj_controllers.size())
-    {
+        robot_prefixes.size() != base_frames.size() ||
+        robot_prefixes.size() != tcp_frames.size() ||
+        robot_prefixes.size() != traj_controllers.size()) {
       RCLCPP_ERROR(get_logger(), "Mismatch in sizes of parameters!");
       rclcpp::shutdown();
       return;
@@ -86,16 +85,19 @@ private:
       std::string full_base_frame = robot_prefixes[i] + base_frames[i];
       std::string full_controller = robot_prefixes[i] + traj_controllers[i];
 
-      RCLCPP_INFO(
-        get_logger(),
-        "Creating planner and action server for robot_prefix=%s, planning_group=%s",
-        robot_prefixes[i].c_str(), full_planning_group.c_str());
+      RCLCPP_INFO(get_logger(),
+                  "Creating planner and action server for robot_prefix=%s, planning_group=%s",
+                  robot_prefixes[i].c_str(), full_planning_group.c_str());
 
-      auto planner = std::make_shared<MoveItCppPlanner>(
-        self, full_planning_group, full_base_frame, full_controller, moveit_cpp_);
+      auto planner = std::make_shared<MoveItCppPlanner>(self,
+                                                        full_planning_group,
+                                                        full_base_frame,
+                                                        full_controller,
+                                                        moveit_cpp_);
 
-      auto action_server = std::make_shared<ManipulatorActionServer>(
-        self, planner, robot_prefixes[i]);
+      auto action_server = std::make_shared<ManipulatorActionServer>(self,
+                                                                     planner,
+                                                                     robot_prefixes[i]);
 
       action_servers_.push_back(action_server);
     }
@@ -104,10 +106,10 @@ private:
   }
 
   std::shared_ptr<moveit_cpp::MoveItCpp> moveit_cpp_;
-  std::vector<std::shared_ptr<ManipulatorActionServer>> action_servers_;
+  std::vector<std::shared_ptr<ManipulatorActionServer> > action_servers_;
 };
 
-int main(int argc, char ** argv)
+int main(int argc, char** argv)
 {
   rclcpp::init(argc, argv);
   rclcpp::NodeOptions node_opts;
@@ -125,7 +127,9 @@ int main(int argc, char ** argv)
 
   // Thread dedicated to the MoveItCpp node's execution.
   std::thread moveitcpp_thread([&moveitcpp_executor = moveitcpp_executor]()
-    {moveitcpp_executor.spin();});
+    {
+                               moveitcpp_executor.spin();
+    });
 
   // Node and executor for Planners/Action Servers
   auto planners_node = MoveItCppActionServerNode::create(moveit_cpp, node_opts);
