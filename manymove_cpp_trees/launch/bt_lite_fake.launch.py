@@ -44,10 +44,14 @@ def generate_launch_description():
                 description="Model of the robot (e.g., lite6, uf850, xarm)",
             ),
             DeclareLaunchArgument(
-                "robot_prefix", default_value="", description="Prefix for the name of the robot arms"
+                "robot_prefix",
+                default_value="",
+                description="Prefix for the name of the robot arms",
             ),
             DeclareLaunchArgument(
-                "tcp_frame", default_value="link_tcp", description="Name of the link to attach/detach objects to/from"
+                "tcp_frame",
+                default_value="link_tcp",
+                description="Name of the link to attach/detach objects to/from",
             ),
             DeclareLaunchArgument(
                 "is_robot_real",

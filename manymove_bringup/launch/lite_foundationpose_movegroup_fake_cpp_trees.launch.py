@@ -70,10 +70,14 @@ def launch_setup(context, *args, **kwargs):
     geometry_radius = LaunchConfiguration("geometry_radius", default=0.1)
     geometry_length = LaunchConfiguration("geometry_length", default=0.1)
     geometry_width = LaunchConfiguration("geometry_width", default=0.1)
-    geometry_mesh_filename = LaunchConfiguration("geometry_mesh_filename", default="pneumatic_lite.stl")
+    geometry_mesh_filename = LaunchConfiguration(
+        "geometry_mesh_filename", default="pneumatic_lite.stl"
+    )
     geometry_mesh_origin_xyz = LaunchConfiguration("geometry_mesh_origin_xyz", default='"0 0 0"')
     geometry_mesh_origin_rpy = LaunchConfiguration("geometry_mesh_origin_rpy", default='"0 0 0"')
-    geometry_mesh_tcp_xyz = LaunchConfiguration("geometry_mesh_tcp_xyz", default='"0.03075 0 0.11885"')
+    geometry_mesh_tcp_xyz = LaunchConfiguration(
+        "geometry_mesh_tcp_xyz", default='"0.03075 0 0.11885"'
+    )
     geometry_mesh_tcp_rpy = LaunchConfiguration("geometry_mesh_tcp_rpy", default='"0 0.52 0"')
 
     no_gui_ctrl = LaunchConfiguration("no_gui_ctrl", default=False)
@@ -90,11 +94,16 @@ def launch_setup(context, *args, **kwargs):
     contact_links = (LaunchConfiguration("contact_links"),)
 
     xarm_type = "{}{}".format(
-        robot_type.perform(context), dof.perform(context) if robot_type.perform(context) in ("xarm", "lite") else ""
+        robot_type.perform(context),
+        dof.perform(context) if robot_type.perform(context) in ("xarm", "lite") else "",
     )
 
     ros2_control_params = generate_ros2_control_params_temp_file(
-        os.path.join(get_package_share_directory("xarm_controller"), "config", "{}_controllers.yaml".format(xarm_type)),
+        os.path.join(
+            get_package_share_directory("xarm_controller"),
+            "config",
+            "{}_controllers.yaml".format(xarm_type),
+        ),
         prefix=prefix.perform(context),
         add_gripper=add_gripper.perform(context) in ("True", "true"),
         add_bio_gripper=add_bio_gripper.perform(context) in ("True", "true"),
@@ -154,7 +163,9 @@ def launch_setup(context, *args, **kwargs):
             geometry_mesh_tcp_rpy=geometry_mesh_tcp_rpy,
         )
         .robot_description()
-        .planning_scene_monitor(publish_robot_description=True, publish_robot_description_semantic=True)
+        .planning_scene_monitor(
+            publish_robot_description=True, publish_robot_description_semantic=True
+        )
         .planning_pipelines(pipelines=["ompl", "chomp", "pilz_industrial_motion_planner"])
         # .moveit_cpp(file_path=get_package_share_directory("manymove_planner") + "/config/moveit_cpp.yaml")
     ).to_moveit_configs()
@@ -235,7 +246,9 @@ def launch_setup(context, *args, **kwargs):
 
     xyz = attach_xyz.perform(context)[1:-1].split(" ")
     rpy = attach_rpy.perform(context)[1:-1].split(" ")
-    tf_args = xyz + rpy + [attach_to.perform(context), "{}link_base".format(prefix.perform(context))]
+    tf_args = (
+        xyz + rpy + [attach_to.perform(context), "{}link_base".format(prefix.perform(context))]
+    )
 
     # Static TF
     static_tf = Node(
@@ -260,14 +273,21 @@ def launch_setup(context, *args, **kwargs):
 
     controllers = ["{}{}_traj_controller".format(prefix.perform(context), xarm_type)]
     if add_gripper.perform(context) in ("True", "true") and robot_type.perform(context) != "lite":
-        controllers.append("{}{}_gripper_traj_controller".format(prefix.perform(context), robot_type.perform(context)))
+        controllers.append(
+            "{}{}_gripper_traj_controller".format(
+                prefix.perform(context), robot_type.perform(context)
+            )
+        )
     elif (
         add_gripper.perform(context) in ("True", "true")
         and robot_type.perform(context) == "lite"
         and ros2_control_plugin.perform(context) != "isaac"
     ):
         controllers.append("{}lite_gripper_controller".format(prefix.perform(context)))
-    elif add_bio_gripper.perform(context) in ("True", "true") and robot_type.perform(context) != "lite":
+    elif (
+        add_bio_gripper.perform(context) in ("True", "true")
+        and robot_type.perform(context) != "lite"
+    ):
         controllers.append("{}bio_gripper_traj_controller".format(prefix.perform(context)))
 
     joint_state_broadcaster = Node(
@@ -437,9 +457,13 @@ def generate_launch_description():
     return LaunchDescription(
         [
             # New DeclareLaunchArguments for base_frame, tcp_frame
-            DeclareLaunchArgument("base_frame", default_value="link_base", description="Base frame of the robot"),
             DeclareLaunchArgument(
-                "tcp_frame", default_value="link_tcp", description="TCP (end effector) frame of the robot"
+                "base_frame", default_value="link_base", description="Base frame of the robot"
+            ),
+            DeclareLaunchArgument(
+                "tcp_frame",
+                default_value="link_tcp",
+                description="TCP (end effector) frame of the robot",
             ),
             # DeclareLaunchArgument('gripper_action_server', default_value='/lite_gripper_controller/gripper_cmd',
             # description='Name of the action server to control the gripper'),
@@ -454,7 +478,9 @@ def generate_launch_description():
                 description="List of links to exclude from collision checking",
             ),
             DeclareLaunchArgument(
-                "log_level", default_value="info", description="Defines log level for bt_client_node"
+                "log_level",
+                default_value="info",
+                description="Defines log level for bt_client_node",
             ),
             # OpaqueFunction to set up the node
             OpaqueFunction(function=launch_setup),

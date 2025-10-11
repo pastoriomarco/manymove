@@ -61,7 +61,9 @@ def launch_setup(context, *args, **kwargs):
         MoveItConfigsBuilder("moveit_resources_panda")
         .robot_description(
             file_path="config/panda.urdf.xacro",
-            mappings={"ros2_control_hardware_type": LaunchConfiguration("ros2_control_hardware_type")},
+            mappings={
+                "ros2_control_hardware_type": LaunchConfiguration("ros2_control_hardware_type")
+            },
         )
         .robot_description_semantic(file_path="config/panda.srdf")
         .trajectory_execution(file_path="config/gripper_moveit_controllers.yaml")
@@ -71,7 +73,9 @@ def launch_setup(context, *args, **kwargs):
 
     # Load isaac_ros_cumotion_planning.yaml
     isaac_config_file_path = os.path.join(
-        get_package_share_directory("isaac_ros_cumotion_moveit"), "config", "isaac_ros_cumotion_planning.yaml"
+        get_package_share_directory("isaac_ros_cumotion_moveit"),
+        "config",
+        "isaac_ros_cumotion_planning.yaml",
     )
 
     with open(isaac_config_file_path, "r") as f:
@@ -245,10 +249,16 @@ def generate_launch_description():
     return LaunchDescription(
         [
             # DeclareLaunchArguments for planning_group, base_frame, tcp_frame
-            DeclareLaunchArgument("planning_group", default_value="panda_arm", description="MoveIt planning group"),
-            DeclareLaunchArgument("base_frame", default_value="panda_link0", description="Base frame of the robot"),
             DeclareLaunchArgument(
-                "tcp_frame", default_value="panda_link8", description="TCP (end effector) frame of the robot"
+                "planning_group", default_value="panda_arm", description="MoveIt planning group"
+            ),
+            DeclareLaunchArgument(
+                "base_frame", default_value="panda_link0", description="Base frame of the robot"
+            ),
+            DeclareLaunchArgument(
+                "tcp_frame",
+                default_value="panda_link8",
+                description="TCP (end effector) frame of the robot",
             ),
             DeclareLaunchArgument(
                 "traj_controller",

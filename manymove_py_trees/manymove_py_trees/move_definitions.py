@@ -28,7 +28,10 @@ class Move:
         """Validate that the requested move type is supported."""
         allowed_types = ["pose", "joint", "named", "cartesian"]
         if self.movement_type not in allowed_types:
-            raise ValueError(f"Unsupported movement_type '{self.movement_type}'. " f"Must be one of {allowed_types}.")
+            raise ValueError(
+                f"Unsupported movement_type '{self.movement_type}'. "
+                f"Must be one of {allowed_types}."
+            )
 
     def to_move_manipulator_goal(self) -> MoveManipulatorGoal:
         """Convert this Move object into a MoveManipulatorGoal message."""
@@ -40,7 +43,9 @@ class Move:
 
         if self.movement_type in ["pose", "cartesian"]:
             if not isinstance(self.pose_target, Pose):
-                raise TypeError(f"For '{self.movement_type}' moves, a valid Pose must be provided.")
+                raise TypeError(
+                    f"For '{self.movement_type}' moves, a valid Pose must be provided."
+                )
             mmg.pose_target = self.pose_target
 
         elif self.movement_type == "joint":
@@ -110,7 +115,11 @@ def define_movement_configs() -> Dict[str, MovementConfig]:
     slow_move_config.plan_number_limit = 32
     slow_move_config.smoothing_type = "time_optimal"
 
-    return {"max_move": max_move_config, "mid_move": mid_move_config, "slow_move": slow_move_config}
+    return {
+        "max_move": max_move_config,
+        "mid_move": mid_move_config,
+        "slow_move": slow_move_config,
+    }
 
 
 def create_pose(position: dict, orientation: dict) -> Pose:

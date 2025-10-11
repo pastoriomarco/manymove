@@ -65,7 +65,9 @@ class HMIServiceNode(Node):
             key = request.key[i]
             value_type = request.value_type[i]
             data_str = request.value_data[i]
-            self.get_logger().info(f"Updating BB key='{key}' type='{value_type}' data='{data_str}'")
+            self.get_logger().info(
+                f"Updating BB key='{key}' type='{value_type}' data='{data_str}'"
+            )
             try:
                 if value_type == "bool":
                     # Expect data_str to be a JSON string "true" or "false"
@@ -107,7 +109,11 @@ class HMIServiceNode(Node):
             stop_execution = self.blackboard.get("stop_execution")
             reset = self.blackboard.get("reset")
             collision_detected = self.blackboard.get("collision_detected")
-            msg_dict = {"stop_execution": stop_execution, "reset": reset, "collision_detected": collision_detected}
+            msg_dict = {
+                "stop_execution": stop_execution,
+                "reset": reset,
+                "collision_detected": collision_detected,
+            }
         else:
             # For a specific robot prefix, expect keys like "L_stop_execution", etc.
             stop_execution = self.blackboard.get(f"{self.robot_prefix}stop_execution")

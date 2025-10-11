@@ -39,23 +39,37 @@ def build_and_run_bt(node: Node):
     joint_rest = [0.0, -0.785, 0.0, -2.355, 0.0, 3.14, 0.785]
     named_home = "ready"
 
-    pick_target = Pose(position=Point(x=0.3, y=0.3, z=0.25), orientation=Quaternion(x=1.0, y=0.0, z=0.0, w=0.0))
+    pick_target = Pose(
+        position=Point(x=0.3, y=0.3, z=0.25), orientation=Quaternion(x=1.0, y=0.0, z=0.0, w=0.0)
+    )
     approach_target = Pose(
-        position=Point(x=pick_target.position.x, y=pick_target.position.y, z=pick_target.position.z + 0.02),
+        position=Point(
+            x=pick_target.position.x, y=pick_target.position.y, z=pick_target.position.z + 0.02
+        ),
         orientation=Quaternion(x=1.0, y=0.0, z=0.0, w=0.0),
     )
 
     # Define three sequences: rest, pick, and home.
     rest_position = [
-        create_move("joint", tcp_frame, joint_values=joint_rest, config=movement_configs["max_move"]),
+        create_move(
+            "joint", tcp_frame, joint_values=joint_rest, config=movement_configs["max_move"]
+        ),
     ]
     pick_sequence = [
-        create_move("pose", tcp_frame, target=approach_target, config=movement_configs["mid_move"]),
-        create_move("cartesian", tcp_frame, target=pick_target, config=movement_configs["slow_move"]),
-        create_move("cartesian", tcp_frame, target=approach_target, config=movement_configs["max_move"]),
+        create_move(
+            "pose", tcp_frame, target=approach_target, config=movement_configs["mid_move"]
+        ),
+        create_move(
+            "cartesian", tcp_frame, target=pick_target, config=movement_configs["slow_move"]
+        ),
+        create_move(
+            "cartesian", tcp_frame, target=approach_target, config=movement_configs["max_move"]
+        ),
     ]
     home_position = [
-        create_move("named", tcp_frame, named_target=named_home, config=movement_configs["max_move"]),
+        create_move(
+            "named", tcp_frame, named_target=named_home, config=movement_configs["max_move"]
+        ),
     ]
 
     # Build a list of sequences and the Behavior Tree (BT)
@@ -63,7 +77,9 @@ def build_and_run_bt(node: Node):
     chained_branch = create_tree_from_sequences(node, list_of_sequences, root_name="LogicSequence")
     main_seq = py_trees.composites.Sequence("Main_Sequence", memory=True)
     main_seq.add_child(chained_branch.root)
-    repeated_root = py_trees.decorators.Repeat(child=main_seq, num_success=-1, name="RepeatForever")  # infinite repeat
+    repeated_root = py_trees.decorators.Repeat(
+        child=main_seq, num_success=-1, name="RepeatForever"
+    )  # infinite repeat
     bt_tree = py_trees_ros.trees.BehaviourTree(repeated_root)
 
     # Setup the BT (which will read the rclpy Node from the blackboard)

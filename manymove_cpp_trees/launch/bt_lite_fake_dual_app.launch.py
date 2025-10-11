@@ -39,22 +39,34 @@ def generate_launch_description():
     return LaunchDescription(
         [
             DeclareLaunchArgument(
-                "robot_model_1", default_value="lite6", description="Model of the robot (e.g., lite6, uf850, xarm)"
+                "robot_model_1",
+                default_value="lite6",
+                description="Model of the robot (e.g., lite6, uf850, xarm)",
             ),
             DeclareLaunchArgument(
-                "robot_prefix_1", default_value="L_", description="Prefix for the name of the robot arms"
+                "robot_prefix_1",
+                default_value="L_",
+                description="Prefix for the name of the robot arms",
             ),
             DeclareLaunchArgument(
-                "tcp_frame_1", default_value="link_tcp", description="Name of the link to attach/detach objects to/from"
+                "tcp_frame_1",
+                default_value="link_tcp",
+                description="Name of the link to attach/detach objects to/from",
             ),
             DeclareLaunchArgument(
-                "robot_model_2", default_value="uf850", description="Model of the robot (e.g., lite6, uf850, xarm)"
+                "robot_model_2",
+                default_value="uf850",
+                description="Model of the robot (e.g., lite6, uf850, xarm)",
             ),
             DeclareLaunchArgument(
-                "robot_prefix_2", default_value="R_", description="Prefix for the name of the robot arms"
+                "robot_prefix_2",
+                default_value="R_",
+                description="Prefix for the name of the robot arms",
             ),
             DeclareLaunchArgument(
-                "tcp_frame_2", default_value="link_tcp", description="Name of the link to attach/detach objects to/from"
+                "tcp_frame_2",
+                default_value="link_tcp",
+                description="Name of the link to attach/detach objects to/from",
             ),
             DeclareLaunchArgument(
                 "is_robot_real",

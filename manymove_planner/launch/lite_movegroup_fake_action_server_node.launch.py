@@ -65,10 +65,14 @@ def launch_setup(context, *args, **kwargs):
     geometry_radius = LaunchConfiguration("geometry_radius", default=0.1)
     geometry_length = LaunchConfiguration("geometry_length", default=0.1)
     geometry_width = LaunchConfiguration("geometry_width", default=0.1)
-    geometry_mesh_filename = LaunchConfiguration("geometry_mesh_filename", default="pneumatic_lite.stl")
+    geometry_mesh_filename = LaunchConfiguration(
+        "geometry_mesh_filename", default="pneumatic_lite.stl"
+    )
     geometry_mesh_origin_xyz = LaunchConfiguration("geometry_mesh_origin_xyz", default='"0 0 0"')
     geometry_mesh_origin_rpy = LaunchConfiguration("geometry_mesh_origin_rpy", default='"0 0 0"')
-    geometry_mesh_tcp_xyz = LaunchConfiguration("geometry_mesh_tcp_xyz", default='"0.03075 0 0.11885"')
+    geometry_mesh_tcp_xyz = LaunchConfiguration(
+        "geometry_mesh_tcp_xyz", default='"0.03075 0 0.11885"'
+    )
     geometry_mesh_tcp_rpy = LaunchConfiguration("geometry_mesh_tcp_rpy", default='"0 0.52 0"')
 
     # no_gui_ctrl = LaunchConfiguration('no_gui_ctrl', default=False)
@@ -78,7 +82,8 @@ def launch_setup(context, *args, **kwargs):
     tcp_frame = LaunchConfiguration("tcp_frame")
 
     xarm_type = "{}{}".format(
-        robot_type.perform(context), dof.perform(context) if robot_type.perform(context) in ("xarm", "lite") else ""
+        robot_type.perform(context),
+        dof.perform(context) if robot_type.perform(context) in ("xarm", "lite") else "",
     )
 
     # ros2_control_plugin = 'uf_robot_hardware/UFRobotFakeSystemHardware'
@@ -196,9 +201,13 @@ def generate_launch_description():
     return LaunchDescription(
         [
             # DeclareLaunchArguments for base_frame, tcp_frame
-            DeclareLaunchArgument("base_frame", default_value="link_base", description="Base frame of the robot"),
             DeclareLaunchArgument(
-                "tcp_frame", default_value="link_tcp", description="TCP (end effector) frame of the robot"
+                "base_frame", default_value="link_base", description="Base frame of the robot"
+            ),
+            DeclareLaunchArgument(
+                "tcp_frame",
+                default_value="link_tcp",
+                description="TCP (end effector) frame of the robot",
             ),
             # OpaqueFunction to set up the node
             OpaqueFunction(function=launch_setup),

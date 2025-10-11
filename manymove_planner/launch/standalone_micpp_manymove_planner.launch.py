@@ -59,9 +59,13 @@ def generate_launch_description():
         )
         .robot_description()
         .trajectory_execution(file_path="config/lite6/fake_controllers.yaml")
-        .planning_scene_monitor(publish_robot_description=True, publish_robot_description_semantic=True)
+        .planning_scene_monitor(
+            publish_robot_description=True, publish_robot_description_semantic=True
+        )
         .planning_pipelines(pipelines=["ompl"])
-        .moveit_cpp(file_path=get_package_share_directory("manymove_planner") + "/config/moveit_cpp.yaml")
+        .moveit_cpp(
+            file_path=get_package_share_directory("manymove_planner") + "/config/moveit_cpp.yaml"
+        )
         .to_moveit_configs()
     )
 

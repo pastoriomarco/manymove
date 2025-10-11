@@ -13,7 +13,9 @@ from manymove_msgs.action import MoveManipulator
 class MoveManipulatorBehavior(py_trees.behaviour.Behaviour):
     """Wrap the MoveManipulator action into a reusable py_trees behaviour."""
 
-    def __init__(self, name: str, node, move, prefix: str = "", wait_for_server_seconds: float = 5.0):
+    def __init__(
+        self, name: str, node, move, prefix: str = "", wait_for_server_seconds: float = 5.0
+    ):
         """Store configuration and initialise blackboard handles."""
         super().__init__(name=name)
         self.prefix = prefix
@@ -65,7 +67,10 @@ class MoveManipulatorBehavior(py_trees.behaviour.Behaviour):
 
         server_name = self.prefix + "move_manipulator"
         self._action_client = ActionClient(
-            self._node, MoveManipulator, server_name, callback_group=self._node.default_callback_group
+            self._node,
+            MoveManipulator,
+            server_name,
+            callback_group=self._node.default_callback_group,
         )
 
         self._node.get_logger().info(
@@ -110,7 +115,9 @@ class MoveManipulatorBehavior(py_trees.behaviour.Behaviour):
         if self._bb_get_bool("stop_execution"):
             self._paused = True
             if self._goal_sent and not self._result_received and not self._cancel_in_progress:
-                self._node.get_logger().error(f"[{self.name}] stop_execution => CANCEL => goal canceled")
+                self._node.get_logger().error(
+                    f"[{self.name}] stop_execution => CANCEL => goal canceled"
+                )
                 self._cancel_all_goals()
                 self._cancel_in_progress = True
         else:
@@ -125,7 +132,9 @@ class MoveManipulatorBehavior(py_trees.behaviour.Behaviour):
             self.bb.set(self.prefix + "collision_detected", False)
             self.bb.set(self.prefix + "stop_execution", True)
             if self._goal_sent and not self._result_received and not self._cancel_in_progress:
-                self._node.get_logger().error(f"[{self.name}] collision => CANCEL => will retry next tick")
+                self._node.get_logger().error(
+                    f"[{self.name}] collision => CANCEL => will retry next tick"
+                )
                 self._cancel_all_goals()
                 self._cancel_in_progress = True
             return py_trees.common.Status.RUNNING
@@ -134,12 +143,18 @@ class MoveManipulatorBehavior(py_trees.behaviour.Behaviour):
         if self._waiting_to_send and not self._goal_sent:
             goal_msg = self._build_goal()
             if not goal_msg:
-                self._node.get_logger().error(f"[{self.name}] failed to build goal => immediate FAILURE")
+                self._node.get_logger().error(
+                    f"[{self.name}] failed to build goal => immediate FAILURE"
+                )
                 self.stop(py_trees.common.Status.FAILURE)
                 return py_trees.common.Status.FAILURE
 
-            self._node.get_logger().info(f"[{self.name}] sending MoveManipulator goal => prefix '{self.prefix}'")
-            send_goal_future = self._action_client.send_goal_async(goal_msg, feedback_callback=self.feedback_callback)
+            self._node.get_logger().info(
+                f"[{self.name}] sending MoveManipulator goal => prefix '{self.prefix}'"
+            )
+            send_goal_future = self._action_client.send_goal_async(
+                goal_msg, feedback_callback=self.feedback_callback
+            )
             send_goal_future.add_done_callback(self.goal_response_callback)
 
             self._goal_sent = True
@@ -218,7 +233,9 @@ class MoveManipulatorBehavior(py_trees.behaviour.Behaviour):
         if cancel_response.goals_canceling:
             self._node.get_logger().info(f"[{self.name}] Goal successfully canceled.")
         else:
-            self._node.get_logger().warn(f"[{self.name}] Goal failed to cancel or already completed.")
+            self._node.get_logger().warn(
+                f"[{self.name}] Goal failed to cancel or already completed."
+            )
         self._cancel_in_progress = False
         self._goal_sent = False
         self._result_received = False
@@ -251,7 +268,9 @@ class MoveManipulatorBehavior(py_trees.behaviour.Behaviour):
         """Handle completion of the MoveManipulator goal."""
         wrapped_result = future.result()
         if not wrapped_result:
-            self._node.get_logger().error(f"[{self.name}] result callback with no wrapped_result => fail")
+            self._node.get_logger().error(
+                f"[{self.name}] result callback with no wrapped_result => fail"
+            )
             fake_res = MoveManipulator_Result()
             fake_res.success = False
             fake_res.message = "No result"
