@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.8)
+cmake_minimum_required(VERSION 3.14.4)
 project(manymove_msgs)
 
 # Set common compiler flags
