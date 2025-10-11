@@ -845,7 +845,7 @@ BT::NodeStatus FoundationPoseAlignmentNode::onRunning()
 
   // Helper to apply a local XYZRPY transform (6 elements) to a pose: T_out = T_pose * T_delta
   auto apply_local_xyzrpy = [](const geometry_msgs::msg::Pose & base,
-      const std::vector<double> & xyzrpy) -> geometry_msgs::msg::Pose
+    const std::vector<double> & xyzrpy) -> geometry_msgs::msg::Pose
     {
       std::vector<double> v(6, 0.0);
       for (size_t i = 0; i < std::min<size_t>(
