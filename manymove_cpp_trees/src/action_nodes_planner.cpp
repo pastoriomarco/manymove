@@ -159,22 +159,22 @@ BT::NodeStatus MoveManipulatorAction::onRunning()
     if (getInput<std::string>("pose_key", input_pose_key)) {
       move_ptr->pose_key = input_pose_key;
       RCLCPP_INFO(node_->get_logger(), "[MoveManipulatorAction] Using provided pose_key: %s",
-	input_pose_key.c_str());
+        input_pose_key.c_str());
     }
 
     // If the move is "pose" or "cartesian", retrieve the dynamic pose.
     geometry_msgs::msg::Pose dynamic_pose;
     if (move_ptr->type == "pose" || move_ptr->type == "cartesian") {
       if (!config().blackboard->get(move_ptr->pose_key, dynamic_pose)) {
-	RCLCPP_ERROR(node_->get_logger(),
-	  "[MoveManipulatorAction] Failed to retrieve pose from blackboard key '%s'",
-	  move_ptr->pose_key.c_str());
-	return BT::NodeStatus::FAILURE;
+        RCLCPP_ERROR(node_->get_logger(),
+          "[MoveManipulatorAction] Failed to retrieve pose from blackboard key '%s'",
+          move_ptr->pose_key.c_str());
+        return BT::NodeStatus::FAILURE;
       }
       else {
-	RCLCPP_INFO(node_->get_logger(),
-	  "[MoveManipulatorAction] Retrieved dynamic pose from '%s'",
-	  move_ptr->pose_key.c_str());
+        RCLCPP_INFO(node_->get_logger(),
+          "[MoveManipulatorAction] Retrieved dynamic pose from '%s'",
+          move_ptr->pose_key.c_str());
       }
     }
 
@@ -211,10 +211,10 @@ BT::NodeStatus MoveManipulatorAction::onRunning()
   if (result_received_) {
     if (action_result_.success) {
       if (invalidate_traj_on_exec) {
-	config().blackboard->set("trajectory_" + move_id_, moveit_msgs::msg::RobotTrajectory());
+        config().blackboard->set("trajectory_" + move_id_, moveit_msgs::msg::RobotTrajectory());
       }
       else {
-	config().blackboard->set("trajectory_" + move_id_, action_result_.final_trajectory);
+        config().blackboard->set("trajectory_" + move_id_, action_result_.final_trajectory);
       }
 
       // HMI message
@@ -229,30 +229,30 @@ BT::NodeStatus MoveManipulatorAction::onRunning()
       current_try_++;
 
       if (max_tries_ != -1 && current_try_ >= max_tries_) {
-	RCLCPP_ERROR(
-	  node_->get_logger(),
-	  "[MoveManipulatorAction] [%s]: failed after %d attempts => returning FAILURE",
-	  name().c_str(),
-	  current_try_);
+        RCLCPP_ERROR(
+          node_->get_logger(),
+          "[MoveManipulatorAction] [%s]: failed after %d attempts => returning FAILURE",
+          name().c_str(),
+          current_try_);
 
-	// stop the execution
-	config().blackboard->set(robot_prefix_ + "stop_execution", true);
+        // stop the execution
+        config().blackboard->set(robot_prefix_ + "stop_execution", true);
 
-	// HMI message
-	setHMIMessage(config().blackboard,
-	  robot_prefix_,
-	  "MOTION FAILED: " + action_result_.message,
-	  "red");
+        // HMI message
+        setHMIMessage(config().blackboard,
+          robot_prefix_,
+          "MOTION FAILED: " + action_result_.message,
+          "red");
 
-	return BT::NodeStatus::FAILURE;
+        return BT::NodeStatus::FAILURE;
       }
       else {
-	RCLCPP_ERROR(node_->get_logger(),
-	  "[MoveManipulatorAction] attempt %d failed, retrying...",
-	  current_try_);
-	// prepare for a new attempt
-	goal_sent_ = false;
-	result_received_ = false;
+        RCLCPP_ERROR(node_->get_logger(),
+          "[MoveManipulatorAction] attempt %d failed, retrying...",
+          current_try_);
+        // prepare for a new attempt
+        goal_sent_ = false;
+        result_received_ = false;
       }
     }
   }
@@ -399,12 +399,12 @@ BT::NodeStatus ResetTrajectories::tick()
       config().blackboard->set(validity_key, false);
 
       RCLCPP_DEBUG(node_->get_logger(),
-	"ResetTrajectories [%s]: Reset move_id=%d => %s cleared, %s set to false.",
-	name().c_str(), move_id, traj_key.c_str(), validity_key.c_str());
+        "ResetTrajectories [%s]: Reset move_id=%d => %s cleared, %s set to false.",
+        name().c_str(), move_id, traj_key.c_str(), validity_key.c_str());
     } catch (const std::exception & e) {
       RCLCPP_ERROR(node_->get_logger(),
-	"ResetTrajectories [%s]: Invalid move_id '%s'. Exception: %s",
-	name().c_str(), move_id_str.c_str(), e.what());
+        "ResetTrajectories [%s]: Invalid move_id '%s'. Exception: %s",
+        name().c_str(), move_id_str.c_str(), e.what());
       // Continue resetting other IDs
     }
   }

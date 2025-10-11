@@ -141,7 +141,7 @@ BT::NodeStatus SetOutputAction::onRunning()
     setHMIMessage(config().blackboard,
       prefix_,
       "OUTPUT " + std::to_string(
-	ionum_) + " OF " + io_type_ + " SET TO " + std::to_string(value_),
+        ionum_) + " OF " + io_type_ + " SET TO " + std::to_string(value_),
       "green");
 
     return BT::NodeStatus::SUCCESS;
@@ -635,7 +635,7 @@ BT::NodeStatus ResetRobotStateAction::onRunning()
     auto load_traj_options = rclcpp_action::Client<LoadTrajController>::SendGoalOptions();
     load_traj_options.goal_response_callback =
       std::bind(&ResetRobotStateAction::goalResponseCallbackLoadTraj, this,
-	std::placeholders::_1);
+        std::placeholders::_1);
     load_traj_options.result_callback =
       std::bind(&ResetRobotStateAction::resultCallbackLoadTraj, this, std::placeholders::_1);
 
@@ -818,8 +818,8 @@ BT::NodeStatus WaitForInputAction::onStart()
       name().c_str(), server_name.c_str());
     if (!action_client_->wait_for_action_server(std::chrono::seconds(5))) {
       RCLCPP_ERROR(node_->get_logger(),
-	"[%s] server '%s' not available.",
-	name().c_str(), server_name.c_str());
+        "[%s] server '%s' not available.",
+        name().c_str(), server_name.c_str());
       return BT::NodeStatus::FAILURE;
     }
   }
@@ -859,15 +859,15 @@ BT::NodeStatus WaitForInputAction::onRunning()
       // Condition satisfied => SUCCESS
       setOutput("value", last_value_);
       RCLCPP_DEBUG(node_->get_logger(),
-	"[%s] read=%d => DESIRED => SUCCESS",
-	name().c_str(), last_value_);
+        "[%s] read=%d => DESIRED => SUCCESS",
+        name().c_str(), last_value_);
 
       // HMI message
       setHMIMessage(config().blackboard,
-	prefix_,
-	"INPUT " + std::to_string(ionum_) + " OF " + io_type_ + " HAS VALUE " +
-	std::to_string(desired_value_),
-	"green");
+        prefix_,
+        "INPUT " + std::to_string(ionum_) + " OF " + io_type_ + " HAS VALUE " +
+        std::to_string(desired_value_),
+        "green");
 
       return BT::NodeStatus::SUCCESS;
     }
@@ -876,17 +876,17 @@ BT::NodeStatus WaitForInputAction::onRunning()
     if (timeout_ > 0.0) {
       double elapsed = (now - start_time_).seconds();
       if (elapsed >= timeout_) {
-	RCLCPP_WARN(node_->get_logger(),
-	  "[%s] Timeout => FAILURE (read=%d)",
-	  name().c_str(), last_value_);
+        RCLCPP_WARN(node_->get_logger(),
+          "[%s] Timeout => FAILURE (read=%d)",
+          name().c_str(), last_value_);
 
-	// HMI message
-	setHMIMessage(config().blackboard,
-	  prefix_,
-	  "WAIT INPUT " + std::to_string(ionum_) + " OF " + io_type_ + " TIMED OUT",
-	  "red");
+        // HMI message
+        setHMIMessage(config().blackboard,
+          prefix_,
+          "WAIT INPUT " + std::to_string(ionum_) + " OF " + io_type_ + " TIMED OUT",
+          "red");
 
-	return BT::NodeStatus::FAILURE;
+        return BT::NodeStatus::FAILURE;
       }
     }
 

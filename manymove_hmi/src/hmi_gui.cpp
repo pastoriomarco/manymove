@@ -149,14 +149,14 @@ void HmiGui::updateStatus(
     if (ri.prefix == robotPrefix.toStdString()) {
       // Update button states
       if (stop_execution) {
-	ri.startButton->setEnabled(true);
-	ri.resetButton->setEnabled(true);
-	ri.stopButton->setEnabled(false);
+        ri.startButton->setEnabled(true);
+        ri.resetButton->setEnabled(true);
+        ri.stopButton->setEnabled(false);
       }
       else {
-	ri.startButton->setEnabled(false);
-	ri.resetButton->setEnabled(false);
-	ri.stopButton->setEnabled(true);
+        ri.startButton->setEnabled(false);
+        ri.resetButton->setEnabled(false);
+        ri.stopButton->setEnabled(true);
       }
 
       // Build a JSON string for status (if you want to send it via TCP)
@@ -188,11 +188,11 @@ void HmiGui::updateRobotMessage(
     if (ri.prefix == robotPrefix.toStdString()) {
       ri.messageLabel->setText(message);
       if (!color.isEmpty()) {
-	ri.messageLabel->setStyleSheet(QString("color: %1; border: 2px solid %1; padding:2px;").arg(
-	  color));
+        ri.messageLabel->setStyleSheet(QString("color: %1; border: 2px solid %1; padding:2px;").arg(
+          color));
       }
       else {
-	ri.messageLabel->setStyleSheet("");
+        ri.messageLabel->setStyleSheet("");
       }
       break;
     }

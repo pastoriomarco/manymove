@@ -333,7 +333,7 @@ int main(int argc, char ** argv)
     }
     else {
       const moveit::core::RobotState & last_waypoint = plan_solution3.trajectory->getWayPoint(
-	num_waypoints - 1);
+        num_waypoints - 1);
       Eigen::Isometry3d ee_transform = last_waypoint.getGlobalLinkTransform("link_tcp");
 
       // Convert Eigen::Isometry3d to geometry_msgs::Pose

@@ -97,28 +97,28 @@ int main(int argc, char ** argv)
     "ground",                                                  /* object name */
     "box",                                                  /* shape */
     createPoseRPY(0.0, 0.0, -0.051, 0.0, 0.0, 0.0),                                                  /*
-	                                                                                              *
-	                                                                                              *
-	                                                                                              *
-	                                                                                              *
-	                                                                                              * pose
-	                                                                                              *
-	                                                                                              *
-	                                                                                              *
-	                                                                                              *
-	                                                                                              * of
-	                                                                                              *
-	                                                                                              *
-	                                                                                              *
-	                                                                                              *
-	                                                                                              * the
-	                                                                                              *
-	                                                                                              *
-	                                                                                              *
-	                                                                                              *
-	                                                                                              * object
-	                                                                                              *
-	                                                                                              **/
+                                                                                                      *
+                                                                                                      *
+                                                                                                      *
+                                                                                                      *
+                                                                                                      * pose
+                                                                                                      *
+                                                                                                      *
+                                                                                                      *
+                                                                                                      *
+                                                                                                      * of
+                                                                                                      *
+                                                                                                      *
+                                                                                                      *
+                                                                                                      *
+                                                                                                      * the
+                                                                                                      *
+                                                                                                      *
+                                                                                                      *
+                                                                                                      *
+                                                                                                      * object
+                                                                                                      *
+                                                                                                      **/
   {
     1.0, 1.0, 0.1
   },                                                                  /* primitive dimensions */
@@ -179,18 +179,18 @@ int main(int argc, char ** argv)
   std::string get_pick_pose_xml =
     buildObjectActionXML("get_pick_pose",
       createGetObjectPose("graspable_key",
-	"pick_target_key",
-	"world_frame_key",
-	"identity_transform_key",
-	"post_transform_xyz_rpy_1_key"));
+        "pick_target_key",
+        "world_frame_key",
+        "identity_transform_key",
+        "post_transform_xyz_rpy_1_key"));
 
   std::string get_approach_pose_xml =
     buildObjectActionXML("get_approach_pose",
       createGetObjectPose("graspable_key",
-	"approach_pick_target_key",
-	"world_frame_key",
-	"approach_pre_transform_xyz_rpy_1_key",
-	"post_transform_xyz_rpy_1_key"));
+        "approach_pick_target_key",
+        "world_frame_key",
+        "approach_pre_transform_xyz_rpy_1_key",
+        "post_transform_xyz_rpy_1_key"));
 
   // ----------------------------------------------------------------------------
   // 3. Define the moves

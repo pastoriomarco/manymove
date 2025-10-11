@@ -138,27 +138,27 @@ int main(int argc, char * argv[])
 
       // Connect the AppModule signal to a handler that calls the update_blackboard service.
       QObject::connect(appModule, &AppModule::keyUpdateRequested,
-	[service_node](const QString & key, const QString & value_type,
-	               const QString & value)
+        [service_node](const QString & key, const QString & value_type,
+                       const QString & value)
       {
-	qDebug() << "AppModule key update:" << key << "=" << value;
-	auto client =
-	  service_node->create_client<manymove_msgs::srv::SetBlackboardValues>("update_blackboard");
-	if (!client->wait_for_service(std::chrono::seconds(1))) {
-	  RCLCPP_WARN(service_node->get_logger(), "Service update_blackboard not available");
-	  return;
-	}
-	auto request = std::make_shared<manymove_msgs::srv::SetBlackboardValues::Request>();
-	request->key.push_back(key.toStdString());
-	request->value_type.push_back(value_type.toStdString());
-	request->value_data.push_back(value.toStdString());
-	auto future = client->async_send_request(request);
-	if (rclcpp::spin_until_future_complete(service_node, future,
-	  std::chrono::seconds(1)) !=
-	    rclcpp::FutureReturnCode::SUCCESS) {
-	  RCLCPP_WARN(service_node->get_logger(),
-	    "Failed to get response for update_blackboard service");
-	}
+        qDebug() << "AppModule key update:" << key << "=" << value;
+        auto client =
+          service_node->create_client<manymove_msgs::srv::SetBlackboardValues>("update_blackboard");
+        if (!client->wait_for_service(std::chrono::seconds(1))) {
+          RCLCPP_WARN(service_node->get_logger(), "Service update_blackboard not available");
+          return;
+        }
+        auto request = std::make_shared<manymove_msgs::srv::SetBlackboardValues::Request>();
+        request->key.push_back(key.toStdString());
+        request->value_type.push_back(value_type.toStdString());
+        request->value_data.push_back(value.toStdString());
+        auto future = client->async_send_request(request);
+        if (rclcpp::spin_until_future_complete(service_node, future,
+          std::chrono::seconds(1)) !=
+            rclcpp::FutureReturnCode::SUCCESS) {
+          RCLCPP_WARN(service_node->get_logger(),
+            "Failed to get response for update_blackboard service");
+        }
       });
     }
     else {
@@ -177,19 +177,19 @@ int main(int argc, char * argv[])
     QObject::connect(&gui, &HmiGui::startExecutionRequested, [worker](const std::string & p)
     {
       if (worker->getRobotPrefix() == p) {
-	worker->callStartExecution();
+        worker->callStartExecution();
       }
     });
     QObject::connect(&gui, &HmiGui::stopExecutionRequested, [worker](const std::string & p)
     {
       if (worker->getRobotPrefix() == p) {
-	worker->callStopExecution();
+        worker->callStopExecution();
       }
     });
     QObject::connect(&gui, &HmiGui::resetProgramRequested, [worker](const std::string & p)
     {
       if (worker->getRobotPrefix() == p) {
-	worker->callResetProgram();
+        worker->callResetProgram();
       }
     });
   }

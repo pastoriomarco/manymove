@@ -422,9 +422,9 @@ void FoundationPoseAlignmentNode::ensureSubscription(const std::string & topic)
 
   current_topic_ = topic;
   auto callback = [this](DetectionArray::SharedPtr msg)
-		  {
-		    detectionCallback(std::move(msg));
-		  };
+                  {
+                    detectionCallback(std::move(msg));
+                  };
   subscription_ = node_->create_subscription<DetectionArray>(topic,
     rclcpp::SensorDataQoS(),
     callback);
@@ -448,17 +448,17 @@ FoundationPoseAlignmentNode::pickDetection(const DetectionArray & array)
     for (const auto & result : detection.results) {
       const auto & hypothesis = result.hypothesis;
       if (!target_id_.empty() && hypothesis.class_id != target_id_) {
-	continue;
+        continue;
       }
       if (hypothesis.score < minimum_score_) {
-	continue;
+        continue;
       }
       if (!best_selection || hypothesis.score > best_score) {
-	best_selection = DetectionSelection
-	{
-	  detection, result
-	};
-	best_score = hypothesis.score;
+        best_selection = DetectionSelection
+        {
+          detection, result
+        };
+        best_score = hypothesis.score;
       }
     }
   }
@@ -541,10 +541,10 @@ BT::NodeStatus FoundationPoseAlignmentNode::onRunning()
     if (timeout_seconds_ > 0.0) {
       const rclcpp::Duration elapsed = clock->now() - start_time_;
       if (elapsed.seconds() > timeout_seconds_) {
-	RCLCPP_WARN(node_->get_logger(),
-	  "[%s] Timed out waiting for detections on '%s'",
-	  name().c_str(), current_topic_.c_str());
-	return BT::NodeStatus::FAILURE;
+        RCLCPP_WARN(node_->get_logger(),
+          "[%s] Timed out waiting for detections on '%s'",
+          name().c_str(), current_topic_.c_str());
+        return BT::NodeStatus::FAILURE;
       }
     }
     return BT::NodeStatus::RUNNING;
@@ -559,13 +559,13 @@ BT::NodeStatus FoundationPoseAlignmentNode::onRunning()
     if (timeout_seconds_ > 0.0) {
       const rclcpp::Duration elapsed = clock->now() - start_time_;
       if (elapsed.seconds() > timeout_seconds_) {
-	RCLCPP_WARN(
-	  node_->get_logger(),
-	  "[%s] Timed out waiting for a valid detection (target_id='%s', min_score=%.3f)",
-	  name().c_str(),
-	  target_id_.c_str(),
-	  minimum_score_);
-	return BT::NodeStatus::FAILURE;
+        RCLCPP_WARN(
+          node_->get_logger(),
+          "[%s] Timed out waiting for a valid detection (target_id='%s', min_score=%.3f)",
+          name().c_str(),
+          target_id_.c_str(),
+          minimum_score_);
+        return BT::NodeStatus::FAILURE;
       }
     }
     return BT::NodeStatus::RUNNING;
@@ -607,10 +607,10 @@ BT::NodeStatus FoundationPoseAlignmentNode::onRunning()
     if (timeout_seconds_ > 0.0) {
       const rclcpp::Duration elapsed = clock->now() - start_time_;
       if (elapsed.seconds() > timeout_seconds_) {
-	RCLCPP_ERROR(node_->get_logger(),
-	  "[%s] Timed out waiting for TF transform to '%s'", name().c_str(),
-	  alignment_frame.c_str());
-	return BT::NodeStatus::FAILURE;
+        RCLCPP_ERROR(node_->get_logger(),
+          "[%s] Timed out waiting for TF transform to '%s'", name().c_str(),
+          alignment_frame.c_str());
+        return BT::NodeStatus::FAILURE;
       }
     }
     return BT::NodeStatus::RUNNING;
@@ -635,22 +635,22 @@ BT::NodeStatus FoundationPoseAlignmentNode::onRunning()
 
     try {
       transformed_pose = tf_buffer_->transform(world_pose_for_transform, planning_frame_,
-	tf2::durationFromSec(transform_timeout_));
+        tf2::durationFromSec(transform_timeout_));
       corrected_pose = transformed_pose.pose;
     } catch (const tf2::TransformException & ex) {
       RCLCPP_WARN_THROTTLE(node_->get_logger(), *clock, 2000,
-	"[%s] Failed to transform pose from '%s' to '%s': %s",
-	name().c_str(), alignment_frame.c_str(), planning_frame_.c_str(),
-	ex.what());
+        "[%s] Failed to transform pose from '%s' to '%s': %s",
+        name().c_str(), alignment_frame.c_str(), planning_frame_.c_str(),
+        ex.what());
 
       if (timeout_seconds_ > 0.0) {
-	const rclcpp::Duration elapsed = clock->now() - start_time_;
-	if (elapsed.seconds() > timeout_seconds_) {
-	  RCLCPP_ERROR(node_->get_logger(),
-	    "[%s] Timed out waiting for TF transform to '%s'", name().c_str(),
-	    planning_frame_.c_str());
-	  return BT::NodeStatus::FAILURE;
-	}
+        const rclcpp::Duration elapsed = clock->now() - start_time_;
+        if (elapsed.seconds() > timeout_seconds_) {
+          RCLCPP_ERROR(node_->get_logger(),
+            "[%s] Timed out waiting for TF transform to '%s'", name().c_str(),
+            planning_frame_.c_str());
+          return BT::NodeStatus::FAILURE;
+        }
       }
       return BT::NodeStatus::RUNNING;
     }
@@ -664,44 +664,44 @@ BT::NodeStatus FoundationPoseAlignmentNode::onRunning()
   // Helper to apply a local XYZRPY transform (6 elements) to a pose: T_out = T_pose * T_delta
   auto apply_local_xyzrpy = [](const geometry_msgs::msg::Pose & base,
                                const std::vector<double> & xyzrpy) -> geometry_msgs::msg::Pose
-			    {
-			      std::vector<double> v(6, 0.0);
-			      for (size_t i = 0; i < std::min<size_t>(6, xyzrpy.size()); ++i) {
-				v[i] = xyzrpy[i];
-			      }
+                            {
+                              std::vector<double> v(6, 0.0);
+                              for (size_t i = 0; i < std::min<size_t>(6, xyzrpy.size()); ++i) {
+                                v[i] = xyzrpy[i];
+                              }
 
-			      tf2::Quaternion q_base(base.orientation.x, base.orientation.y,
-			                             base.orientation.z,
-			                             base.orientation.w);
-			      if (q_base.length2() > 0.0) {
-				q_base.normalize();
-			      }
-			      tf2::Matrix3x3 R_base(q_base);
+                              tf2::Quaternion q_base(base.orientation.x, base.orientation.y,
+                                                     base.orientation.z,
+                                                     base.orientation.w);
+                              if (q_base.length2() > 0.0) {
+                                q_base.normalize();
+                              }
+                              tf2::Matrix3x3 R_base(q_base);
 
-			      tf2::Quaternion q_delta;
-			      q_delta.setRPY(v[3], v[4], v[5]);
+                              tf2::Quaternion q_delta;
+                              q_delta.setRPY(v[3], v[4], v[5]);
 
-			      tf2::Vector3 t_delta(v[0], v[1], v[2]);
-			      tf2::Vector3 t_world = R_base * t_delta;             // local -> world
-			                                                           // translation
+                              tf2::Vector3 t_delta(v[0], v[1], v[2]);
+                              tf2::Vector3 t_world = R_base * t_delta;             // local -> world
+                                                                                   // translation
 
-			      geometry_msgs::msg::Pose out = base;
-			      out.position.x += t_world.x();
-			      out.position.y += t_world.y();
-			      out.position.z += t_world.z();
+                              geometry_msgs::msg::Pose out = base;
+                              out.position.x += t_world.x();
+                              out.position.y += t_world.y();
+                              out.position.z += t_world.z();
 
-			      tf2::Quaternion q_out = q_base * q_delta;             // local
-			                                                            // rotation
-			                                                            // composition
-			      if (q_out.length2() > 0.0) {
-				q_out.normalize();
-			      }
-			      out.orientation.x = q_out.x();
-			      out.orientation.y = q_out.y();
-			      out.orientation.z = q_out.z();
-			      out.orientation.w = q_out.w();
-			      return out;
-			    };
+                              tf2::Quaternion q_out = q_base * q_delta;             // local
+                                                                                    // rotation
+                                                                                    // composition
+                              if (q_out.length2() > 0.0) {
+                                q_out.normalize();
+                              }
+                              out.orientation.x = q_out.x();
+                              out.orientation.y = q_out.y();
+                              out.orientation.z = q_out.z();
+                              out.orientation.w = q_out.w();
+                              return out;
+                            };
 
   // Compute final pick pose (pose output) by applying pick_transform after Z-thresholding
   geometry_msgs::msg::Pose final_pose = corrected_pose;

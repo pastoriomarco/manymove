@@ -260,21 +260,21 @@ rclcpp_action::CancelResponse ManipulatorActionServer::handle_move_cancel(
     std::lock_guard<std::mutex> lock(move_state_mutex_);
     if (move_state_ == MoveExecutionState::EXECUTING) {
       const double elapsed =
-	(node_->now() - executing_start_time_).seconds();
+        (node_->now() - executing_start_time_).seconds();
 
       RCLCPP_INFO(node_->get_logger(),
-	"[MoveManipulator] Cancel while EXECUTING → "
-	"controlled stop (elapsed %.3f s).",
-	elapsed);
+        "[MoveManipulator] Cancel while EXECUTING → "
+        "controlled stop (elapsed %.3f s).",
+        elapsed);
 
       planner_->sendControlledStop(move_manipulator_goal_.config,
-	executing_traj_,
-	elapsed);
+        executing_traj_,
+        elapsed);
     }
     else {
       // Cancel while PLANNING or IDLE => do nothing to the controller
       RCLCPP_INFO(node_->get_logger(),
-	"[MoveManipulator] Cancel while PLANNING/IDLE => no stop needed");
+        "[MoveManipulator] Cancel while PLANNING/IDLE => no stop needed");
     }
   }
 
@@ -313,7 +313,7 @@ void ManipulatorActionServer::execute_move(
     {
       std::lock_guard<std::mutex> lock(joint_states_mutex_);
       for (const auto & jn : goal->existing_trajectory.joint_trajectory.joint_names) {
-	current_joints.push_back(current_joint_positions_[jn]);
+        current_joints.push_back(current_joint_positions_[jn]);
       }
     }
     bool starts_ok = planner_->isTrajectoryStartValid(goal->existing_trajectory, goal->plan_request,
@@ -331,11 +331,11 @@ void ManipulatorActionServer::execute_move(
       have_valid_traj = true;
       final_traj = goal->existing_trajectory;
       RCLCPP_INFO(node_->get_logger(),
-	"[MoveManipulator] existing_trajectory is valid => will try to execute it");
+        "[MoveManipulator] existing_trajectory is valid => will try to execute it");
     }
     else {
       RCLCPP_INFO(node_->get_logger(),
-	"[MoveManipulator] existing_trajectory is not valid => planning anew");
+        "[MoveManipulator] existing_trajectory is not valid => planning anew");
     }
   }
   else {
@@ -547,17 +547,17 @@ void ManipulatorActionServer::execute_load_traj_controller(
     {
       // 3) Activate the controller
       activateControllerAsync(controller_name,
-	[this, goal_handle, result, controller_name]()
+        [this, goal_handle, result, controller_name]()
       {
-	result->success = true;
-	result->message = "Controller loaded and activated successfully.";
-	goal_handle->succeed(result);
+        result->success = true;
+        result->message = "Controller loaded and activated successfully.";
+        goal_handle->succeed(result);
       },
-	[goal_handle, result, controller_name](const std::string & err)
+        [goal_handle, result, controller_name](const std::string & err)
       {
-	result->success = false;
-	result->message = "Activate error: " + err;
-	goal_handle->abort(result);
+        result->success = false;
+        result->message = "Activate error: " + err;
+        goal_handle->abort(result);
       });
     },
       [goal_handle, result, controller_name](const std::string & err)
@@ -615,7 +615,7 @@ void ManipulatorActionServer::unloadControllerAsync(
 
     if (response->ok) {
       RCLCPP_INFO(node_->get_logger(), "[unloadControllerAsync] SUCCESS: Unloaded '%s'",
-	controller_name.c_str());
+        controller_name.c_str());
       on_success();
     }
     else {
@@ -665,7 +665,7 @@ void ManipulatorActionServer::loadControllerAsync(
 
     if (response->ok) {
       RCLCPP_INFO(node_->get_logger(), "[loadControllerAsync] SUCCESS: Loaded '%s'",
-	controller_name.c_str());
+        controller_name.c_str());
       on_success();
     }
     else {
@@ -722,7 +722,7 @@ void ManipulatorActionServer::activateControllerAsync(
 
     if (response->ok) {
       RCLCPP_INFO(node_->get_logger(), "[activateControllerAsync] SUCCESS: Activated '%s'",
-	controller_name.c_str());
+        controller_name.c_str());
       on_success();
     }
     else {
@@ -790,8 +790,8 @@ void ManipulatorActionServer::deactivateControllerAsync(
 
     if (response->ok) {
       RCLCPP_INFO(node_->get_logger(),
-	"[deactivateControllerAsync] SUCCESS: Deactivated '%s'",
-	controller_name.c_str());
+        "[deactivateControllerAsync] SUCCESS: Deactivated '%s'",
+        controller_name.c_str());
       on_success();
     }
     else {
@@ -840,7 +840,7 @@ void ManipulatorActionServer::configureControllerAsync(
 
     if (response->ok) {
       RCLCPP_INFO(node_->get_logger(), "[configureControllerAsync] Successfully configured '%s'",
-	controller_name.c_str());
+        controller_name.c_str());
       on_success();
     }
     else {
@@ -870,8 +870,8 @@ bool ManipulatorActionServer::executeTrajectoryWithCollisionChecks(
     for (const auto & joint_name : traj.joint_trajectory.joint_names) {
       auto it = current_joint_positions_.find(joint_name);
       if (it == current_joint_positions_.end()) {
-	abort_reason = "Incomplete joint state for " + joint_name;
-	return false;
+        abort_reason = "Incomplete joint state for " + joint_name;
+        return false;
       }
       current_joint_state.push_back(it->second);
     }
@@ -938,32 +938,32 @@ bool ManipulatorActionServer::executeTrajectoryWithCollisionChecks(
     mutable
     {
       RCLCPP_DEBUG(node_->get_logger(),
-	"Partial execution (MoveItCppPlanner): time_from_start %.2f",
-	rclcpp::Duration(feedback->actual.time_from_start).seconds());
+        "Partial execution (MoveItCppPlanner): time_from_start %.2f",
+        rclcpp::Duration(feedback->actual.time_from_start).seconds());
 
       if (!feedback || feedback->actual.positions.empty()) {
-	RCLCPP_ERROR(node_->get_logger(),
-	  "[executeTrajectoryWithCollisionChecks] Empty feedback => abort");
-	collision_detected.store(true);
+        RCLCPP_ERROR(node_->get_logger(),
+          "[executeTrajectoryWithCollisionChecks] Empty feedback => abort");
+        collision_detected.store(true);
       }
 
       // elapsed time since start
       double elapsed_s = (node_->now() - start_time).seconds();
 
       RCLCPP_DEBUG(node_->get_logger(),
-	"[executeTrajectoryWithCollisionChecks] Collision check at t=%.3f of %.3f",
-	elapsed_s,
-	total_time_s);
+        "[executeTrajectoryWithCollisionChecks] Collision check at t=%.3f of %.3f",
+        elapsed_s,
+        total_time_s);
 
       // collision-check the *remaining* trajectory automatically by time
       if (!planner_->isTrajectoryValid(traj,
-	moveit_msgs::msg::Constraints(),
-	elapsed_s)) {
-	RCLCPP_WARN(node_->get_logger(),
-	  "[executeTrajectoryWithCollisionChecks] Collision predicted at t=%.3f of %.3f",
-	  elapsed_s,
-	  total_time_s);
-	collision_detected.store(true);
+        moveit_msgs::msg::Constraints(),
+        elapsed_s)) {
+        RCLCPP_WARN(node_->get_logger(),
+          "[executeTrajectoryWithCollisionChecks] Collision predicted at t=%.3f of %.3f",
+          elapsed_s,
+          total_time_s);
+        collision_detected.store(true);
       }
 
       // publish progress in [0..1]
@@ -975,12 +975,12 @@ bool ManipulatorActionServer::executeTrajectoryWithCollisionChecks(
 
   // Result callback: set the promise value based on execution result
   opts.result_callback = [this, result_promise, &collision_detected](const auto & wrapped_result)
-			 {
-			   bool success = (!collision_detected.load()) &&
-			                  (wrapped_result.code ==
-			                   rclcpp_action::ResultCode::SUCCEEDED);
-			   result_promise->set_value(success);
-			 };
+                         {
+                           bool success = (!collision_detected.load()) &&
+                                          (wrapped_result.code ==
+                                           rclcpp_action::ResultCode::SUCCEEDED);
+                           result_promise->set_value(success);
+                         };
 
   // 7) Send the trajectory execution goal
   auto goal_handle_future = follow_joint_traj_client->async_send_goal(fjt_goal, opts);
@@ -1016,7 +1016,7 @@ bool ManipulatorActionServer::executeTrajectoryWithCollisionChecks(
       abort_reason = "FollowJointTrajectory failed (" +
                      std::to_string(wrapped_result.result->error_code) + ")";
       if (!wrapped_result.result->error_string.empty()) {
-	abort_reason += ": " + wrapped_result.result->error_string;
+        abort_reason += ": " + wrapped_result.result->error_string;
       }
     }
     return false;

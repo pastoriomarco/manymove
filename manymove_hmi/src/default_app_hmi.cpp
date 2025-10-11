@@ -84,7 +84,7 @@ std::vector<KeyConfig> DefaultAppModule::buildKeys()
       const double L = v.value("tube_length_key").toDouble();
       const double D = v.value("tube_diameter_key").toDouble();
       if (L == 0.0 || D == 0.0) {
-	return QString();
+        return QString();
       }
       return QString("[%1, %2, %3]").arg(D).arg(D).arg(L);
     }
@@ -99,7 +99,7 @@ std::vector<KeyConfig> DefaultAppModule::buildKeys()
       double L = v.value("tube_length_key").toDouble();
       double G = v.value("grasp_offset_key").toDouble();
       if (L == 0.0 && G == 0.0) {
-	return QString();
+        return QString();
       }
       double z = (-L / 2.0) + G;
       return QString("[%1,%2,%3,3.14,0,0]").arg(0.0).arg(0.0).arg(z);
@@ -114,7 +114,7 @@ std::vector<KeyConfig> DefaultAppModule::buildKeys()
     {
       double L = v.value("tube_length_key").toDouble();
       if (L == 0.0) {
-	return QString();
+        return QString();
       }
       double z = (-L / 2.0);
       return QString("[%1,%2,%3,0,0,-0.785]").arg(0.0).arg(0.0).arg(z);
@@ -129,7 +129,7 @@ std::vector<KeyConfig> DefaultAppModule::buildKeys()
     {
       double L = v.value("tube_length_key").toDouble();
       if (L == 0.0) {
-	return QString();
+        return QString();
       }
       double z = -L;
       return QString("[%1,%2,%3,0,0,0]").arg(0.0).arg(0.0).arg(z);
@@ -145,14 +145,14 @@ std::vector<KeyConfig> DefaultAppModule::buildKeys()
       bool ok = false;
       double L = v.value("tube_length_key").toDouble(&ok);
       if (!ok) {
-	return QString();
+        return QString();
       }
       double x = (L / 2.0) + 0.978;
       double y = -0.6465;
       double z = 0.8055;
       return QString(
-	"{\"x\":%1,\"y\":%2,\"z\":%3,\"roll\":1.57,\"pitch\":2.05,\"yaw\":1.57}").arg(x).arg(y).arg(
-	z);
+        "{\"x\":%1,\"y\":%2,\"z\":%3,\"roll\":1.57,\"pitch\":2.05,\"yaw\":1.57}").arg(x).arg(y).arg(
+        z);
     }
   });
 
@@ -165,11 +165,11 @@ std::vector<KeyConfig> DefaultAppModule::buildKeys()
       bool ok = false;
       double L = v.value("tube_length_key").toDouble(&ok);
       if (!ok) {
-	return QString();
+        return QString();
       }
       double x = L + 0.01;
       return QString(
-	"{\"x\":%1,\"y\":0.0,\"z\":0.0,\"roll\":0.0,\"pitch\":0.0,\"yaw\":0.0}").arg(x);
+        "{\"x\":%1,\"y\":0.0,\"z\":0.0,\"roll\":0.0,\"pitch\":0.0,\"yaw\":0.0}").arg(x);
     }
   });
 

@@ -71,7 +71,7 @@ ObjectSnippets createObjectSnippets(
   if (shape == "box" || shape == "cylinder" || shape == "sphere") {
     if (dimensions.empty()) {
       throw BT::RuntimeError(
-	"createObjectSnippets: missing dimensions for primitive '" + shape + "'");
+        "createObjectSnippets: missing dimensions for primitive '" + shape + "'");
     }
 
     bool size_ok = (shape == "box" && dimensions.size() == 3) ||
@@ -80,12 +80,12 @@ ObjectSnippets createObjectSnippets(
 
     if (!size_ok) {
       throw BT::RuntimeError("createObjectSnippets: wrong number of dimensions for '" + shape +
-	"'");
+        "'");
     }
 
     for (double d : dimensions) {
       if (d <= 0.0) {
-	throw BT::RuntimeError("createObjectSnippets: dimension values must be positive");
+        throw BT::RuntimeError("createObjectSnippets: dimension values must be positive");
       }
     }
   }
@@ -145,7 +145,7 @@ ObjectSnippets createObjectSnippets(
   snip.remove_xml = fallbackWrapperXML("remove_" + name + "_obj_always_success",
     {
       buildObjectActionXML("remove_" + name,
-	createRemoveObject(id_key)),
+        createRemoveObject(id_key)),
       "<AlwaysSuccess />"
     });
 
@@ -155,8 +155,8 @@ ObjectSnippets createObjectSnippets(
   snip.detach_xml = fallbackWrapperXML("detach_" + name + "_always_success",
     {
       buildObjectActionXML("detach_" + name,
-	createDetachObject(id_key,
-	  link_name_key)),
+        createDetachObject(id_key,
+          link_name_key)),
       "<AlwaysSuccess />"
     });
 
@@ -194,10 +194,10 @@ std::string buildMoveXML(
     // Check that the move's robot prefix is compatible
     if (!move.robot_prefix.empty() && (move.robot_prefix != robot_prefix)) {
       RCLCPP_ERROR(rclcpp::get_logger(
-	"bt_client_node"),
-	"buildMoveXML: Move has prefix=%s, but user gave robot_prefix=%s: INVALID MOVE.",
-	move.robot_prefix.c_str(),
-	robot_prefix.c_str());
+        "bt_client_node"),
+        "buildMoveXML: Move has prefix=%s, but user gave robot_prefix=%s: INVALID MOVE.",
+        move.robot_prefix.c_str(),
+        robot_prefix.c_str());
       return "<INVALID TREE: MISMATCHING ROBOT PREFIX>";
     }
 
@@ -244,7 +244,7 @@ std::string buildMoveXML(
     for (size_t i = 0; i < move_ids.size(); i++) {
       execution_seq << move_ids[i];
       if (i < move_ids.size() - 1) {
-	execution_seq << ",";
+        execution_seq << ",";
       }
     }
     execution_seq << "\"/>\n";
@@ -379,7 +379,7 @@ std::string buildFoundationPoseSequenceXML(
   if (bounds_check) {
     if (bounds.size() != 6) {
       throw BT::RuntimeError(
-	"buildFoundationPoseSequenceXML: 'bounds' must have 6 elements [min_x,min_y,min_z,max_x,max_y,max_z]");
+        "buildFoundationPoseSequenceXML: 'bounds' must have 6 elements [min_x,min_y,min_z,max_x,max_y,max_z]");
     }
     xml << "\n" << buildCheckPoseBoundsXML("FoundationPoseBounds", pick_pose_key, bounds, true);
   }
@@ -659,7 +659,7 @@ std::string buildResetRobotStateXML(
     {
       xml.str(),
       buildSetKeyBool(robot_prefix, node_prefix,
-	robot_prefix + "stop_execution", true)
+        robot_prefix + "stop_execution", true)
     });
 
   return xml.str();

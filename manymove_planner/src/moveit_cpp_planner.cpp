@@ -146,81 +146,81 @@ double MoveItCppPlanner::computePathLength(
 
   // Helper to compute joint-space path length
   auto computeJointPathLength = [&](const moveit_msgs::msg::RobotTrajectory & traj) -> double
-				{
-				  double length = 0.0;
-				  for (size_t i = 1; i < traj.joint_trajectory.points.size(); ++i) {
-				    const auto & prev_point = traj.joint_trajectory.points[i - 1];
-				    const auto & curr_point = traj.joint_trajectory.points[i];
+                                {
+                                  double length = 0.0;
+                                  for (size_t i = 1; i < traj.joint_trajectory.points.size(); ++i) {
+                                    const auto & prev_point = traj.joint_trajectory.points[i - 1];
+                                    const auto & curr_point = traj.joint_trajectory.points[i];
 
-				    // Ensure joint positions are valid
-				    if (prev_point.positions.size() !=
-				        curr_point.positions.size()) {
-				      RCLCPP_ERROR(logger_,
-					"Mismatch in joint positions size at trajectory points %zu and %zu.",
-					i - 1,
-					i);
-				      return 0.0;
-				    }
+                                    // Ensure joint positions are valid
+                                    if (prev_point.positions.size() !=
+                                        curr_point.positions.size()) {
+                                      RCLCPP_ERROR(logger_,
+                                        "Mismatch in joint positions size at trajectory points %zu and %zu.",
+                                        i - 1,
+                                        i);
+                                      return 0.0;
+                                    }
 
-				    double segment_length = 0.0;
-				    for (size_t j = 0; j < prev_point.positions.size(); ++j) {
-				      double diff = curr_point.positions[j] -
-				                    prev_point.positions[j];
-				      segment_length += diff * diff;
-				    }
-				    length += std::sqrt(segment_length);
-				  }
+                                    double segment_length = 0.0;
+                                    for (size_t j = 0; j < prev_point.positions.size(); ++j) {
+                                      double diff = curr_point.positions[j] -
+                                                    prev_point.positions[j];
+                                      segment_length += diff * diff;
+                                    }
+                                    length += std::sqrt(segment_length);
+                                  }
 
-				  return length;
-				};
+                                  return length;
+                                };
 
   // Helper to compute Cartesian path length using TCP pose
   auto computeCartesianPathLength = [&](const moveit_msgs::msg::RobotTrajectory & traj) -> double
-				    {
-				      double length = 0.0;
+                                    {
+                                      double length = 0.0;
 
-				      // Access the robot model
-				      auto robot_model = moveit_cpp_ptr_->getRobotModel();
-				      if (!robot_model) {
-					RCLCPP_ERROR(logger_, "Robot model is null.");
-					return 0.0;
-				      }
+                                      // Access the robot model
+                                      auto robot_model = moveit_cpp_ptr_->getRobotModel();
+                                      if (!robot_model) {
+                                        RCLCPP_ERROR(logger_, "Robot model is null.");
+                                        return 0.0;
+                                      }
 
-				      // Create a robot state
-				      moveit::core::RobotState robot_state(robot_model);
-				      const auto & joint_model_group =
-					robot_model->getJointModelGroup(planning_group_);
-				      if (!joint_model_group) {
-					RCLCPP_ERROR(logger_, "Invalid joint model group.");
-					return 0.0;
-				      }
+                                      // Create a robot state
+                                      moveit::core::RobotState robot_state(robot_model);
+                                      const auto & joint_model_group =
+                                        robot_model->getJointModelGroup(planning_group_);
+                                      if (!joint_model_group) {
+                                        RCLCPP_ERROR(logger_, "Invalid joint model group.");
+                                        return 0.0;
+                                      }
 
-				      for (size_t i = 1; i < traj.joint_trajectory.points.size();
-				           ++i) {
-					// Set the previous and current joint values
-					const auto & prev_point = traj.joint_trajectory.points[i -
-					                                                       1];
-					const auto & curr_point = traj.joint_trajectory.points[i];
+                                      for (size_t i = 1; i < traj.joint_trajectory.points.size();
+                                           ++i) {
+                                        // Set the previous and current joint values
+                                        const auto & prev_point = traj.joint_trajectory.points[i -
+                                                                                               1];
+                                        const auto & curr_point = traj.joint_trajectory.points[i];
 
-					robot_state.setJointGroupPositions(joint_model_group,
-					  prev_point.positions);
-					const Eigen::Isometry3d prev_tcp_pose =
-					  robot_state.getGlobalLinkTransform(config.tcp_frame);
+                                        robot_state.setJointGroupPositions(joint_model_group,
+                                          prev_point.positions);
+                                        const Eigen::Isometry3d prev_tcp_pose =
+                                          robot_state.getGlobalLinkTransform(config.tcp_frame);
 
-					robot_state.setJointGroupPositions(joint_model_group,
-					  curr_point.positions);
-					const Eigen::Isometry3d curr_tcp_pose =
-					  robot_state.getGlobalLinkTransform(config.tcp_frame);
+                                        robot_state.setJointGroupPositions(joint_model_group,
+                                          curr_point.positions);
+                                        const Eigen::Isometry3d curr_tcp_pose =
+                                          robot_state.getGlobalLinkTransform(config.tcp_frame);
 
-					// Calculate the Cartesian distance
-					Eigen::Vector3d prev_position = prev_tcp_pose.translation();
-					Eigen::Vector3d curr_position = curr_tcp_pose.translation();
+                                        // Calculate the Cartesian distance
+                                        Eigen::Vector3d prev_position = prev_tcp_pose.translation();
+                                        Eigen::Vector3d curr_position = curr_tcp_pose.translation();
 
-					length += (curr_position - prev_position).norm();
-				      }
+                                        length += (curr_position - prev_position).norm();
+                                      }
 
-				      return length;
-				    };
+                                      return length;
+                                    };
 
   // Compute both joint and Cartesian path lengths
   double joint_length = computeJointPathLength(trajectory);
@@ -332,7 +332,7 @@ double MoveItCppPlanner::computeMaxCartesianSpeed(
     if (dt > 0.0) {
       double speed = dist / dt;
       if (speed > max_speed) {
-	max_speed = speed;
+        max_speed = speed;
       }
     }
   }
@@ -440,20 +440,20 @@ std::pair<bool, moveit_msgs::msg::RobotTrajectory> MoveItCppPlanner::plan(
       const auto available_targets = planning_components_->getNamedTargetStates();
       // Check if the specified named target is available
       if (std::find(available_targets.begin(), available_targets.end(),
-	goal_msg.goal.named_target) != available_targets.end()) {
-	// Retrieve and print the joint values for the named target
-	auto joint_values = planning_components_->getNamedTargetStateValues(
-	  goal_msg.goal.named_target);
-	RCLCPP_DEBUG(logger_, "Joint values for named target '%s':",
-	  goal_msg.goal.named_target.c_str());
-	for (const auto & entry : joint_values) {
-	  RCLCPP_DEBUG(logger_, "  %s: %f", entry.first.c_str(), entry.second);
-	}
+        goal_msg.goal.named_target) != available_targets.end()) {
+        // Retrieve and print the joint values for the named target
+        auto joint_values = planning_components_->getNamedTargetStateValues(
+          goal_msg.goal.named_target);
+        RCLCPP_DEBUG(logger_, "Joint values for named target '%s':",
+          goal_msg.goal.named_target.c_str());
+        for (const auto & entry : joint_values) {
+          RCLCPP_DEBUG(logger_, "  %s: %f", entry.first.c_str(), entry.second);
+        }
       }
       else {
-	RCLCPP_ERROR(logger_, "Named target '%s' not found among available targets.",
-	  goal_msg.goal.named_target.c_str());
-	goal_valid = false;
+        RCLCPP_ERROR(logger_, "Named target '%s' not found among available targets.",
+          goal_msg.goal.named_target.c_str());
+        goal_valid = false;
       }
     }
 
@@ -465,37 +465,37 @@ std::pair<bool, moveit_msgs::msg::RobotTrajectory> MoveItCppPlanner::plan(
     {
       auto solution = planning_components_->plan(params);
       if (solution) {
-	// Proceeding only if the traj is valid
+        // Proceeding only if the traj is valid
 
-	// Get the raw msg
-	moveit_msgs::msg::RobotTrajectory traj_msg;
-	solution.trajectory->getRobotTrajectoryMsg(traj_msg);
+        // Get the raw msg
+        moveit_msgs::msg::RobotTrajectory traj_msg;
+        solution.trajectory->getRobotTrajectoryMsg(traj_msg);
 
-	// // Path chosen depending on length
-	// double length = computePathLength(traj_msg);
-	// trajectories.emplace_back(traj_msg, length);
-	// RCLCPP_INFO_STREAM(logger_, "Calculated " << goal_msg.goal.movement_type << " traj
-	// length: " << length);
+        // // Path chosen depending on length
+        // double length = computePathLength(traj_msg);
+        // trajectories.emplace_back(traj_msg, length);
+        // RCLCPP_INFO_STREAM(logger_, "Calculated " << goal_msg.goal.movement_type << " traj
+        // length: " << length);
 
-	// Choosing shortest path
-	// Time‑parametrize it
-	auto [ok, timed_traj] = applyTimeParameterization(traj_msg, cfg);
-	if (!ok || timed_traj.joint_trajectory.points.empty()) {
-	  RCLCPP_WARN(logger_, "Time‑parameterization failed; skipping this candidate.");
-	}
-	else {
-	  // Extract duration from the last point
-	  const auto & pts = timed_traj.joint_trajectory.points;
-	  double duration = rclcpp::Duration(pts.back().time_from_start).seconds();
+        // Choosing shortest path
+        // Time‑parametrize it
+        auto [ok, timed_traj] = applyTimeParameterization(traj_msg, cfg);
+        if (!ok || timed_traj.joint_trajectory.points.empty()) {
+          RCLCPP_WARN(logger_, "Time‑parameterization failed; skipping this candidate.");
+        }
+        else {
+          // Extract duration from the last point
+          const auto & pts = timed_traj.joint_trajectory.points;
+          double duration = rclcpp::Duration(pts.back().time_from_start).seconds();
 
-	  // Store the time‑parametrized trajectory and its duration
-	  trajectories.emplace_back(timed_traj, duration);
-	  RCLCPP_INFO_STREAM(logger_, "Trajectory duration: " << duration << " s");
-	}
+          // Store the time‑parametrized trajectory and its duration
+          trajectories.emplace_back(timed_traj, duration);
+          RCLCPP_INFO_STREAM(logger_, "Trajectory duration: " << duration << " s");
+        }
       }
       else {
-	RCLCPP_WARN(logger_, "%s target planning attempt %d failed.",
-	  goal_msg.goal.movement_type.c_str(), attempts + 1);
+        RCLCPP_WARN(logger_, "%s target planning attempt %d failed.",
+          goal_msg.goal.movement_type.c_str(), attempts + 1);
       }
       attempts++;
     }
@@ -516,83 +516,83 @@ std::pair<bool, moveit_msgs::msg::RobotTrajectory> MoveItCppPlanner::plan(
       auto solution = planning_components_->plan(params);
 
       if (solution && solution.error_code == moveit::core::MoveItErrorCode::SUCCESS) {
-	moveit_msgs::msg::RobotTrajectory traj_msg;
-	solution.trajectory->getRobotTrajectoryMsg(traj_msg);
+        moveit_msgs::msg::RobotTrajectory traj_msg;
+        solution.trajectory->getRobotTrajectoryMsg(traj_msg);
 
-	// Check if traj is empty
-	if (traj_msg.joint_trajectory.points.empty()) {
-	  RCLCPP_WARN(logger_, "%s target planning attempt %d failed: trajectory is empty.",
-	    goal_msg.goal.movement_type.c_str(), attempts + 1);
-	  break;                               // the traj is empty
-	}
+        // Check if traj is empty
+        if (traj_msg.joint_trajectory.points.empty()) {
+          RCLCPP_WARN(logger_, "%s target planning attempt %d failed: trajectory is empty.",
+            goal_msg.goal.movement_type.c_str(), attempts + 1);
+          break;                               // the traj is empty
+        }
 
-	// I'm having trouble with plans succeeding with empty or almost empty trajectories
-	// The following checks are to verify that the trajectory makes sense
+        // I'm having trouble with plans succeeding with empty or almost empty trajectories
+        // The following checks are to verify that the trajectory makes sense
 
-	// auto start_pose = getPoseFromRobotState(*robot_start_state_ptr, tcp_frame_);
-	// auto traj_start_pose = getPoseFromTrajectory(traj_msg, *robot_start_state_ptr,
-	// tcp_frame_, false);
-	auto traj_end_pose = getPoseFromTrajectory(traj_msg, *robot_start_state_ptr,
-	  goal_msg.goal.config.tcp_frame, true);
+        // auto start_pose = getPoseFromRobotState(*robot_start_state_ptr, tcp_frame_);
+        // auto traj_start_pose = getPoseFromTrajectory(traj_msg, *robot_start_state_ptr,
+        // tcp_frame_, false);
+        auto traj_end_pose = getPoseFromTrajectory(traj_msg, *robot_start_state_ptr,
+          goal_msg.goal.config.tcp_frame, true);
 
-	// double min_euclidean_distance = computeCartesianDistance(start_pose,
-	// goal_msg.goal.pose_target);
-	// double traj_euclidean_distance = computeCartesianDistance(traj_start_pose,
-	// traj_end_pose);
-	// double starts_euclidean_distance = computeCartesianDistance(start_pose, traj_start_pose);
-	double targets_euclidean_distance = computeCartesianDistance(traj_end_pose,
-	  goal_msg.goal.pose_target);
+        // double min_euclidean_distance = computeCartesianDistance(start_pose,
+        // goal_msg.goal.pose_target);
+        // double traj_euclidean_distance = computeCartesianDistance(traj_start_pose,
+        // traj_end_pose);
+        // double starts_euclidean_distance = computeCartesianDistance(start_pose, traj_start_pose);
+        double targets_euclidean_distance = computeCartesianDistance(traj_end_pose,
+          goal_msg.goal.pose_target);
 
-	// RCLCPP_INFO_STREAM(logger_, "Minimum theoretical euclidean distance between start pose
-	// and target pose: " << min_euclidean_distance);
-	// RCLCPP_INFO_STREAM(logger_, "Euclidean distance between trajectory first point and
-	// trajectory last point: " << traj_euclidean_distance);
-	// RCLCPP_INFO_STREAM(logger_, "Euclidean distance between theoretical start and calculated
-	// trajectory first point: " << starts_euclidean_distance);
+        // RCLCPP_INFO_STREAM(logger_, "Minimum theoretical euclidean distance between start pose
+        // and target pose: " << min_euclidean_distance);
+        // RCLCPP_INFO_STREAM(logger_, "Euclidean distance between trajectory first point and
+        // trajectory last point: " << traj_euclidean_distance);
+        // RCLCPP_INFO_STREAM(logger_, "Euclidean distance between theoretical start and calculated
+        // trajectory first point: " << starts_euclidean_distance);
 
-	if (targets_euclidean_distance < goal_msg.goal.config.linear_precision) {
-	  // Proceeding only if the traj is valid
+        if (targets_euclidean_distance < goal_msg.goal.config.linear_precision) {
+          // Proceeding only if the traj is valid
 
-	  // // Path chosen depending on length, only if the traj is valid
-	  // double length = computePathLength(traj_msg);
+          // // Path chosen depending on length, only if the traj is valid
+          // double length = computePathLength(traj_msg);
 
-	  // trajectories.emplace_back(traj_msg, length);
-	  // RCLCPP_DEBUG_STREAM(logger_, "Calculated pose traj length: " << length);
-	  // RCLCPP_DEBUG(logger_, "moveit::core::MoveItErrorCode = %d.",
-	  //              solution.error_code.val);
+          // trajectories.emplace_back(traj_msg, length);
+          // RCLCPP_DEBUG_STREAM(logger_, "Calculated pose traj length: " << length);
+          // RCLCPP_DEBUG(logger_, "moveit::core::MoveItErrorCode = %d.",
+          //              solution.error_code.val);
 
-	  auto [ok, timed_traj] = applyTimeParameterization(traj_msg, cfg);
-	  if (ok && !timed_traj.joint_trajectory.points.empty()) {
-	    double duration =
-	      rclcpp::Duration(timed_traj.joint_trajectory.points.back().time_from_start)
-	      .seconds();
-	    trajectories.emplace_back(timed_traj, duration);
-	    RCLCPP_DEBUG_STREAM(logger_, "Pose traj duration: " << duration);
-	  }
-	  else {
-	    RCLCPP_WARN(logger_, "Time‑param failed on pose candidate.");
-	  }
-	}
-	else {
-	  RCLCPP_WARN_STREAM(logger_,
-	    "Euclidean distance between theoretical target and calculated trajectory last point: "
-	      <<
-	      targets_euclidean_distance);
+          auto [ok, timed_traj] = applyTimeParameterization(traj_msg, cfg);
+          if (ok && !timed_traj.joint_trajectory.points.empty()) {
+            double duration =
+              rclcpp::Duration(timed_traj.joint_trajectory.points.back().time_from_start)
+              .seconds();
+            trajectories.emplace_back(timed_traj, duration);
+            RCLCPP_DEBUG_STREAM(logger_, "Pose traj duration: " << duration);
+          }
+          else {
+            RCLCPP_WARN(logger_, "Time‑param failed on pose candidate.");
+          }
+        }
+        else {
+          RCLCPP_WARN_STREAM(logger_,
+            "Euclidean distance between theoretical target and calculated trajectory last point: "
+              <<
+              targets_euclidean_distance);
 
-	  RCLCPP_WARN_STREAM(logger_,
-	    "The planner was not able to calculate trajectory with end point within tolerance. Difference:"
-	      <<
-	      (targets_euclidean_distance -
-	       goal_msg.goal.config.linear_precision));
-	  RCLCPP_WARN(logger_, "%s target planning attempt %d failed: trajectory is empty.",
-	    goal_msg.goal.movement_type.c_str(), attempts + 1);
-	}
+          RCLCPP_WARN_STREAM(logger_,
+            "The planner was not able to calculate trajectory with end point within tolerance. Difference:"
+              <<
+              (targets_euclidean_distance -
+               goal_msg.goal.config.linear_precision));
+          RCLCPP_WARN(logger_, "%s target planning attempt %d failed: trajectory is empty.",
+            goal_msg.goal.movement_type.c_str(), attempts + 1);
+        }
       }
       else {
-	RCLCPP_WARN(logger_, "%s target planning attempt %d failed.",
-	  goal_msg.goal.movement_type.c_str(), attempts + 1);
-	RCLCPP_WARN(logger_, "moveit::core::MoveItErrorCode = %d.",
-	  solution.error_code.val);
+        RCLCPP_WARN(logger_, "%s target planning attempt %d failed.",
+          goal_msg.goal.movement_type.c_str(), attempts + 1);
+        RCLCPP_WARN(logger_, "moveit::core::MoveItErrorCode = %d.",
+          solution.error_code.val);
       }
       attempts++;
     }
@@ -604,19 +604,19 @@ std::pair<bool, moveit_msgs::msg::RobotTrajectory> MoveItCppPlanner::plan(
            static_cast<int>(trajectories.size()) < goal_msg.goal.config.plan_number_target)
     {
       RCLCPP_DEBUG(logger_,
-	"Cartesian path planning attempt %d with step size %.3f, jump threshold %.3f",
-	attempts + 1,
-	goal_msg.goal.config.step_size,
-	goal_msg.goal.config.jump_threshold);
+        "Cartesian path planning attempt %d with step size %.3f, jump threshold %.3f",
+        attempts + 1,
+        goal_msg.goal.config.step_size,
+        goal_msg.goal.config.jump_threshold);
 
       // Handle start state
       if (!goal_msg.goal.start_joint_values.empty()) {
-	moveit::core::RobotState start_state(*moveit_cpp_ptr_->getCurrentState());
-	start_state.setJointGroupPositions(joint_model_group_ptr, goal_msg.goal.start_joint_values);
-	planning_components_->setStartState(start_state);
+        moveit::core::RobotState start_state(*moveit_cpp_ptr_->getCurrentState());
+        start_state.setJointGroupPositions(joint_model_group_ptr, goal_msg.goal.start_joint_values);
+        planning_components_->setStartState(start_state);
       }
       else {
-	planning_components_->setStartStateToCurrentState();
+        planning_components_->setStartStateToCurrentState();
       }
 
       // Get the initial robot state
@@ -624,7 +624,7 @@ std::pair<bool, moveit_msgs::msg::RobotTrajectory> MoveItCppPlanner::plan(
 
       // Get the end-effector link model
       const moveit::core::LinkModel * ee_link = joint_model_group_ptr->getLinkModel(
-	goal_msg.goal.config.tcp_frame);
+        goal_msg.goal.config.tcp_frame);
 
       // Retrieve the global pose of the end-effector at the start
       Eigen::Isometry3d start_pose = start_state->getGlobalLinkTransform(ee_link);
@@ -637,64 +637,64 @@ std::pair<bool, moveit_msgs::msg::RobotTrajectory> MoveItCppPlanner::plan(
       eigen_waypoints.push_back(start_pose);
 
       for (const auto & wp : waypoints) {
-	Eigen::Isometry3d eigen_pose;
-	tf2::fromMsg(wp, eigen_pose);
-	eigen_waypoints.push_back(eigen_pose);
+        Eigen::Isometry3d eigen_pose;
+        tf2::fromMsg(wp, eigen_pose);
+        eigen_waypoints.push_back(eigen_pose);
       }
 
       std::vector<moveit::core::RobotStatePtr> trajectory_states;
 
       // Creating the callback to check for collisions on cartesian path
       moveit::core::GroupStateValidityCallbackFn custom_callback =
-	std::bind(&MoveItCppPlanner::isStateValid, this, std::placeholders::_1,
-	  std::placeholders::_2);
+        std::bind(&MoveItCppPlanner::isStateValid, this, std::placeholders::_1,
+          std::placeholders::_2);
 
       double fraction = manymove_planner_compat::computeCartesianPathCompat(start_state.get(),
-	joint_model_group_ptr,
-	trajectory_states,
-	ee_link,
-	eigen_waypoints,
-	true,
-	moveit::core::MaxEEFStep(
-	  goal_msg.goal.config.
-	  step_size),
-	goal_msg.goal.config,
-	custom_callback,
-	kinematics::KinematicsQueryOptions(),
-	nullptr);
+        joint_model_group_ptr,
+        trajectory_states,
+        ee_link,
+        eigen_waypoints,
+        true,
+        moveit::core::MaxEEFStep(
+          goal_msg.goal.config.
+          step_size),
+        goal_msg.goal.config,
+        custom_callback,
+        kinematics::KinematicsQueryOptions(),
+        nullptr);
 
       if (fraction >= 1.0) {
-	// Proceeding only if the traj is valid
+        // Proceeding only if the traj is valid
 
-	RCLCPP_DEBUG_STREAM(logger_, "trajectory_states length: " << trajectory_states.size());
-	// Construct a RobotTrajectory from the computed states
-	robot_trajectory::RobotTrajectory robot_trajectory(robot_model_ptr, planning_group_);
-	for (const auto & state : trajectory_states) {
-	  robot_trajectory.addSuffixWayPoint(*state, 0.0);
-	}
+        RCLCPP_DEBUG_STREAM(logger_, "trajectory_states length: " << trajectory_states.size());
+        // Construct a RobotTrajectory from the computed states
+        robot_trajectory::RobotTrajectory robot_trajectory(robot_model_ptr, planning_group_);
+        for (const auto & state : trajectory_states) {
+          robot_trajectory.addSuffixWayPoint(*state, 0.0);
+        }
 
-	// Convert to message
-	moveit_msgs::msg::RobotTrajectory traj_msg = convertToMsg(robot_trajectory);
+        // Convert to message
+        moveit_msgs::msg::RobotTrajectory traj_msg = convertToMsg(robot_trajectory);
 
-	// double length = computePathLength(traj_msg);
-	// trajectories.emplace_back(traj_msg, length);
-	// RCLCPP_DEBUG_STREAM(logger_, "Calculated traj length: " << length);
+        // double length = computePathLength(traj_msg);
+        // trajectories.emplace_back(traj_msg, length);
+        // RCLCPP_DEBUG_STREAM(logger_, "Calculated traj length: " << length);
 
-	auto [ok, timed_traj] = applyTimeParameterization(traj_msg, cfg);
-	if (ok && !timed_traj.joint_trajectory.points.empty()) {
-	  double duration =
-	    rclcpp::Duration(timed_traj.joint_trajectory.points.back().time_from_start)
-	    .seconds();
-	  trajectories.emplace_back(timed_traj, duration);
-	  RCLCPP_DEBUG_STREAM(logger_, "Cartesian traj duration: " << duration);
-	}
-	else {
-	  RCLCPP_WARN(logger_, "Time‑param failed on Cartesian candidate.");
-	}
+        auto [ok, timed_traj] = applyTimeParameterization(traj_msg, cfg);
+        if (ok && !timed_traj.joint_trajectory.points.empty()) {
+          double duration =
+            rclcpp::Duration(timed_traj.joint_trajectory.points.back().time_from_start)
+            .seconds();
+          trajectories.emplace_back(timed_traj, duration);
+          RCLCPP_DEBUG_STREAM(logger_, "Cartesian traj duration: " << duration);
+        }
+        else {
+          RCLCPP_WARN(logger_, "Time‑param failed on Cartesian candidate.");
+        }
       }
       else {
-	RCLCPP_WARN(logger_, "Cartesian path planning attempt %d failed (%.2f%% achieved)",
-	  attempts + 1, fraction * 100.0);
+        RCLCPP_WARN(logger_, "Cartesian path planning attempt %d failed (%.2f%% achieved)",
+          attempts + 1, fraction * 100.0);
       }
       attempts++;
     }
@@ -785,46 +785,46 @@ std::pair<bool, moveit_msgs::msg::RobotTrajectory> MoveItCppPlanner::applyTimePa
     if (config.smoothing_type == "time_optimal") {
       trajectory_processing::TimeOptimalTrajectoryGeneration time_param;
       time_param_success = time_param.computeTimeStamps(*robot_traj_ptr,
-	velocity_scaling_factor,
-	acceleration_scaling_factor);
+        velocity_scaling_factor,
+        acceleration_scaling_factor);
     }
     /// TODO: Is ruckig still developed? Is it worth keeping since it doesn't work on cartesian
     // paths? To test.
     else if (config.smoothing_type == "ruckig") {
       // Ruckig-based smoothing
       time_param_success = trajectory_processing::RuckigSmoothing::applySmoothing(*robot_traj_ptr,
-	velocity_scaling_factor,
-	acceleration_scaling_factor);
+        velocity_scaling_factor,
+        acceleration_scaling_factor);
     }
     else {
       // Default fallback to time_optimal
       trajectory_processing::TimeOptimalTrajectoryGeneration time_param;
       time_param_success = time_param.computeTimeStamps(*robot_traj_ptr,
-	velocity_scaling_factor,
-	acceleration_scaling_factor);
+        velocity_scaling_factor,
+        acceleration_scaling_factor);
     }
 
     if (!time_param_success) {
       // Attempt fallback if first try fails, try TOTG (again)
       RCLCPP_ERROR(logger_, "Failed to compute time stamps with '%s'",
-	config.smoothing_type.c_str());
+        config.smoothing_type.c_str());
       RCLCPP_WARN(logger_, "Fallback to time-optimal smoothing...");
 
       // Reset durations
       for (size_t i = 1; i < robot_traj_ptr->getWayPointCount(); i++) {
-	robot_traj_ptr->setWayPointDurationFromPrevious(i, 0.0);
+        robot_traj_ptr->setWayPointDurationFromPrevious(i, 0.0);
       }
 
       trajectory_processing::TimeOptimalTrajectoryGeneration fallback_param;
       bool fallback_ok = fallback_param.computeTimeStamps(*robot_traj_ptr,
-	velocity_scaling_factor,
-	acceleration_scaling_factor);
+        velocity_scaling_factor,
+        acceleration_scaling_factor);
       if (!fallback_ok) {
-	RCLCPP_ERROR(logger_, "Fallback time-optimal smoothing also failed.");
-	return
-	  {
-	    false, moveit_msgs::msg::RobotTrajectory()
-	  };
+        RCLCPP_ERROR(logger_, "Fallback time-optimal smoothing also failed.");
+        return
+          {
+            false, moveit_msgs::msg::RobotTrajectory()
+          };
       }
     }
 
@@ -837,25 +837,25 @@ std::pair<bool, moveit_msgs::msg::RobotTrajectory> MoveItCppPlanner::applyTimePa
       return
         {
           true, output_traj
-	};
+        };
     }
     else {
       // Need to reduce velocity scaling factor
       RCLCPP_INFO(logger_,
-	"Adjusting cartesian speed from %.2f to <= %.2f. Reducing velocity scale...",
-	max_speed,
-	config.max_cartesian_speed);
+        "Adjusting cartesian speed from %.2f to <= %.2f. Reducing velocity scale...",
+        max_speed,
+        config.max_cartesian_speed);
 
       double scale = (config.max_cartesian_speed * 0.99) / max_speed;
       velocity_scaling_factor *= scale;
 
       // If it's too small, we abort
       if (velocity_scaling_factor < 0.001 || acceleration_scaling_factor < 0.001) {
-	RCLCPP_ERROR(logger_, "Scaling factors too small to limit Cartesian speed.");
-	return
-	  {
-	    false, moveit_msgs::msg::RobotTrajectory()
-	  };
+        RCLCPP_ERROR(logger_, "Scaling factors too small to limit Cartesian speed.");
+        return
+          {
+            false, moveit_msgs::msg::RobotTrajectory()
+          };
       }
     }
   }
@@ -988,8 +988,8 @@ bool MoveItCppPlanner::isStateValid(
       double joint_value = entry.second;
       // Only update joints not in the planning group
       if (std::find(group_joint_names.begin(), group_joint_names.end(),
-	joint_name) == group_joint_names.end()) {
-	temp_state.setVariablePosition(joint_name, joint_value);
+        joint_name) == group_joint_names.end()) {
+        temp_state.setVariablePosition(joint_name, joint_value);
       }
     }
   }
@@ -1007,7 +1007,7 @@ bool MoveItCppPlanner::isStateValid(
       group->getName().c_str());
     for (const auto & contact : collision_result.contacts) {
       RCLCPP_WARN(logger_, "Collision between: '%s' and '%s'",
-	contact.first.first.c_str(), contact.first.second.c_str());
+        contact.first.first.c_str(), contact.first.second.c_str());
     }
   }
 
@@ -1064,8 +1064,8 @@ bool MoveItCppPlanner::isTrajectoryStartValid(
     if (std::fabs(first_point.positions[i] - current_joint_state[i]) >
         move_request.config.rotational_precision) {
       RCLCPP_INFO(logger_, "Joint %zu difference (%.6f) exceeds tolerance (%.6f).",
-	i, std::fabs(first_point.positions[i] - current_joint_state[i]),
-	move_request.config.rotational_precision);
+        i, std::fabs(first_point.positions[i] - current_joint_state[i]),
+        move_request.config.rotational_precision);
       return false;
     }
   }
@@ -1090,7 +1090,7 @@ bool MoveItCppPlanner::isTrajectoryEndValid(
     try {
       // Get the pose from the last point of the trajectory.
       traj_end_pose =
-	getPoseFromTrajectory(traj, current_state, move_request.config.tcp_frame, true);
+        getPoseFromTrajectory(traj, current_state, move_request.config.tcp_frame, true);
     } catch (const std::exception & e) {
       RCLCPP_ERROR(logger_, "Error extracting trajectory end pose: %s", e.what());
       return false;
@@ -1099,8 +1099,8 @@ bool MoveItCppPlanner::isTrajectoryEndValid(
     double distance = computeCartesianDistance(traj_end_pose, move_request.pose_target);
     if (distance > move_request.config.linear_precision) {
       RCLCPP_INFO(logger_,
-	"Trajectory end pose invalid: Euclidean distance (%.6f) exceeds tolerance (%.6f)",
-	distance, move_request.config.linear_precision);
+        "Trajectory end pose invalid: Euclidean distance (%.6f) exceeds tolerance (%.6f)",
+        distance, move_request.config.linear_precision);
       return false;
     }
     return true;
@@ -1114,15 +1114,15 @@ bool MoveItCppPlanner::isTrajectoryEndValid(
       auto named_map = planning_components_->getNamedTargetStateValues(move_request.named_target);
       // Create a vector by iterating over the trajectory's joint_names (ensuring proper order)
       for (const auto & joint_name : traj.joint_trajectory.joint_names) {
-	auto it = named_map.find(joint_name);
-	if (it != named_map.end()) {
-	  target_joint_values.push_back(it->second);
-	}
-	else {
-	  RCLCPP_ERROR(logger_, "Joint '%s' not found in named target values for '%s'.",
-	    joint_name.c_str(), move_request.named_target.c_str());
-	  return false;
-	}
+        auto it = named_map.find(joint_name);
+        if (it != named_map.end()) {
+          target_joint_values.push_back(it->second);
+        }
+        else {
+          RCLCPP_ERROR(logger_, "Joint '%s' not found in named target values for '%s'.",
+            joint_name.c_str(), move_request.named_target.c_str());
+          return false;
+        }
       }
     }
     else {
@@ -1131,18 +1131,18 @@ bool MoveItCppPlanner::isTrajectoryEndValid(
 
     if (last_point.positions.size() != target_joint_values.size()) {
       RCLCPP_ERROR(logger_,
-	"Mismatch: trajectory joints (%zu) vs. target joints (%zu).",
-	last_point.positions.size(), target_joint_values.size());
+        "Mismatch: trajectory joints (%zu) vs. target joints (%zu).",
+        last_point.positions.size(), target_joint_values.size());
       return false;
     }
 
     for (size_t i = 0; i < last_point.positions.size(); ++i) {
       double diff = std::fabs(last_point.positions[i] - target_joint_values[i]);
       if (diff > move_request.config.rotational_precision) {
-	RCLCPP_INFO(logger_,
-	  "Joint %zu difference (%.6f) exceeds tolerance (%.6f) for end validation.",
-	  i, diff, move_request.config.rotational_precision);
-	return false;
+        RCLCPP_INFO(logger_,
+          "Joint %zu difference (%.6f) exceeds tolerance (%.6f) for end validation.",
+          i, diff, move_request.config.rotational_precision);
+        return false;
       }
     }
     return true;
@@ -1199,8 +1199,8 @@ bool MoveItCppPlanner::isTrajectoryValid(
       // copy way-points [after … end) into  sub_traj
       for (std::size_t i = static_cast<std::size_t>(after);
            i < trajectory.getWayPointCount(); ++i) {
-	sub_traj.addSuffixWayPoint(trajectory.getWayPoint(i),
-	  trajectory.getWayPointDurationFromPrevious(i));
+        sub_traj.addSuffixWayPoint(trajectory.getWayPoint(i),
+          trajectory.getWayPointDurationFromPrevious(i));
       }
     }
   }

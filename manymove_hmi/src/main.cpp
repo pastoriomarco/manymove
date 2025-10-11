@@ -136,19 +136,19 @@ int main(int argc, char * argv[])
     QObject::connect(&gui, &HmiGui::startExecutionRequested, [worker](const std::string & p)
     {
       if (worker->getRobotPrefix() == p) {
-	worker->callStartExecution();
+        worker->callStartExecution();
       }
     });
     QObject::connect(&gui, &HmiGui::stopExecutionRequested, [worker](const std::string & p)
     {
       if (worker->getRobotPrefix() == p) {
-	worker->callStopExecution();
+        worker->callStopExecution();
       }
     });
     QObject::connect(&gui, &HmiGui::resetProgramRequested, [worker](const std::string & p)
     {
       if (worker->getRobotPrefix() == p) {
-	worker->callResetProgram();
+        worker->callResetProgram();
       }
     });
   }

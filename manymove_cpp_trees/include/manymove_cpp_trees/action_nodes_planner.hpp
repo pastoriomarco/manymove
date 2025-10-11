@@ -75,9 +75,9 @@ class MoveManipulatorAction : public BT::StatefulActionNode
         BT::InputPort<moveit_msgs::msg::RobotTrajectory>("trajectory"),
         BT::InputPort<std::string>("pose_key", "Optional key to retrieve the dynamic target pose"),
         BT::InputPort<bool>("collision_detected",
-	  "If a collision is detected, the execution fails"),
+          "If a collision is detected, the execution fails"),
         BT::InputPort<bool>("invalidate_traj_on_exec",
-	  "Flag to indicate if the trajectory should be invalidated on exec even if successful"),
+          "Flag to indicate if the trajectory should be invalidated on exec even if successful"),
         BT::InputPort<bool>("stop_execution", "Flag to indicate that the execution is stopped"),
         BT::InputPort<int>("max_tries", "Number of times to try the execution"),
       };

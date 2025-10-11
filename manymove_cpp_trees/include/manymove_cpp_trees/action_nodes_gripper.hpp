@@ -99,7 +99,7 @@ class GripperTrajAction : public BT::StatefulActionNode
         BT::InputPort<std::string>("action_server", "FollowJointTrajectory server name"),
         BT::InputPort<std::vector<std::string> >("joint_names", "List of gripper joint names"),
         BT::InputPort<std::vector<double> >("positions",
-	  "Target joint positions for each joint_name"),
+          "Target joint positions for each joint_name"),
         BT::InputPort<double>("time_from_start", 1.0, "Trajectory duration in seconds")
       };
   }

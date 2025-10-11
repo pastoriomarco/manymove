@@ -60,10 +60,10 @@ class RetryPauseResetNode : public BT::DecoratorNode
       {
         BT::InputPort<bool>("stop_execution", false, "Pause execution when true"),
         BT::InputPort<bool>("collision_detected", false,
-	  "Stops current move when true, then retries planning"),
+          "Stops current move when true, then retries planning"),
         BT::InputPort<bool>("reset", false, "Reset branch when true"),
         BT::InputPort<std::string>("robot_prefix",
-	  "Robot prefix for setting correct blackboard key")
+          "Robot prefix for setting correct blackboard key")
       };
   }
 
@@ -95,11 +95,11 @@ class CheckKeyBoolValue : public BT::ConditionNode
     return
       {
         BT::InputPort<std::string>("robot_prefix",
-	  "Prefix only for the HMI output, use \"hmi_\" for generic output"),
+          "Prefix only for the HMI output, use \"hmi_\" for generic output"),
         BT::InputPort<std::string>("key", "Name of the blackboard key to check"),
         BT::InputPort<bool>("value", "Expected value"),
         BT::InputPort<bool>("hmi_message_logic",
-	  "If true, outputs on hmi when check succeeds. If false, when it fails"),
+          "If true, outputs on hmi when check succeeds. If false, when it fails"),
       };
   }
 
@@ -133,7 +133,7 @@ class SetKeyBoolValue : public BT::SyncActionNode
     return
       {
         BT::InputPort<std::string>("robot_prefix",
-	  "Prefix only for the HMI output, use \"hmi_\" for generic output"),
+          "Prefix only for the HMI output, use \"hmi_\" for generic output"),
         BT::InputPort<std::string>("key", "Blackboard key to set"),
         BT::InputPort<bool>("value", "Value to set (as a bool)")
       };
@@ -225,7 +225,7 @@ class GetLinkPoseAction : public BT::SyncActionNode
         BT::InputPort<std::string>("reference_frame", "", "Target frame (default world)"),
         BT::InputPort<std::vector<double> >("pre_transform_xyz_rpy", "6-tuple applied FIRST"),
         BT::InputPort<std::vector<double> >("post_transform_xyz_rpy",
-	  "6-tuple applied AFTER link pose"),
+          "6-tuple applied AFTER link pose"),
         BT::InputPort<std::string>("pose_key", "", "If set, store pose in blackboard"),
         BT::OutputPort<geometry_msgs::msg::Pose>("pose", "Final pose")
       };

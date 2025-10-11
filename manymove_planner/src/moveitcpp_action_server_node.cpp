@@ -42,7 +42,7 @@ class MoveItCppActionServerNode : public rclcpp::Node
   {
     auto node =
       std::shared_ptr<MoveItCppActionServerNode>(new MoveItCppActionServerNode(moveit_cpp,
-	options));
+        options));
     node->initialize();
     return node;
   }
@@ -86,18 +86,18 @@ class MoveItCppActionServerNode : public rclcpp::Node
       std::string full_controller = robot_prefixes[i] + traj_controllers[i];
 
       RCLCPP_INFO(get_logger(),
-	"Creating planner and action server for robot_prefix=%s, planning_group=%s",
-	robot_prefixes[i].c_str(), full_planning_group.c_str());
+        "Creating planner and action server for robot_prefix=%s, planning_group=%s",
+        robot_prefixes[i].c_str(), full_planning_group.c_str());
 
       auto planner = std::make_shared<MoveItCppPlanner>(self,
-	full_planning_group,
-	full_base_frame,
-	full_controller,
-	moveit_cpp_);
+        full_planning_group,
+        full_base_frame,
+        full_controller,
+        moveit_cpp_);
 
       auto action_server = std::make_shared<ManipulatorActionServer>(self,
-	planner,
-	robot_prefixes[i]);
+        planner,
+        robot_prefixes[i]);
 
       action_servers_.push_back(action_server);
     }

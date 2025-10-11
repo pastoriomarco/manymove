@@ -91,9 +91,9 @@ BT::NodeStatus AddCollisionObjectAction::onStart()
   if (shape != "mesh") {
     if (!getInput<std::vector<double> >("dimensions", dimensions)) {
       RCLCPP_ERROR(
-	node_->get_logger(),
-	"AddCollisionObjectAction: Missing required input 'dimensions' for shape '%s'.",
-	shape.c_str());
+        node_->get_logger(),
+        "AddCollisionObjectAction: Missing required input 'dimensions' for shape '%s'.",
+        shape.c_str());
       return BT::NodeStatus::FAILURE;
     }
   }
@@ -108,7 +108,7 @@ BT::NodeStatus AddCollisionObjectAction::onStart()
   if (shape == "mesh") {
     if (!getInput<std::string>("mesh_file", mesh_file)) {
       RCLCPP_ERROR(node_->get_logger(),
-	"AddCollisionObjectAction: Missing required input 'mesh_file' for mesh shape.");
+        "AddCollisionObjectAction: Missing required input 'mesh_file' for mesh shape.");
       return BT::NodeStatus::FAILURE;
     }
   }
@@ -150,15 +150,15 @@ BT::NodeStatus AddCollisionObjectAction::onRunning()
   if (result_received_) {
     if (action_result_.success) {
       RCLCPP_INFO(node_->get_logger(),
-	"AddCollisionObjectAction: Successfully added object '%s'.",
-	object_id_.c_str());
+        "AddCollisionObjectAction: Successfully added object '%s'.",
+        object_id_.c_str());
       return BT::NodeStatus::SUCCESS;
     }
     else {
       RCLCPP_ERROR(node_->get_logger(),
-	"AddCollisionObjectAction: Failed to add object '%s'. Message: %s",
-	object_id_.c_str(),
-	action_result_.message.c_str());
+        "AddCollisionObjectAction: Failed to add object '%s'. Message: %s",
+        object_id_.c_str(),
+        action_result_.message.c_str());
       return BT::NodeStatus::FAILURE;
     }
   }
@@ -293,14 +293,14 @@ BT::NodeStatus RemoveCollisionObjectAction::onRunning()
   if (result_received_) {
     if (action_result_.success) {
       RCLCPP_INFO(node_->get_logger(),
-	"RemoveCollisionObjectAction: Successfully removed object '%s'.",
-	object_id_.c_str());
+        "RemoveCollisionObjectAction: Successfully removed object '%s'.",
+        object_id_.c_str());
       return BT::NodeStatus::SUCCESS;
     }
     else {
       RCLCPP_ERROR(node_->get_logger(),
-	"RemoveCollisionObjectAction: Failed to remove object '%s'. Message: %s",
-	object_id_.c_str(), action_result_.message.c_str());
+        "RemoveCollisionObjectAction: Failed to remove object '%s'. Message: %s",
+        object_id_.c_str(), action_result_.message.c_str());
       return BT::NodeStatus::FAILURE;
     }
   }
@@ -465,20 +465,20 @@ BT::NodeStatus AttachDetachObjectAction::onRunning()
     if (action_result_.success) {
       std::string action = attach_ ? "attached" : "detached";
       RCLCPP_INFO(node_->get_logger(),
-	"AttachDetachObjectAction: Successfully %s object '%s' to link '%s'.",
-	action.c_str(),
-	object_id_.c_str(),
-	link_name_.c_str());
+        "AttachDetachObjectAction: Successfully %s object '%s' to link '%s'.",
+        action.c_str(),
+        object_id_.c_str(),
+        link_name_.c_str());
       return BT::NodeStatus::SUCCESS;
     }
     else {
       std::string action = attach_ ? "attach" : "detach";
       RCLCPP_ERROR(node_->get_logger(),
-	"AttachDetachObjectAction: Failed to %s object '%s' to link '%s'. Message: %s",
-	action.c_str(),
-	object_id_.c_str(),
-	link_name_.c_str(),
-	action_result_.message.c_str());
+        "AttachDetachObjectAction: Failed to %s object '%s' to link '%s'. Message: %s",
+        action.c_str(),
+        object_id_.c_str(),
+        link_name_.c_str(),
+        action_result_.message.c_str());
       return BT::NodeStatus::FAILURE;
     }
   }
@@ -618,13 +618,13 @@ BT::NodeStatus CheckObjectExistsAction::onRunning()
 
     if (action_result_.exists) {
       RCLCPP_INFO(node_->get_logger(),
-	"CheckObjectExistsAction: Object '%s' exists.",
-	object_id_.c_str());
+        "CheckObjectExistsAction: Object '%s' exists.",
+        object_id_.c_str());
       return BT::NodeStatus::SUCCESS;
     }
     else {
       RCLCPP_INFO(node_->get_logger(), "CheckObjectExistsAction: Object '%s' does not exist.",
-	object_id_.c_str());
+        object_id_.c_str());
       return BT::NodeStatus::FAILURE;
     }
   }
@@ -821,38 +821,38 @@ BT::NodeStatus GetObjectPoseAction::onRunning()
 
       // **Important**: Also set the pose in the blackboard under pose_key_
       if (!pose_key_.empty()) {
-	// Attempt to set the pose on the blackboard
-	auto blackboard = config().blackboard;
-	blackboard->set(pose_key_, action_result_.pose);
-	RCLCPP_INFO(node_->get_logger(),
-	  "GetObjectPoseAction: Successfully set pose to blackboard key '%s'.",
-	  pose_key_.c_str());
+        // Attempt to set the pose on the blackboard
+        auto blackboard = config().blackboard;
+        blackboard->set(pose_key_, action_result_.pose);
+        RCLCPP_INFO(node_->get_logger(),
+          "GetObjectPoseAction: Successfully set pose to blackboard key '%s'.",
+          pose_key_.c_str());
       }
       else {
-	RCLCPP_ERROR(node_->get_logger(),
-	  "GetObjectPoseAction: pose_key_ is empty. Cannot set pose on blackboard.");
-	return BT::NodeStatus::FAILURE;
+        RCLCPP_ERROR(node_->get_logger(),
+          "GetObjectPoseAction: pose_key_ is empty. Cannot set pose on blackboard.");
+        return BT::NodeStatus::FAILURE;
       }
 
       // Log the new pose
       RCLCPP_INFO(
-	node_->get_logger(),
-	"GetObjectPoseAction: New pose for '%s': Position (%.3f, %.3f, %.3f), Orientation (%.3f, %.3f, %.3f, %.3f)",
-	pose_key_.c_str(),
-	action_result_.pose.position.x,
-	action_result_.pose.position.y,
-	action_result_.pose.position.z,
-	action_result_.pose.orientation.x,
-	action_result_.pose.orientation.y,
-	action_result_.pose.orientation.z,
-	action_result_.pose.orientation.w);
+        node_->get_logger(),
+        "GetObjectPoseAction: New pose for '%s': Position (%.3f, %.3f, %.3f), Orientation (%.3f, %.3f, %.3f, %.3f)",
+        pose_key_.c_str(),
+        action_result_.pose.position.x,
+        action_result_.pose.position.y,
+        action_result_.pose.position.z,
+        action_result_.pose.orientation.x,
+        action_result_.pose.orientation.y,
+        action_result_.pose.orientation.z,
+        action_result_.pose.orientation.w);
 
       return BT::NodeStatus::SUCCESS;
     }
     else {
       RCLCPP_ERROR(node_->get_logger(),
-	"GetObjectPoseAction: Failed to retrieve pose for object '%s'. Message: %s",
-	object_id_.c_str(), action_result_.message.c_str());
+        "GetObjectPoseAction: Failed to retrieve pose for object '%s'. Message: %s",
+        object_id_.c_str(), action_result_.message.c_str());
       return BT::NodeStatus::FAILURE;
     }
   }
@@ -1008,8 +1008,8 @@ BT::NodeStatus WaitForObjectAction::onRunning()
       setHMIMessage(config().blackboard, prefix_, "", "grey");
 
       RCLCPP_INFO(node_->get_logger(),
-	"WaitForObjectAction: Condition met: object '%s' => exists=%s -> SUCCESS.",
-	object_id_.c_str(), (last_exists_ ? "true" : "false"));
+        "WaitForObjectAction: Condition met: object '%s' => exists=%s -> SUCCESS.",
+        object_id_.c_str(), (last_exists_ ? "true" : "false"));
       return BT::NodeStatus::SUCCESS;
     }
 
@@ -1018,16 +1018,16 @@ BT::NodeStatus WaitForObjectAction::onRunning()
       double elapsed = (now - start_time_).seconds();
       if (elapsed >= timeout_) {
 
-	// HMI message
-	setHMIMessage(config().blackboard,
-	  prefix_,
-	  "WAITING FOR OBJECT " + object_id_ + " TIMED OUT",
-	  "red");
+        // HMI message
+        setHMIMessage(config().blackboard,
+          prefix_,
+          "WAITING FOR OBJECT " + object_id_ + " TIMED OUT",
+          "red");
 
-	RCLCPP_WARN(node_->get_logger(),
-	  "WaitForObjectAction: Timeout (%.1f s) reached for object '%s' -> FAILURE.",
-	  timeout_, object_id_.c_str());
-	return BT::NodeStatus::FAILURE;
+        RCLCPP_WARN(node_->get_logger(),
+          "WaitForObjectAction: Timeout (%.1f s) reached for object '%s' -> FAILURE.",
+          timeout_, object_id_.c_str());
+        return BT::NodeStatus::FAILURE;
       }
     }
 

@@ -179,7 +179,7 @@ BT::NodeStatus CheckKeyBoolValue::tick()
     // HMI message
     if (hmi_message_logic) {
       setHMIMessage(config().blackboard, robot_prefix, "KEY VALUE CHECK SUCCEEDED: " + key,
-	"green");
+        "green");
     }
 
     // Condition satisfied => SUCCESS
@@ -346,8 +346,8 @@ BT::NodeStatus WaitForKeyBool::onRunning()
     double elapsed = (now - start_time_).seconds();
     if (elapsed >= timeout_) {
       RCLCPP_WARN(node_->get_logger(),
-	"[%s] Timeout after %.2f s => FAILURE. last_value='%s'",
-	name().c_str(), elapsed, (actual_value ? "true" : "false"));
+        "[%s] Timeout after %.2f s => FAILURE. last_value='%s'",
+        name().c_str(), elapsed, (actual_value ? "true" : "false"));
       return BT::NodeStatus::FAILURE;
     }
   }

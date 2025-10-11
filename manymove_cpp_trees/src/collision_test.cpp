@@ -195,15 +195,15 @@ int main(int argc, char ** argv)
   {
     buildObjectActionXML("detach_obj_to_manipulate_1",
       createDetachObject(
-	object_to_manipulate_1_key_name,
-	tcp_frame_name_1_key_name)),
+        object_to_manipulate_1_key_name,
+        tcp_frame_name_1_key_name)),
     "<AlwaysSuccess />"
   });
   std::string remove_obj_1_xml = fallbackWrapperXML("detach_obj_to_manipulate_1_always_success",
   {
     buildObjectActionXML("remove_obj_to_manipulate_1",
       createRemoveObject(
-	object_to_manipulate_1_key_name)),
+        object_to_manipulate_1_key_name)),
     "<AlwaysSuccess />"
   });
 
@@ -447,7 +447,7 @@ int main(int argc, char ** argv)
     buildObjectActionXML(
       "remove_slider_mesh",
       createRemoveObject(
-	"slider_id_key")),
+        "slider_id_key")),
     "<AlwaysSuccess />"
   });
   std::string remove_endplate_mesh_obj_xml = fallbackWrapperXML(
@@ -535,15 +535,15 @@ int main(int argc, char ** argv)
   {
     buildObjectActionXML("detach_obj_to_manipulate_2",
       createDetachObject(
-	object_to_manipulate_2_key_name,
-	tcp_frame_name_2_key_name)),
+        object_to_manipulate_2_key_name,
+        tcp_frame_name_2_key_name)),
     "<AlwaysSuccess />"
   });
   std::string remove_obj_2_xml = fallbackWrapperXML("detach_obj_to_manipulate_2_always_success",
   {
     buildObjectActionXML("remove_obj_to_manipulate_2",
       createRemoveObject(
-	object_to_manipulate_2_key_name)),
+        object_to_manipulate_2_key_name)),
     "<AlwaysSuccess />"
   });
 

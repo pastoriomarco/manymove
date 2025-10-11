@@ -86,8 +86,8 @@ class CollisionSpawner : public rclcpp::Node
     // Load YAML
     if (!loadObjectsFromYAML(config_file_)) {
       RCLCPP_ERROR(this->get_logger(),
-	"Failed to load objects from YAML file: %s",
-	config_file_.c_str());
+        "Failed to load objects from YAML file: %s",
+        config_file_.c_str());
       rclcpp::shutdown();
       return;
     }
@@ -112,14 +112,14 @@ class CollisionSpawner : public rclcpp::Node
     }
     if (!remove_object_action_client_->wait_for_action_server(std::chrono::seconds(10))) {
       RCLCPP_ERROR(this->get_logger(),
-	"RemoveCollisionObject action server not available. Exiting.");
+        "RemoveCollisionObject action server not available. Exiting.");
       rclcpp::shutdown();
       return;
     }
     if (!check_object_exists_action_client_->wait_for_action_server(std::chrono::seconds(10))) {
       RCLCPP_WARN(
-	this->get_logger(),
-	"CheckObjectExists action server not available. Proceeding without existence checks.");
+        this->get_logger(),
+        "CheckObjectExists action server not available. Proceeding without existence checks.");
     }
     else {
       RCLCPP_INFO(this->get_logger(), "CheckObjectExists action server is available.");
@@ -151,73 +151,73 @@ class CollisionSpawner : public rclcpp::Node
     try {
       YAML::Node config = YAML::LoadFile(file_path);
       if (!config["objects"]) {
-	RCLCPP_ERROR(this->get_logger(), "YAML file does not contain 'objects' key.");
-	return false;
+        RCLCPP_ERROR(this->get_logger(), "YAML file does not contain 'objects' key.");
+        return false;
       }
 
       for (const auto & obj_node : config["objects"]) {
-	ObjectSpec obj_spec;
-	if (!obj_node["name"] || !obj_node["type"]) {
-	  RCLCPP_WARN(this->get_logger(), "Object spec missing 'name' or 'type'. Skipping.");
-	  continue;
-	}
+        ObjectSpec obj_spec;
+        if (!obj_node["name"] || !obj_node["type"]) {
+          RCLCPP_WARN(this->get_logger(), "Object spec missing 'name' or 'type'. Skipping.");
+          continue;
+        }
 
-	obj_spec.name = obj_node["name"].as<std::string>();
-	obj_spec.type = obj_node["type"].as<std::string>();
+        obj_spec.name = obj_node["name"].as<std::string>();
+        obj_spec.type = obj_node["type"].as<std::string>();
 
-	if (obj_spec.type == "mesh") {
-	  if (!obj_node["mesh_file"]) {
-	    RCLCPP_WARN(this->get_logger(), "Mesh object '%s' missing 'mesh_file'. Skipping.",
-	      obj_spec.name.c_str());
-	    continue;
-	  }
-	  obj_spec.mesh_file = obj_node["mesh_file"].as<std::string>();
+        if (obj_spec.type == "mesh") {
+          if (!obj_node["mesh_file"]) {
+            RCLCPP_WARN(this->get_logger(), "Mesh object '%s' missing 'mesh_file'. Skipping.",
+              obj_spec.name.c_str());
+            continue;
+          }
+          obj_spec.mesh_file = obj_node["mesh_file"].as<std::string>();
 
-	  // Parse scaling values for mesh
-	  if (obj_node["scale"]) {
-	    obj_spec.scale_mesh = obj_node["scale"].as<std::vector<double> >();
-	  }
-	  else {
-	    obj_spec.scale_mesh =
-	    {
-	      1.0, 1.0, 1.0
-	    };
-	  }
-	}
-	else {
-	  if (!obj_node["dimensions"]) {
-	    RCLCPP_WARN(this->get_logger(), "Object '%s' missing 'dimensions'. Skipping.",
-	      obj_spec.name.c_str());
-	    continue;
-	  }
-	  obj_spec.dimensions = obj_node["dimensions"].as<std::vector<double> >();
-	}
+          // Parse scaling values for mesh
+          if (obj_node["scale"]) {
+            obj_spec.scale_mesh = obj_node["scale"].as<std::vector<double> >();
+          }
+          else {
+            obj_spec.scale_mesh =
+            {
+              1.0, 1.0, 1.0
+            };
+          }
+        }
+        else {
+          if (!obj_node["dimensions"]) {
+            RCLCPP_WARN(this->get_logger(), "Object '%s' missing 'dimensions'. Skipping.",
+              obj_spec.name.c_str());
+            continue;
+          }
+          obj_spec.dimensions = obj_node["dimensions"].as<std::vector<double> >();
+        }
 
-	if (obj_node["pose"]) {
-	  if (obj_node["pose"]["position"] && obj_node["pose"]["orientation"]) {
-	    obj_spec.pose.position.x = obj_node["pose"]["position"]["x"].as<double>();
-	    obj_spec.pose.position.y = obj_node["pose"]["position"]["y"].as<double>();
-	    obj_spec.pose.position.z = obj_node["pose"]["position"]["z"].as<double>();
+        if (obj_node["pose"]) {
+          if (obj_node["pose"]["position"] && obj_node["pose"]["orientation"]) {
+            obj_spec.pose.position.x = obj_node["pose"]["position"]["x"].as<double>();
+            obj_spec.pose.position.y = obj_node["pose"]["position"]["y"].as<double>();
+            obj_spec.pose.position.z = obj_node["pose"]["position"]["z"].as<double>();
 
-	    double roll = obj_node["pose"]["orientation"]["roll"].as<double>();
-	    double pitch = obj_node["pose"]["orientation"]["pitch"].as<double>();
-	    double yaw = obj_node["pose"]["orientation"]["yaw"].as<double>();
-	    obj_spec.pose.orientation = rpyToQuaternion(roll, pitch, yaw);
+            double roll = obj_node["pose"]["orientation"]["roll"].as<double>();
+            double pitch = obj_node["pose"]["orientation"]["pitch"].as<double>();
+            double yaw = obj_node["pose"]["orientation"]["yaw"].as<double>();
+            obj_spec.pose.orientation = rpyToQuaternion(roll, pitch, yaw);
 
-	    obj_spec.has_pose = true;
-	  }
-	  else {
-	    RCLCPP_WARN(this->get_logger(),
-	      "Object '%s' has incomplete 'pose'. Will be placed randomly.",
-	      obj_spec.name.c_str());
-	    obj_spec.has_pose = false;
-	  }
-	}
-	else {
-	  obj_spec.has_pose = false;
-	}
+            obj_spec.has_pose = true;
+          }
+          else {
+            RCLCPP_WARN(this->get_logger(),
+              "Object '%s' has incomplete 'pose'. Will be placed randomly.",
+              obj_spec.name.c_str());
+            obj_spec.has_pose = false;
+          }
+        }
+        else {
+          obj_spec.has_pose = false;
+        }
 
-	objects_to_spawn_.push_back(obj_spec);
+        objects_to_spawn_.push_back(obj_spec);
       }
       return true;
     } catch (const YAML::Exception & e) {
@@ -238,10 +238,10 @@ class CollisionSpawner : public rclcpp::Node
 
       // 1. Check if it exists
       if (!isObjectPresent(object_id)) {
-	RCLCPP_INFO(this->get_logger(),
-	  "Object '%s' does not exist. Skipping removal.",
-	  object_id.c_str());
-	continue;
+        RCLCPP_INFO(this->get_logger(),
+          "Object '%s' does not exist. Skipping removal.",
+          object_id.c_str());
+        continue;
       }
 
       // 2. Proceed with remove
@@ -263,14 +263,14 @@ class CollisionSpawner : public rclcpp::Node
       std::chrono::seconds(5)) !=
         rclcpp::FutureReturnCode::SUCCESS) {
       RCLCPP_WARN(this->get_logger(), "Timeout while sending remove goal for object '%s'.",
-	object_id.c_str());
+        object_id.c_str());
       return;
     }
 
     auto goal_handle = send_goal_future.get();
     if (!goal_handle) {
       RCLCPP_ERROR(this->get_logger(), "Remove goal was rejected for object '%s'.",
-	object_id.c_str());
+        object_id.c_str());
       return;
     }
 
@@ -281,7 +281,7 @@ class CollisionSpawner : public rclcpp::Node
       std::chrono::seconds(5)) !=
         rclcpp::FutureReturnCode::SUCCESS) {
       RCLCPP_WARN(this->get_logger(), "Timeout while waiting for remove result for object '%s'.",
-	object_id.c_str());
+        object_id.c_str());
       return;
     }
 
@@ -292,17 +292,17 @@ class CollisionSpawner : public rclcpp::Node
       break;
     case rclcpp_action::ResultCode::ABORTED:
       RCLCPP_WARN(this->get_logger(),
-	"Remove action was aborted for object '%s'.",
-	object_id.c_str());
+        "Remove action was aborted for object '%s'.",
+        object_id.c_str());
       break;
     case rclcpp_action::ResultCode::CANCELED:
       RCLCPP_WARN(this->get_logger(),
-	"Remove action was canceled for object '%s'.",
-	object_id.c_str());
+        "Remove action was canceled for object '%s'.",
+        object_id.c_str());
       break;
     default:
       RCLCPP_WARN(this->get_logger(), "Unknown result code for remove action of object '%s'.",
-	object_id.c_str());
+        object_id.c_str());
       break;
     }
   }
@@ -336,14 +336,14 @@ class CollisionSpawner : public rclcpp::Node
       std::chrono::seconds(5)) !=
         rclcpp::FutureReturnCode::SUCCESS) {
       RCLCPP_WARN(this->get_logger(), "Timeout while sending add goal for object '%s'.",
-	obj_spec.name.c_str());
+        obj_spec.name.c_str());
       return;
     }
 
     auto goal_handle = send_goal_future.get();
     if (!goal_handle) {
       RCLCPP_ERROR(this->get_logger(), "Add goal was rejected for object '%s'.",
-	obj_spec.name.c_str());
+        obj_spec.name.c_str());
       return;
     }
 
@@ -354,7 +354,7 @@ class CollisionSpawner : public rclcpp::Node
       std::chrono::seconds(5)) !=
         rclcpp::FutureReturnCode::SUCCESS) {
       RCLCPP_WARN(this->get_logger(), "Timeout while waiting for add result for object '%s'.",
-	obj_spec.name.c_str());
+        obj_spec.name.c_str());
       return;
     }
 
@@ -365,17 +365,17 @@ class CollisionSpawner : public rclcpp::Node
       break;
     case rclcpp_action::ResultCode::ABORTED:
       RCLCPP_WARN(this->get_logger(),
-	"Add action was aborted for object '%s'.",
-	obj_spec.name.c_str());
+        "Add action was aborted for object '%s'.",
+        obj_spec.name.c_str());
       break;
     case rclcpp_action::ResultCode::CANCELED:
       RCLCPP_WARN(this->get_logger(),
-	"Add action was canceled for object '%s'.",
-	obj_spec.name.c_str());
+        "Add action was canceled for object '%s'.",
+        obj_spec.name.c_str());
       break;
     default:
       RCLCPP_WARN(this->get_logger(), "Unknown result code for add action of object '%s'.",
-	obj_spec.name.c_str());
+        obj_spec.name.c_str());
       break;
     }
   }
@@ -387,8 +387,8 @@ class CollisionSpawner : public rclcpp::Node
   {
     if (!check_object_exists_action_client_->action_server_is_ready()) {
       RCLCPP_WARN(this->get_logger(),
-	"CheckObjectExists action server not ready. Assuming object '%s' does not exist.",
-	object_id.c_str());
+        "CheckObjectExists action server not ready. Assuming object '%s' does not exist.",
+        object_id.c_str());
       return false;
     }
 
@@ -406,18 +406,18 @@ class CollisionSpawner : public rclcpp::Node
       std::chrono::seconds(3)) !=
         rclcpp::FutureReturnCode::SUCCESS) {
       RCLCPP_WARN(
-	this->get_logger(),
-	"Timeout while sending CheckObjectExists goal for object '%s'. Assuming it does not exist.",
-	object_id.c_str());
+        this->get_logger(),
+        "Timeout while sending CheckObjectExists goal for object '%s'. Assuming it does not exist.",
+        object_id.c_str());
       return false;
     }
 
     auto goal_handle = send_goal_future.get();
     if (!goal_handle) {
       RCLCPP_ERROR(
-	this->get_logger(),
-	"CheckObjectExists goal was rejected for object '%s'. Assuming it does not exist.",
-	object_id.c_str());
+        this->get_logger(),
+        "CheckObjectExists goal was rejected for object '%s'. Assuming it does not exist.",
+        object_id.c_str());
       return false;
     }
 
@@ -428,9 +428,9 @@ class CollisionSpawner : public rclcpp::Node
       std::chrono::seconds(3)) !=
         rclcpp::FutureReturnCode::SUCCESS) {
       RCLCPP_WARN(
-	this->get_logger(),
-	"Timeout while waiting for CheckObjectExists result for object '%s'. Assuming it does not exist.",
-	object_id.c_str());
+        this->get_logger(),
+        "Timeout while waiting for CheckObjectExists result for object '%s'. Assuming it does not exist.",
+        object_id.c_str());
       return false;
     }
 

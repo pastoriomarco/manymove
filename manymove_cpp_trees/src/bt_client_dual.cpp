@@ -384,23 +384,23 @@ int main(int argc, char ** argv)
   std::string add_ground_obj_xml =
     buildObjectActionXML("add_ground",
       createAddObject("ground_id_key", "ground_shape_key",
-	"ground_dimension_key", "ground_pose_key",
-	"ground_scale_key", ""));
+        "ground_dimension_key", "ground_pose_key",
+        "ground_scale_key", ""));
   std::string add_wall_obj_xml =
     buildObjectActionXML("add_wall",
       createAddObject("wall_id_key", "wall_shape_key", "wall_dimension_key",
-	"wall_pose_key",
-	"wall_scale_key", ""));
+        "wall_pose_key",
+        "wall_scale_key", ""));
   std::string add_cylinder_obj_xml =
     buildObjectActionXML("add_cylinder",
       createAddObject("cylinder_id_key", "cylinder_shape_key",
-	"cylinder_dimension_key",
-	"cylinder_pose_key", "cylinder_scale_key", ""));
+        "cylinder_dimension_key",
+        "cylinder_pose_key", "cylinder_scale_key", ""));
   std::string add_mesh_obj_xml =
     buildObjectActionXML("add_mesh",
       createAddObject("mesh_id_key", "mesh_shape_key", "", "mesh_pose_key",
-	"mesh_scale_key",
-	"mesh_file_key"));
+        "mesh_scale_key",
+        "mesh_file_key"));
 
   // Compose the check and add sequence for objects
   std::string init_ground_obj_xml = fallbackWrapperXML("init_ground_obj",
@@ -445,15 +445,15 @@ int main(int argc, char ** argv)
   {
     buildObjectActionXML("detach_obj_to_manipulate_1",
       createDetachObject(
-	"object_to_manipulate_1_key",
-	"tcp_frame_name_1_key")),
+        "object_to_manipulate_1_key",
+        "tcp_frame_name_1_key")),
     "<AlwaysSuccess />"
   });
   std::string remove_obj_1_xml = fallbackWrapperXML("remove_obj_to_manipulate_1_always_success",
   {
     buildObjectActionXML("remove_obj_to_manipulate_1",
       createRemoveObject(
-	"object_to_manipulate_1_key")),
+        "object_to_manipulate_1_key")),
     "<AlwaysSuccess />"
   });
 
@@ -466,15 +466,15 @@ int main(int argc, char ** argv)
   {
     buildObjectActionXML("detach_obj_to_manipulate_2",
       createDetachObject(
-	"object_to_manipulate_2_key",
-	"tcp_frame_name_2_key")),
+        "object_to_manipulate_2_key",
+        "tcp_frame_name_2_key")),
     "<AlwaysSuccess />"
   });
   std::string remove_obj_2_xml = fallbackWrapperXML("remove_obj_to_manipulate_2_always_success",
   {
     buildObjectActionXML("remove_obj_to_manipulate_2",
       createRemoveObject(
-	"object_to_manipulate_2_key")),
+        "object_to_manipulate_2_key")),
     "<AlwaysSuccess />"
   });
   // ----------------------------------------------------------------------------
@@ -505,10 +505,10 @@ int main(int argc, char ** argv)
   std::string get_pick_pose_1_xml =
     buildObjectActionXML("get_pick_pose_1",
       createGetObjectPose("object_to_manipulate_1_key",
-	"pick_target_1_key",
-	"world_frame_key",
-	"pick_pre_transform_xyz_rpy_1_key",
-	"pick_post_transform_xyz_rpy_1_key"));
+        "pick_target_1_key",
+        "world_frame_key",
+        "pick_pre_transform_xyz_rpy_1_key",
+        "pick_post_transform_xyz_rpy_1_key"));
   std::string get_approach_pose_1_xml = buildObjectActionXML("get_approach_pose_1",
     createGetObjectPose(
       "object_to_manipulate_1_key",
@@ -540,10 +540,10 @@ int main(int argc, char ** argv)
   std::string get_pick_pose_2_xml =
     buildObjectActionXML("get_pick_pose_2",
       createGetObjectPose("object_to_manipulate_2_key",
-	"pick_target_2_key",
-	"world_frame_key",
-	"pick_pre_transform_xyz_rpy_2_key",
-	"pick_post_transform_xyz_rpy_2_key"));
+        "pick_target_2_key",
+        "world_frame_key",
+        "pick_pre_transform_xyz_rpy_2_key",
+        "pick_post_transform_xyz_rpy_2_key"));
   std::string get_approach_pose_2_xml = buildObjectActionXML("get_approach_pose_2",
     createGetObjectPose(
       "object_to_manipulate_2_key",

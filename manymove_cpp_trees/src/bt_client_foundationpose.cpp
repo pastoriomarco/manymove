@@ -102,28 +102,28 @@ int main(int argc, char ** argv)
     "ground",                                                  /* object name */
     "box",                                                  /* shape */
     createPoseRPY(0.0, 0.0, -0.051, 0.0, 0.0, 0.0),                                                  /*
-	                                                                                              *
-	                                                                                              *
-	                                                                                              *
-	                                                                                              *
-	                                                                                              * pose
-	                                                                                              *
-	                                                                                              *
-	                                                                                              *
-	                                                                                              *
-	                                                                                              * of
-	                                                                                              *
-	                                                                                              *
-	                                                                                              *
-	                                                                                              *
-	                                                                                              * the
-	                                                                                              *
-	                                                                                              *
-	                                                                                              *
-	                                                                                              *
-	                                                                                              * object
-	                                                                                              *
-	                                                                                              **/
+                                                                                                      *
+                                                                                                      *
+                                                                                                      *
+                                                                                                      *
+                                                                                                      * pose
+                                                                                                      *
+                                                                                                      *
+                                                                                                      *
+                                                                                                      *
+                                                                                                      * of
+                                                                                                      *
+                                                                                                      *
+                                                                                                      *
+                                                                                                      *
+                                                                                                      * the
+                                                                                                      *
+                                                                                                      *
+                                                                                                      *
+                                                                                                      *
+                                                                                                      * object
+                                                                                                      *
+                                                                                                      **/
   {
     1.0, 1.0, 0.1
   },                                                                  /* primitive dimensions */

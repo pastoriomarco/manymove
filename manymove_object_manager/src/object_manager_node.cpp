@@ -381,30 +381,30 @@ void ObjectManagerNode::printPlanningScene()
       const auto & collision_objects = response->scene.world.collision_objects;
 
       if (collision_objects.empty()) {
-	RCLCPP_INFO(this->get_logger(), "  No collision objects found in the planning scene.");
+        RCLCPP_INFO(this->get_logger(), "  No collision objects found in the planning scene.");
       }
       else {
-	RCLCPP_INFO(this->get_logger(), "  Found %zu collision object(s):",
-	  collision_objects.size());
-	for (const auto & obj : collision_objects) {
-	  RCLCPP_INFO(this->get_logger(), "    - ID: '%s'", obj.id.c_str());
-	}
+        RCLCPP_INFO(this->get_logger(), "  Found %zu collision object(s):",
+          collision_objects.size());
+        for (const auto & obj : collision_objects) {
+          RCLCPP_INFO(this->get_logger(), "    - ID: '%s'", obj.id.c_str());
+        }
       }
 
       const auto & attached_collision_object =
-	response->scene.robot_state.attached_collision_objects;
+        response->scene.robot_state.attached_collision_objects;
 
       if (attached_collision_object.empty()) {
-	RCLCPP_INFO(this->get_logger(),
-	  "  No attached collision objects found in the planning scene.");
+        RCLCPP_INFO(this->get_logger(),
+          "  No attached collision objects found in the planning scene.");
       }
       else {
-	RCLCPP_INFO(this->get_logger(),
-	  "  Found %zu attached collision object(s):",
-	  attached_collision_object.size());
-	for (const auto & attached_obj : attached_collision_object) {
-	  RCLCPP_INFO(this->get_logger(), "    - ID: '%s'", attached_obj.object.id.c_str());
-	}
+        RCLCPP_INFO(this->get_logger(),
+          "  Found %zu attached collision object(s):",
+          attached_collision_object.size());
+        for (const auto & attached_obj : attached_collision_object) {
+          RCLCPP_INFO(this->get_logger(), "    - ID: '%s'", attached_obj.object.id.c_str());
+        }
       }
     }
     else {
@@ -482,9 +482,9 @@ void ObjectManagerNode::handleAddExecute(const std::shared_ptr<AddGoalHandle> go
       result->message = "Object added successfully.";
       goal_handle->succeed(result);
       RCLCPP_INFO(this->get_logger(),
-	"Object '%s' added successfully after %d attempt(s).",
-	goal->id.c_str(),
-	attempt);
+        "Object '%s' added successfully after %d attempt(s).",
+        goal->id.c_str(),
+        attempt);
       return;
     }
 
@@ -578,8 +578,8 @@ void ObjectManagerNode::handleRemoveExecute(const std::shared_ptr<RemoveGoalHand
       result->message = "Object removed successfully.";
       goal_handle->succeed(result);
       RCLCPP_INFO(this->get_logger(), "Object '%s' removed successfully after %d attempt(s).",
-	goal->id.c_str(),
-	attempt);
+        goal->id.c_str(),
+        attempt);
       return;
     }
 
@@ -701,16 +701,16 @@ void ObjectManagerNode::handleAttachDetachExecute(
     collision_object_opt = getObjectDataById(goal->object_id);
     if (!collision_object_opt) {
       RCLCPP_ERROR(this->get_logger(), "Failed to retrieve object '%s' data.",
-	goal->object_id.c_str());
+        goal->object_id.c_str());
 
       result->success = false;
       result->message = goal->attach ? "Failed to attach object." : "Failed to detach object.";
       goal_handle->abort(result);
       RCLCPP_ERROR(this->get_logger(),
-	"%s operation failed for object '%s' and link '%s'.",
-	goal->attach ? "Attach" : "Detach",
-	goal->object_id.c_str(),
-	goal->link_name.c_str());
+        "%s operation failed for object '%s' and link '%s'.",
+        goal->attach ? "Attach" : "Detach",
+        goal->object_id.c_str(),
+        goal->link_name.c_str());
       return;
     }
   }
@@ -745,58 +745,58 @@ void ObjectManagerNode::handleAttachDetachExecute(
     if (future_response.wait_for(std::chrono::milliseconds(500)) == std::future_status::ready) {
       auto response = future_response.get();
       if (response) {
-	bool found = attachedObjectExists(goal->object_id);
+        bool found = attachedObjectExists(goal->object_id);
 
-	if (goal->attach && found) {
-	  RCLCPP_INFO(this->get_logger(), "Object '%s' successfully attached to link '%s'.",
-	    goal->object_id.c_str(),
-	    goal->link_name.c_str());
-	  operation_successful = true;
-	  break;
-	}
-	else if (!goal->attach && !found) {
-	  RCLCPP_INFO(this->get_logger(), "Object '%s' successfully detached from link '%s'.",
-	    goal->object_id.c_str(), goal->link_name.c_str());
+        if (goal->attach && found) {
+          RCLCPP_INFO(this->get_logger(), "Object '%s' successfully attached to link '%s'.",
+            goal->object_id.c_str(),
+            goal->link_name.c_str());
+          operation_successful = true;
+          break;
+        }
+        else if (!goal->attach && !found) {
+          RCLCPP_INFO(this->get_logger(), "Object '%s' successfully detached from link '%s'.",
+            goal->object_id.c_str(), goal->link_name.c_str());
 
-	  // If detaching, ensure the object is back in the planning scene
-	  if (!objectExists(goal->object_id)) {
-	    RCLCPP_INFO(
-	      this->get_logger(),
-	      "Object '%s' not found in the planning scene after detaching. Adding it back.",
-	      goal->object_id.c_str());
+          // If detaching, ensure the object is back in the planning scene
+          if (!objectExists(goal->object_id)) {
+            RCLCPP_INFO(
+              this->get_logger(),
+              "Object '%s' not found in the planning scene after detaching. Adding it back.",
+              goal->object_id.c_str());
 
-	    const auto & collision_object = collision_object_opt.value();
+            const auto & collision_object = collision_object_opt.value();
 
-	    // Publisher for collision objects
-	    collision_object_publisher_->publish(collision_object);
-	    RCLCPP_INFO(this->get_logger(), "Re-added object '%s' to the planning scene.",
-	      goal->object_id.c_str());
+            // Publisher for collision objects
+            collision_object_publisher_->publish(collision_object);
+            RCLCPP_INFO(this->get_logger(), "Re-added object '%s' to the planning scene.",
+              goal->object_id.c_str());
 
-	    // Wait briefly to allow the planning scene to update
-	    rclcpp::sleep_for(std::chrono::milliseconds(500));
+            // Wait briefly to allow the planning scene to update
+            rclcpp::sleep_for(std::chrono::milliseconds(500));
 
-	    // Verify the object is added
-	    if (objectExists(goal->object_id)) {
-	      RCLCPP_INFO(this->get_logger(),
-		"Object '%s' re-added to the planning scene successfully.",
-		goal->object_id.c_str());
-	      operation_successful = true;
-	      break;
-	    }
-	    else {
-	      RCLCPP_WARN(this->get_logger(),
-		"Failed to re-add object '%s' to the planning scene.",
-		goal->object_id.c_str());
-	    }
-	  }
-	  else {
-	    operation_successful = true;
-	    break;
-	  }
-	}
+            // Verify the object is added
+            if (objectExists(goal->object_id)) {
+              RCLCPP_INFO(this->get_logger(),
+                "Object '%s' re-added to the planning scene successfully.",
+                goal->object_id.c_str());
+              operation_successful = true;
+              break;
+            }
+            else {
+              RCLCPP_WARN(this->get_logger(),
+                "Failed to re-add object '%s' to the planning scene.",
+                goal->object_id.c_str());
+            }
+          }
+          else {
+            operation_successful = true;
+            break;
+          }
+        }
       }
       else {
-	RCLCPP_ERROR(this->get_logger(), "Received null response from /get_planning_scene.");
+        RCLCPP_ERROR(this->get_logger(), "Received null response from /get_planning_scene.");
       }
     }
     else {
@@ -881,7 +881,7 @@ void ObjectManagerNode::handleGetObjectPoseExecute(
     auto maybe_link = getAttachedObjectLinkById(goal->object_id);
     if (!maybe_link) {
       RCLCPP_ERROR(this->get_logger(), "Failed to get attached link for object '%s'.",
-	goal->object_id.c_str());
+        goal->object_id.c_str());
       result->success = false;
       result->message = "Failed to determine attached link.";
       goal_handle->abort(result);
@@ -899,9 +899,9 @@ void ObjectManagerNode::handleGetObjectPoseExecute(
 
     try {
       geometry_msgs::msg::TransformStamped transformStamped =
-	tfBuffer.lookupTransform(goal->link_name,                         // target frame
-	  object_frame,                                                // source frame
-	  tf2::TimePointZero, tf2::durationFromSec(1.0));
+        tfBuffer.lookupTransform(goal->link_name,                         // target frame
+          object_frame,                                                // source frame
+          tf2::TimePointZero, tf2::durationFromSec(1.0));
 
       // Apply that transform
       geometry_msgs::msg::Pose transformed_pose;
@@ -909,8 +909,8 @@ void ObjectManagerNode::handleGetObjectPoseExecute(
       object_pose = transformed_pose;
     } catch (const tf2::TransformException & ex) {
       RCLCPP_ERROR(this->get_logger(), "Failed to lookup transform from '%s' to '%s': %s",
-	object_frame.c_str(),
-	goal->link_name.c_str(), ex.what());
+        object_frame.c_str(),
+        goal->link_name.c_str(), ex.what());
       result->success = false;
       result->message = "Transform error.";
       goal_handle->abort(result);
@@ -924,11 +924,11 @@ void ObjectManagerNode::handleGetObjectPoseExecute(
     // Validate arrays
     if (goal->pre_transform_xyz_rpy.size() != 6) {
       throw std::invalid_argument(
-	"pre_transform_xyz_rpy must have exactly 6 elements (x,y,z,roll,pitch,yaw).");
+        "pre_transform_xyz_rpy must have exactly 6 elements (x,y,z,roll,pitch,yaw).");
     }
     if (goal->post_transform_xyz_rpy.size() != 6) {
       throw std::invalid_argument(
-	"post_transform_xyz_rpy must have exactly 6 elements (x,y,z,roll,pitch,yaw).");
+        "post_transform_xyz_rpy must have exactly 6 elements (x,y,z,roll,pitch,yaw).");
     }
 
     // Steps 1..8 from the original snippet
@@ -1045,10 +1045,10 @@ bool ObjectManagerNode::objectExists(const std::string & id)
     auto response = future_response.get();
     if (response) {
       for (const auto & obj : response->scene.world.collision_objects) {
-	if (obj.id == id) {
-	  RCLCPP_INFO(this->get_logger(), "Object '%s' found in the planning scene.", id.c_str());
-	  return true;
-	}
+        if (obj.id == id) {
+          RCLCPP_INFO(this->get_logger(), "Object '%s' found in the planning scene.", id.c_str());
+          return true;
+        }
       }
     }
     else {
@@ -1089,13 +1089,13 @@ bool ObjectManagerNode::attachedObjectExists(const std::string & id, const std::
     auto response = future_response.get();
     if (response) {
       for (const auto & attached_obj : response->scene.robot_state.attached_collision_objects) {
-	if (attached_obj.object.id == id) {
-	  if (link_name.empty() || attached_obj.link_name == link_name) {
-	    RCLCPP_INFO(this->get_logger(), "Object '%s' is attached to link '%s'.", id.c_str(),
-	      attached_obj.link_name.c_str());
-	    return true;
-	  }
-	}
+        if (attached_obj.object.id == id) {
+          if (link_name.empty() || attached_obj.link_name == link_name) {
+            RCLCPP_INFO(this->get_logger(), "Object '%s' is attached to link '%s'.", id.c_str(),
+              attached_obj.link_name.c_str());
+            return true;
+          }
+        }
       }
     }
     else {
@@ -1130,25 +1130,25 @@ std::optional<moveit_msgs::msg::CollisionObject> ObjectManagerNode::getObjectDat
     auto response = future_response.get();
     if (response) {
       for (const auto & collision_object : response->scene.world.collision_objects) {
-	if (collision_object.id == object_id) {
-	  // Object found, return it
-	  RCLCPP_INFO(this->get_logger(), "Object '%s' data retrieved from planning scene.",
-	    object_id.c_str());
-	  return collision_object;
-	}
+        if (collision_object.id == object_id) {
+          // Object found, return it
+          RCLCPP_INFO(this->get_logger(), "Object '%s' data retrieved from planning scene.",
+            object_id.c_str());
+          return collision_object;
+        }
       }
       for (const auto & attached_collision_object :
            response->scene.robot_state.attached_collision_objects) {
-	if (attached_collision_object.object.id == object_id) {
-	  // Object found, return it
-	  RCLCPP_INFO(this->get_logger(),
-	    "Object '%s' data retrieved from attached objects in planning scene.",
-	    object_id.c_str());
-	  return attached_collision_object.object;
-	}
+        if (attached_collision_object.object.id == object_id) {
+          // Object found, return it
+          RCLCPP_INFO(this->get_logger(),
+            "Object '%s' data retrieved from attached objects in planning scene.",
+            object_id.c_str());
+          return attached_collision_object.object;
+        }
       }
       RCLCPP_WARN(this->get_logger(), "Object '%s' not found in planning scene.",
-	object_id.c_str());
+        object_id.c_str());
     }
     else {
       RCLCPP_ERROR(this->get_logger(), "Null response received from /get_planning_scene.");
@@ -1181,16 +1181,16 @@ std::optional<std::string> ObjectManagerNode::getAttachedObjectLinkById(
     if (response) {
       for (const auto & attached_collision_object :
            response->scene.robot_state.attached_collision_objects) {
-	if (attached_collision_object.object.id == object_id) {
-	  // Object found, return it
-	  RCLCPP_INFO(this->get_logger(),
-	    "Object '%s' link retrieved from attached objects in planning scene.",
-	    object_id.c_str());
-	  return attached_collision_object.link_name;
-	}
+        if (attached_collision_object.object.id == object_id) {
+          // Object found, return it
+          RCLCPP_INFO(this->get_logger(),
+            "Object '%s' link retrieved from attached objects in planning scene.",
+            object_id.c_str());
+          return attached_collision_object.link_name;
+        }
       }
       RCLCPP_WARN(this->get_logger(), "Link '%s' not found in planning scene.",
-	object_id.c_str());
+        object_id.c_str());
     }
     else {
       RCLCPP_ERROR(this->get_logger(), "Null response received from /get_planning_scene.");
@@ -1228,9 +1228,9 @@ ObjectManagerNode::createCollisionObject(
     try {
       // Apply scaling to the mesh vertices
       for (unsigned int i = 0; i < mesh->vertex_count; ++i) {
-	mesh->vertices[3 * i + 0] *= scale_mesh[0];                         // Scale X
-	mesh->vertices[3 * i + 1] *= scale_mesh[1];                         // Scale Y
-	mesh->vertices[3 * i + 2] *= scale_mesh[2];                         // Scale Z
+        mesh->vertices[3 * i + 0] *= scale_mesh[0];                         // Scale X
+        mesh->vertices[3 * i + 1] *= scale_mesh[1];                         // Scale Y
+        mesh->vertices[3 * i + 2] *= scale_mesh[2];                         // Scale Z
       }
       // Convert the scaled mesh into a shape_msgs::Mesh
       shape_msgs::msg::Mesh mesh_msg;
@@ -1241,14 +1241,14 @@ ObjectManagerNode::createCollisionObject(
 
       // Extract the shape_msgs::msg::Mesh from the ShapeMsg
       if (auto mesh_ptr = boost::get<shape_msgs::msg::Mesh>(&shape_msg)) {
-	// Successfully extracted the mesh
-	mesh_msg = *mesh_ptr;
-	collision_object.meshes.push_back(mesh_msg);
-	collision_object.mesh_poses.push_back(pose);
+        // Successfully extracted the mesh
+        mesh_msg = *mesh_ptr;
+        collision_object.meshes.push_back(mesh_msg);
+        collision_object.mesh_poses.push_back(pose);
       }
       else {
-	RCLCPP_ERROR(this->get_logger(), "Failed to extract mesh from ShapeMsg for object '%s'.",
-	  id.c_str());
+        RCLCPP_ERROR(this->get_logger(), "Failed to extract mesh from ShapeMsg for object '%s'.",
+          id.c_str());
       }
     } catch (const std::exception & e) {
       RCLCPP_ERROR(this->get_logger(), "Exception while processing mesh: %s", e.what());
@@ -1263,46 +1263,46 @@ ObjectManagerNode::createCollisionObject(
       primitive.type = primitive.BOX;
       primitive.dimensions.resize(3);
       if (dimensions.size() >= 3) {
-	primitive.dimensions[0] = dimensions[0];
-	primitive.dimensions[1] = dimensions[1];
-	primitive.dimensions[2] = dimensions[2];
+        primitive.dimensions[0] = dimensions[0];
+        primitive.dimensions[1] = dimensions[1];
+        primitive.dimensions[2] = dimensions[2];
       }
       else {
-	RCLCPP_WARN(this->get_logger(), "Insufficient dimensions for box. Using default size.");
-	primitive.dimensions[0] = 0.1;
-	primitive.dimensions[1] = 0.1;
-	primitive.dimensions[2] = 0.1;
+        RCLCPP_WARN(this->get_logger(), "Insufficient dimensions for box. Using default size.");
+        primitive.dimensions[0] = 0.1;
+        primitive.dimensions[1] = 0.1;
+        primitive.dimensions[2] = 0.1;
       }
     }
     else if (shape == "cylinder") {
       primitive.type = primitive.CYLINDER;
       primitive.dimensions.resize(2);
       if (dimensions.size() >= 2) {
-	primitive.dimensions[0] = dimensions[0];                         // height
-	primitive.dimensions[1] = dimensions[1];                         // radius
+        primitive.dimensions[0] = dimensions[0];                         // height
+        primitive.dimensions[1] = dimensions[1];                         // radius
       }
       else {
-	RCLCPP_WARN(this->get_logger(),
-	  "Insufficient dimensions for cylinder. Using default size.");
-	primitive.dimensions[0] = 0.1;
-	primitive.dimensions[1] = 0.05;
+        RCLCPP_WARN(this->get_logger(),
+          "Insufficient dimensions for cylinder. Using default size.");
+        primitive.dimensions[0] = 0.1;
+        primitive.dimensions[1] = 0.05;
       }
     }
     else if (shape == "sphere") {
       primitive.type = primitive.SPHERE;
       primitive.dimensions.resize(1);
       if (dimensions.size() >= 1) {
-	primitive.dimensions[0] = dimensions[0];                         // radius
+        primitive.dimensions[0] = dimensions[0];                         // radius
       }
       else {
-	RCLCPP_WARN(this->get_logger(),
-	  "Insufficient dimensions for sphere. Using default size.");
-	primitive.dimensions[0] = 0.05;
+        RCLCPP_WARN(this->get_logger(),
+          "Insufficient dimensions for sphere. Using default size.");
+        primitive.dimensions[0] = 0.05;
       }
     }
     else {
       RCLCPP_WARN(this->get_logger(), "Unsupported shape type: %s. Defaulting to box.",
-	shape.c_str());
+        shape.c_str());
       primitive.type = primitive.BOX;
       primitive.dimensions.resize(3);
       primitive.dimensions[0] = 0.1;

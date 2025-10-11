@@ -56,10 +56,10 @@ HMIServiceNode::HMIServiceNode(
   update_blackboard_srv_ =
     this->create_service<manymove_msgs::srv::SetBlackboardValues>("update_blackboard",
       std::bind(&HMIServiceNode::
-	handleUpdateBlackboard,
-	this,
-	std::placeholders::_1,
-	std::placeholders::_2));
+        handleUpdateBlackboard,
+        this,
+        std::placeholders::_1,
+        std::placeholders::_2));
 
   RCLCPP_INFO(this->get_logger(),
     "[%s] HMIServiceNode started: service 'update_blackboard' is ready.",
@@ -98,30 +98,30 @@ void HMIServiceNode::handleUpdateBlackboard(
 
     try {
       if (type == "bool") {
-	bool val = (data.find("true") != std::string::npos);
-	blackboard_->set(key, val);
+        bool val = (data.find("true") != std::string::npos);
+        blackboard_->set(key, val);
       }
       else if (type == "double") {
-	double d = std::stod(data);
-	blackboard_->set(key, d);
+        double d = std::stod(data);
+        blackboard_->set(key, d);
       }
       else if (type == "string") {
-	blackboard_->set(key, data);
+        blackboard_->set(key, data);
       }
       else if (type == "double_array") {
-	std::vector<double> arr = parseJsonDoubleArray(data);
-	blackboard_->set(key, arr);
+        std::vector<double> arr = parseJsonDoubleArray(data);
+        blackboard_->set(key, arr);
       }
       else if (type == "pose") {
-	geometry_msgs::msg::Pose pose = parseJsonPose(data);
-	blackboard_->set(key, pose);
+        geometry_msgs::msg::Pose pose = parseJsonPose(data);
+        blackboard_->set(key, pose);
       }
       else {
-	throw std::runtime_error("Unsupported value_type or wrong nomenclature: " + type);
+        throw std::runtime_error("Unsupported value_type or wrong nomenclature: " + type);
       }
     } catch (const std::exception & e) {
       RCLCPP_ERROR(this->get_logger(),
-	"Error updating key='%s': %s", key.c_str(), e.what());
+        "Error updating key='%s': %s", key.c_str(), e.what());
     }
   }
 
@@ -167,67 +167,67 @@ void HMIServiceNode::publishBlackboardStatus()
     if (entry.value_type == "bool") {
       bool b = false;
       if (blackboard_->get(entry.key, b)) {
-	ss << "\"" << entry.key << "\": " << (b ? "true" : "false");
+        ss << "\"" << entry.key << "\": " << (b ? "true" : "false");
       }
       else {
-	ss << "\"" << entry.key << "\": \"\"";
+        ss << "\"" << entry.key << "\": \"\"";
       }
     }
     else if (entry.value_type == "double") {
       double d = 0.0;
       if (blackboard_->get(entry.key, d)) {
-	ss << "\"" << entry.key << "\": " << d;
+        ss << "\"" << entry.key << "\": " << d;
       }
       else {
-	ss << "\"" << entry.key << "\": \"\"";
+        ss << "\"" << entry.key << "\": \"\"";
       }
     }
     else if (entry.value_type == "string") {
       std::string s;
       if (blackboard_->get(entry.key, s)) {
-	ss << "\"" << entry.key << "\": \"" << s << "\"";
+        ss << "\"" << entry.key << "\": \"" << s << "\"";
       }
       else {
-	ss << "\"" << entry.key << "\": \"\"";
+        ss << "\"" << entry.key << "\": \"\"";
       }
     }
     else if (entry.value_type == "pose") {
       geometry_msgs::msg::Pose pose;
       if (blackboard_->get(entry.key, pose)) {
-	// Use the helper function to convert the Pose to a JSON string with RPY.
-	std::string poseStr = serializePoseRPY(pose);
-	ss << "\"" << entry.key << "\": " << poseStr;
+        // Use the helper function to convert the Pose to a JSON string with RPY.
+        std::string poseStr = serializePoseRPY(pose);
+        ss << "\"" << entry.key << "\": " << poseStr;
       }
       else {
-	ss << "\"" << entry.key << "\": \"\"";
+        ss << "\"" << entry.key << "\": \"\"";
       }
     }
     else if (entry.value_type == "double_array") {
       std::vector<double> arr;
       if (blackboard_->get(entry.key, arr)) {
-	ss << "\"" << entry.key << "\": [";
-	bool first = true;
-	for (auto & v : arr) {
-	  if (!first) {
-	    ss << ", ";
-	  }
-	  first = false;
-	  ss << v;
-	}
-	ss << "]";
+        ss << "\"" << entry.key << "\": [";
+        bool first = true;
+        for (auto & v : arr) {
+          if (!first) {
+            ss << ", ";
+          }
+          first = false;
+          ss << v;
+        }
+        ss << "]";
       }
       else {
-	ss << "\"" << entry.key << "\": \"\"";
+        ss << "\"" << entry.key << "\": \"\"";
       }
     }
     else {
       // Fallback: try to retrieve as a string.
       std::string s;
       if (blackboard_->get(entry.key, s)) {
-	ss << "\"" << entry.key << "\": \"" << s << "\"";
+        ss << "\"" << entry.key << "\": \"" << s << "\"";
       }
       else {
-	ss << "\"" << entry.key << "\": \"\"";
+        ss << "\"" << entry.key << "\": \"\"";
       }
     }
   }
@@ -270,39 +270,39 @@ std::vector<double> HMIServiceNode::parseJsonDoubleArray(const std::string & jso
 geometry_msgs::msg::Pose HMIServiceNode::parseJsonPose(const std::string & json_str)
 {
   auto findValue = [&](const std::string & label) -> double
-		   {
-		     auto pos = json_str.find(label);
-		     if (pos == std::string::npos) {
-		       throw std::runtime_error("Missing field: " + label + " in pose");
-		     }
-		     auto colon_pos = json_str.find(":", pos + label.size());
-		     if (colon_pos == std::string::npos) {
-		       throw std::runtime_error("Missing colon after " + label);
-		     }
-		     auto comma_pos = json_str.find(",", colon_pos + 1);
-		     auto brace_pos = json_str.find("}", colon_pos + 1);
-		     size_t endpos;
-		     if (comma_pos == std::string::npos && brace_pos == std::string::npos) {
-		       throw std::runtime_error("Cannot find end of numeric for " + label);
-		     }
-		     else if (comma_pos == std::string::npos) {
-		       endpos = brace_pos;
-		     }
-		     else if (brace_pos == std::string::npos) {
-		       endpos = comma_pos;
-		     }
-		     else {
-		       endpos = std::min(comma_pos, brace_pos);
-		     }
-		     std::string val_str = json_str.substr(colon_pos + 1, endpos - (colon_pos + 1));
-		     auto st = val_str.find_first_not_of(" \t\r\n");
-		     auto en = val_str.find_last_not_of(" \t\r\n");
-		     if (st == std::string::npos) {
-		       throw std::runtime_error("Empty numeric for " + label);
-		     }
-		     val_str = val_str.substr(st, en - st + 1);
-		     return std::stod(val_str);
-		   };
+                   {
+                     auto pos = json_str.find(label);
+                     if (pos == std::string::npos) {
+                       throw std::runtime_error("Missing field: " + label + " in pose");
+                     }
+                     auto colon_pos = json_str.find(":", pos + label.size());
+                     if (colon_pos == std::string::npos) {
+                       throw std::runtime_error("Missing colon after " + label);
+                     }
+                     auto comma_pos = json_str.find(",", colon_pos + 1);
+                     auto brace_pos = json_str.find("}", colon_pos + 1);
+                     size_t endpos;
+                     if (comma_pos == std::string::npos && brace_pos == std::string::npos) {
+                       throw std::runtime_error("Cannot find end of numeric for " + label);
+                     }
+                     else if (comma_pos == std::string::npos) {
+                       endpos = brace_pos;
+                     }
+                     else if (brace_pos == std::string::npos) {
+                       endpos = comma_pos;
+                     }
+                     else {
+                       endpos = std::min(comma_pos, brace_pos);
+                     }
+                     std::string val_str = json_str.substr(colon_pos + 1, endpos - (colon_pos + 1));
+                     auto st = val_str.find_first_not_of(" \t\r\n");
+                     auto en = val_str.find_last_not_of(" \t\r\n");
+                     if (st == std::string::npos) {
+                       throw std::runtime_error("Empty numeric for " + label);
+                     }
+                     val_str = val_str.substr(st, en - st + 1);
+                     return std::stod(val_str);
+                   };
 
   geometry_msgs::msg::Pose pose;
   double x = findValue("\"x\"");

@@ -93,14 +93,14 @@ void Ros2Worker::statusCallback(const std_msgs::msg::String::SharedPtr msg)
   const auto & knownKeys = appModule->getKnownKeys();
 
   auto stripQuotes = [](std::string & s)
-		     {
-		       if (!s.empty() && s.front() == '"') {
-			 s.erase(0, 1);
-		       }
-		       if (!s.empty() && s.back() == '"') {
-			 s.pop_back();
-		       }
-		     };
+                     {
+                       if (!s.empty() && s.front() == '"') {
+                         s.erase(0, 1);
+                       }
+                       if (!s.empty() && s.back() == '"') {
+                         s.pop_back();
+                       }
+                     };
 
   for (const auto & bk : knownKeys) {
     /* keys in the JSON are *not* prefixed – keep original pattern */
@@ -108,7 +108,7 @@ void Ros2Worker::statusCallback(const std_msgs::msg::String::SharedPtr msg)
     size_t pos = data.find(pattern);
     if (pos == std::string::npos) {
       QMetaObject::invokeMethod(appModule, "updateField", Qt::QueuedConnection,
-	Q_ARG(QString, bk.key), Q_ARG(QString, QString()));
+        Q_ARG(QString, bk.key), Q_ARG(QString, QString()));
       continue;
     }
 
@@ -124,66 +124,66 @@ void Ros2Worker::statusCallback(const std_msgs::msg::String::SharedPtr msg)
     if (bk.type == "double") {
       size_t valEnd = data.find_first_of(",}", valStart);
       if (valEnd == std::string::npos) {
-	valEnd = data.size();
+        valEnd = data.size();
       }
       valueStr = data.substr(valStart, valEnd - valStart);
       stripQuotes(valueStr);
 
       try {
-	double d = std::stod(valueStr);
-	valueStr = std::to_string(d);
+        double d = std::stod(valueStr);
+        valueStr = std::to_string(d);
       } catch (...) {
-	valueStr.clear();
+        valueStr.clear();
       }
     }
     /* ---------------- integer INT ---------------------------- */
     else if (bk.type == "int") {
       size_t valEnd = data.find_first_of(",}", valStart);
       if (valEnd == std::string::npos) {
-	valEnd = data.size();
+        valEnd = data.size();
       }
       valueStr = data.substr(valStart, valEnd - valStart);
       stripQuotes(valueStr);
 
       try {
-	int i = std::stoi(valueStr);
-	valueStr = std::to_string(i);
+        int i = std::stoi(valueStr);
+        valueStr = std::to_string(i);
       } catch (...) {
-	valueStr.clear();
+        valueStr.clear();
       }
     }
     /* ---------------- double array --------------------------- */
     else if (bk.type == "double_array") {
       if (data[valStart] == '"') {
-	++valStart;
+        ++valStart;
       }                   // skip leading quote
       if (data[valStart] == '[') {                   // keep the brackets
-	size_t end = data.find(']', valStart);
-	if (end != std::string::npos) {
-	  valueStr = data.substr(valStart, end - valStart + 1);
-	}
+        size_t end = data.find(']', valStart);
+        if (end != std::string::npos) {
+          valueStr = data.substr(valStart, end - valStart + 1);
+        }
       }
       stripQuotes(valueStr);
     }
     /* ---------------- pose (JSON object) --------------------- */
     else if (bk.type == "pose") {
       if (data[valStart] == '"') {
-	++valStart;                         // optional quote
+        ++valStart;                         // optional quote
 
       }
       if (data[valStart] == '{') {
-	int braces = 0;
-	size_t idx = valStart;
-	do{
-	  if (data[idx] == '{') {
-	    ++braces;
-	  }
-	  if (data[idx] == '}') {
-	    --braces;
-	  }
-	  ++idx;
-	} while (idx < data.size() && braces);
-	valueStr = data.substr(valStart, idx - valStart);
+        int braces = 0;
+        size_t idx = valStart;
+        do{
+          if (data[idx] == '{') {
+            ++braces;
+          }
+          if (data[idx] == '}') {
+            --braces;
+          }
+          ++idx;
+        } while (idx < data.size() && braces);
+        valueStr = data.substr(valStart, idx - valStart);
       }
       stripQuotes(valueStr);
     }
@@ -191,7 +191,7 @@ void Ros2Worker::statusCallback(const std_msgs::msg::String::SharedPtr msg)
     else {
       size_t valEnd = data.find_first_of(",}", valStart);
       if (valEnd == std::string::npos) {
-	valEnd = data.size();
+        valEnd = data.size();
       }
       valueStr = data.substr(valStart, valEnd - valStart);
       stripQuotes(valueStr);
@@ -205,26 +205,26 @@ void Ros2Worker::statusCallback(const std_msgs::msg::String::SharedPtr msg)
 
   /* ---------- per-robot message -------------------------------- */
   auto findString = [&](const std::string & key) -> std::string
-		    {
-		      std::string pattern = "\"" + key + "\":";
-		      size_t pos = data.find(pattern);
-		      if (pos == std::string::npos) {
-			return std::string();
-		      }
-		      pos += pattern.size();
-		      while (pos < data.size() && std::isspace(data[pos])) {
-			++pos;
-		      }
-		      if (pos >= data.size() || data[pos] != '"') {
-			return std::string();
-		      }
-		      ++pos;
-		      size_t end = data.find('"', pos);
-		      if (end == std::string::npos) {
-			return std::string();
-		      }
-		      return data.substr(pos, end - pos);
-		    };
+                    {
+                      std::string pattern = "\"" + key + "\":";
+                      size_t pos = data.find(pattern);
+                      if (pos == std::string::npos) {
+                        return std::string();
+                      }
+                      pos += pattern.size();
+                      while (pos < data.size() && std::isspace(data[pos])) {
+                        ++pos;
+                      }
+                      if (pos >= data.size() || data[pos] != '"') {
+                        return std::string();
+                      }
+                      ++pos;
+                      size_t end = data.find('"', pos);
+                      if (end == std::string::npos) {
+                        return std::string();
+                      }
+                      return data.substr(pos, end - pos);
+                    };
 
   const std::string msgKey = robot_prefix_ + "message";
   const std::string colorKey = robot_prefix_ + "message_color";
