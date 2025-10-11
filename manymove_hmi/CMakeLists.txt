@@ -85,7 +85,6 @@ if(BUILD_TESTING)
   find_package(ament_lint_auto REQUIRED)
   find_package(ament_cmake_uncrustify REQUIRED)
   set(ament_cmake_cpplint_FOUND TRUE)
-  set(AMENT_UNCRUSTIFY_CONFIG_FILE ${CMAKE_CURRENT_SOURCE_DIR}/../uncrustify.cfg)
   ament_lint_auto_find_test_dependencies()
 endif()
 
