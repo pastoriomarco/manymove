@@ -52,11 +52,11 @@ GripperCommandAction(const std::string& name, const BT::NodeConfiguration& confi
 
 static BT::PortsList providedPorts()
 {
-	return {
-	        BT::InputPort<double>("position", 0.0, "Desired gripper position"),
-	        BT::InputPort<double>("max_effort", 0.0, "Maximum effort"),
-	        BT::InputPort<std::string>("action_server", "Action server name"),
-	        BT::OutputPort<double>("current_position", "Current gripper position")};
+  return {
+    BT::InputPort<double>("position", 0.0, "Desired gripper position"),
+    BT::InputPort<double>("max_effort", 0.0, "Maximum effort"),
+    BT::InputPort<std::string>("action_server", "Action server name"),
+    BT::OutputPort<double>("current_position", "Current gripper position")};
 }
 
 BT::NodeStatus onStart() override;
@@ -92,12 +92,12 @@ GripperTrajAction(const std::string& name, const BT::NodeConfiguration& config);
 
 static BT::PortsList providedPorts()
 {
-	return {
-	        BT::InputPort<std::string>("action_server", "FollowJointTrajectory server name"),
-	        BT::InputPort<std::vector<std::string> >("joint_names", "List of gripper joint names"),
-	        BT::InputPort<std::vector<double> >("positions",
-	                                            "Target joint positions for each joint_name"),
-	        BT::InputPort<double>("time_from_start", 1.0, "Trajectory duration in seconds")};
+  return {
+    BT::InputPort<std::string>("action_server", "FollowJointTrajectory server name"),
+    BT::InputPort<std::vector<std::string> >("joint_names", "List of gripper joint names"),
+    BT::InputPort<std::vector<double> >("positions",
+                                        "Target joint positions for each joint_name"),
+    BT::InputPort<double>("time_from_start", 1.0, "Trajectory duration in seconds")};
 }
 
 BT::NodeStatus onStart() override;
@@ -127,13 +127,13 @@ PublishJointStateAction(const std::string& name, const BT::NodeConfiguration& co
 
 static BT::PortsList providedPorts()
 {
-	return {
-	        BT::InputPort<std::string>("topic", "/isaac_joint_commands_gripper", "Topic to publish"),
-	        BT::InputPort<std::vector<std::string> >("joint_names", "Joint names"),
-	        BT::InputPort<std::vector<double> >("joint_positions", "Positions (optional)"),
-	        BT::InputPort<std::vector<double> >("joint_velocities", "Velocities (optional)"),
-	        BT::InputPort<std::vector<double> >("joint_efforts", "Efforts (optional)"),
-	        BT::InputPort<bool>("stamp_now", true, "Stamp header with node->now()")};
+  return {
+    BT::InputPort<std::string>("topic", "/isaac_joint_commands_gripper", "Topic to publish"),
+    BT::InputPort<std::vector<std::string> >("joint_names", "Joint names"),
+    BT::InputPort<std::vector<double> >("joint_positions", "Positions (optional)"),
+    BT::InputPort<std::vector<double> >("joint_velocities", "Velocities (optional)"),
+    BT::InputPort<std::vector<double> >("joint_efforts", "Efforts (optional)"),
+    BT::InputPort<bool>("stamp_now", true, "Stamp header with node->now()")};
 }
 
 BT::NodeStatus tick() override;

@@ -41,12 +41,12 @@ namespace manymove_cpp_trees
  */
 enum class ObjectActionType
 {
-	ADD,     ///< Add a new object to the planning scene.
-	REMOVE,  ///< Remove an existing object from the planning scene.
-	ATTACH,  ///< Attach an object to a specific robot link.
-	DETACH,  ///< Detach an object from a specific robot link.
-	CHECK,   ///< Check if an object exists and its attachment status.
-	GET_POSE ///< Retrieve and possibly modify the pose of an object.
+  ADD,           ///< Add a new object to the planning scene.
+  REMOVE,        ///< Remove an existing object from the planning scene.
+  ATTACH,        ///< Attach an object to a specific robot link.
+  DETACH,        ///< Detach an object from a specific robot link.
+  CHECK,         ///< Check if an object exists and its attachment status.
+  GET_POSE       ///< Retrieve and possibly modify the pose of an object.
 };
 
 /**
@@ -55,31 +55,31 @@ enum class ObjectActionType
  */
 struct ObjectAction
 {
-	ObjectActionType type; ///< The type of object action.
-	std::string object_id_key_st; ///< Unique identifier for the object.
-	// Parameters for ADD action
-	std::string shape_key_st;       ///< Shape type (e.g., box, mesh).
-	std::string dimensions_key_d_a; ///< Dimensions for primitive shapes (e.g., width, height,
-	// depth).
-	std::string pose_key;           ///< Blackboard key to store the retrieved pose (used only
-	// for GET_POSE).
-	std::string mesh_file_key_st;   ///< Path to the mesh file (required if shape is mesh).
-	std::string scale_key_d_a;      ///< Blackboard key to store the retrieved scale (used only
-	// for GET_POSE).
-	// Parameters for ATTACH and DETACH actions
-	std::string link_name_key_st;     ///< Name of the robot link to attach/detach the object.
-	std::string touch_links_key_st_a; ///< (Optional) List of robot links to exclude from
-	// collision checking.
-	// Parameters for GET_POSE action (also uses the link_name for relative)
-	std::string pre_transform_xyz_rpy_key_d_a;  ///< Linear transform in x, y and z and rotation
-	// in roll, pitch, yaw of the pose of the object
-	std::string post_transform_xyz_rpy_key_d_a; ///< Reference orientation for the pose
-	// transform of the pose
+  ObjectActionType type;       ///< The type of object action.
+  std::string object_id_key_st;       ///< Unique identifier for the object.
+  // Parameters for ADD action
+  std::string shape_key_st;             ///< Shape type (e.g., box, mesh).
+  std::string dimensions_key_d_a;       ///< Dimensions for primitive shapes (e.g., width, height,
+  // depth).
+  std::string pose_key;                 ///< Blackboard key to store the retrieved pose (used only
+  // for GET_POSE).
+  std::string mesh_file_key_st;         ///< Path to the mesh file (required if shape is mesh).
+  std::string scale_key_d_a;            ///< Blackboard key to store the retrieved scale (used only
+  // for GET_POSE).
+  // Parameters for ATTACH and DETACH actions
+  std::string link_name_key_st;           ///< Name of the robot link to attach/detach the object.
+  std::string touch_links_key_st_a;       ///< (Optional) List of robot links to exclude from
+  // collision checking.
+  // Parameters for GET_POSE action (also uses the link_name for relative)
+  std::string pre_transform_xyz_rpy_key_d_a;        ///< Linear transform in x, y and z and rotation
+  // in roll, pitch, yaw of the pose of the object
+  std::string post_transform_xyz_rpy_key_d_a;       ///< Reference orientation for the pose
+  // transform of the pose
 
-	/**
-	 * @brief Default constructor.
-	 */
-	ObjectAction() = default;
+  /**
+   * @brief Default constructor.
+   */
+  ObjectAction() = default;
 };
 
 /**
@@ -93,22 +93,22 @@ struct ObjectAction
  * @return Configured ObjectAction.
  */
 inline ObjectAction createAddObject(
-	const std::string& object_id_key_st,
-	const std::string& object_shape_key,
-	const std::string& dimensions_key,
-	const std::string& pose_key,
-	const std::string& scale_key,
-	const std::string& mesh_file_key)
+  const std::string& object_id_key_st,
+  const std::string& object_shape_key,
+  const std::string& dimensions_key,
+  const std::string& pose_key,
+  const std::string& scale_key,
+  const std::string& mesh_file_key)
 {
-	ObjectAction action;
-	action.type = ObjectActionType::ADD;
-	action.object_id_key_st = object_id_key_st;
-	action.shape_key_st = object_shape_key;
-	action.dimensions_key_d_a = dimensions_key;
-	action.pose_key = pose_key;
-	action.mesh_file_key_st = mesh_file_key;
-	action.scale_key_d_a = scale_key;
-	return action;
+  ObjectAction action;
+  action.type = ObjectActionType::ADD;
+  action.object_id_key_st = object_id_key_st;
+  action.shape_key_st = object_shape_key;
+  action.dimensions_key_d_a = dimensions_key;
+  action.pose_key = pose_key;
+  action.mesh_file_key_st = mesh_file_key;
+  action.scale_key_d_a = scale_key;
+  return action;
 }
 
 /**
@@ -118,16 +118,16 @@ inline ObjectAction createAddObject(
  * @return Configured ObjectAction.
  */
 inline ObjectAction createAttachObject(
-	const std::string& object_id_key_st,
-	const std::string& link_name_key,
-	const std::string& touch_links_key)
+  const std::string& object_id_key_st,
+  const std::string& link_name_key,
+  const std::string& touch_links_key)
 {
-	ObjectAction action;
-	action.type = ObjectActionType::ATTACH;
-	action.object_id_key_st = object_id_key_st;
-	action.link_name_key_st = link_name_key;
-	action.touch_links_key_st_a = touch_links_key;
-	return action;
+  ObjectAction action;
+  action.type = ObjectActionType::ATTACH;
+  action.object_id_key_st = object_id_key_st;
+  action.link_name_key_st = link_name_key;
+  action.touch_links_key_st_a = touch_links_key;
+  return action;
 }
 
 /**
@@ -137,14 +137,14 @@ inline ObjectAction createAttachObject(
  * @return Configured ObjectAction.
  */
 inline ObjectAction createDetachObject(
-	const std::string& object_id_key_st,
-	const std::string& link_name_key)
+  const std::string& object_id_key_st,
+  const std::string& link_name_key)
 {
-	ObjectAction action;
-	action.type = ObjectActionType::DETACH;
-	action.object_id_key_st = object_id_key_st;
-	action.link_name_key_st = link_name_key;
-	return action;
+  ObjectAction action;
+  action.type = ObjectActionType::DETACH;
+  action.object_id_key_st = object_id_key_st;
+  action.link_name_key_st = link_name_key;
+  return action;
 }
 
 /**
@@ -154,10 +154,10 @@ inline ObjectAction createDetachObject(
  */
 inline ObjectAction createCheckObjectExists(const std::string& object_id_key_st)
 {
-	ObjectAction action;
-	action.type = ObjectActionType::CHECK;
-	action.object_id_key_st = object_id_key_st;
-	return action;
+  ObjectAction action;
+  action.type = ObjectActionType::CHECK;
+  action.object_id_key_st = object_id_key_st;
+  return action;
 }
 
 /**
@@ -167,10 +167,10 @@ inline ObjectAction createCheckObjectExists(const std::string& object_id_key_st)
  */
 inline ObjectAction createRemoveObject(const std::string& object_id_key_st)
 {
-	ObjectAction action;
-	action.type = ObjectActionType::REMOVE;
-	action.object_id_key_st = object_id_key_st;
-	return action;
+  ObjectAction action;
+  action.type = ObjectActionType::REMOVE;
+  action.object_id_key_st = object_id_key_st;
+  return action;
 }
 
 /**
@@ -182,20 +182,20 @@ inline ObjectAction createRemoveObject(const std::string& object_id_key_st)
  * @return Configured ObjectAction.
  */
 inline ObjectAction createGetObjectPose(
-	const std::string& object_id_key_st,
-	const std::string& pose_key,
-	const std::string& link_name_key,
-	const std::string& pre_xyz_rpy_key,
-	const std::string& post_xyz_rpy_key)
+  const std::string& object_id_key_st,
+  const std::string& pose_key,
+  const std::string& link_name_key,
+  const std::string& pre_xyz_rpy_key,
+  const std::string& post_xyz_rpy_key)
 {
-	ObjectAction action;
-	action.type = ObjectActionType::GET_POSE;
-	action.object_id_key_st = object_id_key_st;
-	action.pose_key = pose_key;
-	action.link_name_key_st = link_name_key;
-	action.pre_transform_xyz_rpy_key_d_a = pre_xyz_rpy_key;
-	action.post_transform_xyz_rpy_key_d_a = post_xyz_rpy_key;
-	return action;
+  ObjectAction action;
+  action.type = ObjectActionType::GET_POSE;
+  action.object_id_key_st = object_id_key_st;
+  action.pose_key = pose_key;
+  action.link_name_key_st = link_name_key;
+  action.pre_transform_xyz_rpy_key_d_a = pre_xyz_rpy_key;
+  action.post_transform_xyz_rpy_key_d_a = post_xyz_rpy_key;
+  return action;
 }
 
 } // namespace manymove_cpp_trees

@@ -39,28 +39,28 @@ namespace manymove_cpp_trees
 // Structure representing a blackboard key.
 struct BlackboardEntry
 {
-	std::string key;
-	std::string value_type; // e.g. "bool", "double", "string", "pose", etc.
+  std::string key;
+  std::string value_type;       // e.g. "bool", "double", "string", "pose", etc.
 };
 
 template<class T>
 void defineVariableKey(
-	const rclcpp::Node::SharedPtr& node_ptr,
-	BT::Blackboard::Ptr blackboard,
-	std::vector<BlackboardEntry>& keys,
-	const std::string& key_name,
-	const std::string& key_type,
-	const T& value)
+  const rclcpp::Node::SharedPtr& node_ptr,
+  BT::Blackboard::Ptr blackboard,
+  std::vector<BlackboardEntry>& keys,
+  const std::string& key_name,
+  const std::string& key_type,
+  const T& value)
 {
-	// Set the blackboard key with initial value
-	blackboard->set(key_name, value);
+  // Set the blackboard key with initial value
+  blackboard->set(key_name, value);
 
-	// These keys need to be published for the HMI, adding them here:
-	keys.push_back({key_name, key_type});
+  // These keys need to be published for the HMI, adding them here:
+  keys.push_back({key_name, key_type});
 
-	RCLCPP_INFO(node_ptr->get_logger(),
-	            "%s key added to 'blackboard_status' service.",
-	            key_name.c_str());
+  RCLCPP_INFO(node_ptr->get_logger(),
+              "%s key added to 'blackboard_status' service.",
+              key_name.c_str());
 }
 }
 

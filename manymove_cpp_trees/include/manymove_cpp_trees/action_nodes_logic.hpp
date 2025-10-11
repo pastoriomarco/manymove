@@ -56,13 +56,13 @@ RetryPauseResetNode(const std::string& name, const BT::NodeConfiguration& config
 
 static BT::PortsList providedPorts()
 {
-	return {
-	        BT::InputPort<bool>("stop_execution", false, "Pause execution when true"),
-	        BT::InputPort<bool>("collision_detected", false,
-	                            "Stops current move when true, then retries planning"),
-	        BT::InputPort<bool>("reset", false, "Reset branch when true"),
-	        BT::InputPort<std::string>("robot_prefix",
-	                                   "Robot prefix for setting correct blackboard key")};
+  return {
+    BT::InputPort<bool>("stop_execution", false, "Pause execution when true"),
+    BT::InputPort<bool>("collision_detected", false,
+                        "Stops current move when true, then retries planning"),
+    BT::InputPort<bool>("reset", false, "Reset branch when true"),
+    BT::InputPort<std::string>("robot_prefix",
+                               "Robot prefix for setting correct blackboard key")};
 }
 
 BT::NodeStatus tick() override;
@@ -90,14 +90,14 @@ CheckKeyBoolValue(const std::string& name,
  */
 static BT::PortsList providedPorts()
 {
-	return {
-	        BT::InputPort<std::string>("robot_prefix",
-	                                   "Prefix only for the HMI output, use \"hmi_\" for generic output"),
-	        BT::InputPort<std::string>("key", "Name of the blackboard key to check"),
-	        BT::InputPort<bool>("value", "Expected value"),
-	        BT::InputPort<bool>("hmi_message_logic",
-	                            "If true, outputs on hmi when check succeeds. If false, when it fails"),
-	};
+  return {
+    BT::InputPort<std::string>("robot_prefix",
+                               "Prefix only for the HMI output, use \"hmi_\" for generic output"),
+    BT::InputPort<std::string>("key", "Name of the blackboard key to check"),
+    BT::InputPort<bool>("value", "Expected value"),
+    BT::InputPort<bool>("hmi_message_logic",
+                        "If true, outputs on hmi when check succeeds. If false, when it fails"),
+  };
 }
 
 protected:
@@ -120,18 +120,18 @@ class SetKeyBoolValue : public BT::SyncActionNode
 public:
 // Constructor
 SetKeyBoolValue(const std::string& name, const BT::NodeConfiguration& config)
-	: BT::SyncActionNode(name, config)
+  : BT::SyncActionNode(name, config)
 {
 }
 
 // Required interface: which ports are needed/offered?
 static BT::PortsList providedPorts()
 {
-	return {
-	        BT::InputPort<std::string>("robot_prefix",
-	                                   "Prefix only for the HMI output, use \"hmi_\" for generic output"),
-	        BT::InputPort<std::string>("key", "Blackboard key to set"),
-	        BT::InputPort<bool>("value", "Value to set (as a bool)")};
+  return {
+    BT::InputPort<std::string>("robot_prefix",
+                               "Prefix only for the HMI output, use \"hmi_\" for generic output"),
+    BT::InputPort<std::string>("key", "Blackboard key to set"),
+    BT::InputPort<bool>("value", "Value to set (as a bool)")};
 }
 
 // The main tick function; sets the blackboard key to the specified string
@@ -158,12 +158,12 @@ WaitForKeyBool(const std::string& name,
 
 static BT::PortsList providedPorts()
 {
-	return {
-	        BT::InputPort<std::string>("key", "Blackboard key to read"),
-	        BT::InputPort<bool>("expected_value", "Desired bool value"),
-	        BT::InputPort<double>("timeout", 10.0, "Seconds before giving up (0 => infinite)"),
-	        BT::InputPort<double>("poll_rate", 0.25, "Check frequency (seconds)"),
-	        BT::InputPort<std::string>("prefix", "Prefix for HMI messages, optional")};
+  return {
+    BT::InputPort<std::string>("key", "Blackboard key to read"),
+    BT::InputPort<bool>("expected_value", "Desired bool value"),
+    BT::InputPort<double>("timeout", 10.0, "Seconds before giving up (0 => infinite)"),
+    BT::InputPort<double>("poll_rate", 0.25, "Check frequency (seconds)"),
+    BT::InputPort<std::string>("prefix", "Prefix for HMI messages, optional")};
 }
 
 protected:
@@ -212,14 +212,14 @@ GetLinkPoseAction(const std::string& name,
 
 static BT::PortsList providedPorts()
 {
-	return {
-	        BT::InputPort<std::string>("link_name", "Source link / frame"),
-	        BT::InputPort<std::string>("reference_frame", "", "Target frame (default world)"),
-	        BT::InputPort<std::vector<double> >("pre_transform_xyz_rpy", "6-tuple applied FIRST"),
-	        BT::InputPort<std::vector<double> >("post_transform_xyz_rpy",
-	                                            "6-tuple applied AFTER link pose"),
-	        BT::InputPort<std::string>("pose_key", "", "If set, store pose in blackboard"),
-	        BT::OutputPort<geometry_msgs::msg::Pose>("pose", "Final pose")};
+  return {
+    BT::InputPort<std::string>("link_name", "Source link / frame"),
+    BT::InputPort<std::string>("reference_frame", "", "Target frame (default world)"),
+    BT::InputPort<std::vector<double> >("pre_transform_xyz_rpy", "6-tuple applied FIRST"),
+    BT::InputPort<std::vector<double> >("post_transform_xyz_rpy",
+                                        "6-tuple applied AFTER link pose"),
+    BT::InputPort<std::string>("pose_key", "", "If set, store pose in blackboard"),
+    BT::OutputPort<geometry_msgs::msg::Pose>("pose", "Final pose")};
 }
 
 BT::NodeStatus tick() override;
@@ -247,10 +247,10 @@ CheckPoseDistance(const std::string& name, const BT::NodeConfiguration& cfg);
 
 static BT::PortsList providedPorts()
 {
-	return {
-	        BT::InputPort<std::string>("reference_pose_key", "Blackboard key for reference pose"),
-	        BT::InputPort<std::string>("target_pose_key", "Blackboard key for target pose"),
-	        BT::InputPort<double>("tolerance", 0.01, "Distance tolerance")};
+  return {
+    BT::InputPort<std::string>("reference_pose_key", "Blackboard key for reference pose"),
+    BT::InputPort<std::string>("target_pose_key", "Blackboard key for target pose"),
+    BT::InputPort<double>("tolerance", 0.01, "Distance tolerance")};
 }
 
 BT::NodeStatus tick() override;
@@ -274,10 +274,10 @@ CheckPoseBounds(const std::string& name, const BT::NodeConfiguration& cfg);
 
 static BT::PortsList providedPorts()
 {
-	return {
-	        BT::InputPort<std::string>("pose_key", "Blackboard key for pose to check"),
-	        BT::InputPort<std::vector<double> >("bounds", "[min_x, min_y, min_z, max_x, max_y, max_z]"),
-	        BT::InputPort<bool>("inclusive", true, "Inclusive bounds check")};
+  return {
+    BT::InputPort<std::string>("pose_key", "Blackboard key for pose to check"),
+    BT::InputPort<std::vector<double> >("bounds", "[min_x, min_y, min_z, max_x, max_y, max_z]"),
+    BT::InputPort<bool>("inclusive", true, "Inclusive bounds check")};
 }
 
 BT::NodeStatus tick() override;
@@ -299,16 +299,16 @@ class CopyPoseKey : public BT::SyncActionNode
 {
 public:
 CopyPoseKey(const std::string& name, const BT::NodeConfiguration& cfg)
-	: BT::SyncActionNode(name, cfg)
+  : BT::SyncActionNode(name, cfg)
 {
 }
 
 static BT::PortsList providedPorts()
 {
-	return {
-	        BT::InputPort<std::string>("source_key", "Blackboard key (Pose) to read"),
-	        BT::InputPort<std::string>("target_key", "Blackboard key (Pose) to write"),
-	        BT::InputPort<std::string>("robot_prefix", "Prefix for HMI messages, optional")};
+  return {
+    BT::InputPort<std::string>("source_key", "Blackboard key (Pose) to read"),
+    BT::InputPort<std::string>("target_key", "Blackboard key (Pose) to write"),
+    BT::InputPort<std::string>("robot_prefix", "Prefix for HMI messages, optional")};
 }
 
 BT::NodeStatus tick() override;

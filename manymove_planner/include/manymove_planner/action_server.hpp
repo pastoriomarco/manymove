@@ -47,11 +47,11 @@
 
 enum class MoveExecutionState
 {
-	IDLE,
-	PLANNING,
-	EXECUTING,
-	COMPLETED,
-	CANCELLED
+  IDLE,
+  PLANNING,
+  EXECUTING,
+  COMPLETED,
+  CANCELLED
 };
 
 class ManipulatorActionServer
@@ -88,12 +88,12 @@ rclcpp_action::Server<LoadTrajController>::SharedPtr load_traj_controller_server
 
 // Service Clients
 rclcpp::Client<controller_manager_msgs::srv::UnloadController>::SharedPtr
-        unload_controller_client_;
+  unload_controller_client_;
 rclcpp::Client<controller_manager_msgs::srv::LoadController>::SharedPtr load_controller_client_;
 rclcpp::Client<controller_manager_msgs::srv::SwitchController>::SharedPtr
-        switch_controller_client_;
+  switch_controller_client_;
 rclcpp::Client<controller_manager_msgs::srv::ConfigureController>::SharedPtr
-        configure_controller_client_;
+  configure_controller_client_;
 
 // Joint States
 rclcpp::Subscription<sensor_msgs::msg::JointState>::SharedPtr joint_states_sub_;
@@ -111,7 +111,7 @@ manymove_msgs::msg::MoveManipulatorGoal move_manipulator_goal_;
 rclcpp_action::GoalResponse handle_move_goal(const rclcpp_action::GoalUUID&,
                                              std::shared_ptr<const MoveManipulator::Goal> );
 rclcpp_action::CancelResponse handle_move_cancel(
-	const std::shared_ptr<GoalHandleMoveManipulator> );
+  const std::shared_ptr<GoalHandleMoveManipulator> );
 void handle_move_accepted(const std::shared_ptr<GoalHandleMoveManipulator> goal_handle);
 void execute_move(const std::shared_ptr<GoalHandleMoveManipulator> goal_handle);
 
@@ -119,7 +119,7 @@ void execute_move(const std::shared_ptr<GoalHandleMoveManipulator> goal_handle);
 rclcpp_action::GoalResponse handle_unload_traj_goal(const rclcpp_action::GoalUUID&,
                                                     std::shared_ptr<const UnloadTrajController::Goal> );
 rclcpp_action::CancelResponse handle_unload_traj_cancel(
-	const std::shared_ptr<GoalHandleUnloadTrajController> );
+  const std::shared_ptr<GoalHandleUnloadTrajController> );
 void handle_unload_traj_accepted(const std::shared_ptr<GoalHandleUnloadTrajController> );
 void execute_unload_traj_controller(const std::shared_ptr<GoalHandleUnloadTrajController>&);
 
@@ -127,7 +127,7 @@ void execute_unload_traj_controller(const std::shared_ptr<GoalHandleUnloadTrajCo
 rclcpp_action::GoalResponse handle_load_traj_goal(const rclcpp_action::GoalUUID&,
                                                   std::shared_ptr<const LoadTrajController::Goal> );
 rclcpp_action::CancelResponse handle_load_traj_cancel(
-	const std::shared_ptr<GoalHandleLoadTrajController> );
+  const std::shared_ptr<GoalHandleLoadTrajController> );
 void handle_load_traj_accepted(const std::shared_ptr<GoalHandleLoadTrajController> );
 void execute_load_traj_controller(const std::shared_ptr<GoalHandleLoadTrajController>&);
 
@@ -145,9 +145,9 @@ void configureControllerAsync(const std::string&,
 
 // Helper functions
 bool executeTrajectoryWithCollisionChecks(
-	const std::shared_ptr<GoalHandleMoveManipulator>& goal_handle,
-	const moveit_msgs::msg::RobotTrajectory& traj,
-	std::string& abort_reason);
+  const std::shared_ptr<GoalHandleMoveManipulator>& goal_handle,
+  const moveit_msgs::msg::RobotTrajectory& traj,
+  std::string& abort_reason);
 };
 
 #endif // MANYMOVE_PLANNER_ACTION_SERVER_HPP

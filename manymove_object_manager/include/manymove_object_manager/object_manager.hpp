@@ -137,7 +137,7 @@ rclcpp_action::GoalResponse handleRemoveGoal(const rclcpp_action::GoalUUID& uuid
  * @return A response indicating acceptance or rejection of the cancel request.
  */
 rclcpp_action::CancelResponse handleRemoveCancel(
-	const std::shared_ptr<RemoveGoalHandle> goal_handle);
+  const std::shared_ptr<RemoveGoalHandle> goal_handle);
 
 /**
  * @brief Callback to handle execution of the remove operation.
@@ -162,7 +162,7 @@ rclcpp_action::GoalResponse handleCheckExistGoal(const rclcpp_action::GoalUUID& 
  * @return A response indicating acceptance or rejection of the cancel request.
  */
 rclcpp_action::CancelResponse handleCheckExistCancel(
-	const std::shared_ptr<CheckGoalHandle> goal_handle);
+  const std::shared_ptr<CheckGoalHandle> goal_handle);
 
 /**
  * @brief Callback to handle execution of the check existence operation.
@@ -187,7 +187,7 @@ rclcpp_action::GoalResponse handleAttachDetachGoal(const rclcpp_action::GoalUUID
  * @return A response indicating acceptance or rejection of the cancel request.
  */
 rclcpp_action::CancelResponse handleAttachDetachCancel(
-	const std::shared_ptr<AttachDetachGoalHandle> goal_handle);
+  const std::shared_ptr<AttachDetachGoalHandle> goal_handle);
 
 /**
  * @brief Callback to handle execution of the attach/detach operation.
@@ -212,7 +212,7 @@ rclcpp_action::GoalResponse handleGetObjectPoseGoal(const rclcpp_action::GoalUUI
  * @return A response indicating acceptance or rejection of the cancel request.
  */
 rclcpp_action::CancelResponse handleGetObjectPoseCancel(
-	const std::shared_ptr<GetObjectPoseGoalHandle> goal_handle);
+  const std::shared_ptr<GetObjectPoseGoalHandle> goal_handle);
 
 /**
  * @brief Callback to handle execution of the get object pose operation.
@@ -278,7 +278,7 @@ bool attachedObjectExists(const std::string& id, const std::string& link_name = 
  * @return A std::optional containing the CollisionObject if found, std::nullopt otherwise.
  */
 std::optional<moveit_msgs::msg::CollisionObject> getObjectDataById(
-	const std::string& object_id);
+  const std::string& object_id);
 
 /**
  * @brief Get the link that an object is attached to, if any.
@@ -291,26 +291,26 @@ std::optional<std::string> getAttachedObjectLinkById(const std::string& object_i
 // Member variables
 // ------------------
 rclcpp::Publisher<moveit_msgs::msg::CollisionObject>::SharedPtr
-        collision_object_publisher_; ///< Publishes collision objects to the planning scene.
+  collision_object_publisher_;       ///< Publishes collision objects to the planning scene.
 rclcpp::Publisher<moveit_msgs::msg::AttachedCollisionObject>::SharedPtr
-        attached_collision_object_publisher_; ///< Publishes attached collision objects to the
+  attached_collision_object_publisher_;       ///< Publishes attached collision objects to the
 // planning scene.
 
 rclcpp::Client<moveit_msgs::srv::GetPlanningScene>::SharedPtr
-        get_planning_scene_client_; ///< Client for retrieving the planning scene.
+  get_planning_scene_client_;       ///< Client for retrieving the planning scene.
 
 // Action servers for managing collision objects
 rclcpp_action::Server<AddCollisionObject>::SharedPtr
-        add_object_action_server_; ///< Action server for adding collision objects.
+  add_object_action_server_;       ///< Action server for adding collision objects.
 rclcpp_action::Server<RemoveCollisionObject>::SharedPtr
-        remove_object_action_server_; ///< Action server for removing collision objects.
+  remove_object_action_server_;       ///< Action server for removing collision objects.
 rclcpp_action::Server<CheckObjectExists>::SharedPtr
-        check_object_exists_action_server_; ///< Action server for checking object existence.
+  check_object_exists_action_server_;       ///< Action server for checking object existence.
 rclcpp_action::Server<AttachDetachObject>::SharedPtr
-        attach_detach_object_action_server_; ///< Action server for attaching and detaching objects
+  attach_detach_object_action_server_;       ///< Action server for attaching and detaching objects
 // from specified link.
 rclcpp_action::Server<GetObjectPose>::SharedPtr
-        get_object_pose_action_server_; ///< Action server for retrieving and aligning object poses.
+  get_object_pose_action_server_;       ///< Action server for retrieving and aligning object poses.
 
 std::string frame_id_;     ///< Reference frame in which collision objects are defined.
 

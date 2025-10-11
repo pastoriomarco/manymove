@@ -94,7 +94,7 @@ MoveItCppPlanner(const rclcpp::Node::SharedPtr& node,
  * @return A pair containing a success flag and the planned robot trajectory.
  */
 std::pair<bool, moveit_msgs::msg::RobotTrajectory> plan(
-	const manymove_msgs::action::PlanManipulator::Goal& goal) override;
+  const manymove_msgs::action::PlanManipulator::Goal& goal) override;
 
 /**
  * @brief Apply time parameterization to a single trajectory using the given movement config.
@@ -127,8 +127,8 @@ std::pair<bool, moveit_msgs::msg::RobotTrajectory> plan(
  * you set.
  */
 std::pair<bool, moveit_msgs::msg::RobotTrajectory> applyTimeParameterization(
-	const moveit_msgs::msg::RobotTrajectory& input_traj,
-	const manymove_msgs::msg::MovementConfig& config);
+  const moveit_msgs::msg::RobotTrajectory& input_traj,
+  const manymove_msgs::msg::MovementConfig& config);
 
 /**
  * @brief Send a controlled stop command to the robot.
@@ -255,7 +255,7 @@ bool areSameJointTargets(const std::vector<double>& j1, const std::vector<double
  * @return A moveit_msgs::msg::RobotTrajectory representation of the same trajectory.
  */
 moveit_msgs::msg::RobotTrajectory convertToMsg(
-	const robot_trajectory::RobotTrajectory& trajectory) const;
+  const robot_trajectory::RobotTrajectory& trajectory) const;
 
 void jointStateCallback(const sensor_msgs::msg::JointState::SharedPtr msg);
 
@@ -297,7 +297,7 @@ moveit_cpp::PlanningComponent::PlanRequestParameters plan_parameters_;     ///< 
 // loaded at startup.
 
 rclcpp_action::Client<control_msgs::action::FollowJointTrajectory>::SharedPtr
-        follow_joint_traj_client_;                                                                           ///<
+  follow_joint_traj_client_;                                                                                 ///<
 // Action
 // client
 // for

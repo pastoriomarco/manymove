@@ -73,14 +73,14 @@ SetOutputAction(const std::string& name,
 
 static BT::PortsList providedPorts()
 {
-	return {
-	        BT::InputPort<std::string>("io_type", "IO type: 'tool' or 'controller'"),
-	        BT::InputPort<int>("ionum", "Which IO channel number"),
-	        BT::InputPort<int>("value", "Desired output value (0 or 1)"),
-	        BT::InputPort<std::string>("robot_prefix",
-	                                   "Optional robot namespace prefix, e.g. 'R_' or 'L_'."),
-	        BT::OutputPort<bool>("success", "Whether set_output succeeded"),
-	};
+  return {
+    BT::InputPort<std::string>("io_type", "IO type: 'tool' or 'controller'"),
+    BT::InputPort<int>("ionum", "Which IO channel number"),
+    BT::InputPort<int>("value", "Desired output value (0 or 1)"),
+    BT::InputPort<std::string>("robot_prefix",
+                               "Optional robot namespace prefix, e.g. 'R_' or 'L_'."),
+    BT::OutputPort<bool>("success", "Whether set_output succeeded"),
+  };
 }
 
 protected:
@@ -121,13 +121,13 @@ GetInputAction(const std::string& name,
 
 static BT::PortsList providedPorts()
 {
-	return {
-	        BT::InputPort<std::string>("io_type", "IO type: 'tool' or 'controller'"),
-	        BT::InputPort<int>("ionum", "Which IO channel to read"),
-	        BT::InputPort<std::string>("robot_prefix",
-	                                   "Optional robot namespace prefix, e.g. 'R_' or 'L_'."),
-	        BT::OutputPort<int>("value", "Read value from the input (0 or 1)"),
-	};
+  return {
+    BT::InputPort<std::string>("io_type", "IO type: 'tool' or 'controller'"),
+    BT::InputPort<int>("ionum", "Which IO channel to read"),
+    BT::InputPort<std::string>("robot_prefix",
+                               "Optional robot namespace prefix, e.g. 'R_' or 'L_'."),
+    BT::OutputPort<int>("value", "Read value from the input (0 or 1)"),
+  };
 }
 
 protected:
@@ -168,14 +168,14 @@ CheckRobotStateAction(const std::string& name,
 
 static BT::PortsList providedPorts()
 {
-	return {
-	        BT::InputPort<std::string>("robot_prefix",
-	                                   "Optional robot namespace prefix, e.g. 'R_' or 'L_'."),
-	        BT::OutputPort<bool>("ready", "True if robot is ready"),
-	        BT::OutputPort<int>("err", "Current error code"),
-	        BT::OutputPort<int>("mode", "Robot mode"),
-	        BT::OutputPort<int>("state", "Robot state"),
-	        BT::OutputPort<std::string>("message", "Status message")};
+  return {
+    BT::InputPort<std::string>("robot_prefix",
+                               "Optional robot namespace prefix, e.g. 'R_' or 'L_'."),
+    BT::OutputPort<bool>("ready", "True if robot is ready"),
+    BT::OutputPort<int>("err", "Current error code"),
+    BT::OutputPort<int>("mode", "Robot mode"),
+    BT::OutputPort<int>("state", "Robot state"),
+    BT::OutputPort<std::string>("message", "Status message")};
 }
 
 protected:
@@ -217,12 +217,12 @@ ResetRobotStateAction(const std::string& name,
 
 static BT::PortsList providedPorts()
 {
-	return {
-	        BT::InputPort<std::string>("robot_prefix",
-	                                   "Optional robot namespace prefix, e.g. 'R_' or 'L_'."),
-	        BT::InputPort<std::string>("robot_model", "Name of the robot model, e.g. 'lite6'."),
-	        BT::OutputPort<bool>("success", "True if robot reset is successful"),
-	};
+  return {
+    BT::InputPort<std::string>("robot_prefix",
+                               "Optional robot namespace prefix, e.g. 'R_' or 'L_'."),
+    BT::InputPort<std::string>("robot_model", "Name of the robot model, e.g. 'lite6'."),
+    BT::OutputPort<bool>("success", "True if robot reset is successful"),
+  };
 }
 
 protected:
@@ -235,7 +235,7 @@ void goalResponseCallback(std::shared_ptr<GoalHandleResetRobotState> goal_handle
 void resultCallback(const GoalHandleResetRobotState::WrappedResult& result);
 
 void goalResponseCallbackUnloadTraj(
-	std::shared_ptr<GoalHandleUnloadTrajController> goal_handle);
+  std::shared_ptr<GoalHandleUnloadTrajController> goal_handle);
 void resultCallbackUnloadTraj(const GoalHandleUnloadTrajController::WrappedResult& result);
 
 void goalResponseCallbackLoadTraj(std::shared_ptr<GoalHandleLoadTrajController> goal_handle);
@@ -274,15 +274,15 @@ WaitForInputAction(const std::string& name,
 // ...
 static BT::PortsList providedPorts()
 {
-	return {
-	        BT::InputPort<std::string>("io_type", "IO type: 'tool' or 'controller'"),
-	        BT::InputPort<int>("ionum", "Which IO channel to read"),
-	        BT::InputPort<int>("desired_value", 1, "Desired input value (0 or 1)"),
-	        BT::InputPort<double>("timeout", 10.0, "Seconds before giving up (0 => infinite)"),
-	        BT::InputPort<double>("poll_rate", 0.25, "Check frequency (s)"),
-	        BT::InputPort<std::string>("robot_prefix", "", "Optional namespace prefix"),
-	        BT::OutputPort<int>("value",
-	                            "Final read value (0 or 1)")};
+  return {
+    BT::InputPort<std::string>("io_type", "IO type: 'tool' or 'controller'"),
+    BT::InputPort<int>("ionum", "Which IO channel to read"),
+    BT::InputPort<int>("desired_value", 1, "Desired input value (0 or 1)"),
+    BT::InputPort<double>("timeout", 10.0, "Seconds before giving up (0 => infinite)"),
+    BT::InputPort<double>("poll_rate", 0.25, "Check frequency (s)"),
+    BT::InputPort<std::string>("robot_prefix", "", "Optional namespace prefix"),
+    BT::OutputPort<int>("value",
+                        "Final read value (0 or 1)")};
 }
 
 protected:
@@ -296,9 +296,9 @@ void sendCheckRequest();
 
 // Action callbacks
 void goalResponseCallback(
-	std::shared_ptr<rclcpp_action::ClientGoalHandle<manymove_msgs::action::GetInput> > goal_handle);
+  std::shared_ptr<rclcpp_action::ClientGoalHandle<manymove_msgs::action::GetInput> > goal_handle);
 void resultCallback(
-	const rclcpp_action::ClientGoalHandle<manymove_msgs::action::GetInput>::WrappedResult& result);
+  const rclcpp_action::ClientGoalHandle<manymove_msgs::action::GetInput>::WrappedResult& result);
 
 using GetInput = manymove_msgs::action::GetInput;
 

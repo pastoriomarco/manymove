@@ -68,18 +68,18 @@ MoveManipulatorAction(const std::string& name, const BT::NodeConfiguration& conf
 
 static BT::PortsList providedPorts()
 {
-	return {
-	        BT::InputPort<std::string>("move_id"),
-	        BT::InputPort<std::string>("robot_prefix"),
-	        BT::InputPort<moveit_msgs::msg::RobotTrajectory>("trajectory"),
-	        BT::InputPort<std::string>("pose_key", "Optional key to retrieve the dynamic target pose"),
-	        BT::InputPort<bool>("collision_detected",
-	                            "If a collision is detected, the execution fails"),
-	        BT::InputPort<bool>("invalidate_traj_on_exec",
-	                            "Flag to indicate if the trajectory should be invalidated on exec even if successful"),
-	        BT::InputPort<bool>("stop_execution", "Flag to indicate that the execution is stopped"),
-	        BT::InputPort<int>("max_tries", "Number of times to try the execution"),
-	};
+  return {
+    BT::InputPort<std::string>("move_id"),
+    BT::InputPort<std::string>("robot_prefix"),
+    BT::InputPort<moveit_msgs::msg::RobotTrajectory>("trajectory"),
+    BT::InputPort<std::string>("pose_key", "Optional key to retrieve the dynamic target pose"),
+    BT::InputPort<bool>("collision_detected",
+                        "If a collision is detected, the execution fails"),
+    BT::InputPort<bool>("invalidate_traj_on_exec",
+                        "Flag to indicate if the trajectory should be invalidated on exec even if successful"),
+    BT::InputPort<bool>("stop_execution", "Flag to indicate that the execution is stopped"),
+    BT::InputPort<int>("max_tries", "Number of times to try the execution"),
+  };
 }
 
 protected:
@@ -129,7 +129,7 @@ ResetTrajectories(const std::string& name, const BT::NodeConfiguration& config);
  */
 static BT::PortsList providedPorts()
 {
-	return {BT::InputPort<std::string>("move_ids", "Comma-separated list of move IDs to reset")};
+  return {BT::InputPort<std::string>("move_ids", "Comma-separated list of move IDs to reset")};
 }
 
 /**

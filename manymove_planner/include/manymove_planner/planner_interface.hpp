@@ -67,7 +67,7 @@ virtual ~PlannerInterface() = default;
  * trajectory.
  */
 virtual std::pair<bool, moveit_msgs::msg::RobotTrajectory> plan(
-	const manymove_msgs::action::PlanManipulator::Goal& goal) = 0;
+  const manymove_msgs::action::PlanManipulator::Goal& goal) = 0;
 
 /**
  * @brief Apply time parameterization to a trajectory.
@@ -104,8 +104,8 @@ virtual std::pair<bool, moveit_msgs::msg::RobotTrajectory> plan(
  * you set.
  */
 virtual std::pair<bool, moveit_msgs::msg::RobotTrajectory> applyTimeParameterization(
-	const moveit_msgs::msg::RobotTrajectory& input_traj,
-	const manymove_msgs::msg::MovementConfig& config)
+  const moveit_msgs::msg::RobotTrajectory& input_traj,
+  const manymove_msgs::msg::MovementConfig& config)
 = 0;
 
 /**

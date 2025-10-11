@@ -54,7 +54,7 @@ void callResetProgram();
 
 const std::string& getRobotPrefix() const
 {
-	return robot_prefix_;
+  return robot_prefix_;
 }
 
 private:

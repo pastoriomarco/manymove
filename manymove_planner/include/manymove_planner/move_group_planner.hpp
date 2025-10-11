@@ -95,7 +95,7 @@ MoveGroupPlanner(const rclcpp::Node::SharedPtr& node,
  * @return A pair containing a success flag and the planned robot trajectory.
  */
 std::pair<bool, moveit_msgs::msg::RobotTrajectory> plan(
-	const manymove_msgs::action::PlanManipulator::Goal& goal) override;
+  const manymove_msgs::action::PlanManipulator::Goal& goal) override;
 
 /**
  * @brief Apply time parameterization to a single trajectory.
@@ -128,8 +128,8 @@ std::pair<bool, moveit_msgs::msg::RobotTrajectory> plan(
  * you set.
  */
 std::pair<bool, moveit_msgs::msg::RobotTrajectory> applyTimeParameterization(
-	const moveit_msgs::msg::RobotTrajectory& input_traj,
-	const manymove_msgs::msg::MovementConfig& config);
+  const moveit_msgs::msg::RobotTrajectory& input_traj,
+  const manymove_msgs::msg::MovementConfig& config);
 
 /**
  * @brief Send a controlled stop command to the robot.
@@ -291,7 +291,7 @@ planning_scene_monitor::PlanningSceneMonitorPtr planning_scene_monitor_;        
 // monitor
 
 rclcpp_action::Client<control_msgs::action::FollowJointTrajectory>::SharedPtr
-        follow_joint_traj_client_;                                                                           ///<
+  follow_joint_traj_client_;                                                                                 ///<
 // Action
 // client
 // for

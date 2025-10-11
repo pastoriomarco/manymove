@@ -60,40 +60,40 @@ namespace manymove_cpp_trees
 inline void registerAllNodeTypes(BT::BehaviorTreeFactory& factory)
 {
 
-	factory.registerNodeType<MoveManipulatorAction>("MoveManipulatorAction");
-	factory.registerNodeType<ResetTrajectories>("ResetTrajectories");
+  factory.registerNodeType<MoveManipulatorAction>("MoveManipulatorAction");
+  factory.registerNodeType<ResetTrajectories>("ResetTrajectories");
 
-	factory.registerNodeType<AddCollisionObjectAction>("AddCollisionObjectAction");
-	factory.registerNodeType<RemoveCollisionObjectAction>("RemoveCollisionObjectAction");
-	factory.registerNodeType<AttachDetachObjectAction>("AttachDetachObjectAction");
-	factory.registerNodeType<CheckObjectExistsAction>("CheckObjectExistsAction");
-	factory.registerNodeType<GetObjectPoseAction>("GetObjectPoseAction");
-	factory.registerNodeType<WaitForObjectAction>("WaitForObjectAction");
+  factory.registerNodeType<AddCollisionObjectAction>("AddCollisionObjectAction");
+  factory.registerNodeType<RemoveCollisionObjectAction>("RemoveCollisionObjectAction");
+  factory.registerNodeType<AttachDetachObjectAction>("AttachDetachObjectAction");
+  factory.registerNodeType<CheckObjectExistsAction>("CheckObjectExistsAction");
+  factory.registerNodeType<GetObjectPoseAction>("GetObjectPoseAction");
+  factory.registerNodeType<WaitForObjectAction>("WaitForObjectAction");
 
-	factory.registerNodeType<SetOutputAction>("SetOutputAction");
-	factory.registerNodeType<GetInputAction>("GetInputAction");
-	factory.registerNodeType<WaitForInputAction>("WaitForInputAction");
-	factory.registerNodeType<CheckRobotStateAction>("CheckRobotStateAction");
-	factory.registerNodeType<ResetRobotStateAction>("ResetRobotStateAction");
-	factory.registerNodeType<PublishJointStateAction>("PublishJointStateAction");
+  factory.registerNodeType<SetOutputAction>("SetOutputAction");
+  factory.registerNodeType<GetInputAction>("GetInputAction");
+  factory.registerNodeType<WaitForInputAction>("WaitForInputAction");
+  factory.registerNodeType<CheckRobotStateAction>("CheckRobotStateAction");
+  factory.registerNodeType<ResetRobotStateAction>("ResetRobotStateAction");
+  factory.registerNodeType<PublishJointStateAction>("PublishJointStateAction");
 
-	factory.registerNodeType<CheckKeyBoolValue>("CheckKeyBoolValue");
-	factory.registerNodeType<SetKeyBoolValue>("SetKeyBoolValue");
-	factory.registerNodeType<WaitForKeyBool>("WaitForKeyBool");
-	factory.registerNodeType<BT::RetryNode>("RetryNode");
-	factory.registerNodeType<RetryPauseResetNode>("RetryPauseResetNode");
-	factory.registerNodeType<GetLinkPoseAction>("GetLinkPoseAction");
-	factory.registerNodeType<CheckPoseDistance>("CheckPoseDistance");
-	factory.registerNodeType<CheckPoseBounds>("CheckPoseBounds");
-	factory.registerNodeType<CopyPoseKey>("CopyPoseKey");
+  factory.registerNodeType<CheckKeyBoolValue>("CheckKeyBoolValue");
+  factory.registerNodeType<SetKeyBoolValue>("SetKeyBoolValue");
+  factory.registerNodeType<WaitForKeyBool>("WaitForKeyBool");
+  factory.registerNodeType<BT::RetryNode>("RetryNode");
+  factory.registerNodeType<RetryPauseResetNode>("RetryPauseResetNode");
+  factory.registerNodeType<GetLinkPoseAction>("GetLinkPoseAction");
+  factory.registerNodeType<CheckPoseDistance>("CheckPoseDistance");
+  factory.registerNodeType<CheckPoseBounds>("CheckPoseBounds");
+  factory.registerNodeType<CopyPoseKey>("CopyPoseKey");
 
-	factory.registerNodeType<GripperCommandAction>("GripperCommandAction");
-	factory.registerNodeType<GripperTrajAction>("GripperTrajAction");
+  factory.registerNodeType<GripperCommandAction>("GripperCommandAction");
+  factory.registerNodeType<GripperTrajAction>("GripperTrajAction");
 
-	factory.registerNodeType<SetEntityPoseNode>("SetEntityPoseNode");
-	factory.registerNodeType<GetEntityPoseNode>("GetEntityPoseNode");
+  factory.registerNodeType<SetEntityPoseNode>("SetEntityPoseNode");
+  factory.registerNodeType<GetEntityPoseNode>("GetEntityPoseNode");
 
-	factory.registerNodeType<FoundationPoseAlignmentNode>("FoundationPoseAlignmentNode");
+  factory.registerNodeType<FoundationPoseAlignmentNode>("FoundationPoseAlignmentNode");
 }
 
 // --------------------------------------------------------------------------
@@ -102,12 +102,12 @@ inline void registerAllNodeTypes(BT::BehaviorTreeFactory& factory)
 
 struct ObjectSnippets
 {
-	std::string check_xml;  ///< Check if object exists
-	std::string add_xml;    ///< Add object to the scene
-	std::string init_xml;   ///< Fallback check/add
-	std::string remove_xml; ///< Remove object (empty for fixed)
-	std::string attach_xml; ///< Attach object (only attachable)
-	std::string detach_xml; ///< Detach object (only attachable)
+  std::string check_xml;        ///< Check if object exists
+  std::string add_xml;          ///< Add object to the scene
+  std::string init_xml;         ///< Fallback check/add
+  std::string remove_xml;       ///< Remove object (empty for fixed)
+  std::string attach_xml;       ///< Attach object (only attachable)
+  std::string detach_xml;       ///< Detach object (only attachable)
 };
 
 /**

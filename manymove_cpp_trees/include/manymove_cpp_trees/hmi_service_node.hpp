@@ -73,8 +73,8 @@ rclcpp::TimerBase::SharedPtr status_timer_;
 
 // Service callback.
 void handleUpdateBlackboard(
-	const std::shared_ptr<manymove_msgs::srv::SetBlackboardValues::Request> request,
-	std::shared_ptr<manymove_msgs::srv::SetBlackboardValues::Response> response);
+  const std::shared_ptr<manymove_msgs::srv::SetBlackboardValues::Request> request,
+  std::shared_ptr<manymove_msgs::srv::SetBlackboardValues::Response> response);
 
 std::string serializePoseRPY(const geometry_msgs::msg::Pose& pose);
 

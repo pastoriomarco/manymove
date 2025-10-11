@@ -78,12 +78,12 @@ QTcpSocket* clientSocket_;
 // Structure holding one robot’s UI elements.
 struct RobotInterface
 {
-	std::string prefix;
-	QLabel* prefixLabel;
-	QPushButton* startButton;
-	QPushButton* stopButton;
-	QPushButton* resetButton;
-	QLabel* messageLabel;
+  std::string prefix;
+  QLabel* prefixLabel;
+  QPushButton* startButton;
+  QPushButton* stopButton;
+  QPushButton* resetButton;
+  QLabel* messageLabel;
 };
 
 std::vector<RobotInterface> robotInterfaces_;
