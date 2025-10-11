@@ -37,8 +37,8 @@ namespace manymove_cpp_trees
 {
 
 MoveManipulatorAction::MoveManipulatorAction(
-  const std::string& name,
-  const BT::NodeConfiguration& config)
+  const std::string&name,
+  const BT::NodeConfiguration&config)
   : BT::StatefulActionNode(name, config),
   goal_sent_(false),
   result_received_(false),
@@ -295,7 +295,7 @@ void MoveManipulatorAction::goalResponseCallback(
 }
 
 void MoveManipulatorAction::resultCallback(
-  const GoalHandleMoveManipulator::WrappedResult& wrapped_result)
+  const GoalHandleMoveManipulator::WrappedResult&wrapped_result)
 {
   bool invalidate_traj_on_exec;
   getInput<bool>("invalidate_traj_on_exec", invalidate_traj_on_exec);
@@ -337,7 +337,7 @@ void MoveManipulatorAction::feedbackCallback(
   }
 }
 
-ResetTrajectories::ResetTrajectories(const std::string& name, const BT::NodeConfiguration& config)
+ResetTrajectories::ResetTrajectories(const std::string&name, const BT::NodeConfiguration&config)
   : BT::SyncActionNode(name, config)
 {
   // Obtain the ROS node from the blackboard
@@ -385,7 +385,7 @@ BT::NodeStatus ResetTrajectories::tick()
   }
 
   // Perform reset for each move_id
-  for (const auto& move_id_str : move_ids) {
+  for (const auto&move_id_str : move_ids) {
     try {
       int move_id = std::stoi(move_id_str);
 
@@ -401,7 +401,7 @@ BT::NodeStatus ResetTrajectories::tick()
       RCLCPP_DEBUG(node_->get_logger(),
                    "ResetTrajectories [%s]: Reset move_id=%d => %s cleared, %s set to false.",
                    name().c_str(), move_id, traj_key.c_str(), validity_key.c_str());
-    } catch (const std::exception& e) {
+    } catch (const std::exception&e) {
       RCLCPP_ERROR(node_->get_logger(),
                    "ResetTrajectories [%s]: Invalid move_id '%s'. Exception: %s",
                    name().c_str(), move_id_str.c_str(), e.what());

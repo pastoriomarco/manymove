@@ -39,8 +39,8 @@ namespace manymove_cpp_trees
 // GripperCommandAction
 // -------------------------------------------------
 GripperCommandAction::GripperCommandAction(
-  const std::string& name,
-  const BT::NodeConfiguration& config)
+  const std::string&name,
+  const BT::NodeConfiguration&config)
   : BT::StatefulActionNode(name, config), goal_sent_(false), result_received_(false)
 {
   // Obtain the ROS node from the blackboard
@@ -142,7 +142,7 @@ void GripperCommandAction::goalResponseCallback(
 }
 
 void GripperCommandAction::resultCallback(
-  const GoalHandleGripperCommand::WrappedResult& wrapped_result)
+  const GoalHandleGripperCommand::WrappedResult&wrapped_result)
 {
   action_result_ = *wrapped_result.result;
   result_received_ = true;
@@ -166,8 +166,8 @@ void GripperCommandAction::feedbackCallback(
 // -------------------------------------------------
 
 GripperTrajAction::GripperTrajAction(
-  const std::string& name,
-  const BT::NodeConfiguration& config)
+  const std::string&name,
+  const BT::NodeConfiguration&config)
   : BT::StatefulActionNode(name, config),
   goal_sent_(false),
   result_received_(false),
@@ -275,7 +275,7 @@ void GripperTrajAction::goalResponseCallback(
 }
 
 void GripperTrajAction::resultCallback(
-  const GoalHandleFollowJointTrajectory::WrappedResult& result)
+  const GoalHandleFollowJointTrajectory::WrappedResult&result)
 {
   result_received_ = true;
   success_ = (result.code == rclcpp_action::ResultCode::SUCCEEDED);
@@ -289,8 +289,8 @@ void GripperTrajAction::resultCallback(
 // -------------------------------------------------
 
 PublishJointStateAction::PublishJointStateAction(
-  const std::string& name,
-  const BT::NodeConfiguration& config)
+  const std::string&name,
+  const BT::NodeConfiguration&config)
   : BT::SyncActionNode(name, config)
 {
   if (!config.blackboard || !config.blackboard->get("node", node_)) {
@@ -323,7 +323,7 @@ BT::NodeStatus PublishJointStateAction::tick()
   }
 
   const auto N = names.size();
-  auto broadcast_or_check = [&](std::vector<double>& v, const char* label)
+  auto broadcast_or_check = [&](std::vector<double>&v, const char*label)
 			    {
 			      if (v.empty()) {
 				return;

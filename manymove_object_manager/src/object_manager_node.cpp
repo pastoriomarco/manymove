@@ -291,7 +291,7 @@ ObjectManagerNode::ObjectManagerNode()
 // ----------------------------------------------------------------------------
 rclcpp_action::GoalResponse
 ObjectManagerNode::handleCheckExistGoal(
-  [[maybe_unused]] const rclcpp_action::GoalUUID& uuid,
+  [[maybe_unused]] const rclcpp_action::GoalUUID&uuid,
   std::shared_ptr<const CheckObjectExists::Goal> goal)
 {
   RCLCPP_INFO(this->get_logger(), "Received request to check existence of object: %s",
@@ -377,7 +377,7 @@ void ObjectManagerNode::printPlanningScene()
     auto response = future_response.get();
     if (response) {
       RCLCPP_INFO(this->get_logger(), "Received Planning Scene:");
-      const auto& collision_objects = response->scene.world.collision_objects;
+      const auto&collision_objects = response->scene.world.collision_objects;
 
       if (collision_objects.empty()) {
 	RCLCPP_INFO(this->get_logger(), "  No collision objects found in the planning scene.");
@@ -385,12 +385,12 @@ void ObjectManagerNode::printPlanningScene()
       else {
 	RCLCPP_INFO(this->get_logger(), "  Found %zu collision object(s):",
 	            collision_objects.size());
-	for (const auto& obj : collision_objects) {
+	for (const auto&obj : collision_objects) {
 	  RCLCPP_INFO(this->get_logger(), "    - ID: '%s'", obj.id.c_str());
 	}
       }
 
-      const auto& attached_collision_object =
+      const auto&attached_collision_object =
 	response->scene.robot_state.attached_collision_objects;
 
       if (attached_collision_object.empty()) {
@@ -401,7 +401,7 @@ void ObjectManagerNode::printPlanningScene()
 	RCLCPP_INFO(this->get_logger(),
 	            "  Found %zu attached collision object(s):",
 	            attached_collision_object.size());
-	for (const auto& attached_obj : attached_collision_object) {
+	for (const auto&attached_obj : attached_collision_object) {
 	  RCLCPP_INFO(this->get_logger(), "    - ID: '%s'", attached_obj.object.id.c_str());
 	}
       }
@@ -419,7 +419,7 @@ void ObjectManagerNode::printPlanningScene()
 // Action Server Callbacks: AddCollisionObject
 // ----------------------------------------------------------------------------
 rclcpp_action::GoalResponse ObjectManagerNode::handleAddGoal(
-  [[maybe_unused]] const rclcpp_action::GoalUUID& uuid,
+  [[maybe_unused]] const rclcpp_action::GoalUUID&uuid,
   std::shared_ptr<const AddCollisionObject::Goal> goal)
 {
   RCLCPP_INFO(this->get_logger(), "Received request to add object: %s", goal->id.c_str());
@@ -507,7 +507,7 @@ void ObjectManagerNode::handleAddExecute(const std::shared_ptr<AddGoalHandle> go
 // ----------------------------------------------------------------------------
 rclcpp_action::GoalResponse
 ObjectManagerNode::handleRemoveGoal(
-  [[maybe_unused]] const rclcpp_action::GoalUUID& uuid,
+  [[maybe_unused]] const rclcpp_action::GoalUUID&uuid,
   std::shared_ptr<const RemoveCollisionObject::Goal> goal)
 {
   RCLCPP_INFO(this->get_logger(), "Received request to remove object: %s", goal->id.c_str());
@@ -605,7 +605,7 @@ void ObjectManagerNode::handleRemoveExecute(const std::shared_ptr<RemoveGoalHand
 // ----------------------------------------------------------------------------
 rclcpp_action::GoalResponse
 ObjectManagerNode::handleAttachDetachGoal(
-  [[maybe_unused]] const rclcpp_action::GoalUUID& uuid,
+  [[maybe_unused]] const rclcpp_action::GoalUUID&uuid,
   std::shared_ptr<const AttachDetachObject::Goal> goal)
 {
 
@@ -764,7 +764,7 @@ void ObjectManagerNode::handleAttachDetachExecute(
 	      "Object '%s' not found in the planning scene after detaching. Adding it back.",
 	      goal->object_id.c_str());
 
-	    const auto& collision_object = collision_object_opt.value();
+	    const auto&collision_object = collision_object_opt.value();
 
 	    // Publisher for collision objects
 	    collision_object_publisher_->publish(collision_object);
@@ -830,7 +830,7 @@ void ObjectManagerNode::handleAttachDetachExecute(
 
 rclcpp_action::GoalResponse
 ObjectManagerNode::handleGetObjectPoseGoal(
-  [[maybe_unused]] const rclcpp_action::GoalUUID& uuid,
+  [[maybe_unused]] const rclcpp_action::GoalUUID&uuid,
   std::shared_ptr<const GetObjectPose::Goal> goal)
 {
   RCLCPP_INFO(this->get_logger(),
@@ -906,7 +906,7 @@ void ObjectManagerNode::handleGetObjectPoseExecute(
       geometry_msgs::msg::Pose transformed_pose;
       tf2::doTransform(object_pose, transformed_pose, transformStamped);
       object_pose = transformed_pose;
-    } catch (const tf2::TransformException& ex) {
+    } catch (const tf2::TransformException&ex) {
       RCLCPP_ERROR(this->get_logger(), "Failed to lookup transform from '%s' to '%s': %s",
                    object_frame.c_str(),
                    goal->link_name.c_str(), ex.what());
@@ -1017,7 +1017,7 @@ void ObjectManagerNode::handleGetObjectPoseExecute(
                 final_pose.orientation.y,
                 final_pose.orientation.z,
                 final_pose.orientation.w);
-  } catch (const std::exception& e) {
+  } catch (const std::exception&e) {
     RCLCPP_ERROR(this->get_logger(), "%s", e.what());
     result->success = false;
     result->message = e.what();
@@ -1028,7 +1028,7 @@ void ObjectManagerNode::handleGetObjectPoseExecute(
 // ----------------------------------------------------------------------------
 // Utility Function: objectExists
 // ----------------------------------------------------------------------------
-bool ObjectManagerNode::objectExists(const std::string& id)
+bool ObjectManagerNode::objectExists(const std::string&id)
 {
   auto request = std::make_shared<moveit_msgs::srv::GetPlanningScene::Request>();
   request->components.components = moveit_msgs::msg::PlanningSceneComponents::WORLD_OBJECT_NAMES;
@@ -1043,7 +1043,7 @@ bool ObjectManagerNode::objectExists(const std::string& id)
   if (future_response.wait_for(std::chrono::seconds(5)) == std::future_status::ready) {
     auto response = future_response.get();
     if (response) {
-      for (const auto& obj : response->scene.world.collision_objects) {
+      for (const auto&obj : response->scene.world.collision_objects) {
 	if (obj.id == id) {
 	  RCLCPP_INFO(this->get_logger(), "Object '%s' found in the planning scene.", id.c_str());
 	  return true;
@@ -1065,7 +1065,7 @@ bool ObjectManagerNode::objectExists(const std::string& id)
 // ----------------------------------------------------------------------------
 // Utility Function: objectExists
 // ----------------------------------------------------------------------------
-bool ObjectManagerNode::attachedObjectExists(const std::string& id, const std::string& link_name)
+bool ObjectManagerNode::attachedObjectExists(const std::string&id, const std::string&link_name)
 {
   auto request = std::make_shared<moveit_msgs::srv::GetPlanningScene::Request>();
   request->components.components =
@@ -1087,7 +1087,7 @@ bool ObjectManagerNode::attachedObjectExists(const std::string& id, const std::s
   if (future_response.wait_for(std::chrono::seconds(5)) == std::future_status::ready) {
     auto response = future_response.get();
     if (response) {
-      for (const auto& attached_obj : response->scene.robot_state.attached_collision_objects) {
+      for (const auto&attached_obj : response->scene.robot_state.attached_collision_objects) {
 	if (attached_obj.object.id == id) {
 	  if (link_name.empty() || attached_obj.link_name == link_name) {
 	    RCLCPP_INFO(this->get_logger(), "Object '%s' is attached to link '%s'.", id.c_str(),
@@ -1114,7 +1114,7 @@ bool ObjectManagerNode::attachedObjectExists(const std::string& id, const std::s
 // Utility Function: getObjectDataById
 // ----------------------------------------------------------------------------
 std::optional<moveit_msgs::msg::CollisionObject> ObjectManagerNode::getObjectDataById(
-  const std::string& object_id)
+  const std::string&object_id)
 {
   // Request planning scene world data
   auto request = std::make_shared<moveit_msgs::srv::GetPlanningScene::Request>();
@@ -1128,7 +1128,7 @@ std::optional<moveit_msgs::msg::CollisionObject> ObjectManagerNode::getObjectDat
   if (future_response.wait_for(std::chrono::seconds(5)) == std::future_status::ready) {
     auto response = future_response.get();
     if (response) {
-      for (const auto& collision_object : response->scene.world.collision_objects) {
+      for (const auto&collision_object : response->scene.world.collision_objects) {
 	if (collision_object.id == object_id) {
 	  // Object found, return it
 	  RCLCPP_INFO(this->get_logger(), "Object '%s' data retrieved from planning scene.",
@@ -1136,7 +1136,7 @@ std::optional<moveit_msgs::msg::CollisionObject> ObjectManagerNode::getObjectDat
 	  return collision_object;
 	}
       }
-      for (const auto& attached_collision_object :
+      for (const auto&attached_collision_object :
            response->scene.robot_state.attached_collision_objects) {
 	if (attached_collision_object.object.id == object_id) {
 	  // Object found, return it
@@ -1165,7 +1165,7 @@ std::optional<moveit_msgs::msg::CollisionObject> ObjectManagerNode::getObjectDat
 // Utility Function: getAttachedObjectLinkById
 // ----------------------------------------------------------------------------
 std::optional<std::string> ObjectManagerNode::getAttachedObjectLinkById(
-  const std::string& object_id)
+  const std::string&object_id)
 {
   // Request planning scene world data
   auto request = std::make_shared<moveit_msgs::srv::GetPlanningScene::Request>();
@@ -1178,7 +1178,7 @@ std::optional<std::string> ObjectManagerNode::getAttachedObjectLinkById(
   if (future_response.wait_for(std::chrono::seconds(5)) == std::future_status::ready) {
     auto response = future_response.get();
     if (response) {
-      for (const auto& attached_collision_object :
+      for (const auto&attached_collision_object :
            response->scene.robot_state.attached_collision_objects) {
 	if (attached_collision_object.object.id == object_id) {
 	  // Object found, return it
@@ -1208,9 +1208,9 @@ std::optional<std::string> ObjectManagerNode::getAttachedObjectLinkById(
 // ----------------------------------------------------------------------------
 moveit_msgs::msg::CollisionObject
 ObjectManagerNode::createCollisionObject(
-  const std::string& id, const std::string& shape,
-  const std::vector<double>& dimensions, const geometry_msgs::msg::Pose& pose,
-  const std::string& mesh_file, const std::vector<double> scale_mesh) const
+  const std::string&id, const std::string&shape,
+  const std::vector<double>&dimensions, const geometry_msgs::msg::Pose&pose,
+  const std::string&mesh_file, const std::vector<double> scale_mesh) const
 {
   moveit_msgs::msg::CollisionObject collision_object;
   collision_object.header.frame_id = frame_id_;
@@ -1218,7 +1218,7 @@ ObjectManagerNode::createCollisionObject(
 
   if (shape == "mesh") {
     // Attempt to load the mesh from the specified resource
-    shapes::Mesh* mesh = shapes::createMeshFromResource(mesh_file);
+    shapes::Mesh*mesh = shapes::createMeshFromResource(mesh_file);
     if (!mesh) {
       RCLCPP_ERROR(this->get_logger(), "Failed to load mesh from file: %s", mesh_file.c_str());
       return collision_object;                   // Exit early if mesh loading fails
@@ -1249,7 +1249,7 @@ ObjectManagerNode::createCollisionObject(
 	RCLCPP_ERROR(this->get_logger(), "Failed to extract mesh from ShapeMsg for object '%s'.",
 	             id.c_str());
       }
-    } catch (const std::exception& e) {
+    } catch (const std::exception&e) {
       RCLCPP_ERROR(this->get_logger(), "Exception while processing mesh: %s", e.what());
     }
 
@@ -1321,8 +1321,8 @@ ObjectManagerNode::createCollisionObject(
 // Utility Function: validateShapeAndDimensions
 // ----------------------------------------------------------------------------
 bool ObjectManagerNode::validateShapeAndDimensions(
-  const std::string& shape, const std::vector<double>& dimensions,
-  const std::optional<std::string>& mesh_file) const
+  const std::string&shape, const std::vector<double>&dimensions,
+  const std::optional<std::string>&mesh_file) const
 {
   if (shape == "box" && dimensions.size() == 3) {
     return true;
@@ -1348,7 +1348,7 @@ bool ObjectManagerNode::validateShapeAndDimensions(
 // ----------------------------------------------------------------------------
 // Main Function
 // ----------------------------------------------------------------------------
-int main(int argc, char** argv)
+int main(int argc, char**argv)
 {
   rclcpp::init(argc, argv);
 

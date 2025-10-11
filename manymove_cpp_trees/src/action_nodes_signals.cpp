@@ -41,8 +41,8 @@ namespace manymove_cpp_trees
 // ------------------------------------------------------------------
 
 SetOutputAction::SetOutputAction(
-  const std::string& name,
-  const BT::NodeConfiguration& config)
+  const std::string&name,
+  const BT::NodeConfiguration&config)
   : BT::StatefulActionNode(name, config),
   goal_sent_(false),
   result_received_(false)
@@ -191,7 +191,7 @@ void SetOutputAction::goalResponseCallback(std::shared_ptr<GoalHandleSetOutput> 
   }
 }
 
-void SetOutputAction::resultCallback(const GoalHandleSetOutput::WrappedResult& wrapped_result)
+void SetOutputAction::resultCallback(const GoalHandleSetOutput::WrappedResult&wrapped_result)
 {
   if (wrapped_result.code == rclcpp_action::ResultCode::SUCCEEDED) {
     action_result_ = *(wrapped_result.result);
@@ -208,8 +208,8 @@ void SetOutputAction::resultCallback(const GoalHandleSetOutput::WrappedResult& w
 // ------------------------------------------------------------------
 
 GetInputAction::GetInputAction(
-  const std::string& name,
-  const BT::NodeConfiguration& config)
+  const std::string&name,
+  const BT::NodeConfiguration&config)
   : BT::StatefulActionNode(name, config),
   goal_sent_(false),
   result_received_(false)
@@ -347,7 +347,7 @@ void GetInputAction::goalResponseCallback(std::shared_ptr<GoalHandleGetInput> go
   }
 }
 
-void GetInputAction::resultCallback(const GoalHandleGetInput::WrappedResult& wrapped_result)
+void GetInputAction::resultCallback(const GoalHandleGetInput::WrappedResult&wrapped_result)
 {
   if (wrapped_result.code == rclcpp_action::ResultCode::SUCCEEDED) {
     action_result_ = *(wrapped_result.result);
@@ -364,8 +364,8 @@ void GetInputAction::resultCallback(const GoalHandleGetInput::WrappedResult& wra
 // ------------------------------------------------------------------
 
 CheckRobotStateAction::CheckRobotStateAction(
-  const std::string& name,
-  const BT::NodeConfiguration& config)
+  const std::string&name,
+  const BT::NodeConfiguration&config)
   : BT::StatefulActionNode(name, config),
   goal_sent_(false),
   result_received_(false)
@@ -489,7 +489,7 @@ void CheckRobotStateAction::goalResponseCallback(
 }
 
 void CheckRobotStateAction::resultCallback(
-  const GoalHandleCheckRobotState::WrappedResult& wrapped_result)
+  const GoalHandleCheckRobotState::WrappedResult&wrapped_result)
 {
   if (wrapped_result.code == rclcpp_action::ResultCode::SUCCEEDED) {
     // The server returned a valid result
@@ -512,8 +512,8 @@ void CheckRobotStateAction::resultCallback(
 // ------------------------------------------------------------------
 
 ResetRobotStateAction::ResetRobotStateAction(
-  const std::string& name,
-  const BT::NodeConfiguration& config)
+  const std::string&name,
+  const BT::NodeConfiguration&config)
   : BT::StatefulActionNode(name, config),
   goal_sent_(false),
   result_received_(false),
@@ -697,7 +697,7 @@ void ResetRobotStateAction::goalResponseCallback(
 }
 
 void ResetRobotStateAction::resultCallback(
-  const GoalHandleResetRobotState::WrappedResult& wrapped_result)
+  const GoalHandleResetRobotState::WrappedResult&wrapped_result)
 {
   if (wrapped_result.code == rclcpp_action::ResultCode::SUCCEEDED) {
     action_result_ = *(wrapped_result.result);
@@ -726,7 +726,7 @@ void ResetRobotStateAction::goalResponseCallbackUnloadTraj(
 }
 
 void ResetRobotStateAction::resultCallbackUnloadTraj(
-  const GoalHandleUnloadTrajController::WrappedResult& wrapped_result)
+  const GoalHandleUnloadTrajController::WrappedResult&wrapped_result)
 {
   if (wrapped_result.code == rclcpp_action::ResultCode::SUCCEEDED) {
     unload_traj_success_ = wrapped_result.result->success;
@@ -753,7 +753,7 @@ void ResetRobotStateAction::goalResponseCallbackLoadTraj(
 }
 
 void ResetRobotStateAction::resultCallbackLoadTraj(
-  const GoalHandleLoadTrajController::WrappedResult& wrapped_result)
+  const GoalHandleLoadTrajController::WrappedResult&wrapped_result)
 {
   if (wrapped_result.code == rclcpp_action::ResultCode::SUCCEEDED) {
     load_traj_success_ = wrapped_result.result->success;
@@ -764,8 +764,8 @@ void ResetRobotStateAction::resultCallbackLoadTraj(
 }
 
 WaitForInputAction::WaitForInputAction(
-  const std::string& name,
-  const BT::NodeConfiguration& config)
+  const std::string&name,
+  const BT::NodeConfiguration&config)
   : BT::StatefulActionNode(name, config),
   goal_sent_(false),
   result_received_(false),
@@ -978,7 +978,7 @@ void WaitForInputAction::goalResponseCallback(
 }
 
 void WaitForInputAction::resultCallback(
-  const rclcpp_action::ClientGoalHandle<GetInput>::WrappedResult& wrapped_result)
+  const rclcpp_action::ClientGoalHandle<GetInput>::WrappedResult&wrapped_result)
 {
   if (wrapped_result.code == rclcpp_action::ResultCode::SUCCEEDED) {
     // Fill last_xxx with the server's result

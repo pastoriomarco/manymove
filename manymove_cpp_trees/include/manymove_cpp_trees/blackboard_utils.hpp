@@ -45,12 +45,12 @@ struct BlackboardEntry
 
 template<class T>
 void defineVariableKey(
-  const rclcpp::Node::SharedPtr& node_ptr,
+  const rclcpp::Node::SharedPtr&node_ptr,
   BT::Blackboard::Ptr blackboard,
-  std::vector<BlackboardEntry>& keys,
-  const std::string& key_name,
-  const std::string& key_type,
-  const T& value)
+  std::vector<BlackboardEntry>&keys,
+  const std::string&key_name,
+  const std::string&key_type,
+  const T&value)
 {
   // Set the blackboard key with initial value
   blackboard->set(key_name, value);

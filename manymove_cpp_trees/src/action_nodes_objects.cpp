@@ -38,8 +38,8 @@ namespace manymove_cpp_trees
 // ---------------------- AddCollisionObjectAction ----------------------
 
 AddCollisionObjectAction::AddCollisionObjectAction(
-  const std::string& name,
-  const BT::NodeConfiguration& config)
+  const std::string&name,
+  const BT::NodeConfiguration&config)
   : BT::StatefulActionNode(name, config),
   goal_sent_(false),
   result_received_(false)
@@ -196,7 +196,7 @@ void AddCollisionObjectAction::goalResponseCallback(
 }
 
 void AddCollisionObjectAction::resultCallback(
-  const GoalHandleAddCollisionObject::WrappedResult& wrapped_result)
+  const GoalHandleAddCollisionObject::WrappedResult&wrapped_result)
 {
   switch (wrapped_result.code) {
   case rclcpp_action::ResultCode::SUCCEEDED:
@@ -226,8 +226,8 @@ void AddCollisionObjectAction::resultCallback(
 // ---------------------- RemoveCollisionObjectAction ----------------------
 
 RemoveCollisionObjectAction::RemoveCollisionObjectAction(
-  const std::string& name,
-  const BT::NodeConfiguration& config)
+  const std::string&name,
+  const BT::NodeConfiguration&config)
   : BT::StatefulActionNode(name, config),
   goal_sent_(false),
   result_received_(false)
@@ -338,7 +338,7 @@ void RemoveCollisionObjectAction::goalResponseCallback(
 }
 
 void RemoveCollisionObjectAction::resultCallback(
-  const GoalHandleRemoveCollisionObject::WrappedResult& wrapped_result)
+  const GoalHandleRemoveCollisionObject::WrappedResult&wrapped_result)
 {
   switch (wrapped_result.code) {
   case rclcpp_action::ResultCode::SUCCEEDED:
@@ -368,8 +368,8 @@ void RemoveCollisionObjectAction::resultCallback(
 // ---------------------- AttachDetachObjectAction ----------------------
 
 AttachDetachObjectAction::AttachDetachObjectAction(
-  const std::string& name,
-  const BT::NodeConfiguration& config)
+  const std::string&name,
+  const BT::NodeConfiguration&config)
   : BT::StatefulActionNode(name, config),
   goal_sent_(false),
   result_received_(false),
@@ -514,7 +514,7 @@ void AttachDetachObjectAction::goalResponseCallback(
 }
 
 void AttachDetachObjectAction::resultCallback(
-  const GoalHandleAttachDetachObject::WrappedResult& wrapped_result)
+  const GoalHandleAttachDetachObject::WrappedResult&wrapped_result)
 {
   switch (wrapped_result.code) {
   case rclcpp_action::ResultCode::SUCCEEDED:
@@ -545,8 +545,8 @@ void AttachDetachObjectAction::resultCallback(
 // ---------------------- CheckObjectExistsAction ----------------------
 
 CheckObjectExistsAction::CheckObjectExistsAction(
-  const std::string& name,
-  const BT::NodeConfiguration& config)
+  const std::string&name,
+  const BT::NodeConfiguration&config)
   : BT::StatefulActionNode(name, config),
   goal_sent_(false),
   result_received_(false)
@@ -659,7 +659,7 @@ void CheckObjectExistsAction::goalResponseCallback(
 }
 
 void CheckObjectExistsAction::resultCallback(
-  const GoalHandleCheckObjectExists::WrappedResult& wrapped_result)
+  const GoalHandleCheckObjectExists::WrappedResult&wrapped_result)
 {
   switch (wrapped_result.code) {
   case rclcpp_action::ResultCode::SUCCEEDED:
@@ -692,8 +692,8 @@ void CheckObjectExistsAction::resultCallback(
 // ---------------------- GetObjectPoseAction ----------------------
 
 GetObjectPoseAction::GetObjectPoseAction(
-  const std::string& name,
-  const BT::NodeConfiguration& config)
+  const std::string&name,
+  const BT::NodeConfiguration&config)
   : BT::StatefulActionNode(name, config),
   goal_sent_(false),
   result_received_(false)
@@ -886,7 +886,7 @@ void GetObjectPoseAction::goalResponseCallback(
 }
 
 void GetObjectPoseAction::resultCallback(
-  const GoalHandleGetObjectPose::WrappedResult& wrapped_result)
+  const GoalHandleGetObjectPose::WrappedResult&wrapped_result)
 {
   switch (wrapped_result.code) {
   case rclcpp_action::ResultCode::SUCCEEDED:
@@ -914,8 +914,8 @@ void GetObjectPoseAction::resultCallback(
 }
 
 WaitForObjectAction::WaitForObjectAction(
-  const std::string& name,
-  const BT::NodeConfiguration& config)
+  const std::string&name,
+  const BT::NodeConfiguration&config)
   : BT::StatefulActionNode(name, config),
   goal_sent_(false),
   result_received_(false),
@@ -1108,7 +1108,7 @@ void WaitForObjectAction::goalResponseCallback(
 }
 
 void WaitForObjectAction::resultCallback(
-  const GoalHandleCheckObjectExists::WrappedResult& wrapped_result)
+  const GoalHandleCheckObjectExists::WrappedResult&wrapped_result)
 {
   switch (wrapped_result.code) {
   case rclcpp_action::ResultCode::SUCCEEDED:

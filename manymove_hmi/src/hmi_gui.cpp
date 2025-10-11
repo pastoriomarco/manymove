@@ -36,8 +36,8 @@
 #include <sstream>
 
 HmiGui::HmiGui(
-  const std::vector<std::string>& robotPrefixes,
-  std::vector<std::string>& robotNames, QWidget* parent)
+  const std::vector<std::string>&robotPrefixes,
+  std::vector<std::string>&robotNames, QWidget*parent)
   : QMainWindow(parent), tcpServer_(nullptr), clientSocket_(nullptr)
 {
   // Keep the window always on top
@@ -46,35 +46,35 @@ HmiGui::HmiGui(
   // Create the central widget + main vertical layout
   centralWidget_ = new QWidget(this);
   setCentralWidget(centralWidget_);
-  QVBoxLayout* mainLayout = new QVBoxLayout(centralWidget_);
+  QVBoxLayout*mainLayout = new QVBoxLayout(centralWidget_);
 
   // For each robot prefix, create one row of controls
   for (size_t i{0}; i < robotPrefixes.size(); i++) {
     std::string prefix = robotPrefixes[i];
     std::string name = robotNames[i];
 
-    QVBoxLayout* robotLayout = new QVBoxLayout();
+    QVBoxLayout*robotLayout = new QVBoxLayout();
 
     // A label to display the prefix name
-    QLabel* prefixLabel = new QLabel(QString::fromStdString("ROBOT: " + prefix + name), this);
+    QLabel*prefixLabel = new QLabel(QString::fromStdString("ROBOT: " + prefix + name), this);
     robotLayout->addWidget(prefixLabel);
 
-    QHBoxLayout* rowLayout = new QHBoxLayout();
+    QHBoxLayout*rowLayout = new QHBoxLayout();
 
     // START button
-    QPushButton* startButton = new QPushButton("START", this);
+    QPushButton*startButton = new QPushButton("START", this);
     startButton->setObjectName("startButton");
     startButton->setEnabled(true);
     rowLayout->addWidget(startButton);
 
     // STOP button
-    QPushButton* stopButton = new QPushButton("STOP", this);
+    QPushButton*stopButton = new QPushButton("STOP", this);
     stopButton->setObjectName("stopButton");
     stopButton->setEnabled(false);
     rowLayout->addWidget(stopButton);
 
     // RESET button
-    QPushButton* resetButton = new QPushButton("RESET", this);
+    QPushButton*resetButton = new QPushButton("RESET", this);
     resetButton->setObjectName("resetButton");
     resetButton->setEnabled(true);
     rowLayout->addWidget(resetButton);
@@ -82,7 +82,7 @@ HmiGui::HmiGui(
     // Add the row to the robot layout
     robotLayout->addLayout(rowLayout);
 
-    QLabel* msgLbl = new QLabel(this);
+    QLabel*msgLbl = new QLabel(this);
     msgLbl->setFixedHeight(50);
     QFont msgFont = msgLbl->font();
     msgFont.setPointSize(14);
@@ -136,13 +136,13 @@ HmiGui::~HmiGui()
 }
 
 void HmiGui::updateStatus(
-  const QString& robotPrefix,
+  const QString&robotPrefix,
   bool stop_execution,
   bool reset,
   bool collision_detected)
 {
   // Find the row for this robotPrefix
-  for (auto& ri : robotInterfaces_) {
+  for (auto&ri : robotInterfaces_) {
     if (ri.prefix == robotPrefix.toStdString()) {
       // Update button states
       if (stop_execution) {
@@ -177,11 +177,11 @@ void HmiGui::updateStatus(
 }
 
 void HmiGui::updateRobotMessage(
-  const QString& robotPrefix,
-  const QString& message,
-  const QString& color)
+  const QString&robotPrefix,
+  const QString&message,
+  const QString&color)
 {
-  for (auto& ri : robotInterfaces_) {
+  for (auto&ri : robotInterfaces_) {
     if (ri.prefix == robotPrefix.toStdString()) {
       ri.messageLabel->setText(message);
       if (!color.isEmpty()) {

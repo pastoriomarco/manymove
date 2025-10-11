@@ -48,7 +48,7 @@ public:
 using GripperCommand = control_msgs::action::GripperCommand;
 using GoalHandleGripperCommand = rclcpp_action::ClientGoalHandle<GripperCommand>;
 
-GripperCommandAction(const std::string& name, const BT::NodeConfiguration& config);
+GripperCommandAction(const std::string&name, const BT::NodeConfiguration&config);
 
 static BT::PortsList providedPorts()
 {
@@ -65,7 +65,7 @@ void onHalted() override;
 
 private:
 void goalResponseCallback(std::shared_ptr<GoalHandleGripperCommand> goal_handle);
-void resultCallback(const GoalHandleGripperCommand::WrappedResult& result);
+void resultCallback(const GoalHandleGripperCommand::WrappedResult&result);
 void feedbackCallback(std::shared_ptr<GoalHandleGripperCommand>,
                       const std::shared_ptr<const GripperCommand::Feedback> feedback);
 
@@ -88,7 +88,7 @@ public:
 using FollowJointTrajectory = control_msgs::action::FollowJointTrajectory;
 using GoalHandleFollowJointTrajectory = rclcpp_action::ClientGoalHandle<FollowJointTrajectory>;
 
-GripperTrajAction(const std::string& name, const BT::NodeConfiguration& config);
+GripperTrajAction(const std::string&name, const BT::NodeConfiguration&config);
 
 static BT::PortsList providedPorts()
 {
@@ -106,7 +106,7 @@ void onHalted() override;
 
 private:
 void goalResponseCallback(std::shared_ptr<GoalHandleFollowJointTrajectory> goal_handle);
-void resultCallback(const GoalHandleFollowJointTrajectory::WrappedResult& result);
+void resultCallback(const GoalHandleFollowJointTrajectory::WrappedResult&result);
 
 rclcpp::Node::SharedPtr node_;
 rclcpp_action::Client<FollowJointTrajectory>::SharedPtr action_client_;
@@ -123,7 +123,7 @@ bool success_;
 class PublishJointStateAction : public BT::SyncActionNode
 {
 public:
-PublishJointStateAction(const std::string& name, const BT::NodeConfiguration& config);
+PublishJointStateAction(const std::string&name, const BT::NodeConfiguration&config);
 
 static BT::PortsList providedPorts()
 {

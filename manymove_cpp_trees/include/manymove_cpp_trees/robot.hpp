@@ -64,15 +64,15 @@ struct RobotParams
  * @return A RobotParams struct populated from the parameter server or the defaults.
  */
 inline RobotParams defineRobotParams(
-  const rclcpp::Node::SharedPtr& node_ptr,
+  const rclcpp::Node::SharedPtr&node_ptr,
   BT::Blackboard::Ptr blackboard,
-  std::vector<manymove_cpp_trees::BlackboardEntry>& keys,
-  const std::string& ID = "",
-  const std::string& model = "",
-  const std::string& prefix = "",
-  const std::string& tcp_frame = "",
-  const std::string& gripper_action_server = "",
-  const std::vector<std::string>& contact_links = {},
+  std::vector<manymove_cpp_trees::BlackboardEntry>&keys,
+  const std::string&ID = "",
+  const std::string&model = "",
+  const std::string&prefix = "",
+  const std::string&tcp_frame = "",
+  const std::string&gripper_action_server = "",
+  const std::vector<std::string>&contact_links = {},
   bool is_real = false)
 {
   RobotParams rp;

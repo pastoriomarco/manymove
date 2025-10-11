@@ -51,7 +51,7 @@ void handleSigInt(int)
   QCoreApplication::quit();
 }
 
-int main(int argc, char* argv[])
+int main(int argc, char*argv[])
 {
   std::signal(SIGINT, handleSigInt);
   rclcpp::init(argc, argv);
@@ -124,15 +124,15 @@ int main(int argc, char* argv[])
   // Append the application-specific module into the GUI.
   // We assume the HmiGui’s central widget has a QVBoxLayout.
   if (gui.centralWidget()) {
-    QVBoxLayout* mainLayout = qobject_cast<QVBoxLayout*>(gui.centralWidget()->layout());
+    QVBoxLayout*mainLayout = qobject_cast<QVBoxLayout*>(gui.centralWidget()->layout());
     if (mainLayout) {
-      auto* appModule = new DefaultAppModule(&gui);
+      auto*appModule = new DefaultAppModule(&gui);
       mainLayout->addWidget(appModule);
 
       // Connect the AppModule signal to a handler that calls the update_blackboard service.
       QObject::connect(appModule, &AppModule::keyUpdateRequested,
-                       [service_node](const QString& key, const QString& value_type,
-                                      const QString& value)
+                       [service_node](const QString&key, const QString&value_type,
+                                      const QString&value)
       {
 	qDebug() << "AppModule key update:" << key << "=" << value;
 	auto client =
@@ -161,25 +161,25 @@ int main(int argc, char* argv[])
 
   // Create ROS2 workers for each robot module (as before).
   std::vector<std::shared_ptr<Ros2Worker> > workers;
-  for (auto& prefix : robot_prefixes) {
+  for (auto&prefix : robot_prefixes) {
     std::string node_name = prefix + "hmi_worker";
     auto worker = std::make_shared<Ros2Worker>(node_name, &gui, prefix);
     workers.push_back(worker);
   }
-  for (auto& worker : workers) {
-    QObject::connect(&gui, &HmiGui::startExecutionRequested, [worker](const std::string& p)
+  for (auto&worker : workers) {
+    QObject::connect(&gui, &HmiGui::startExecutionRequested, [worker](const std::string&p)
     {
       if (worker->getRobotPrefix() == p) {
 	worker->callStartExecution();
       }
     });
-    QObject::connect(&gui, &HmiGui::stopExecutionRequested, [worker](const std::string& p)
+    QObject::connect(&gui, &HmiGui::stopExecutionRequested, [worker](const std::string&p)
     {
       if (worker->getRobotPrefix() == p) {
 	worker->callStopExecution();
       }
     });
-    QObject::connect(&gui, &HmiGui::resetProgramRequested, [worker](const std::string& p)
+    QObject::connect(&gui, &HmiGui::resetProgramRequested, [worker](const std::string&p)
     {
       if (worker->getRobotPrefix() == p) {
 	worker->callResetProgram();
@@ -189,7 +189,7 @@ int main(int argc, char* argv[])
 
   // Spin each worker in its own thread.
   std::vector<std::thread> worker_threads;
-  for (auto& w : workers) {
+  for (auto&w : workers) {
     worker_threads.emplace_back([w]()
     {
       rclcpp::spin(w);
@@ -198,7 +198,7 @@ int main(int argc, char* argv[])
 
   int ret = app.exec();
   rclcpp::shutdown();
-  for (auto& th : worker_threads) {
+  for (auto&th : worker_threads) {
     if (th.joinable()) {
       th.join();
     }

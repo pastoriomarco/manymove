@@ -64,7 +64,7 @@ public:
 using MoveManipulator = manymove_msgs::action::MoveManipulator;
 using GoalHandleMoveManipulator = rclcpp_action::ClientGoalHandle<MoveManipulator>;
 
-MoveManipulatorAction(const std::string& name, const BT::NodeConfiguration& config);
+MoveManipulatorAction(const std::string&name, const BT::NodeConfiguration&config);
 
 static BT::PortsList providedPorts()
 {
@@ -91,7 +91,7 @@ private:
 void goalResponseCallback(std::shared_ptr<GoalHandleMoveManipulator> goal_handle);
 void feedbackCallback(std::shared_ptr<GoalHandleMoveManipulator>,
                       const std::shared_ptr<const MoveManipulator::Feedback> feedback);
-void resultCallback(const GoalHandleMoveManipulator::WrappedResult& result);
+void resultCallback(const GoalHandleMoveManipulator::WrappedResult&result);
 
 int max_tries_;
 int current_try_;
@@ -122,7 +122,7 @@ public:
  * @param name The name of the BT node.
  * @param config The BT NodeConfiguration (ports, blackboard, etc.).
  */
-ResetTrajectories(const std::string& name, const BT::NodeConfiguration& config);
+ResetTrajectories(const std::string&name, const BT::NodeConfiguration&config);
 
 /**
  * @brief Define the required/optional ports for this node.

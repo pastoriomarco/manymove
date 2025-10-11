@@ -37,8 +37,8 @@ class MoveItCppActionServerNode : public rclcpp::Node
 {
 public:
 static std::shared_ptr<MoveItCppActionServerNode> create(
-  const std::shared_ptr<moveit_cpp::MoveItCpp>& moveit_cpp,
-  const rclcpp::NodeOptions& options = rclcpp::NodeOptions())
+  const std::shared_ptr<moveit_cpp::MoveItCpp>&moveit_cpp,
+  const rclcpp::NodeOptions&options = rclcpp::NodeOptions())
 {
   auto node =
     std::shared_ptr<MoveItCppActionServerNode>(new MoveItCppActionServerNode(moveit_cpp,
@@ -49,8 +49,8 @@ static std::shared_ptr<MoveItCppActionServerNode> create(
 
 private:
 MoveItCppActionServerNode(
-  const std::shared_ptr<moveit_cpp::MoveItCpp>& moveit_cpp,
-  const rclcpp::NodeOptions& options)
+  const std::shared_ptr<moveit_cpp::MoveItCpp>&moveit_cpp,
+  const rclcpp::NodeOptions&options)
   : Node("moveitcpp_action_server_node", options),
   moveit_cpp_(moveit_cpp)
 {
@@ -109,7 +109,7 @@ std::shared_ptr<moveit_cpp::MoveItCpp> moveit_cpp_;
 std::vector<std::shared_ptr<ManipulatorActionServer> > action_servers_;
 };
 
-int main(int argc, char** argv)
+int main(int argc, char**argv)
 {
   rclcpp::init(argc, argv);
   rclcpp::NodeOptions node_opts;

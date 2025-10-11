@@ -93,12 +93,12 @@ struct ObjectAction
  * @return Configured ObjectAction.
  */
 inline ObjectAction createAddObject(
-  const std::string& object_id_key_st,
-  const std::string& object_shape_key,
-  const std::string& dimensions_key,
-  const std::string& pose_key,
-  const std::string& scale_key,
-  const std::string& mesh_file_key)
+  const std::string&object_id_key_st,
+  const std::string&object_shape_key,
+  const std::string&dimensions_key,
+  const std::string&pose_key,
+  const std::string&scale_key,
+  const std::string&mesh_file_key)
 {
   ObjectAction action;
   action.type = ObjectActionType::ADD;
@@ -118,9 +118,9 @@ inline ObjectAction createAddObject(
  * @return Configured ObjectAction.
  */
 inline ObjectAction createAttachObject(
-  const std::string& object_id_key_st,
-  const std::string& link_name_key,
-  const std::string& touch_links_key)
+  const std::string&object_id_key_st,
+  const std::string&link_name_key,
+  const std::string&touch_links_key)
 {
   ObjectAction action;
   action.type = ObjectActionType::ATTACH;
@@ -137,8 +137,8 @@ inline ObjectAction createAttachObject(
  * @return Configured ObjectAction.
  */
 inline ObjectAction createDetachObject(
-  const std::string& object_id_key_st,
-  const std::string& link_name_key)
+  const std::string&object_id_key_st,
+  const std::string&link_name_key)
 {
   ObjectAction action;
   action.type = ObjectActionType::DETACH;
@@ -152,7 +152,7 @@ inline ObjectAction createDetachObject(
  * @param object_id_key_st Unique identifier for the object.
  * @return Configured ObjectAction.
  */
-inline ObjectAction createCheckObjectExists(const std::string& object_id_key_st)
+inline ObjectAction createCheckObjectExists(const std::string&object_id_key_st)
 {
   ObjectAction action;
   action.type = ObjectActionType::CHECK;
@@ -165,7 +165,7 @@ inline ObjectAction createCheckObjectExists(const std::string& object_id_key_st)
  * @param object_id_key_st Unique identifier for the object.
  * @return Configured ObjectAction.
  */
-inline ObjectAction createRemoveObject(const std::string& object_id_key_st)
+inline ObjectAction createRemoveObject(const std::string&object_id_key_st)
 {
   ObjectAction action;
   action.type = ObjectActionType::REMOVE;
@@ -182,11 +182,11 @@ inline ObjectAction createRemoveObject(const std::string& object_id_key_st)
  * @return Configured ObjectAction.
  */
 inline ObjectAction createGetObjectPose(
-  const std::string& object_id_key_st,
-  const std::string& pose_key,
-  const std::string& link_name_key,
-  const std::string& pre_xyz_rpy_key,
-  const std::string& post_xyz_rpy_key)
+  const std::string&object_id_key_st,
+  const std::string&pose_key,
+  const std::string&link_name_key,
+  const std::string&pre_xyz_rpy_key,
+  const std::string&post_xyz_rpy_key)
 {
   ObjectAction action;
   action.type = ObjectActionType::GET_POSE;

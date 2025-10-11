@@ -37,8 +37,8 @@
 using namespace std::chrono_literals;
 
 Ros2Worker::Ros2Worker(
-  const std::string& node_name, HmiGui* gui,
-  const std::string& robot_prefix)
+  const std::string&node_name, HmiGui*gui,
+  const std::string&robot_prefix)
   : Node(node_name), gui_(gui), robot_prefix_(robot_prefix)
 {
   RCLCPP_INFO_STREAM(this->get_logger(), "Ros2Worker node started with prefix: " << robot_prefix_);
@@ -85,14 +85,14 @@ void Ros2Worker::statusCallback(const std_msgs::msg::String::SharedPtr msg)
                             Q_ARG(bool, collision_detected));
 
   /* ---------- HMI keys ----------------------------------------- */
-  AppModule* appModule = gui_->findChild<AppModule*>();
+  AppModule*appModule = gui_->findChild<AppModule*>();
   if (!appModule) {
     return;
   }
 
-  const auto& knownKeys = appModule->getKnownKeys();
+  const auto&knownKeys = appModule->getKnownKeys();
 
-  auto stripQuotes = [](std::string& s)
+  auto stripQuotes = [](std::string&s)
 		     {
 		       if (!s.empty() && s.front() == '"') {
 			 s.erase(0, 1);
@@ -102,7 +102,7 @@ void Ros2Worker::statusCallback(const std_msgs::msg::String::SharedPtr msg)
 		       }
 		     };
 
-  for (const auto& bk : knownKeys) {
+  for (const auto&bk : knownKeys) {
     /* keys in the JSON are *not* prefixed – keep original pattern */
     const std::string pattern = "\"" + bk.key.toStdString() + "\":";
     size_t pos = data.find(pattern);
@@ -204,7 +204,7 @@ void Ros2Worker::statusCallback(const std_msgs::msg::String::SharedPtr msg)
   }
 
   /* ---------- per-robot message -------------------------------- */
-  auto findString = [&](const std::string& key) -> std::string
+  auto findString = [&](const std::string&key) -> std::string
 		    {
 		      std::string pattern = "\"" + key + "\":";
 		      size_t pos = data.find(pattern);

@@ -54,7 +54,7 @@ class HMIServiceNode : public rclcpp::Node
 {
 public:
 // Constructor: pass the complete vector of keys.
-explicit HMIServiceNode(const std::string& node_name,
+explicit HMIServiceNode(const std::string&node_name,
                         BT::Blackboard::Ptr blackboard,
                         std::vector<BlackboardEntry> keys = {});
 
@@ -76,17 +76,17 @@ void handleUpdateBlackboard(
   const std::shared_ptr<manymove_msgs::srv::SetBlackboardValues::Request> request,
   std::shared_ptr<manymove_msgs::srv::SetBlackboardValues::Response> response);
 
-std::string serializePoseRPY(const geometry_msgs::msg::Pose& pose);
+std::string serializePoseRPY(const geometry_msgs::msg::Pose&pose);
 
 // Timer callback.
 void publishBlackboardStatus();
 
 // Minimal JSON parse for "double_array" (e.g. "[0.01, 0.01, 0.25]").
-std::vector<double> parseJsonDoubleArray(const std::string& json_str);
+std::vector<double> parseJsonDoubleArray(const std::string&json_str);
 
 // Minimal JSON parse for pose (e.g.
 // {"x":0.1,"y":0.2,"z":0.3,"roll":1.57,"pitch":0.0,"yaw":0.0}).
-geometry_msgs::msg::Pose parseJsonPose(const std::string& json_str);
+geometry_msgs::msg::Pose parseJsonPose(const std::string&json_str);
 };
 
 } // namespace manymove_cpp_trees

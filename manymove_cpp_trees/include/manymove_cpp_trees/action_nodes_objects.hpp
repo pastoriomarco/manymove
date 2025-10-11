@@ -74,7 +74,7 @@ using GoalHandleAddCollisionObject = rclcpp_action::ClientGoalHandle<AddCollisio
  * @param name The name of this BT node.
  * @param config The BT NodeConfiguration (ports, blackboard, etc.).
  */
-AddCollisionObjectAction(const std::string& name, const BT::NodeConfiguration& config);
+AddCollisionObjectAction(const std::string&name, const BT::NodeConfiguration&config);
 
 /**
  * @brief Define the required ports for this node.
@@ -112,7 +112,7 @@ void onHalted() override;
 private:
 // Callbacks for action client
 void goalResponseCallback(std::shared_ptr<GoalHandleAddCollisionObject> goal_handle);
-void resultCallback(const GoalHandleAddCollisionObject::WrappedResult& result);
+void resultCallback(const GoalHandleAddCollisionObject::WrappedResult&result);
 
 // ROS2 members
 rclcpp::Node::SharedPtr node_;
@@ -142,7 +142,7 @@ using GoalHandleRemoveCollisionObject = rclcpp_action::ClientGoalHandle<RemoveCo
  * @param name The name of this BT node.
  * @param config The BT NodeConfiguration (ports, blackboard, etc.).
  */
-RemoveCollisionObjectAction(const std::string& name, const BT::NodeConfiguration& config);
+RemoveCollisionObjectAction(const std::string&name, const BT::NodeConfiguration&config);
 
 /**
  * @brief Define the required ports for this node.
@@ -175,7 +175,7 @@ void onHalted() override;
 private:
 // Callbacks for action client
 void goalResponseCallback(std::shared_ptr<GoalHandleRemoveCollisionObject> goal_handle);
-void resultCallback(const GoalHandleRemoveCollisionObject::WrappedResult& result);
+void resultCallback(const GoalHandleRemoveCollisionObject::WrappedResult&result);
 
 // ROS2 members
 rclcpp::Node::SharedPtr node_;
@@ -205,7 +205,7 @@ using GoalHandleAttachDetachObject = rclcpp_action::ClientGoalHandle<AttachDetac
  * @param name The name of this BT node.
  * @param config The BT NodeConfiguration (ports, blackboard, etc.).
  */
-AttachDetachObjectAction(const std::string& name, const BT::NodeConfiguration& config);
+AttachDetachObjectAction(const std::string&name, const BT::NodeConfiguration&config);
 
 /**
  * @brief Define the required ports for this node.
@@ -243,7 +243,7 @@ void onHalted() override;
 private:
 // Callbacks for action client
 void goalResponseCallback(std::shared_ptr<GoalHandleAttachDetachObject> goal_handle);
-void resultCallback(const GoalHandleAttachDetachObject::WrappedResult& result);
+void resultCallback(const GoalHandleAttachDetachObject::WrappedResult&result);
 
 // ROS2 members
 rclcpp::Node::SharedPtr node_;
@@ -275,7 +275,7 @@ using GoalHandleCheckObjectExists = rclcpp_action::ClientGoalHandle<CheckObjectE
  * @param name The name of this BT node.
  * @param config The BT NodeConfiguration (ports, blackboard, etc.).
  */
-CheckObjectExistsAction(const std::string& name, const BT::NodeConfiguration& config);
+CheckObjectExistsAction(const std::string&name, const BT::NodeConfiguration&config);
 
 /**
  * @brief Define the required ports for this node.
@@ -312,7 +312,7 @@ void onHalted() override;
 private:
 // Callbacks for action client
 void goalResponseCallback(std::shared_ptr<GoalHandleCheckObjectExists> goal_handle);
-void resultCallback(const GoalHandleCheckObjectExists::WrappedResult& result);
+void resultCallback(const GoalHandleCheckObjectExists::WrappedResult&result);
 
 // ROS2 members
 rclcpp::Node::SharedPtr node_;
@@ -342,7 +342,7 @@ using GoalHandleGetObjectPose = rclcpp_action::ClientGoalHandle<GetObjectPose>;
  * @param name The name of this BT node.
  * @param config The BT NodeConfiguration (ports, blackboard, etc.).
  */
-GetObjectPoseAction(const std::string& name, const BT::NodeConfiguration& config);
+GetObjectPoseAction(const std::string&name, const BT::NodeConfiguration&config);
 
 /**
  * @brief Define the required ports for this node.
@@ -382,7 +382,7 @@ void onHalted() override;
 private:
 // Callbacks for action client
 void goalResponseCallback(std::shared_ptr<GoalHandleGetObjectPose> goal_handle);
-void resultCallback(const GoalHandleGetObjectPose::WrappedResult& result);
+void resultCallback(const GoalHandleGetObjectPose::WrappedResult&result);
 
 // ROS2 members
 rclcpp::Node::SharedPtr node_;
@@ -419,7 +419,7 @@ public:
 using CheckObjectExists = manymove_msgs::action::CheckObjectExists;
 using GoalHandleCheckObjectExists = rclcpp_action::ClientGoalHandle<CheckObjectExists>;
 
-WaitForObjectAction(const std::string& name, const BT::NodeConfiguration& config);
+WaitForObjectAction(const std::string&name, const BT::NodeConfiguration&config);
 
 static BT::PortsList providedPorts()
 {
@@ -450,7 +450,7 @@ void sendCheckRequest();
 
 // Action client callbacks
 void goalResponseCallback(std::shared_ptr<GoalHandleCheckObjectExists> goal_handle);
-void resultCallback(const GoalHandleCheckObjectExists::WrappedResult& result);
+void resultCallback(const GoalHandleCheckObjectExists::WrappedResult&result);
 
 private:
 rclcpp::Node::SharedPtr node_;

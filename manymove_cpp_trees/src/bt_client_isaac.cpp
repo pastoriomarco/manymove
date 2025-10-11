@@ -55,7 +55,7 @@
 using geometry_msgs::msg::Pose;
 using namespace manymove_cpp_trees;
 
-int main(int argc, char** argv)
+int main(int argc, char**argv)
 {
   // ----------------------------------------------------------------------------
   // 0. Preparing the node, blackboard and robot params
@@ -205,32 +205,32 @@ int main(int argc, char** argv)
   blackboard->set("approach_drop_target_key", approach_drop_target);
 
   // Adjusting only the scaling factors for default moves
-  auto& max_move = move_configs["max_move"];
+  auto&max_move = move_configs["max_move"];
   max_move.velocity_scaling_factor = 0.7;
   max_move.acceleration_scaling_factor = 0.35;
   max_move.max_cartesian_speed = 0.25;
 
-  auto& mid_move = move_configs["mid_move"];
+  auto&mid_move = move_configs["mid_move"];
   mid_move.velocity_scaling_factor = 0.4;
   mid_move.acceleration_scaling_factor = 0.2;
   mid_move.max_cartesian_speed = 0.25;
 
-  auto& slow_move = move_configs["slow_move"];
+  auto&slow_move = move_configs["slow_move"];
   slow_move.velocity_scaling_factor = 0.2;
   slow_move.acceleration_scaling_factor = 0.1;
   slow_move.max_cartesian_speed = 0.1;
 
-  auto& cartesian_max_move = move_configs["cartesian_max_move"];
+  auto&cartesian_max_move = move_configs["cartesian_max_move"];
   cartesian_max_move.velocity_scaling_factor = 0.8;
   cartesian_max_move.acceleration_scaling_factor = 0.4;
   cartesian_max_move.max_cartesian_speed = 0.45;
 
-  auto& cartesian_mid_move = move_configs["cartesian_mid_move"];
+  auto&cartesian_mid_move = move_configs["cartesian_mid_move"];
   cartesian_mid_move.velocity_scaling_factor = 0.4;
   cartesian_mid_move.acceleration_scaling_factor = 0.2;
   cartesian_mid_move.max_cartesian_speed = 0.25;
 
-  auto& cartesian_slow_move = move_configs["cartesian_slow_move"];
+  auto&cartesian_slow_move = move_configs["cartesian_slow_move"];
   cartesian_slow_move.velocity_scaling_factor = 0.2;
   cartesian_slow_move.acceleration_scaling_factor = 0.1;
   cartesian_slow_move.max_cartesian_speed = 0.1;
@@ -454,7 +454,7 @@ int main(int argc, char** argv)
   BT::Tree tree;
   try {
     tree = factory.createTreeFromText(final_tree_xml, blackboard);
-  } catch (const std::exception& ex) {
+  } catch (const std::exception&ex) {
     RCLCPP_ERROR(node->get_logger(), "Failed to create tree: %s", ex.what());
     return 1;
   }

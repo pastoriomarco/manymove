@@ -63,13 +63,13 @@ struct KeyConfig // how one line of the HMI behaves
   double upper_limit = std::numeric_limits<double>::quiet_NaN();
 
   KeyConfig(
-    const QString& k,
-    const QString& type,
+    const QString&k,
+    const QString&type,
     bool ed,
     bool vis,
     std::function<QString(const QMap<QString, QString>&)> fn = {},
     double scale = 1.0,
-    const QString& u = QString(),
+    const QString&u = QString(),
     bool show_lbl = true,
     int width = 500,
     double lower = std::numeric_limits<double>::quiet_NaN(),
@@ -106,8 +106,8 @@ Q_OBJECT
 
 public:
 ///  Construct from a *list* of KeyConfig. Nothing is hard-coded.
-explicit AppModule(const std::vector<KeyConfig>& key_cfg,
-                   QWidget* parent = nullptr);
+explicit AppModule(const std::vector<KeyConfig>&key_cfg,
+                   QWidget*parent = nullptr);
 ~AppModule() override = default;
 
 ///  Keys understood by this instance – Ros2Worker uses this.
@@ -117,33 +117,33 @@ const std::vector<BlackboardKey>& getKnownKeys() const
 }
 
 public slots:
-void setKeyVisibility(const QString& key, bool visible);
-void updateField(const QString& key,
-                 const QString& newValue = QString());
-void updateGeneralMessage(const QString& message,
-                          const QString& color);
+void setKeyVisibility(const QString&key, bool visible);
+void updateField(const QString&key,
+                 const QString&newValue = QString());
+void updateGeneralMessage(const QString&message,
+                          const QString&color);
 
 signals:
-void keyUpdateRequested(const QString& key,
-                        const QString& value_type,
-                        const QString& value);
+void keyUpdateRequested(const QString&key,
+                        const QString&value_type,
+                        const QString&value);
 
 private slots:
 void onSendClicked();
-void onEditableChanged(const QString& text);
+void onEditableChanged(const QString&text);
 
 private:
 /* helpers ------------------------------------------------------- */
 void setupUI();
 void updateComputedFields();
 void updateSendButtonState();
-bool isFieldValid(const QString& key, const QString& text) const;
-FieldStatus validateField(const QString& key, const QString& text) const;
-QString toDisplay(const QString& key, const QString& val) const;
-QString toInternal(const QString& key, const QString& val) const;
+bool isFieldValid(const QString&key, const QString&text) const;
+FieldStatus validateField(const QString&key, const QString&text) const;
+QString toDisplay(const QString&key, const QString&val) const;
+QString toInternal(const QString&key, const QString&val) const;
 
 /* QWidget override --------------------------------------------- */
-bool eventFilter(QObject* obj, QEvent* event) override;
+bool eventFilter(QObject*obj, QEvent*event) override;
 
 protected:
 /* configuration & runtime state -------------------------------- */
@@ -156,9 +156,9 @@ QMap<QString, QString> currentValues_;
 QMap<QString, QString> userOverrides_;
 QMap<QString, QString> editableValues_;
 
-QPushButton* sendButton_{nullptr};
-QVBoxLayout* layout_{nullptr};
-QLabel* generalMessage_{nullptr};
+QPushButton*sendButton_{nullptr};
+QVBoxLayout*layout_{nullptr};
+QLabel*generalMessage_{nullptr};
 };
 
 #endif /* APP_MODULE_HPP */

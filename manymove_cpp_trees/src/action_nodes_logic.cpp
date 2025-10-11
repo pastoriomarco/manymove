@@ -34,8 +34,8 @@ namespace manymove_cpp_trees
 {
 
 RetryPauseResetNode::RetryPauseResetNode(
-  const std::string& name,
-  const BT::NodeConfiguration& config)
+  const std::string&name,
+  const BT::NodeConfiguration&config)
   : BT::DecoratorNode(name, config)
 {
 }
@@ -131,8 +131,8 @@ void RetryPauseResetNode::halt()
 // ---------------------------------------------------------------
 
 CheckKeyBoolValue::CheckKeyBoolValue(
-  const std::string& name,
-  const BT::NodeConfiguration& config)
+  const std::string&name,
+  const BT::NodeConfiguration&config)
   : BT::ConditionNode(name, config)
 {
   // If you need to confirm the blackboard is present:
@@ -234,8 +234,8 @@ BT::NodeStatus SetKeyBoolValue::tick()
 // WaitForKeyBool
 // ---------------------------------------------------------
 WaitForKeyBool::WaitForKeyBool(
-  const std::string& name,
-  const BT::NodeConfiguration& config)
+  const std::string&name,
+  const BT::NodeConfiguration&config)
   : BT::StatefulActionNode(name, config),
   condition_met_(false)
 {
@@ -378,8 +378,8 @@ constexpr double TF_TIMEOUT_SEC = 0.1;
 }     // 100 ms
 
 GetLinkPoseAction::GetLinkPoseAction(
-  const std::string& name,
-  const BT::NodeConfiguration& cfg)
+  const std::string&name,
+  const BT::NodeConfiguration&cfg)
   : BT::SyncActionNode(name, cfg)
 {
   if (!cfg.blackboard || !cfg.blackboard->get("node", node_)) {
@@ -420,7 +420,7 @@ BT::NodeStatus GetLinkPoseAction::tick()
                                                  link_name,             // source
                                                  tf2::TimePointZero,
                                                  tf2::durationFromSec(TF_TIMEOUT_SEC));
-  } catch (const tf2::TransformException& ex) {
+  } catch (const tf2::TransformException&ex) {
     RCLCPP_ERROR(node_->get_logger(), "[%s] TF error: %s", name().c_str(), ex.what());
     return BT::NodeStatus::FAILURE;
   }
@@ -459,7 +459,7 @@ BT::NodeStatus GetLinkPoseAction::tick()
   }
 
   /* link orientation + translation */
-  const auto& tr = tf_link_to_ref.transform;
+  const auto&tr = tf_link_to_ref.transform;
   tf2::Quaternion q_link(tr.rotation.x, tr.rotation.y, tr.rotation.z, tr.rotation.w);
   combined = tf2::Transform(tf2::Quaternion::getIdentity(),
                             tf2::Vector3(tr.translation.x,
@@ -517,8 +517,8 @@ BT::NodeStatus GetLinkPoseAction::tick()
 // =========================================================================
 
 CheckPoseDistance::CheckPoseDistance(
-  const std::string& name,
-  const BT::NodeConfiguration& cfg)
+  const std::string&name,
+  const BT::NodeConfiguration&cfg)
   : BT::ConditionNode(name, cfg)
 {
   if (!cfg.blackboard) {
@@ -583,8 +583,8 @@ BT::NodeStatus CheckPoseDistance::tick()
 // =========================================================================
 
 CheckPoseBounds::CheckPoseBounds(
-  const std::string& name,
-  const BT::NodeConfiguration& cfg)
+  const std::string&name,
+  const BT::NodeConfiguration&cfg)
   : BT::ConditionNode(name, cfg)
 {
   if (!cfg.blackboard) {

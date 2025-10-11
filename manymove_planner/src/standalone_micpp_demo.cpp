@@ -59,7 +59,7 @@ namespace rvt = rviz_visual_tools;
 // and inside the namespace with the narrowest scope (if there is one)
 static const rclcpp::Logger LOGGER = rclcpp::get_logger("moveit_cpp_tutorial");
 
-int main(int argc, char** argv)
+int main(int argc, char**argv)
 {
   rclcpp::init(argc, argv);
   rclcpp::NodeOptions node_options;
@@ -320,7 +320,7 @@ int main(int argc, char** argv)
       RCLCPP_WARN(LOGGER, "Planned trajectory has no waypoints.");
     }
     else {
-      const moveit::core::RobotState& last_waypoint = plan_solution3.trajectory->getWayPoint(
+      const moveit::core::RobotState&last_waypoint = plan_solution3.trajectory->getWayPoint(
 	num_waypoints - 1);
       Eigen::Isometry3d ee_transform = last_waypoint.getGlobalLinkTransform("link_tcp");
 
@@ -522,7 +522,7 @@ int main(int argc, char** argv)
     // Build a RobotTrajectory from the computed states
     robot_trajectory::RobotTrajectory trajectory(moveit_cpp_ptr->getRobotModel(), PLANNING_GROUP);
     double dt = 0.1;             // time interval between waypoints
-    for (const auto& rs : trajectory_states) {
+    for (const auto&rs : trajectory_states) {
       trajectory.addSuffixWayPoint(*rs, dt);
     }
 

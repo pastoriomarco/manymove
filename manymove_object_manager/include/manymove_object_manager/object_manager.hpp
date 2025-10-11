@@ -104,7 +104,7 @@ private:
  * @param goal The goal details to add a collision object.
  * @return A response indicating acceptance or rejection.
  */
-rclcpp_action::GoalResponse handleAddGoal(const rclcpp_action::GoalUUID& uuid,
+rclcpp_action::GoalResponse handleAddGoal(const rclcpp_action::GoalUUID&uuid,
                                           std::shared_ptr<const AddCollisionObject::Goal> goal);
 
 /**
@@ -128,7 +128,7 @@ void handleAddExecute(const std::shared_ptr<AddGoalHandle> goal_handle);
  * @param goal The goal details to remove a collision object.
  * @return A response indicating acceptance or rejection.
  */
-rclcpp_action::GoalResponse handleRemoveGoal(const rclcpp_action::GoalUUID& uuid,
+rclcpp_action::GoalResponse handleRemoveGoal(const rclcpp_action::GoalUUID&uuid,
                                              std::shared_ptr<const RemoveCollisionObject::Goal> goal);
 
 /**
@@ -153,7 +153,7 @@ void handleRemoveExecute(const std::shared_ptr<RemoveGoalHandle> goal_handle);
  * @param goal The goal details to check object existence.
  * @return A response indicating acceptance or rejection.
  */
-rclcpp_action::GoalResponse handleCheckExistGoal(const rclcpp_action::GoalUUID& uuid,
+rclcpp_action::GoalResponse handleCheckExistGoal(const rclcpp_action::GoalUUID&uuid,
                                                  std::shared_ptr<const CheckObjectExists::Goal> goal);
 
 /**
@@ -178,7 +178,7 @@ void handleCheckExistExecute(const std::shared_ptr<CheckGoalHandle> goal_handle)
  * @param goal The goal details to attach or detach a collision object.
  * @return A response indicating acceptance or rejection.
  */
-rclcpp_action::GoalResponse handleAttachDetachGoal(const rclcpp_action::GoalUUID& uuid,
+rclcpp_action::GoalResponse handleAttachDetachGoal(const rclcpp_action::GoalUUID&uuid,
                                                    std::shared_ptr<const AttachDetachObject::Goal> goal);
 
 /**
@@ -203,7 +203,7 @@ void handleAttachDetachExecute(const std::shared_ptr<AttachDetachGoalHandle> goa
  * @param goal The goal details to retrieve and optionally align the object pose.
  * @return A response indicating acceptance or rejection.
  */
-rclcpp_action::GoalResponse handleGetObjectPoseGoal(const rclcpp_action::GoalUUID& uuid,
+rclcpp_action::GoalResponse handleGetObjectPoseGoal(const rclcpp_action::GoalUUID&uuid,
                                                     std::shared_ptr<const GetObjectPose::Goal> goal);
 
 /**
@@ -235,11 +235,11 @@ void handleGetObjectPoseExecute(const std::shared_ptr<GetObjectPoseGoalHandle> g
  * @return A fully populated CollisionObject message.
  */
 moveit_msgs::msg::CollisionObject
-createCollisionObject(const std::string& id,
-                      const std::string& shape,
-                      const std::vector<double>& dimensions,
-                      const geometry_msgs::msg::Pose& pose,
-                      const std::string& mesh_file,
+createCollisionObject(const std::string&id,
+                      const std::string&shape,
+                      const std::vector<double>&dimensions,
+                      const geometry_msgs::msg::Pose&pose,
+                      const std::string&mesh_file,
                       const std::vector<double> scale_mesh = {1.0, 1.0, 1.0}) const;
 
 /**
@@ -254,15 +254,15 @@ void printPlanningScene();
  * @param mesh_file Optional mesh file path if shape is 'mesh'.
  * @return True if valid, false otherwise.
  */
-bool validateShapeAndDimensions(const std::string& shape, const std::vector<double>& dimensions,
-                                const std::optional<std::string>& mesh_file) const;
+bool validateShapeAndDimensions(const std::string&shape, const std::vector<double>&dimensions,
+                                const std::optional<std::string>&mesh_file) const;
 
 /**
  * @brief Check if an object exists in the planning scene.
  * @param id The identifier of the object to look for.
  * @return True if the object is found, false otherwise.
  */
-bool objectExists(const std::string& id);
+bool objectExists(const std::string&id);
 
 /**
  * @brief Check if an attached object exists in the planning scene.
@@ -270,7 +270,7 @@ bool objectExists(const std::string& id);
  * @param link_name The link where the object should be attached (empty for any link).
  * @return True if the object is found, false otherwise.
  */
-bool attachedObjectExists(const std::string& id, const std::string& link_name = "");
+bool attachedObjectExists(const std::string&id, const std::string&link_name = "");
 
 /**
  * @brief Get the data of an object from the planning scene for further use.
@@ -278,14 +278,14 @@ bool attachedObjectExists(const std::string& id, const std::string& link_name = 
  * @return A std::optional containing the CollisionObject if found, std::nullopt otherwise.
  */
 std::optional<moveit_msgs::msg::CollisionObject> getObjectDataById(
-  const std::string& object_id);
+  const std::string&object_id);
 
 /**
  * @brief Get the link that an object is attached to, if any.
  * @param object_id The identifier of the object for which to get the link.
  * @return A std::optional containing the link name if found, std::nullopt otherwise.
  */
-std::optional<std::string> getAttachedObjectLinkById(const std::string& object_id);
+std::optional<std::string> getAttachedObjectLinkById(const std::string&object_id);
 
 // ------------------
 // Member variables

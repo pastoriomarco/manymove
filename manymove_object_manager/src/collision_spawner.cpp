@@ -144,7 +144,7 @@ CollisionSpawner()
 private:
 rclcpp::TimerBase::SharedPtr shutdown_timer_;
 
-bool loadObjectsFromYAML(const std::string& file_path)
+bool loadObjectsFromYAML(const std::string&file_path)
 {
   try {
     YAML::Node config = YAML::LoadFile(file_path);
@@ -153,7 +153,7 @@ bool loadObjectsFromYAML(const std::string& file_path)
       return false;
     }
 
-    for (const auto& obj_node : config["objects"]) {
+    for (const auto&obj_node : config["objects"]) {
       ObjectSpec obj_spec;
       if (!obj_node["name"] || !obj_node["type"]) {
 	RCLCPP_WARN(this->get_logger(), "Object spec missing 'name' or 'type'. Skipping.");
@@ -215,11 +215,11 @@ bool loadObjectsFromYAML(const std::string& file_path)
       objects_to_spawn_.push_back(obj_spec);
     }
     return true;
-  } catch (const YAML::Exception& e) {
+  } catch (const YAML::Exception&e) {
     RCLCPP_ERROR(this->get_logger(), "YAML Exception: %s", e.what());
     return false;
   }
-  catch (const std::exception& e) {
+  catch (const std::exception&e) {
     RCLCPP_ERROR(this->get_logger(), "Exception while loading YAML file: %s", e.what());
     return false;
   }
@@ -228,7 +228,7 @@ bool loadObjectsFromYAML(const std::string& file_path)
 void removeExistingSpawnerObjects()
 {
   RCLCPP_INFO(this->get_logger(), "Removing existing spawner objects...");
-  for (const auto& obj : objects_to_spawn_) {
+  for (const auto&obj : objects_to_spawn_) {
     auto object_id = obj.name + "_spawner";
 
     // 1. Check if it exists
@@ -244,7 +244,7 @@ void removeExistingSpawnerObjects()
   }
 }
 
-void sendRemoveGoal(const std::string& object_id)
+void sendRemoveGoal(const std::string&object_id)
 {
   auto goal = RemoveCollisionObject::Goal();
   goal.id = object_id;
@@ -304,12 +304,12 @@ void sendRemoveGoal(const std::string& object_id)
 
 void spawnObjects()
 {
-  for (const auto& obj : objects_to_spawn_) {
+  for (const auto&obj : objects_to_spawn_) {
     sendAddGoal(obj);
   }
 }
 
-void sendAddGoal(const ObjectSpec& obj_spec)
+void sendAddGoal(const ObjectSpec&obj_spec)
 {
   auto goal = AddCollisionObject::Goal();
   goal.id = obj_spec.name + "_spawner";
@@ -378,7 +378,7 @@ void sendAddGoal(const ObjectSpec& obj_spec)
 // ----------------------------------------------------------------------------
 // New Utility Function: isObjectPresent
 // ----------------------------------------------------------------------------
-bool isObjectPresent(const std::string& object_id)
+bool isObjectPresent(const std::string&object_id)
 {
   if (!check_object_exists_action_client_->action_server_is_ready()) {
     RCLCPP_WARN(this->get_logger(),
@@ -483,7 +483,7 @@ std::string frame_id_;
 std::string config_file_;
 };
 
-int main(int argc, char** argv)
+int main(int argc, char**argv)
 {
   rclcpp::init(argc, argv);
   auto node = std::make_shared<CollisionSpawner>();

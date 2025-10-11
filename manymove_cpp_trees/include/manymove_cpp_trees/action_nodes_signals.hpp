@@ -68,8 +68,8 @@ public:
 using SetOutput = manymove_msgs::action::SetOutput;
 using GoalHandleSetOutput = rclcpp_action::ClientGoalHandle<SetOutput>;
 
-SetOutputAction(const std::string& name,
-                const BT::NodeConfiguration& config);
+SetOutputAction(const std::string&name,
+                const BT::NodeConfiguration&config);
 
 static BT::PortsList providedPorts()
 {
@@ -90,7 +90,7 @@ void onHalted() override;
 
 private:
 void goalResponseCallback(std::shared_ptr<GoalHandleSetOutput> goal_handle);
-void resultCallback(const GoalHandleSetOutput::WrappedResult& result);
+void resultCallback(const GoalHandleSetOutput::WrappedResult&result);
 
 rclcpp::Node::SharedPtr node_;
 rclcpp_action::Client<SetOutput>::SharedPtr action_client_;
@@ -116,8 +116,8 @@ public:
 using GetInput = manymove_msgs::action::GetInput;
 using GoalHandleGetInput = rclcpp_action::ClientGoalHandle<GetInput>;
 
-GetInputAction(const std::string& name,
-               const BT::NodeConfiguration& config);
+GetInputAction(const std::string&name,
+               const BT::NodeConfiguration&config);
 
 static BT::PortsList providedPorts()
 {
@@ -137,7 +137,7 @@ void onHalted() override;
 
 private:
 void goalResponseCallback(std::shared_ptr<GoalHandleGetInput> goal_handle);
-void resultCallback(const GoalHandleGetInput::WrappedResult& result);
+void resultCallback(const GoalHandleGetInput::WrappedResult&result);
 
 rclcpp::Node::SharedPtr node_;
 rclcpp_action::Client<GetInput>::SharedPtr action_client_;
@@ -163,8 +163,8 @@ public:
 using CheckRobotState = manymove_msgs::action::CheckRobotState;
 using GoalHandleCheckRobotState = rclcpp_action::ClientGoalHandle<CheckRobotState>;
 
-CheckRobotStateAction(const std::string& name,
-                      const BT::NodeConfiguration& config);
+CheckRobotStateAction(const std::string&name,
+                      const BT::NodeConfiguration&config);
 
 static BT::PortsList providedPorts()
 {
@@ -185,7 +185,7 @@ void onHalted() override;
 
 private:
 void goalResponseCallback(std::shared_ptr<GoalHandleCheckRobotState> goal_handle);
-void resultCallback(const GoalHandleCheckRobotState::WrappedResult& result);
+void resultCallback(const GoalHandleCheckRobotState::WrappedResult&result);
 
 rclcpp::Node::SharedPtr node_;
 rclcpp_action::Client<CheckRobotState>::SharedPtr action_client_;
@@ -212,8 +212,8 @@ using GoalHandleUnloadTrajController = rclcpp_action::ClientGoalHandle<UnloadTra
 using LoadTrajController = manymove_msgs::action::LoadTrajController;
 using GoalHandleLoadTrajController = rclcpp_action::ClientGoalHandle<LoadTrajController>;
 
-ResetRobotStateAction(const std::string& name,
-                      const BT::NodeConfiguration& config);
+ResetRobotStateAction(const std::string&name,
+                      const BT::NodeConfiguration&config);
 
 static BT::PortsList providedPorts()
 {
@@ -232,14 +232,14 @@ void onHalted() override;
 
 private:
 void goalResponseCallback(std::shared_ptr<GoalHandleResetRobotState> goal_handle);
-void resultCallback(const GoalHandleResetRobotState::WrappedResult& result);
+void resultCallback(const GoalHandleResetRobotState::WrappedResult&result);
 
 void goalResponseCallbackUnloadTraj(
   std::shared_ptr<GoalHandleUnloadTrajController> goal_handle);
-void resultCallbackUnloadTraj(const GoalHandleUnloadTrajController::WrappedResult& result);
+void resultCallbackUnloadTraj(const GoalHandleUnloadTrajController::WrappedResult&result);
 
 void goalResponseCallbackLoadTraj(std::shared_ptr<GoalHandleLoadTrajController> goal_handle);
-void resultCallbackLoadTraj(const GoalHandleLoadTrajController::WrappedResult& result);
+void resultCallbackLoadTraj(const GoalHandleLoadTrajController::WrappedResult&result);
 
 rclcpp::Node::SharedPtr node_;
 rclcpp_action::Client<ResetRobotState>::SharedPtr action_client_;
@@ -268,8 +268,8 @@ ResetRobotState::Result action_result_;
 class WaitForInputAction : public BT::StatefulActionNode
 {
 public:
-WaitForInputAction(const std::string& name,
-                   const BT::NodeConfiguration& config);
+WaitForInputAction(const std::string&name,
+                   const BT::NodeConfiguration&config);
 
 // ...
 static BT::PortsList providedPorts()
@@ -298,7 +298,7 @@ void sendCheckRequest();
 void goalResponseCallback(
   std::shared_ptr<rclcpp_action::ClientGoalHandle<manymove_msgs::action::GetInput> > goal_handle);
 void resultCallback(
-  const rclcpp_action::ClientGoalHandle<manymove_msgs::action::GetInput>::WrappedResult& result);
+  const rclcpp_action::ClientGoalHandle<manymove_msgs::action::GetInput>::WrappedResult&result);
 
 using GetInput = manymove_msgs::action::GetInput;
 

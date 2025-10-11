@@ -59,8 +59,8 @@ namespace manymove_cpp_trees
 // GetEntityPoseNode
 // ======================================================================
 GetEntityPoseNode::GetEntityPoseNode(
-  const std::string& name,
-  const BT::NodeConfiguration& config)
+  const std::string&name,
+  const BT::NodeConfiguration&config)
   : BT::StatefulActionNode(name, config)
 {
   if (!config.blackboard || !config.blackboard->get("node", node_) || !node_) {
@@ -161,8 +161,8 @@ void GetEntityPoseNode::onHalted()
 // SetEntityPoseNode
 // ======================================================================
 SetEntityPoseNode::SetEntityPoseNode(
-  const std::string& name,
-  const BT::NodeConfiguration& config)
+  const std::string&name,
+  const BT::NodeConfiguration&config)
   : BT::StatefulActionNode(name, config)
 {
   if (!config.blackboard || !config.blackboard->get("node", node_) || !node_) {
@@ -265,13 +265,13 @@ namespace
 constexpr double kEpsilon = 1e-6;
 
 inline tf2::Vector3 projectOntoPlane(
-  const tf2::Vector3& vector,
-  const tf2::Vector3& normal)
+  const tf2::Vector3&vector,
+  const tf2::Vector3&normal)
 {
   return vector - (vector.dot(normal)) * normal;
 }
 
-inline tf2::Vector3 pickPerpendicularFallback(const tf2::Vector3& axis)
+inline tf2::Vector3 pickPerpendicularFallback(const tf2::Vector3&axis)
 {
   const tf2::Vector3 world_y(0.0, 1.0, 0.0);
   tf2::Vector3 candidate = projectOntoPlane(world_y, axis);
@@ -300,7 +300,7 @@ inline tf2::Vector3 pickPerpendicularFallback(const tf2::Vector3& axis)
 }     // namespace
 
 geometry_msgs::msg::Pose align_foundationpose_orientation(
-  const geometry_msgs::msg::Pose& input_pose,
+  const geometry_msgs::msg::Pose&input_pose,
   bool force_z_vertical)
 {
   tf2::Quaternion source_q(input_pose.orientation.x,
@@ -402,8 +402,8 @@ geometry_msgs::msg::Pose align_foundationpose_orientation(
 }
 
 FoundationPoseAlignmentNode::FoundationPoseAlignmentNode(
-  const std::string& name,
-  const BT::NodeConfiguration& config)
+  const std::string&name,
+  const BT::NodeConfiguration&config)
   : BT::StatefulActionNode(name, config)
 {
   if (!config.blackboard || !config.blackboard->get("node", node_) || !node_) {
@@ -414,7 +414,7 @@ FoundationPoseAlignmentNode::FoundationPoseAlignmentNode(
   tf_listener_ = std::make_unique<tf2_ros::TransformListener>(*tf_buffer_);
 }
 
-void FoundationPoseAlignmentNode::ensureSubscription(const std::string& topic)
+void FoundationPoseAlignmentNode::ensureSubscription(const std::string&topic)
 {
   if (subscription_ && topic == current_topic_ && subscription_->get_topic_name() == topic) {
     return;
@@ -439,14 +439,14 @@ void FoundationPoseAlignmentNode::detectionCallback(const DetectionArray::Shared
 }
 
 std::optional<FoundationPoseAlignmentNode::DetectionSelection>
-FoundationPoseAlignmentNode::pickDetection(const DetectionArray& array)
+FoundationPoseAlignmentNode::pickDetection(const DetectionArray&array)
 {
   std::optional<DetectionSelection> best_selection;
   double best_score = -1.0;
 
-  for (const auto& detection : array.detections) {
-    for (const auto& result : detection.results) {
-      const auto& hypothesis = result.hypothesis;
+  for (const auto&detection : array.detections) {
+    for (const auto&result : detection.results) {
+      const auto&hypothesis = result.hypothesis;
       if (!target_id_.empty() && hypothesis.class_id != target_id_) {
 	continue;
       }
@@ -596,7 +596,7 @@ BT::NodeStatus FoundationPoseAlignmentNode::onRunning()
     pose_in_alignment = tf_buffer_->transform(detection_pose,
                                               alignment_frame,
                                               tf2::durationFromSec(transform_timeout_));
-  } catch (const tf2::TransformException& ex) {
+  } catch (const tf2::TransformException&ex) {
     RCLCPP_WARN_THROTTLE(node_->get_logger(), *clock, 2000,
                          "[%s] Failed to transform pose from '%s' to '%s': %s",
                          name().c_str(), detection_pose.header.frame_id.c_str(),
@@ -634,7 +634,7 @@ BT::NodeStatus FoundationPoseAlignmentNode::onRunning()
       transformed_pose = tf_buffer_->transform(world_pose_for_transform, planning_frame_,
                                                tf2::durationFromSec(transform_timeout_));
       corrected_pose = transformed_pose.pose;
-    } catch (const tf2::TransformException& ex) {
+    } catch (const tf2::TransformException&ex) {
       RCLCPP_WARN_THROTTLE(node_->get_logger(), *clock, 2000,
                            "[%s] Failed to transform pose from '%s' to '%s': %s",
                            name().c_str(), alignment_frame.c_str(), planning_frame_.c_str(),
@@ -659,8 +659,8 @@ BT::NodeStatus FoundationPoseAlignmentNode::onRunning()
   }
 
   // Helper to apply a local XYZRPY transform (6 elements) to a pose: T_out = T_pose * T_delta
-  auto apply_local_xyzrpy = [](const geometry_msgs::msg::Pose& base,
-                               const std::vector<double>& xyzrpy) -> geometry_msgs::msg::Pose
+  auto apply_local_xyzrpy = [](const geometry_msgs::msg::Pose&base,
+                               const std::vector<double>&xyzrpy) -> geometry_msgs::msg::Pose
 			    {
 			      std::vector<double> v(6, 0.0);
 			      for (size_t i = 0; i < std::min<size_t>(6, xyzrpy.size()); ++i) {

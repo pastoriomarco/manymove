@@ -31,7 +31,7 @@
 #include "manymove_planner/moveit_cpp_planner.hpp"
 #include "manymove_planner/action_server.hpp"
 
-int main(int argc, char** argv)
+int main(int argc, char**argv)
 {
   rclcpp::init(argc, argv);
 

@@ -54,7 +54,7 @@
 using geometry_msgs::msg::Pose;
 using namespace manymove_cpp_trees;
 
-int main(int argc, char** argv)
+int main(int argc, char**argv)
 {
   // ----------------------------------------------------------------------------
   // 0. Preparing the node, blackboard and robot params
@@ -354,7 +354,7 @@ int main(int argc, char** argv)
   BT::Tree tree;
   try {
     tree = factory.createTreeFromText(final_tree_xml, blackboard);
-  } catch (const std::exception& ex) {
+  } catch (const std::exception&ex) {
     RCLCPP_ERROR(node->get_logger(), "Failed to create tree: %s", ex.what());
     return 1;
   }

@@ -86,8 +86,8 @@ using GetEntityState = simulation_interfaces::srv::GetEntityState;
 using GetClient = rclcpp::Client<GetEntityState>;
 using GetFuture = GetClient::SharedFuture;
 
-explicit GetEntityPoseNode(const std::string& name,
-                           const BT::NodeConfiguration& config);
+explicit GetEntityPoseNode(const std::string&name,
+                           const BT::NodeConfiguration&config);
 
 static BT::PortsList providedPorts()
 {
@@ -152,8 +152,8 @@ using SetEntityState = simulation_interfaces::srv::SetEntityState;
 using SetClient = rclcpp::Client<SetEntityState>;
 using SetFuture = SetClient::SharedFuture;
 
-explicit SetEntityPoseNode(const std::string& name,
-                           const BT::NodeConfiguration& config);
+explicit SetEntityPoseNode(const std::string&name,
+                           const BT::NodeConfiguration&config);
 
 static BT::PortsList providedPorts()
 {
@@ -209,7 +209,7 @@ SetFuture future_;
  * @return Pose with adjusted orientation quaternion.
  */
 geometry_msgs::msg::Pose align_foundationpose_orientation(
-  const geometry_msgs::msg::Pose& input_pose,
+  const geometry_msgs::msg::Pose&input_pose,
   bool force_z_vertical = false);
 
 /**
@@ -267,8 +267,8 @@ class FoundationPoseAlignmentNode : public BT::StatefulActionNode
 public:
 using DetectionArray = vision_msgs::msg::Detection3DArray;
 
-explicit FoundationPoseAlignmentNode(const std::string& name,
-                                     const BT::NodeConfiguration& config);
+explicit FoundationPoseAlignmentNode(const std::string&name,
+                                     const BT::NodeConfiguration&config);
 
 static BT::PortsList providedPorts()
 {
@@ -325,9 +325,9 @@ struct DetectionSelection
   vision_msgs::msg::ObjectHypothesisWithPose result;
 };
 
-void ensureSubscription(const std::string& topic);
+void ensureSubscription(const std::string&topic);
 void detectionCallback(const DetectionArray::SharedPtr msg);
-std::optional<DetectionSelection> pickDetection(const DetectionArray& array);
+std::optional<DetectionSelection> pickDetection(const DetectionArray&array);
 
 rclcpp::Node::SharedPtr node_;
 rclcpp::Subscription<DetectionArray>::SharedPtr subscription_;

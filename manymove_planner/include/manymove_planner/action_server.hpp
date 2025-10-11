@@ -57,9 +57,9 @@ enum class MoveExecutionState
 class ManipulatorActionServer
 {
 public:
-explicit ManipulatorActionServer(const rclcpp::Node::SharedPtr& node,
-                                 const std::shared_ptr<PlannerInterface>& planner,
-                                 const std::string& planner_prefix = "");
+explicit ManipulatorActionServer(const rclcpp::Node::SharedPtr&node,
+                                 const std::shared_ptr<PlannerInterface>&planner,
+                                 const std::string&planner_prefix = "");
 
 private:
 // Internal types
@@ -145,9 +145,9 @@ void configureControllerAsync(const std::string&,
 
 // Helper functions
 bool executeTrajectoryWithCollisionChecks(
-  const std::shared_ptr<GoalHandleMoveManipulator>& goal_handle,
-  const moveit_msgs::msg::RobotTrajectory& traj,
-  std::string& abort_reason);
+  const std::shared_ptr<GoalHandleMoveManipulator>&goal_handle,
+  const moveit_msgs::msg::RobotTrajectory&traj,
+  std::string&abort_reason);
 };
 
 #endif // MANYMOVE_PLANNER_ACTION_SERVER_HPP

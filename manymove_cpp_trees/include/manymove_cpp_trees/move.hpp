@@ -273,14 +273,14 @@ struct Move
   std::string tcp_frame;                           ///< TCP for cartesian speed calculations
 
   Move(
-    const std::string& robot_prefix,
-    const std::string& tcp_frame,
-    const std::string& type,
-    const manymove_msgs::msg::MovementConfig& config,
-    const std::string& pose_key = "",
-    const std::vector<double>& joint_values = {},
-    const std::string& named_target = "",
-    const std::vector<double>& start_joint_values = {})
+    const std::string&robot_prefix,
+    const std::string&tcp_frame,
+    const std::string&type,
+    const manymove_msgs::msg::MovementConfig&config,
+    const std::string&pose_key = "",
+    const std::vector<double>&joint_values = {},
+    const std::string&named_target = "",
+    const std::vector<double>&start_joint_values = {})
     : type(type),
     pose_key(pose_key),
     joint_values(joint_values),

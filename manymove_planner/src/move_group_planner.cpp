@@ -30,10 +30,10 @@
 #include "manymove_planner/compat/moveit_compat.hpp"
 
 MoveGroupPlanner::MoveGroupPlanner(
-  const rclcpp::Node::SharedPtr& node,
-  const std::string& planning_group,
-  const std::string& base_frame,
-  const std::string& traj_controller)
+  const rclcpp::Node::SharedPtr&node,
+  const std::string&planning_group,
+  const std::string&base_frame,
+  const std::string&traj_controller)
   : node_(node), logger_(node->get_logger()),
   planning_group_(planning_group),
   base_frame_(base_frame),
@@ -113,15 +113,15 @@ getFollowJointTrajClient() const
 }
 
 double MoveGroupPlanner::computePathLength(
-  const moveit_msgs::msg::RobotTrajectory& traj,
-  const manymove_msgs::msg::MovementConfig& config) const
+  const moveit_msgs::msg::RobotTrajectory&traj,
+  const manymove_msgs::msg::MovementConfig&config) const
 {
   if (traj.joint_trajectory.points.size() < 2) {
     return 0.0;
   }
 
   // ---------- helper: joint‑space ----------
-  auto jointLen = [&](const trajectory_msgs::msg::JointTrajectory& jt)
+  auto jointLen = [&](const trajectory_msgs::msg::JointTrajectory&jt)
 		  {
 		    double len = 0.0;
 		    for (size_t i = 1; i < jt.points.size(); ++i) {
@@ -136,7 +136,7 @@ double MoveGroupPlanner::computePathLength(
 		  };
 
   // ---------- helper: TCP Cartesian ----------
-  auto cartLen = [&](const moveit_msgs::msg::RobotTrajectory& t)
+  auto cartLen = [&](const moveit_msgs::msg::RobotTrajectory&t)
 		 {
 		   const auto robot_model = move_group_interface_->getRobotModel();
 		   const auto jmg = robot_model->getJointModelGroup(planning_group_);
@@ -165,8 +165,8 @@ double MoveGroupPlanner::computePathLength(
 
 // Function to get a geometry_msgs::msg::Pose from a RobotState and frame
 geometry_msgs::msg::Pose MoveGroupPlanner::getPoseFromRobotState(
-  const moveit::core::RobotState& robot_state,
-  const std::string& link_frame) const
+  const moveit::core::RobotState&robot_state,
+  const std::string&link_frame) const
 {
 
   // Clone the state to ensure the original state isn't modified
@@ -178,7 +178,7 @@ geometry_msgs::msg::Pose MoveGroupPlanner::getPoseFromRobotState(
   geometry_msgs::msg::Pose pose;
 
   // Get the transform of the frame
-  const Eigen::Isometry3d& pose_eigen = state.getGlobalLinkTransform(link_frame);
+  const Eigen::Isometry3d&pose_eigen = state.getGlobalLinkTransform(link_frame);
 
   // Extract position
   pose.position.x = pose_eigen.translation().x();
@@ -197,8 +197,8 @@ geometry_msgs::msg::Pose MoveGroupPlanner::getPoseFromRobotState(
 
 // Function to compute the Euclidean distance between the start pose and the target pose
 double MoveGroupPlanner::computeCartesianDistance(
-  const geometry_msgs::msg::Pose& start_pose,
-  const geometry_msgs::msg::Pose& target_pose) const
+  const geometry_msgs::msg::Pose&start_pose,
+  const geometry_msgs::msg::Pose&target_pose) const
 {
   // Compute the Euclidean distance to the target pose
   double dx = target_pose.position.x - start_pose.position.x;
@@ -210,9 +210,9 @@ double MoveGroupPlanner::computeCartesianDistance(
 
 // Function to get a pose from a trajectory and TCP frame
 geometry_msgs::msg::Pose MoveGroupPlanner::getPoseFromTrajectory(
-  const moveit_msgs::msg::RobotTrajectory& traj_msg,
-  const moveit::core::RobotState& robot_state,
-  const std::string& link_frame,
+  const moveit_msgs::msg::RobotTrajectory&traj_msg,
+  const moveit::core::RobotState&robot_state,
+  const std::string&link_frame,
   bool use_last_point) const
 {
   geometry_msgs::msg::Pose pose;
@@ -223,10 +223,10 @@ geometry_msgs::msg::Pose MoveGroupPlanner::getPoseFromTrajectory(
   }
 
   // Select the point to use (first or last)
-  const auto& point =
+  const auto&point =
     use_last_point ? traj_msg.joint_trajectory.points.back() : traj_msg.joint_trajectory.points.
     front();
-  const auto& joint_names = traj_msg.joint_trajectory.joint_names;
+  const auto&joint_names = traj_msg.joint_trajectory.joint_names;
   std::vector<double> joint_positions(point.positions.begin(), point.positions.end());
 
   // Clone the robot state to avoid modifying the original
@@ -245,8 +245,8 @@ geometry_msgs::msg::Pose MoveGroupPlanner::getPoseFromTrajectory(
 }
 
 double MoveGroupPlanner::computeMaxCartesianSpeed(
-  const robot_trajectory::RobotTrajectoryPtr& trajectory,
-  const manymove_msgs::msg::MovementConfig& config) const
+  const robot_trajectory::RobotTrajectoryPtr&trajectory,
+  const manymove_msgs::msg::MovementConfig&config) const
 {
   // Compute max Cartesian speed by analyzing consecutive waypoints
   if (trajectory->getWayPointCount() < 2) {
@@ -270,8 +270,8 @@ double MoveGroupPlanner::computeMaxCartesianSpeed(
 }
 
 std::pair<bool, moveit_msgs::msg::RobotTrajectory> MoveGroupPlanner::applyTimeParameterization(
-  const moveit_msgs::msg::RobotTrajectory& input_traj,
-  const manymove_msgs::msg::MovementConfig& config)
+  const moveit_msgs::msg::RobotTrajectory&input_traj,
+  const manymove_msgs::msg::MovementConfig&config)
 {
   // 1) Basic checks
   if (input_traj.joint_trajectory.points.empty()) {
@@ -296,7 +296,7 @@ std::pair<bool, moveit_msgs::msg::RobotTrajectory> MoveGroupPlanner::applyTimePa
     return {false, moveit_msgs::msg::RobotTrajectory()};
   }
 
-  const moveit::core::RobotState& current_state = *current_state_ptr;
+  const moveit::core::RobotState&current_state = *current_state_ptr;
   robot_traj_ptr->setRobotTrajectoryMsg(current_state, input_traj);
 
   // 3) TOTG or iterative param, similar loop as above
@@ -383,14 +383,14 @@ std::pair<bool, moveit_msgs::msg::RobotTrajectory> MoveGroupPlanner::applyTimePa
 }
 
 std::pair<bool, moveit_msgs::msg::RobotTrajectory> MoveGroupPlanner::plan(
-  const manymove_msgs::action::PlanManipulator::Goal& goal_msg)
+  const manymove_msgs::action::PlanManipulator::Goal&goal_msg)
 {
   std::vector<std::pair<moveit_msgs::msg::RobotTrajectory, double> > trajectories;
 
   // Handle start state
   if (!goal_msg.goal.start_joint_values.empty()) {
     moveit::core::RobotState start_state(*move_group_interface_->getCurrentState());
-    const moveit::core::JointModelGroup* joint_model_group = start_state.getJointModelGroup(
+    const moveit::core::JointModelGroup*joint_model_group = start_state.getJointModelGroup(
       move_group_interface_->getName());
 
     start_state.setJointGroupPositions(joint_model_group, goal_msg.goal.start_joint_values);
@@ -400,7 +400,7 @@ std::pair<bool, moveit_msgs::msg::RobotTrajectory> MoveGroupPlanner::plan(
     move_group_interface_->setStartStateToCurrentState();
   }
 
-  const auto& cfg = goal_msg.goal.config;
+  const auto&cfg = goal_msg.goal.config;
 
   // In MoveGroupInterface, pipeline selection is typically done by setting the "planner_id".
   // e.g. "ompl/AnytimePRM", "chomp/CHOMP", "pilz_industrial_motion_planner/LIN", etc.
@@ -472,7 +472,7 @@ std::pair<bool, moveit_msgs::msg::RobotTrajectory> MoveGroupPlanner::plan(
 	}
 	else {
 	  // grab the very last point's time_from_start
-	  const auto& pts = timed_traj.joint_trajectory.points;
+	  const auto&pts = timed_traj.joint_trajectory.points;
 	  if (!pts.empty()) {
 	    // convert to seconds
 	    double duration = rclcpp::Duration(pts.back().time_from_start).seconds();
@@ -551,7 +551,7 @@ std::pair<bool, moveit_msgs::msg::RobotTrajectory> MoveGroupPlanner::plan(
 
   // Select the shortest trajectory
   auto shortest = std::min_element(trajectories.begin(), trajectories.end(),
-                                   [](const auto& a, const auto& b)
+                                   [](const auto&a, const auto&b)
   {
     return a.second < b.second;
   });
@@ -560,8 +560,8 @@ std::pair<bool, moveit_msgs::msg::RobotTrajectory> MoveGroupPlanner::plan(
 }
 
 bool MoveGroupPlanner::areSameJointTargets(
-  const std::vector<double>& j1,
-  const std::vector<double>& j2, double tolerance) const
+  const std::vector<double>&j1,
+  const std::vector<double>&j2, double tolerance) const
 {
   if (j1.size() != j2.size()) {
     return false;
@@ -577,8 +577,8 @@ bool MoveGroupPlanner::areSameJointTargets(
 }
 
 bool MoveGroupPlanner::sendControlledStop(
-  const manymove_msgs::msg::MovementConfig& move_cfg,
-  const moveit_msgs::msg::RobotTrajectory& running_traj,
+  const manymove_msgs::msg::MovementConfig&move_cfg,
+  const moveit_msgs::msg::RobotTrajectory&running_traj,
   double elapsed_s)
 {
   RCLCPP_INFO(logger_, "Controlled stop: decel=%.2f  elapsed=%.2f.", move_cfg.deceleration_time,
@@ -607,7 +607,7 @@ bool MoveGroupPlanner::sendControlledStop(
   moveit_msgs::msg::RobotTrajectory truncated_traj = running_traj;
 
   // Get the last point in the trajectory
-  const auto& last_point = truncated_traj.joint_trajectory.points.back();
+  const auto&last_point = truncated_traj.joint_trajectory.points.back();
   double remaining_time = rclcpp::Duration(last_point.time_from_start).seconds() - elapsed_s;
 
   // If remaining time is less than the deceleration_time and min_stop_time, the motion will stop
@@ -625,16 +625,16 @@ bool MoveGroupPlanner::sendControlledStop(
   *     for each point (negative time)
   * ------------------------------------------------------------*/
   // Remove the past points up to the current time (elapsed_s)
-  auto& points = truncated_traj.joint_trajectory.points;
+  auto&points = truncated_traj.joint_trajectory.points;
   points.erase(std::remove_if(points.begin(), points.end(),
-                              [elapsed_s](const trajectory_msgs::msg::JointTrajectoryPoint& point)
+                              [elapsed_s](const trajectory_msgs::msg::JointTrajectoryPoint&point)
   {
     return rclcpp::Duration(point.time_from_start).seconds() >= elapsed_s;
   }),
                points.end());
 
   // Offset time_from_start to be negative for all points
-  for (auto& point : points) {
+  for (auto&point : points) {
     point.time_from_start = rclcpp::Duration::from_seconds(rclcpp::Duration(
 							     point.time_from_start).seconds() - elapsed_s);
   }
@@ -686,8 +686,8 @@ bool MoveGroupPlanner::sendControlledStop(
 }
 
 bool MoveGroupPlanner::isStateValid(
-  const moveit::core::RobotState* state,
-  const moveit::core::JointModelGroup* group) const
+  const moveit::core::RobotState*state,
+  const moveit::core::JointModelGroup*group) const
 {
   if (!planning_scene_monitor_) {
     RCLCPP_ERROR(logger_, "PlanningSceneMonitor is null. Cannot perform collision checking.");
@@ -704,12 +704,12 @@ bool MoveGroupPlanner::isStateValid(
   moveit::core::RobotState temp_state(*state);
 
   // Retrieve the list of joint names that belong to the group (jmg)
-  const std::vector<std::string>& group_joint_names = group->getVariableNames();
+  const std::vector<std::string>&group_joint_names = group->getVariableNames();
 
   {
     std::lock_guard<std::mutex> lock(js_mutex_);
-    for (const auto& entry : current_positions_) {
-      const std::string& joint_name = entry.first;
+    for (const auto&entry : current_positions_) {
+      const std::string&joint_name = entry.first;
       double joint_value = entry.second;
       // Only update joints not in the planning group
       if (std::find(group_joint_names.begin(), group_joint_names.end(),
@@ -730,7 +730,7 @@ bool MoveGroupPlanner::isStateValid(
   if (collision_result.collision) {
     RCLCPP_WARN(logger_, "[MoveGroupPlanner] Collision detected in isStateValid() (group='%s').",
                 group->getName().c_str());
-    for (const auto& contact : collision_result.contacts) {
+    for (const auto&contact : collision_result.contacts) {
       RCLCPP_WARN(logger_, "Collision between: '%s' and '%s'",
                   contact.first.first.c_str(), contact.first.second.c_str());
     }
@@ -739,7 +739,7 @@ bool MoveGroupPlanner::isStateValid(
   return !collision_result.collision;
 }
 
-bool MoveGroupPlanner::isJointStateValid(const std::vector<double>& joint_positions) const
+bool MoveGroupPlanner::isJointStateValid(const std::vector<double>&joint_positions) const
 {
   // 1) Grab the RobotModel from the MoveGroupInterface
   auto robot_model = move_group_interface_->getRobotModel();
@@ -749,7 +749,7 @@ bool MoveGroupPlanner::isJointStateValid(const std::vector<double>& joint_positi
   }
 
   // 2) Retrieve the group
-  const moveit::core::JointModelGroup* jmg = robot_model->getJointModelGroup(planning_group_);
+  const moveit::core::JointModelGroup*jmg = robot_model->getJointModelGroup(planning_group_);
   if (!jmg) {
     RCLCPP_ERROR(logger_, "JointModelGroup '%s' not found in isJointStateValid().",
                  planning_group_.c_str());
@@ -767,16 +767,16 @@ bool MoveGroupPlanner::isJointStateValid(const std::vector<double>& joint_positi
 }
 
 bool MoveGroupPlanner::isTrajectoryStartValid(
-  const moveit_msgs::msg::RobotTrajectory& traj,
-  const manymove_msgs::msg::MoveManipulatorGoal& move_request,
-  const std::vector<double>& current_joint_state) const
+  const moveit_msgs::msg::RobotTrajectory&traj,
+  const manymove_msgs::msg::MoveManipulatorGoal&move_request,
+  const std::vector<double>&current_joint_state) const
 {
   if (traj.joint_trajectory.points.empty()) {
     RCLCPP_ERROR(logger_, "Trajectory is empty. Cannot validate start.");
     return false;
   }
 
-  const auto& first_point = traj.joint_trajectory.points.front();
+  const auto&first_point = traj.joint_trajectory.points.front();
   if (first_point.positions.size() != current_joint_state.size()) {
     RCLCPP_ERROR(logger_,
                  "Mismatch between trajectory joint positions (%zu) and current joint state (%zu).",
@@ -799,8 +799,8 @@ bool MoveGroupPlanner::isTrajectoryStartValid(
 }
 
 bool MoveGroupPlanner::isTrajectoryEndValid(
-  const moveit_msgs::msg::RobotTrajectory& traj,
-  const manymove_msgs::msg::MoveManipulatorGoal& move_request) const
+  const moveit_msgs::msg::RobotTrajectory&traj,
+  const manymove_msgs::msg::MoveManipulatorGoal&move_request) const
 {
   // Check that the trajectory is not empty.
   if (traj.joint_trajectory.points.empty()) {
@@ -817,7 +817,7 @@ bool MoveGroupPlanner::isTrajectoryEndValid(
       // Get the pose from the last point of the trajectory.
       traj_end_pose =
 	getPoseFromTrajectory(traj, current_state, move_request.config.tcp_frame, true);
-    } catch (const std::exception& e) {
+    } catch (const std::exception&e) {
       RCLCPP_ERROR(logger_, "Error extracting trajectory end pose: %s", e.what());
       return false;
     }
@@ -833,13 +833,13 @@ bool MoveGroupPlanner::isTrajectoryEndValid(
   }
   // For joint or named target movements, compare the joint positions.
   else if (move_request.movement_type == "joint" || move_request.movement_type == "named") {
-    const auto& last_point = traj.joint_trajectory.points.back();
+    const auto&last_point = traj.joint_trajectory.points.back();
     std::vector<double> target_joint_values;
     if (move_request.movement_type == "named") {
       // getNamedTargetValues returns a map<string, double>.
       auto named_map = move_group_interface_->getNamedTargetValues(move_request.named_target);
       // Use the trajectory's joint_names order to extract joint values.
-      for (const auto& joint_name : traj.joint_trajectory.joint_names) {
+      for (const auto&joint_name : traj.joint_trajectory.joint_names) {
 	auto it = named_map.find(joint_name);
 	if (it != named_map.end()) {
 	  target_joint_values.push_back(it->second);
@@ -889,7 +889,7 @@ void MoveGroupPlanner::jointStateCallback(const sensor_msgs::msg::JointState::Sh
 
   // Update position/velocity for each joint in the message
   for (size_t i = 0; i < msg->name.size(); ++i) {
-    const std::string& joint_name = msg->name[i];
+    const std::string&joint_name = msg->name[i];
 
     // Safety checks (avoid out of range)
     double pos = 0.0;
@@ -907,8 +907,8 @@ void MoveGroupPlanner::jointStateCallback(const sensor_msgs::msg::JointState::Sh
 }
 
 bool MoveGroupPlanner::isTrajectoryValid(
-  const robot_trajectory::RobotTrajectory& trajectory,
-  const moveit_msgs::msg::Constraints& path_constraints,
+  const robot_trajectory::RobotTrajectory&trajectory,
+  const moveit_msgs::msg::Constraints&path_constraints,
   const double time_from_start) const
 {
   robot_trajectory::RobotTrajectory sub_traj(trajectory.getRobotModel(),
@@ -951,8 +951,8 @@ bool MoveGroupPlanner::isTrajectoryValid(
 }
 
 bool MoveGroupPlanner::isTrajectoryValid(
-  const trajectory_msgs::msg::JointTrajectory& joint_traj_msg,
-  const moveit_msgs::msg::Constraints& path_constraints,
+  const trajectory_msgs::msg::JointTrajectory&joint_traj_msg,
+  const moveit_msgs::msg::Constraints&path_constraints,
   const double time_from_start) const
 {
   trajectory_msgs::msg::JointTrajectory jt = joint_traj_msg;
@@ -960,7 +960,7 @@ bool MoveGroupPlanner::isTrajectoryValid(
   // If (time_from_start > 0) only check the trajectory after that time from start
   if (time_from_start > 0.0) {
     auto first_after = std::find_if(jt.points.begin(), jt.points.end(),
-                                    [time_from_start](const auto& pt)
+                                    [time_from_start](const auto&pt)
     {
       return rclcpp::Duration(pt.time_from_start).seconds() > time_from_start;
     });
@@ -995,7 +995,7 @@ bool MoveGroupPlanner::isTrajectoryValid(
   {
     std::lock_guard<std::mutex> lock(js_mutex_);
 
-    for (const auto& joint_name : joint_traj_msg.joint_names) {
+    for (const auto&joint_name : joint_traj_msg.joint_names) {
       auto it = current_positions_.find(joint_name);
       if (it != current_positions_.end()) {
 	local_state.setVariablePosition(joint_name, it->second);
