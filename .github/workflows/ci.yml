@@ -76,6 +76,20 @@ jobs:
           else
             cp ${ROS_WS}/src/manymove/uncrustify_0.72.cfg ${ROS_WS}/src/manymove/uncrustify.cfg
           fi
+      
+      - name: Dump uncrustify context
+        shell: bash
+        working-directory: ${{ env.ROS_WS }}/src/manymove
+        run: |
+          set -e
+          echo "binary: $(command -v uncrustify)"
+          uncrustify --version
+          echo "::group::contents of uncrustify.cfg"
+          cat uncrustify.cfg
+          echo "::endgroup::"
+          echo "::group::effective config"
+          uncrustify -c uncrustify.cfg --show-config | tee "$RUNNER_TEMP/uncrustify-effective.cfg"
+          echo "::endgroup::"
 
       - name: Build workspace
         shell: bash
