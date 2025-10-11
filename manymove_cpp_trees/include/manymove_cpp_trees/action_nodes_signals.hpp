@@ -64,7 +64,7 @@ namespace manymove_cpp_trees
  */
 class SetOutputAction : public BT::StatefulActionNode
 {
-  public:
+public:
   using SetOutput = manymove_msgs::action::SetOutput;
   using GoalHandleSetOutput = rclcpp_action::ClientGoalHandle<SetOutput>;
 
@@ -93,12 +93,12 @@ class SetOutputAction : public BT::StatefulActionNode
       };
   }
 
-  protected:
+protected:
   BT::NodeStatus onStart() override;
   BT::NodeStatus onRunning() override;
   void onHalted() override;
 
-  private:
+private:
   void goalResponseCallback(std::shared_ptr<GoalHandleSetOutput> goal_handle);
   void resultCallback(const GoalHandleSetOutput::WrappedResult & result);
 
@@ -122,7 +122,7 @@ class SetOutputAction : public BT::StatefulActionNode
  */
 class GetInputAction : public BT::StatefulActionNode
 {
-  public:
+public:
   using GetInput = manymove_msgs::action::GetInput;
   using GoalHandleGetInput = rclcpp_action::ClientGoalHandle<GetInput>;
 
@@ -148,12 +148,12 @@ class GetInputAction : public BT::StatefulActionNode
       };
   }
 
-  protected:
+protected:
   BT::NodeStatus onStart() override;
   BT::NodeStatus onRunning() override;
   void onHalted() override;
 
-  private:
+private:
   void goalResponseCallback(std::shared_ptr<GoalHandleGetInput> goal_handle);
   void resultCallback(const GoalHandleGetInput::WrappedResult & result);
 
@@ -177,7 +177,7 @@ class GetInputAction : public BT::StatefulActionNode
  */
 class CheckRobotStateAction : public BT::StatefulActionNode
 {
-  public:
+public:
   using CheckRobotState = manymove_msgs::action::CheckRobotState;
   using GoalHandleCheckRobotState = rclcpp_action::ClientGoalHandle<CheckRobotState>;
 
@@ -209,12 +209,12 @@ class CheckRobotStateAction : public BT::StatefulActionNode
       };
   }
 
-  protected:
+protected:
   BT::NodeStatus onStart() override;
   BT::NodeStatus onRunning() override;
   void onHalted() override;
 
-  private:
+private:
   void goalResponseCallback(std::shared_ptr<GoalHandleCheckRobotState> goal_handle);
   void resultCallback(const GoalHandleCheckRobotState::WrappedResult & result);
 
@@ -233,7 +233,7 @@ class CheckRobotStateAction : public BT::StatefulActionNode
  */
 class ResetRobotStateAction : public BT::StatefulActionNode
 {
-  public:
+public:
   using ResetRobotState = manymove_msgs::action::ResetRobotState;
   using GoalHandleResetRobotState = rclcpp_action::ClientGoalHandle<ResetRobotState>;
 
@@ -262,12 +262,12 @@ class ResetRobotStateAction : public BT::StatefulActionNode
       };
   }
 
-  protected:
+protected:
   BT::NodeStatus onStart() override;
   BT::NodeStatus onRunning() override;
   void onHalted() override;
 
-  private:
+private:
   void goalResponseCallback(std::shared_ptr<GoalHandleResetRobotState> goal_handle);
   void resultCallback(const GoalHandleResetRobotState::WrappedResult & result);
 
@@ -304,7 +304,7 @@ class ResetRobotStateAction : public BT::StatefulActionNode
  */
 class WaitForInputAction : public BT::StatefulActionNode
 {
-  public:
+public:
   WaitForInputAction(const std::string & name,
     const BT::NodeConfiguration & config);
 
@@ -341,12 +341,12 @@ class WaitForInputAction : public BT::StatefulActionNode
       };
   }
 
-  protected:
+protected:
   BT::NodeStatus onStart() override;
   BT::NodeStatus onRunning() override;
   void onHalted() override;
 
-  private:
+private:
 // Helper to send the "get_input" request
   void sendCheckRequest();
 

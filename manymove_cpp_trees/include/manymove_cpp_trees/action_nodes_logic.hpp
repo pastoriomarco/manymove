@@ -51,7 +51,7 @@ namespace manymove_cpp_trees
  */
 class RetryPauseResetNode : public BT::DecoratorNode
 {
-  public:
+public:
   RetryPauseResetNode(const std::string & name, const BT::NodeConfiguration & config);
 
   static BT::PortsList providedPorts()
@@ -87,7 +87,7 @@ class RetryPauseResetNode : public BT::DecoratorNode
  */
 class CheckKeyBoolValue : public BT::ConditionNode
 {
-  public:
+public:
 /**
  * @brief Constructor
  * @param name The node's name in the XML
@@ -118,7 +118,7 @@ class CheckKeyBoolValue : public BT::ConditionNode
       };
   }
 
-  protected:
+protected:
 /**
  * @brief The main check. Returns SUCCESS if the blackboard's "key"
  *        equals the expected "value", otherwise FAILURE.
@@ -135,10 +135,10 @@ class CheckKeyBoolValue : public BT::ConditionNode
  */
 class SetKeyBoolValue : public BT::SyncActionNode
 {
-  public:
+public:
 // Constructor
-  SetKeyBoolValue(const std::string & name, const BT::NodeConfiguration & config)
-    : BT::SyncActionNode(name, config)
+  SetKeyBoolValue(const std::string & name, const BT::NodeConfiguration & config) :
+    BT::SyncActionNode(name, config)
   {
   }
 
@@ -177,7 +177,7 @@ class SetKeyBoolValue : public BT::SyncActionNode
  */
 class WaitForKeyBool : public BT::StatefulActionNode
 {
-  public:
+public:
   WaitForKeyBool(const std::string & name,
     const BT::NodeConfiguration & config);
 
@@ -205,12 +205,12 @@ class WaitForKeyBool : public BT::StatefulActionNode
       };
   }
 
-  protected:
+protected:
   BT::NodeStatus onStart() override;
   BT::NodeStatus onRunning() override;
   void onHalted() override;
 
-  private:
+private:
 // read from ports:
   std::string key_;
   bool expected_value_;
@@ -245,7 +245,7 @@ class WaitForKeyBool : public BT::StatefulActionNode
  */
 class GetLinkPoseAction : public BT::SyncActionNode
 {
-  public:
+public:
   GetLinkPoseAction(const std::string & name,
     const BT::NodeConfiguration & cfg);
 
@@ -278,7 +278,7 @@ class GetLinkPoseAction : public BT::SyncActionNode
 
   BT::NodeStatus tick() override;
 
-  private:
+private:
   rclcpp::Node::SharedPtr node_;
   std::unique_ptr<tf2_ros::Buffer> tf_buffer_;
   std::unique_ptr<tf2_ros::TransformListener> tf_listener_;
@@ -296,7 +296,7 @@ class GetLinkPoseAction : public BT::SyncActionNode
  */
 class CheckPoseDistance : public BT::ConditionNode
 {
-  public:
+public:
   CheckPoseDistance(const std::string & name, const BT::NodeConfiguration & cfg);
 
   static BT::PortsList providedPorts()
@@ -318,7 +318,7 @@ class CheckPoseDistance : public BT::ConditionNode
 
   BT::NodeStatus tick() override;
 
-  private:
+private:
   rclcpp::Node::SharedPtr node_;
 };
 
@@ -332,7 +332,7 @@ class CheckPoseDistance : public BT::ConditionNode
  */
 class CheckPoseBounds : public BT::ConditionNode
 {
-  public:
+public:
   CheckPoseBounds(const std::string & name, const BT::NodeConfiguration & cfg);
 
   static BT::PortsList providedPorts()
@@ -354,7 +354,7 @@ class CheckPoseBounds : public BT::ConditionNode
 
   BT::NodeStatus tick() override;
 
-  private:
+private:
   rclcpp::Node::SharedPtr node_;
 };
 
@@ -369,9 +369,9 @@ class CheckPoseBounds : public BT::ConditionNode
  */
 class CopyPoseKey : public BT::SyncActionNode
 {
-  public:
-  CopyPoseKey(const std::string & name, const BT::NodeConfiguration & cfg)
-    : BT::SyncActionNode(name, cfg)
+public:
+  CopyPoseKey(const std::string & name, const BT::NodeConfiguration & cfg) :
+    BT::SyncActionNode(name, cfg)
   {
   }
 

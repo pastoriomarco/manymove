@@ -60,8 +60,8 @@ namespace manymove_cpp_trees
 // ======================================================================
 GetEntityPoseNode::GetEntityPoseNode(
   const std::string & name,
-  const BT::NodeConfiguration & config)
-  : BT::StatefulActionNode(name, config)
+  const BT::NodeConfiguration & config) :
+  BT::StatefulActionNode(name, config)
 {
   if (!config.blackboard || !config.blackboard->get
         ("node",
@@ -237,8 +237,8 @@ void GetEntityPoseNode::onHalted()
 // ======================================================================
 SetEntityPoseNode::SetEntityPoseNode(
   const std::string & name,
-  const BT::NodeConfiguration & config)
-  : BT::StatefulActionNode(name, config)
+  const BT::NodeConfiguration & config) :
+  BT::StatefulActionNode(name, config)
 {
   if (!config.blackboard || !config.blackboard->get
         ("node",
@@ -641,8 +641,8 @@ geometry_msgs::msg::Pose align_foundationpose_orientation(
 
 FoundationPoseAlignmentNode::FoundationPoseAlignmentNode(
   const std::string & name,
-  const BT::NodeConfiguration & config)
-  : BT::StatefulActionNode(name, config)
+  const BT::NodeConfiguration & config) :
+  BT::StatefulActionNode(name, config)
 {
   if (!config.blackboard || !config.blackboard->get
         ("node",

@@ -44,7 +44,7 @@ namespace manymove_cpp_trees
 
 class GripperCommandAction : public BT::StatefulActionNode
 {
-  public:
+public:
   using GripperCommand = control_msgs::action::GripperCommand;
   using GoalHandleGripperCommand = rclcpp_action::ClientGoalHandle<GripperCommand>;
 
@@ -75,7 +75,7 @@ class GripperCommandAction : public BT::StatefulActionNode
   BT::NodeStatus onRunning() override;
   void onHalted() override;
 
-  private:
+private:
   void goalResponseCallback(std::shared_ptr<GoalHandleGripperCommand> goal_handle);
   void resultCallback(const GoalHandleGripperCommand::WrappedResult & result);
   void feedbackCallback(std::shared_ptr<GoalHandleGripperCommand>,
@@ -96,7 +96,7 @@ class GripperCommandAction : public BT::StatefulActionNode
 // =======================================================
 class GripperTrajAction : public BT::StatefulActionNode
 {
-  public:
+public:
   using FollowJointTrajectory = control_msgs::action::FollowJointTrajectory;
   using GoalHandleFollowJointTrajectory = rclcpp_action::ClientGoalHandle<FollowJointTrajectory>;
 
@@ -126,7 +126,7 @@ class GripperTrajAction : public BT::StatefulActionNode
   BT::NodeStatus onRunning() override;
   void onHalted() override;
 
-  private:
+private:
   void goalResponseCallback(std::shared_ptr<GoalHandleFollowJointTrajectory> goal_handle);
   void resultCallback(const GoalHandleFollowJointTrajectory::WrappedResult & result);
 
@@ -144,7 +144,7 @@ class GripperTrajAction : public BT::StatefulActionNode
 
 class PublishJointStateAction : public BT::SyncActionNode
 {
-  public:
+public:
   PublishJointStateAction(const std::string & name, const BT::NodeConfiguration & config);
 
   static BT::PortsList providedPorts()
@@ -176,7 +176,7 @@ class PublishJointStateAction : public BT::SyncActionNode
 
   BT::NodeStatus tick() override;
 
-  private:
+private:
   rclcpp::Node::SharedPtr node_;
   rclcpp::Publisher<sensor_msgs::msg::JointState>::SharedPtr pub_;
   std::string current_topic_;

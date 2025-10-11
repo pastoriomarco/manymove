@@ -35,8 +35,8 @@ namespace manymove_cpp_trees
 
 RetryPauseResetNode::RetryPauseResetNode(
   const std::string & name,
-  const BT::NodeConfiguration & config)
-  : BT::DecoratorNode(name, config)
+  const BT::NodeConfiguration & config) :
+  BT::DecoratorNode(name, config)
 {
 }
 
@@ -176,8 +176,8 @@ void RetryPauseResetNode::halt()
 
 CheckKeyBoolValue::CheckKeyBoolValue(
   const std::string & name,
-  const BT::NodeConfiguration & config)
-  : BT::ConditionNode(name, config)
+  const BT::NodeConfiguration & config) :
+  BT::ConditionNode(name, config)
 {
   // If you need to confirm the blackboard is present:
   if (!config.blackboard) {
@@ -323,8 +323,8 @@ BT::NodeStatus SetKeyBoolValue::tick()
 // ---------------------------------------------------------
 WaitForKeyBool::WaitForKeyBool(
   const std::string & name,
-  const BT::NodeConfiguration & config)
-  : BT::StatefulActionNode(name, config),
+  const BT::NodeConfiguration & config) :
+  BT::StatefulActionNode(name, config),
   condition_met_(false)
 {
   // If you need access to the node for time, etc.
@@ -548,8 +548,8 @@ constexpr double TF_TIMEOUT_SEC = 0.1;
 
 GetLinkPoseAction::GetLinkPoseAction(
   const std::string & name,
-  const BT::NodeConfiguration & cfg)
-  : BT::SyncActionNode(name, cfg)
+  const BT::NodeConfiguration & cfg) :
+  BT::SyncActionNode(name, cfg)
 {
   if (!cfg.blackboard || !cfg.blackboard->get
         ("node",
@@ -791,8 +791,8 @@ BT::NodeStatus GetLinkPoseAction::tick()
 
 CheckPoseDistance::CheckPoseDistance(
   const std::string & name,
-  const BT::NodeConfiguration & cfg)
-  : BT::ConditionNode(name, cfg)
+  const BT::NodeConfiguration & cfg) :
+  BT::ConditionNode(name, cfg)
 {
   if (!cfg.blackboard) {
     throw BT::RuntimeError
@@ -911,8 +911,8 @@ BT::NodeStatus CheckPoseDistance::tick()
 
 CheckPoseBounds::CheckPoseBounds(
   const std::string & name,
-  const BT::NodeConfiguration & cfg)
-  : BT::ConditionNode(name, cfg)
+  const BT::NodeConfiguration & cfg) :
+  BT::ConditionNode(name, cfg)
 {
   if (!cfg.blackboard) {
     throw BT::RuntimeError

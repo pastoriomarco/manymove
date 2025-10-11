@@ -309,8 +309,8 @@ struct Move
     const std::string & pose_key = "",
     const std::vector<double> & joint_values = {},
     const std::string & named_target = "",
-    const std::vector<double> & start_joint_values = {})
-    : type(type),
+    const std::vector<double> & start_joint_values = {}) :
+    type(type),
     pose_key(pose_key),
     joint_values(joint_values),
     named_target(named_target),

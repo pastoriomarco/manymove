@@ -66,7 +66,7 @@
  */
 class MoveItCppPlanner : public PlannerInterface
 {
-  public:
+public:
   using FollowJointTrajectory = control_msgs::action::FollowJointTrajectory;
   using GoalHandleFollowJointTrajectory = rclcpp_action::ClientGoalHandle<FollowJointTrajectory>;
 
@@ -189,7 +189,7 @@ class MoveItCppPlanner : public PlannerInterface
     const moveit_msgs::msg::Constraints & path_constraints,
     const double time_from_start) const;
 
-  private:
+private:
 /**
  * @brief Compute the total path length of a given trajectory.
  * @param trajectory The MoveIt robot trajectory message.

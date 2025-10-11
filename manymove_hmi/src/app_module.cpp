@@ -93,8 +93,8 @@ inline QString convertToInternal(
 /* ------------------------------------------------------------------ */
 AppModule::AppModule(
   const std::vector<KeyConfig> & key_cfg,
-  QWidget * parent)
-  : QWidget(parent),
+  QWidget * parent) :
+  QWidget(parent),
   keyConfigs_(key_cfg)
 {
   /* 1) build black-board key list once --------------------------- */

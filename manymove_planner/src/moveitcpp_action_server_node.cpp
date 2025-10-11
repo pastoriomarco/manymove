@@ -35,7 +35,7 @@
 
 class MoveItCppActionServerNode : public rclcpp::Node
 {
-  public:
+public:
   static std::shared_ptr<MoveItCppActionServerNode> create(
     const std::shared_ptr<moveit_cpp::MoveItCpp> & moveit_cpp,
     const rclcpp::NodeOptions & options = rclcpp::NodeOptions
@@ -51,11 +51,11 @@ class MoveItCppActionServerNode : public rclcpp::Node
     return node;
   }
 
-  private:
+private:
   MoveItCppActionServerNode(
     const std::shared_ptr<moveit_cpp::MoveItCpp> & moveit_cpp,
-    const rclcpp::NodeOptions & options)
-    : Node("moveitcpp_action_server_node", options),
+    const rclcpp::NodeOptions & options) :
+    Node("moveitcpp_action_server_node", options),
     moveit_cpp_(moveit_cpp)
   {
     RCLCPP_INFO

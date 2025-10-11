@@ -56,12 +56,12 @@ enum class MoveExecutionState
 
 class ManipulatorActionServer
 {
-  public:
+public:
   explicit ManipulatorActionServer(const rclcpp::Node::SharedPtr & node,
     const std::shared_ptr<PlannerInterface> & planner,
     const std::string & planner_prefix = "");
 
-  private:
+private:
 // Internal types
   using MoveManipulator = manymove_msgs::action::MoveManipulator;
   using GoalHandleMoveManipulator = rclcpp_action::ServerGoalHandle<MoveManipulator>;

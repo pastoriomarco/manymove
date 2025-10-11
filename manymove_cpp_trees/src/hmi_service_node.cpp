@@ -47,8 +47,8 @@ namespace manymove_cpp_trees
 HMIServiceNode::HMIServiceNode(
   const std::string & node_name,
   BT::Blackboard::Ptr blackboard,
-  std::vector<BlackboardEntry> keys)
-  : Node(node_name),
+  std::vector<BlackboardEntry> keys) :
+  Node(node_name),
   blackboard_(blackboard),
   keys_(keys)
 {

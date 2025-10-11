@@ -38,8 +38,8 @@ MoveItCppPlanner::MoveItCppPlanner(
   const std::string & planning_group,
   const std::string & base_frame,
   const std::string & traj_controller,
-  const std::shared_ptr<moveit_cpp::MoveItCpp> & moveit_cpp_ptr)
-  : node_(node), logger_(node->get_logger()),
+  const std::shared_ptr<moveit_cpp::MoveItCpp> & moveit_cpp_ptr) :
+  node_(node), logger_(node->get_logger()),
   planning_group_(planning_group),
   base_frame_(base_frame),
   traj_controller_(traj_controller),

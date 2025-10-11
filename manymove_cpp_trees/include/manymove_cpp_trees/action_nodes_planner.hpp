@@ -60,7 +60,7 @@ namespace manymove_cpp_trees
 
 class MoveManipulatorAction : public BT::StatefulActionNode
 {
-  public:
+public:
   using MoveManipulator = manymove_msgs::action::MoveManipulator;
   using GoalHandleMoveManipulator = rclcpp_action::ClientGoalHandle<MoveManipulator>;
 
@@ -94,12 +94,12 @@ class MoveManipulatorAction : public BT::StatefulActionNode
       };
   }
 
-  protected:
+protected:
   BT::NodeStatus onStart() override;
   BT::NodeStatus onRunning() override;
   void onHalted() override;
 
-  private:
+private:
   void goalResponseCallback(std::shared_ptr<GoalHandleMoveManipulator> goal_handle);
   void feedbackCallback(std::shared_ptr<GoalHandleMoveManipulator>,
     const std::shared_ptr<const MoveManipulator::Feedback> feedback);
@@ -128,7 +128,7 @@ class MoveManipulatorAction : public BT::StatefulActionNode
  */
 class ResetTrajectories : public BT::SyncActionNode
 {
-  public:
+public:
 /**
  * @brief Constructor for the ResetTrajectories node.
  * @param name The name of the BT node.
@@ -154,7 +154,7 @@ class ResetTrajectories : public BT::SyncActionNode
  */
   BT::NodeStatus tick() override;
 
-  private:
+private:
 // ROS2 node
   rclcpp::Node::SharedPtr node_;
 };

@@ -40,8 +40,8 @@ namespace manymove_cpp_trees
 // -------------------------------------------------
 GripperCommandAction::GripperCommandAction(
   const std::string & name,
-  const BT::NodeConfiguration & config)
-  : BT::StatefulActionNode(name, config), goal_sent_(false), result_received_(false)
+  const BT::NodeConfiguration & config) :
+  BT::StatefulActionNode(name, config), goal_sent_(false), result_received_(false)
 {
   // Obtain the ROS node from the blackboard
   if (!config.blackboard) {
@@ -217,8 +217,8 @@ void GripperCommandAction::feedbackCallback(
 
 GripperTrajAction::GripperTrajAction(
   const std::string & name,
-  const BT::NodeConfiguration & config)
-  : BT::StatefulActionNode(name, config),
+  const BT::NodeConfiguration & config) :
+  BT::StatefulActionNode(name, config),
   goal_sent_(false),
   result_received_(false),
   success_(false)
@@ -389,8 +389,8 @@ void GripperTrajAction::resultCallback(
 
 PublishJointStateAction::PublishJointStateAction(
   const std::string & name,
-  const BT::NodeConfiguration & config)
-  : BT::SyncActionNode(name, config)
+  const BT::NodeConfiguration & config) :
+  BT::SyncActionNode(name, config)
 {
   if (!config.blackboard || !config.blackboard->get
         ("node",

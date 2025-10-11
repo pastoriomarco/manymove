@@ -39,8 +39,8 @@ namespace manymove_cpp_trees
 
 AddCollisionObjectAction::AddCollisionObjectAction(
   const std::string & name,
-  const BT::NodeConfiguration & config)
-  : BT::StatefulActionNode(name, config),
+  const BT::NodeConfiguration & config) :
+  BT::StatefulActionNode(name, config),
   goal_sent_(false),
   result_received_(false)
 {
@@ -311,8 +311,8 @@ void AddCollisionObjectAction::resultCallback(
 
 RemoveCollisionObjectAction::RemoveCollisionObjectAction(
   const std::string & name,
-  const BT::NodeConfiguration & config)
-  : BT::StatefulActionNode(name, config),
+  const BT::NodeConfiguration & config) :
+  BT::StatefulActionNode(name, config),
   goal_sent_(false),
   result_received_(false)
 {
@@ -516,8 +516,8 @@ void RemoveCollisionObjectAction::resultCallback(
 
 AttachDetachObjectAction::AttachDetachObjectAction(
   const std::string & name,
-  const BT::NodeConfiguration & config)
-  : BT::StatefulActionNode(name, config),
+  const BT::NodeConfiguration & config) :
+  BT::StatefulActionNode(name, config),
   goal_sent_(false),
   result_received_(false),
   attach_(true)         // Default to attach
@@ -777,8 +777,8 @@ void AttachDetachObjectAction::resultCallback(
 
 CheckObjectExistsAction::CheckObjectExistsAction(
   const std::string & name,
-  const BT::NodeConfiguration & config)
-  : BT::StatefulActionNode(name, config),
+  const BT::NodeConfiguration & config) :
+  BT::StatefulActionNode(name, config),
   goal_sent_(false),
   result_received_(false)
 {
@@ -993,8 +993,8 @@ void CheckObjectExistsAction::resultCallback(
 
 GetObjectPoseAction::GetObjectPoseAction(
   const std::string & name,
-  const BT::NodeConfiguration & config)
-  : BT::StatefulActionNode(name, config),
+  const BT::NodeConfiguration & config) :
+  BT::StatefulActionNode(name, config),
   goal_sent_(false),
   result_received_(false)
 {
@@ -1318,8 +1318,8 @@ void GetObjectPoseAction::resultCallback(
 
 WaitForObjectAction::WaitForObjectAction(
   const std::string & name,
-  const BT::NodeConfiguration & config)
-  : BT::StatefulActionNode(name, config),
+  const BT::NodeConfiguration & config) :
+  BT::StatefulActionNode(name, config),
   goal_sent_(false),
   result_received_(false),
   last_exists_(false),

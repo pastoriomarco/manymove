@@ -68,7 +68,7 @@
  */
 class MoveGroupPlanner : public PlannerInterface
 {
-  public:
+public:
   using FollowJointTrajectory = control_msgs::action::FollowJointTrajectory;
   using GoalHandleFollowJointTrajectory = rclcpp_action::ClientGoalHandle<FollowJointTrajectory>;
 
@@ -191,7 +191,7 @@ class MoveGroupPlanner : public PlannerInterface
     const moveit_msgs::msg::Constraints & path_constraints,
     const double time_from_start) const;
 
-  private:
+private:
 /**
  * @brief Compute the total path length of a trajectory.
  * @param trajectory The input trajectory message.

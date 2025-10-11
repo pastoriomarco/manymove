@@ -33,8 +33,8 @@ MoveGroupPlanner::MoveGroupPlanner(
   const rclcpp::Node::SharedPtr & node,
   const std::string & planning_group,
   const std::string & base_frame,
-  const std::string & traj_controller)
-  : node_(node), logger_(node->get_logger()),
+  const std::string & traj_controller) :
+  node_(node), logger_(node->get_logger()),
   planning_group_(planning_group),
   base_frame_(base_frame),
   traj_controller_(traj_controller)

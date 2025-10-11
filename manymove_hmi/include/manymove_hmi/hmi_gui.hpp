@@ -42,13 +42,13 @@ class HmiGui : public QMainWindow
 {
   Q_OBJECT
 
-  public:
+public:
 /// The new constructor accepts a list of robot prefixes.
   explicit HmiGui(const std::vector<std::string> & robotPrefixes,
     std::vector<std::string> & robotNames, QWidget * parent = nullptr);
   ~HmiGui();
 
-  public slots:
+public slots:
 /// Update the GUI for a given robot (by prefix).
   void updateStatus(const QString & robotPrefix,
     bool stop_execution,
@@ -64,13 +64,13 @@ class HmiGui : public QMainWindow
   void onNewConnection();
   void onSocketDisconnected();
 
-  signals:
+signals:
 /// Signals that include the robot prefix.
   void startExecutionRequested(const std::string & robotPrefix);
   void stopExecutionRequested(const std::string & robotPrefix);
   void resetProgramRequested(const std::string & robotPrefix);
 
-  private:
+private:
   QWidget * centralWidget_;
   QTcpServer * tcpServer_;
   QTcpSocket * clientSocket_;

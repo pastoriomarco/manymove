@@ -48,8 +48,8 @@
 namespace manymove_object_manager
 {
 
-ObjectManagerNode::ObjectManagerNode()
-  : Node("object_manager_node")
+ObjectManagerNode::ObjectManagerNode() :
+  Node("object_manager_node")
 {
   // Declare and get the frame_id parameter
   this->declare_parameter<std::string>

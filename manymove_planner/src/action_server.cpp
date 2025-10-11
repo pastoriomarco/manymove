@@ -57,8 +57,8 @@ void setSwitchActivateAsap(RequestT & request, bool value)
 ManipulatorActionServer::ManipulatorActionServer(
   const rclcpp::Node::SharedPtr & node,
   const std::shared_ptr<PlannerInterface> & planner,
-  const std::string & planner_prefix)
-  : node_(node), planner_(planner), planner_prefix_(planner_prefix)
+  const std::string & planner_prefix) :
+  node_(node), planner_(planner), planner_prefix_(planner_prefix)
 {
   action_callback_group_ = node_->create_callback_group
                              (rclcpp::CallbackGroupType::Reentrant);

@@ -49,7 +49,7 @@
 
 class CollisionSpawner : public rclcpp::Node
 {
-  public:
+public:
   struct ObjectSpec
   {
     std::string name;
@@ -65,11 +65,11 @@ class CollisionSpawner : public rclcpp::Node
   using RemoveCollisionObject = manymove_msgs::action::RemoveCollisionObject;
   using CheckObjectExists = manymove_msgs::action::CheckObjectExists;
 
-  CollisionSpawner()
-    : Node("collision_spawner"), rng_(std::random_device
+  CollisionSpawner() :
+    Node("collision_spawner"), rng_(std::random_device
   {
   }
-                                        ())
+                                      ())
   {
     // Declare parameters
     this->declare_parameter<std::string>
@@ -203,7 +203,7 @@ class CollisionSpawner : public rclcpp::Node
     });
   }
 
-  private:
+private:
   rclcpp::TimerBase::SharedPtr shutdown_timer_;
 
   bool loadObjectsFromYAML(const std::string & file_path)
@@ -731,7 +731,7 @@ class CollisionSpawner : public rclcpp::Node
     return q_msg;
   }
 
-  private:
+private:
   std::vector<ObjectSpec> objects_to_spawn_;
   rclcpp_action::Client<AddCollisionObject>::SharedPtr add_object_action_client_;
   rclcpp_action::Client<RemoveCollisionObject>::SharedPtr remove_object_action_client_;

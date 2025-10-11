@@ -45,7 +45,7 @@ class AppModule;
 
 class Ros2Worker : public rclcpp::Node
 {
-  public:
+public:
   Ros2Worker(const std::string & node_name, HmiGui * gui, const std::string & robot_prefix = "");
 
   void callStartExecution();
@@ -57,7 +57,7 @@ class Ros2Worker : public rclcpp::Node
     return robot_prefix_;
   }
 
-  private:
+private:
   void statusCallback(const std_msgs::msg::String::SharedPtr msg);
 
   HmiGui * gui_;

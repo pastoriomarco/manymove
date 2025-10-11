@@ -37,8 +37,8 @@
 
 HmiGui::HmiGui(
   const std::vector<std::string> & robotPrefixes,
-  std::vector<std::string> & robotNames, QWidget * parent)
-  : QMainWindow(parent), tcpServer_(nullptr), clientSocket_(nullptr)
+  std::vector<std::string> & robotNames, QWidget * parent) :
+  QMainWindow(parent), tcpServer_(nullptr), clientSocket_(nullptr)
 {
   // Keep the window always on top
   setWindowFlags

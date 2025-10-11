@@ -38,8 +38,8 @@ namespace manymove_cpp_trees
 
 MoveManipulatorAction::MoveManipulatorAction(
   const std::string & name,
-  const BT::NodeConfiguration & config)
-  : BT::StatefulActionNode(name, config),
+  const BT::NodeConfiguration & config) :
+  BT::StatefulActionNode(name, config),
   goal_sent_(false),
   result_received_(false),
   max_tries_(-1),
@@ -506,8 +506,9 @@ void MoveManipulatorAction::feedbackCallback(
   }
 }
 
-ResetTrajectories::ResetTrajectories(const std::string & name, const BT::NodeConfiguration & config)
-  : BT::SyncActionNode(name, config)
+ResetTrajectories::ResetTrajectories(const std::string & name, const
+                                     BT::NodeConfiguration & config) :
+  BT::SyncActionNode(name, config)
 {
   // Obtain the ROS node from the blackboard
   if (!config.blackboard) {

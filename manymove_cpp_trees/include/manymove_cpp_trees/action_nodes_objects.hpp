@@ -65,7 +65,7 @@ namespace manymove_cpp_trees
  */
 class AddCollisionObjectAction : public BT::StatefulActionNode
 {
-  public:
+public:
   using AddCollisionObject = manymove_msgs::action::AddCollisionObject;
   using GoalHandleAddCollisionObject = rclcpp_action::ClientGoalHandle<AddCollisionObject>;
 
@@ -106,7 +106,7 @@ class AddCollisionObjectAction : public BT::StatefulActionNode
       };
   }
 
-  protected:
+protected:
 /**
  * @brief Called once when transitioning from IDLE to RUNNING.
  * @return The initial state of the node after starting.
@@ -124,7 +124,7 @@ class AddCollisionObjectAction : public BT::StatefulActionNode
  */
   void onHalted() override;
 
-  private:
+private:
 // Callbacks for action client
   void goalResponseCallback(std::shared_ptr<GoalHandleAddCollisionObject> goal_handle);
   void resultCallback(const GoalHandleAddCollisionObject::WrappedResult & result);
@@ -148,7 +148,7 @@ class AddCollisionObjectAction : public BT::StatefulActionNode
  */
 class RemoveCollisionObjectAction : public BT::StatefulActionNode
 {
-  public:
+public:
   using RemoveCollisionObject = manymove_msgs::action::RemoveCollisionObject;
   using GoalHandleRemoveCollisionObject = rclcpp_action::ClientGoalHandle<RemoveCollisionObject>;
 
@@ -173,7 +173,7 @@ class RemoveCollisionObjectAction : public BT::StatefulActionNode
       };
   }
 
-  protected:
+protected:
 /**
  * @brief Called once when transitioning from IDLE to RUNNING.
  * @return The initial state of the node after starting.
@@ -191,7 +191,7 @@ class RemoveCollisionObjectAction : public BT::StatefulActionNode
  */
   void onHalted() override;
 
-  private:
+private:
 // Callbacks for action client
   void goalResponseCallback(std::shared_ptr<GoalHandleRemoveCollisionObject> goal_handle);
   void resultCallback(const GoalHandleRemoveCollisionObject::WrappedResult & result);
@@ -215,7 +215,7 @@ class RemoveCollisionObjectAction : public BT::StatefulActionNode
  */
 class AttachDetachObjectAction : public BT::StatefulActionNode
 {
-  public:
+public:
   using AttachDetachObject = manymove_msgs::action::AttachDetachObject;
   using GoalHandleAttachDetachObject = rclcpp_action::ClientGoalHandle<AttachDetachObject>;
 
@@ -253,7 +253,7 @@ class AttachDetachObjectAction : public BT::StatefulActionNode
       };
   }
 
-  protected:
+protected:
 /**
  * @brief Called once when transitioning from IDLE to RUNNING.
  * @return The initial state of the node after starting.
@@ -271,7 +271,7 @@ class AttachDetachObjectAction : public BT::StatefulActionNode
  */
   void onHalted() override;
 
-  private:
+private:
 // Callbacks for action client
   void goalResponseCallback(std::shared_ptr<GoalHandleAttachDetachObject> goal_handle);
   void resultCallback(const GoalHandleAttachDetachObject::WrappedResult & result);
@@ -297,7 +297,7 @@ class AttachDetachObjectAction : public BT::StatefulActionNode
  */
 class CheckObjectExistsAction : public BT::StatefulActionNode
 {
-  public:
+public:
   using CheckObjectExists = manymove_msgs::action::CheckObjectExists;
   using GoalHandleCheckObjectExists = rclcpp_action::ClientGoalHandle<CheckObjectExists>;
 
@@ -331,7 +331,7 @@ class CheckObjectExistsAction : public BT::StatefulActionNode
       };
   }
 
-  protected:
+protected:
 /**
  * @brief Called once when transitioning from IDLE to RUNNING.
  * @return The initial state of the node after starting.
@@ -349,7 +349,7 @@ class CheckObjectExistsAction : public BT::StatefulActionNode
  */
   void onHalted() override;
 
-  private:
+private:
 // Callbacks for action client
   void goalResponseCallback(std::shared_ptr<GoalHandleCheckObjectExists> goal_handle);
   void resultCallback(const GoalHandleCheckObjectExists::WrappedResult & result);
@@ -373,7 +373,7 @@ class CheckObjectExistsAction : public BT::StatefulActionNode
  */
 class GetObjectPoseAction : public BT::StatefulActionNode
 {
-  public:
+public:
   using GetObjectPose = manymove_msgs::action::GetObjectPose;
   using GoalHandleGetObjectPose = rclcpp_action::ClientGoalHandle<GetObjectPose>;
 
@@ -413,7 +413,7 @@ class GetObjectPoseAction : public BT::StatefulActionNode
       };
   }
 
-  protected:
+protected:
 /**
  * @brief Called once when transitioning from IDLE to RUNNING.
  * @return The initial state of the node after starting.
@@ -431,7 +431,7 @@ class GetObjectPoseAction : public BT::StatefulActionNode
  */
   void onHalted() override;
 
-  private:
+private:
 // Callbacks for action client
   void goalResponseCallback(std::shared_ptr<GoalHandleGetObjectPose> goal_handle);
   void resultCallback(const GoalHandleGetObjectPose::WrappedResult & result);
@@ -467,7 +467,7 @@ class GetObjectPoseAction : public BT::StatefulActionNode
  */
 class WaitForObjectAction : public BT::StatefulActionNode
 {
-  public:
+public:
   using CheckObjectExists = manymove_msgs::action::CheckObjectExists;
   using GoalHandleCheckObjectExists = rclcpp_action::ClientGoalHandle<CheckObjectExists>;
 
@@ -507,7 +507,7 @@ class WaitForObjectAction : public BT::StatefulActionNode
       };
   }
 
-  protected:
+protected:
 // Called once when transitioning from IDLE to RUNNING
   BT::NodeStatus onStart() override;
 
@@ -517,7 +517,7 @@ class WaitForObjectAction : public BT::StatefulActionNode
 // Called if this node is halted by force
   void onHalted() override;
 
-  private:
+private:
 // Helper: send the action goal
   void sendCheckRequest();
 
@@ -525,7 +525,7 @@ class WaitForObjectAction : public BT::StatefulActionNode
   void goalResponseCallback(std::shared_ptr<GoalHandleCheckObjectExists> goal_handle);
   void resultCallback(const GoalHandleCheckObjectExists::WrappedResult & result);
 
-  private:
+private:
   rclcpp::Node::SharedPtr node_;
   rclcpp_action::Client<CheckObjectExists>::SharedPtr action_client_;
 

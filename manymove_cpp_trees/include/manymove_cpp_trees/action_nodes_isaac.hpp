@@ -81,7 +81,7 @@ namespace manymove_cpp_trees
  */
 class GetEntityPoseNode : public BT::StatefulActionNode
 {
-  public:
+public:
   using GetEntityState = simulation_interfaces::srv::GetEntityState;
   using GetClient = rclcpp::Client<GetEntityState>;
   using GetFuture = GetClient::SharedFuture;
@@ -116,7 +116,7 @@ class GetEntityPoseNode : public BT::StatefulActionNode
   BT::NodeStatus onRunning() override;
   void onHalted() override;
 
-  private:
+private:
   rclcpp::Node::SharedPtr node_;
   std::shared_ptr<GetClient> get_client_;
   std::string current_get_service_name_;
@@ -157,7 +157,7 @@ class GetEntityPoseNode : public BT::StatefulActionNode
  */
 class SetEntityPoseNode : public BT::StatefulActionNode
 {
-  public:
+public:
   using SetEntityState = simulation_interfaces::srv::SetEntityState;
   using SetClient = rclcpp::Client<SetEntityState>;
   using SetFuture = SetClient::SharedFuture;
@@ -188,7 +188,7 @@ class SetEntityPoseNode : public BT::StatefulActionNode
   BT::NodeStatus onRunning() override;
   void onHalted() override;
 
-  private:
+private:
   rclcpp::Node::SharedPtr node_;
   std::shared_ptr<SetClient> set_client_;
   std::string current_set_service_name_;
@@ -282,7 +282,7 @@ geometry_msgs::msg::Pose align_foundationpose_orientation(
  */
 class FoundationPoseAlignmentNode : public BT::StatefulActionNode
 {
-  public:
+public:
   using DetectionArray = vision_msgs::msg::Detection3DArray;
 
   explicit FoundationPoseAlignmentNode(const std::string & name,
@@ -369,7 +369,7 @@ class FoundationPoseAlignmentNode : public BT::StatefulActionNode
   BT::NodeStatus onRunning() override;
   void onHalted() override;
 
-  private:
+private:
   struct DetectionSelection
   {
     vision_msgs::msg::Detection3D detection;

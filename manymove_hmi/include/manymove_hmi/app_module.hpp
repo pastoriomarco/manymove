@@ -76,8 +76,8 @@ struct KeyConfig // how one line of the HMI behaves
     bool show_lbl = true,
     int width = 500,
     double lower = std::numeric_limits<double>::quiet_NaN(),
-    double upper = std::numeric_limits<double>::quiet_NaN())
-    : key(k), value_type(type), editable(ed), visible(vis), computeFunction(std::move(fn)),
+    double upper = std::numeric_limits<double>::quiet_NaN()) :
+    key(k), value_type(type), editable(ed), visible(vis), computeFunction(std::move(fn)),
     display_scale(scale), unit(u), show_label(show_lbl), widget_width(width)
   {
     lower_limit = std::isnan
@@ -109,7 +109,7 @@ class AppModule : public QWidget
 {
   Q_OBJECT
 
-  public:
+public:
 ///  Construct from a *list* of KeyConfig. Nothing is hard-coded.
   explicit AppModule(const std::vector<KeyConfig> & key_cfg,
     QWidget * parent = nullptr);
@@ -121,7 +121,7 @@ class AppModule : public QWidget
     return bb_keys_;
   }
 
-  public slots:
+public slots:
   void setKeyVisibility(const QString & key, bool visible);
   void updateField(const QString & key,
     const QString & newValue = QString
@@ -129,16 +129,16 @@ class AppModule : public QWidget
   void updateGeneralMessage(const QString & message,
     const QString & color);
 
-  signals:
+signals:
   void keyUpdateRequested(const QString & key,
     const QString & value_type,
     const QString & value);
 
-  private slots:
+private slots:
   void onSendClicked();
   void onEditableChanged(const QString & text);
 
-  private:
+private:
 /* helpers ------------------------------------------------------- */
   void setupUI();
   void updateComputedFields();
@@ -151,7 +151,7 @@ class AppModule : public QWidget
 /* QWidget override --------------------------------------------- */
   bool eventFilter(QObject * obj, QEvent * event) override;
 
-  protected:
+protected:
 /* configuration & runtime state -------------------------------- */
   std::vector<KeyConfig> keyConfigs_;
   std::vector<BlackboardKey> bb_keys_;   // derived once

@@ -68,7 +68,7 @@ namespace manymove_object_manager
  */
 class ObjectManagerNode : public rclcpp::Node
 {
-  public:
+public:
 // Alias declarations for actions and their goal handles
   using AddCollisionObject = manymove_msgs::action::AddCollisionObject;
   using RemoveCollisionObject = manymove_msgs::action::RemoveCollisionObject;
@@ -91,7 +91,7 @@ class ObjectManagerNode : public rclcpp::Node
  */
   ObjectManagerNode();
 
-  private:
+private:
 // ------------------------
 // Action server callbacks
 // ------------------------

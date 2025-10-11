@@ -42,8 +42,8 @@ namespace manymove_cpp_trees
 
 SetOutputAction::SetOutputAction(
   const std::string & name,
-  const BT::NodeConfiguration & config)
-  : BT::StatefulActionNode(name, config),
+  const BT::NodeConfiguration & config) :
+  BT::StatefulActionNode(name, config),
   goal_sent_(false),
   result_received_(false)
 {
@@ -300,8 +300,8 @@ void SetOutputAction::resultCallback(const GoalHandleSetOutput::WrappedResult & 
 
 GetInputAction::GetInputAction(
   const std::string & name,
-  const BT::NodeConfiguration & config)
-  : BT::StatefulActionNode(name, config),
+  const BT::NodeConfiguration & config) :
+  BT::StatefulActionNode(name, config),
   goal_sent_(false),
   result_received_(false)
 {
@@ -540,8 +540,8 @@ void GetInputAction::resultCallback(const GoalHandleGetInput::WrappedResult & wr
 
 CheckRobotStateAction::CheckRobotStateAction(
   const std::string & name,
-  const BT::NodeConfiguration & config)
-  : BT::StatefulActionNode(name, config),
+  const BT::NodeConfiguration & config) :
+  BT::StatefulActionNode(name, config),
   goal_sent_(false),
   result_received_(false)
 {
@@ -756,8 +756,8 @@ void CheckRobotStateAction::resultCallback(
 
 ResetRobotStateAction::ResetRobotStateAction(
   const std::string & name,
-  const BT::NodeConfiguration & config)
-  : BT::StatefulActionNode(name, config),
+  const BT::NodeConfiguration & config) :
+  BT::StatefulActionNode(name, config),
   goal_sent_(false),
   result_received_(false),
   unload_traj_success_(false),
@@ -1108,8 +1108,8 @@ void ResetRobotStateAction::resultCallbackLoadTraj(
 
 WaitForInputAction::WaitForInputAction(
   const std::string & name,
-  const BT::NodeConfiguration & config)
-  : BT::StatefulActionNode(name, config),
+  const BT::NodeConfiguration & config) :
+  BT::StatefulActionNode(name, config),
   goal_sent_(false),
   result_received_(false),
   last_success_(false),

@@ -54,7 +54,7 @@
  */
 class PlannerInterface
 {
-  public:
+public:
 /**
  * @brief Virtual destructor for PlannerInterface.
  */
@@ -168,7 +168,7 @@ class PlannerInterface
     const moveit_msgs::msg::Constraints & path_constraints,
     const double time_from_start = 0) const = 0;
 
-  protected:
+protected:
 /**
  * @brief Protected constructor to prevent direct instantiation of the interface.
  */

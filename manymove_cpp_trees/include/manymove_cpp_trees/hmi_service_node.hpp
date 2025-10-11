@@ -52,13 +52,13 @@ namespace manymove_cpp_trees
  */
 class HMIServiceNode : public rclcpp::Node
 {
-  public:
+public:
 // Constructor: pass the complete vector of keys.
   explicit HMIServiceNode(const std::string & node_name,
     BT::Blackboard::Ptr blackboard,
     std::vector<BlackboardEntry> keys = {});
 
-  private:
+private:
   BT::Blackboard::Ptr blackboard_;
   std::vector<BlackboardEntry> keys_;
 

@@ -38,8 +38,8 @@ using namespace std::chrono_literals;
 
 Ros2Worker::Ros2Worker(
   const std::string & node_name, HmiGui * gui,
-  const std::string & robot_prefix)
-  : Node(node_name), gui_(gui), robot_prefix_(robot_prefix)
+  const std::string & robot_prefix) :
+  Node(node_name), gui_(gui), robot_prefix_(robot_prefix)
 {
   RCLCPP_INFO_STREAM
     (this->get_logger

@@ -35,13 +35,13 @@
  *  Nothing here except the list-builder.                             */
 class DefaultAppModule : public AppModule
 {
-  public:
-  explicit DefaultAppModule(QWidget * parent = nullptr)
-    : AppModule(buildKeys(), parent)
+public:
+  explicit DefaultAppModule(QWidget * parent = nullptr) :
+    AppModule(buildKeys(), parent)
   {
   }
 
-  private:
+private:
   static std::vector<KeyConfig> buildKeys();
 };
 
