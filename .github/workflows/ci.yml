@@ -69,6 +69,16 @@ jobs:
           source /opt/ros/$ROS_DISTRO/setup.bash
           rosdep install --from-paths ${ROS_WS}/src --ignore-src --rosdistro ${ROS_DISTRO} -y
 
+      - name: Select uncrustify profile
+        run: |
+          if [ "$ROS_DISTRO" = "jazzy" ]; then
+            cp uncrustify_0.78.cfg uncrustify.cfg
+          else
+            cp uncrustify_0.72.cfg uncrustify.cfg
+          fi
+        working-directory: src/manymove
+
+
       - name: Build workspace
         shell: bash
         run: |
