@@ -1089,7 +1089,8 @@ bool ManipulatorActionServer::executeTrajectoryWithCollisionChecks(
   // Feedback callback: perform collision check on the *future* part of the path
   opts.feedback_callback =
     [this, &collision_detected, goal_handle, traj = traj.joint_trajectory, start_time,
-      total_time_s](auto /*unused_handle*/,
+      total_time_s](
+    auto /*unused_handle*/,
     const std::shared_ptr<const
     control_msgs::action::FollowJointTrajectory::Feedback>
     & feedback)
