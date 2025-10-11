@@ -37,8 +37,8 @@ namespace manymove_cpp_trees
 {
 
 MoveManipulatorAction::MoveManipulatorAction(
-  const std::string&name,
-  const BT::NodeConfiguration&config)
+  const std::string & name,
+  const BT::NodeConfiguration & config)
   : BT::StatefulActionNode(name, config),
   goal_sent_(false),
   result_received_(false),
@@ -63,8 +63,8 @@ MoveManipulatorAction::MoveManipulatorAction(
   action_client_ = rclcpp_action::create_client<MoveManipulator>(node_, move_server);
 
   RCLCPP_INFO(node_->get_logger(),
-              "[MoveManipulatorAction] Waiting for move_manipulator server: %s",
-              move_server.c_str());
+    "[MoveManipulatorAction] Waiting for move_manipulator server: %s",
+    move_server.c_str());
   if (!action_client_->wait_for_action_server(std::chrono::seconds(5))) {
     throw BT::RuntimeError("MoveManipulatorAction: move_manipulator server not available.");
   }
@@ -73,8 +73,8 @@ MoveManipulatorAction::MoveManipulatorAction(
 BT::NodeStatus MoveManipulatorAction::onStart()
 {
   RCLCPP_DEBUG(node_->get_logger(),
-               "[MoveManipulatorAction] [%s]: onStart() called.",
-               name().c_str());
+    "[MoveManipulatorAction] [%s]: onStart() called.",
+    name().c_str());
 
   goal_sent_ = false;
   result_received_ = false;
@@ -90,14 +90,14 @@ BT::NodeStatus MoveManipulatorAction::onStart()
   bool collision_detected;
   if (!getInput<bool>("collision_detected", collision_detected)) {
     RCLCPP_ERROR(node_->get_logger(),
-                 "[MoveManipulatorAction] [%s]: 'collision_detected' not set => failing",
-                 name().c_str());
+      "[MoveManipulatorAction] [%s]: 'collision_detected' not set => failing",
+      name().c_str());
     return BT::NodeStatus::FAILURE;
   }
   if (collision_detected) {
     RCLCPP_ERROR(node_->get_logger(),
-                 "[MoveManipulatorAction] [%s]: COLLISION DETECTED",
-                 name().c_str());
+      "[MoveManipulatorAction] [%s]: COLLISION DETECTED",
+      name().c_str());
     return BT::NodeStatus::FAILURE;
 
     // HMI message
@@ -123,7 +123,7 @@ BT::NodeStatus MoveManipulatorAction::onStart()
   bool stop_execution;
   if (!getInput<bool>("stop_execution", stop_execution)) {
     throw BT::RuntimeError("MoveManipulatorAction: '" + robot_prefix_ +
-                           "stop_execution' not found in blackboard.");
+      "stop_execution' not found in blackboard.");
   }
   if (stop_execution) {
     // HMI message
@@ -142,8 +142,8 @@ BT::NodeStatus MoveManipulatorAction::onRunning()
   std::shared_ptr<Move> move_ptr;
   if (!config().blackboard->get(move_key, move_ptr)) {
     RCLCPP_ERROR(node_->get_logger(),
-                 "[MoveManipulatorAction] Cannot find key [%s] in blackboard",
-                 move_key.c_str());
+      "[MoveManipulatorAction] Cannot find key [%s] in blackboard",
+      move_key.c_str());
     return BT::NodeStatus::FAILURE;
   }
 
@@ -151,7 +151,7 @@ BT::NodeStatus MoveManipulatorAction::onRunning()
   bool invalidate_traj_on_exec;
   if (!getInput<bool>("invalidate_traj_on_exec", invalidate_traj_on_exec)) {
     throw BT::RuntimeError(
-	    "MoveManipulatorAction [%s]: missing InputPort [invalidate_traj_on_exec].");
+      "MoveManipulatorAction [%s]: missing InputPort [invalidate_traj_on_exec].");
   }
 
   if (!goal_sent_) {
@@ -159,7 +159,7 @@ BT::NodeStatus MoveManipulatorAction::onRunning()
     if (getInput<std::string>("pose_key", input_pose_key)) {
       move_ptr->pose_key = input_pose_key;
       RCLCPP_INFO(node_->get_logger(), "[MoveManipulatorAction] Using provided pose_key: %s",
-                  input_pose_key.c_str());
+	input_pose_key.c_str());
     }
 
     // If the move is "pose" or "cartesian", retrieve the dynamic pose.
@@ -167,14 +167,14 @@ BT::NodeStatus MoveManipulatorAction::onRunning()
     if (move_ptr->type == "pose" || move_ptr->type == "cartesian") {
       if (!config().blackboard->get(move_ptr->pose_key, dynamic_pose)) {
 	RCLCPP_ERROR(node_->get_logger(),
-	             "[MoveManipulatorAction] Failed to retrieve pose from blackboard key '%s'",
-	             move_ptr->pose_key.c_str());
+	  "[MoveManipulatorAction] Failed to retrieve pose from blackboard key '%s'",
+	  move_ptr->pose_key.c_str());
 	return BT::NodeStatus::FAILURE;
       }
       else {
 	RCLCPP_INFO(node_->get_logger(),
-	            "[MoveManipulatorAction] Retrieved dynamic pose from '%s'",
-	            move_ptr->pose_key.c_str());
+	  "[MoveManipulatorAction] Retrieved dynamic pose from '%s'",
+	  move_ptr->pose_key.c_str());
       }
     }
 
@@ -196,12 +196,12 @@ BT::NodeStatus MoveManipulatorAction::onRunning()
     // Send the goal.
     auto send_opts = rclcpp_action::Client<MoveManipulator>::SendGoalOptions();
     send_opts.goal_response_callback = std::bind(&MoveManipulatorAction::goalResponseCallback,
-                                                 this,
-                                                 std::placeholders::_1);
+      this,
+      std::placeholders::_1);
     send_opts.feedback_callback = std::bind(&MoveManipulatorAction::feedbackCallback, this,
-                                            std::placeholders::_1, std::placeholders::_2);
+      std::placeholders::_1, std::placeholders::_2);
     send_opts.result_callback = std::bind(&MoveManipulatorAction::resultCallback, this,
-                                          std::placeholders::_1);
+      std::placeholders::_1);
 
     action_client_->async_send_goal(goal_msg, send_opts);
     goal_sent_ = true;
@@ -240,16 +240,16 @@ BT::NodeStatus MoveManipulatorAction::onRunning()
 
 	// HMI message
 	setHMIMessage(config().blackboard,
-	              robot_prefix_,
-	              "MOTION FAILED: " + action_result_.message,
-	              "red");
+	  robot_prefix_,
+	  "MOTION FAILED: " + action_result_.message,
+	  "red");
 
 	return BT::NodeStatus::FAILURE;
       }
       else {
 	RCLCPP_ERROR(node_->get_logger(),
-	             "[MoveManipulatorAction] attempt %d failed, retrying...",
-	             current_try_);
+	  "[MoveManipulatorAction] attempt %d failed, retrying...",
+	  current_try_);
 	// prepare for a new attempt
 	goal_sent_ = false;
 	result_received_ = false;
@@ -290,12 +290,12 @@ void MoveManipulatorAction::goalResponseCallback(
   }
   else {
     RCLCPP_INFO(node_->get_logger(),
-                "[MoveManipulatorAction] Goal ACCEPTED by server; waiting for result.");
+      "[MoveManipulatorAction] Goal ACCEPTED by server; waiting for result.");
   }
 }
 
 void MoveManipulatorAction::resultCallback(
-  const GoalHandleMoveManipulator::WrappedResult&wrapped_result)
+  const GoalHandleMoveManipulator::WrappedResult & wrapped_result)
 {
   bool invalidate_traj_on_exec;
   getInput<bool>("invalidate_traj_on_exec", invalidate_traj_on_exec);
@@ -324,8 +324,8 @@ void MoveManipulatorAction::feedbackCallback(
   const std::shared_ptr<const MoveManipulator::Feedback> feedback)
 {
   RCLCPP_DEBUG(node_->get_logger(),
-               "[MoveManipulatorAction] feedback => progress=%.2f, in_collision=%s",
-               feedback->progress, feedback->in_collision ? "true" : "false");
+    "[MoveManipulatorAction] feedback => progress=%.2f, in_collision=%s",
+    feedback->progress, feedback->in_collision ? "true" : "false");
   if (feedback->in_collision) {
     // Set collision_detected on the blackboard and cancel the goal.
     config().blackboard->set(robot_prefix_ + "collision_detected", true);
@@ -337,7 +337,7 @@ void MoveManipulatorAction::feedbackCallback(
   }
 }
 
-ResetTrajectories::ResetTrajectories(const std::string&name, const BT::NodeConfiguration&config)
+ResetTrajectories::ResetTrajectories(const std::string & name, const BT::NodeConfiguration & config)
   : BT::SyncActionNode(name, config)
 {
   // Obtain the ROS node from the blackboard
@@ -349,8 +349,8 @@ ResetTrajectories::ResetTrajectories(const std::string&name, const BT::NodeConfi
   }
 
   RCLCPP_INFO(node_->get_logger(),
-              "ResetTrajectories [%s]: Constructed with node [%s].",
-              name.c_str(), node_->get_fully_qualified_name());
+    "ResetTrajectories [%s]: Constructed with node [%s].",
+    name.c_str(), node_->get_fully_qualified_name());
 }
 
 BT::NodeStatus ResetTrajectories::tick()
@@ -359,8 +359,8 @@ BT::NodeStatus ResetTrajectories::tick()
   std::string move_ids_str;
   if (!getInput<std::string>("move_ids", move_ids_str)) {
     RCLCPP_ERROR(node_->get_logger(),
-                 "ResetTrajectories [%s]: missing InputPort [move_ids].",
-                 name().c_str());
+      "ResetTrajectories [%s]: missing InputPort [move_ids].",
+      name().c_str());
     return BT::NodeStatus::FAILURE;
   }
 
@@ -379,13 +379,13 @@ BT::NodeStatus ResetTrajectories::tick()
 
   if (move_ids.empty()) {
     RCLCPP_WARN(node_->get_logger(),
-                "ResetTrajectories [%s]: No move_ids provided to reset.",
-                name().c_str());
+      "ResetTrajectories [%s]: No move_ids provided to reset.",
+      name().c_str());
     return BT::NodeStatus::SUCCESS;
   }
 
   // Perform reset for each move_id
-  for (const auto&move_id_str : move_ids) {
+  for (const auto & move_id_str : move_ids) {
     try {
       int move_id = std::stoi(move_id_str);
 
@@ -399,12 +399,12 @@ BT::NodeStatus ResetTrajectories::tick()
       config().blackboard->set(validity_key, false);
 
       RCLCPP_DEBUG(node_->get_logger(),
-                   "ResetTrajectories [%s]: Reset move_id=%d => %s cleared, %s set to false.",
-                   name().c_str(), move_id, traj_key.c_str(), validity_key.c_str());
-    } catch (const std::exception&e) {
+	"ResetTrajectories [%s]: Reset move_id=%d => %s cleared, %s set to false.",
+	name().c_str(), move_id, traj_key.c_str(), validity_key.c_str());
+    } catch (const std::exception & e) {
       RCLCPP_ERROR(node_->get_logger(),
-                   "ResetTrajectories [%s]: Invalid move_id '%s'. Exception: %s",
-                   name().c_str(), move_id_str.c_str(), e.what());
+	"ResetTrajectories [%s]: Invalid move_id '%s'. Exception: %s",
+	name().c_str(), move_id_str.c_str(), e.what());
       // Continue resetting other IDs
     }
   }

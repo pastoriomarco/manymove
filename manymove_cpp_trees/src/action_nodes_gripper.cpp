@@ -39,8 +39,8 @@ namespace manymove_cpp_trees
 // GripperCommandAction
 // -------------------------------------------------
 GripperCommandAction::GripperCommandAction(
-  const std::string&name,
-  const BT::NodeConfiguration&config)
+  const std::string & name,
+  const BT::NodeConfiguration & config)
   : BT::StatefulActionNode(name, config), goal_sent_(false), result_received_(false)
 {
   // Obtain the ROS node from the blackboard
@@ -49,7 +49,7 @@ GripperCommandAction::GripperCommandAction(
   }
   if (!config.blackboard->get("node", node_)) {
     RCLCPP_ERROR(rclcpp::get_logger("GripperCommandAction"),
-                 "Shared node not found in blackboard, cannot initialize GripperCommandAction.");
+      "Shared node not found in blackboard, cannot initialize GripperCommandAction.");
     throw BT::RuntimeError("GripperCommandAction: 'node' not found in blackboard.");
   }
 
@@ -92,7 +92,7 @@ BT::NodeStatus GripperCommandAction::onStart()
     std::bind(&GripperCommandAction::resultCallback, this, std::placeholders::_1);
   send_goal_options.feedback_callback =
     std::bind(&GripperCommandAction::feedbackCallback, this,
-              std::placeholders::_1, std::placeholders::_2);
+      std::placeholders::_1, std::placeholders::_2);
 
   action_client_->async_send_goal(goal_msg, send_goal_options);
   return BT::NodeStatus::RUNNING;
@@ -137,19 +137,19 @@ void GripperCommandAction::goalResponseCallback(
   }
   else {
     RCLCPP_INFO(node_->get_logger(),
-                "GripperCommandAction: goal accepted, waiting for result...");
+      "GripperCommandAction: goal accepted, waiting for result...");
   }
 }
 
 void GripperCommandAction::resultCallback(
-  const GoalHandleGripperCommand::WrappedResult&wrapped_result)
+  const GoalHandleGripperCommand::WrappedResult & wrapped_result)
 {
   action_result_ = *wrapped_result.result;
   result_received_ = true;
   RCLCPP_INFO(node_->get_logger(),
-              "GripperCommandAction: result received. reached_goal=%s, stalled=%s",
-              action_result_.reached_goal ? "true" : "false",
-              action_result_.stalled ? "true" : "false");
+    "GripperCommandAction: result received. reached_goal=%s, stalled=%s",
+    action_result_.reached_goal ? "true" : "false",
+    action_result_.stalled ? "true" : "false");
 }
 
 void GripperCommandAction::feedbackCallback(
@@ -166,8 +166,8 @@ void GripperCommandAction::feedbackCallback(
 // -------------------------------------------------
 
 GripperTrajAction::GripperTrajAction(
-  const std::string&name,
-  const BT::NodeConfiguration&config)
+  const std::string & name,
+  const BT::NodeConfiguration & config)
   : BT::StatefulActionNode(name, config),
   goal_sent_(false),
   result_received_(false),
@@ -179,7 +179,7 @@ GripperTrajAction::GripperTrajAction(
   }
   if (!config.blackboard->get("node", node_)) {
     RCLCPP_ERROR(rclcpp::get_logger("GripperTrajAction"),
-                 "Shared node not found in blackboard.");
+      "Shared node not found in blackboard.");
     throw BT::RuntimeError("GripperTrajAction: 'node' not found in blackboard.");
   }
 
@@ -275,13 +275,13 @@ void GripperTrajAction::goalResponseCallback(
 }
 
 void GripperTrajAction::resultCallback(
-  const GoalHandleFollowJointTrajectory::WrappedResult&result)
+  const GoalHandleFollowJointTrajectory::WrappedResult & result)
 {
   result_received_ = true;
   success_ = (result.code == rclcpp_action::ResultCode::SUCCEEDED);
   RCLCPP_INFO(node_->get_logger(),
-              "GripperTrajAction: action finished. success=%s",
-              success_ ? "TRUE" : "FALSE");
+    "GripperTrajAction: action finished. success=%s",
+    success_ ? "TRUE" : "FALSE");
 }
 
 // -------------------------------------------------
@@ -289,8 +289,8 @@ void GripperTrajAction::resultCallback(
 // -------------------------------------------------
 
 PublishJointStateAction::PublishJointStateAction(
-  const std::string&name,
-  const BT::NodeConfiguration&config)
+  const std::string & name,
+  const BT::NodeConfiguration & config)
   : BT::SyncActionNode(name, config)
 {
   if (!config.blackboard || !config.blackboard->get("node", node_)) {
@@ -308,7 +308,7 @@ BT::NodeStatus PublishJointStateAction::tick()
   std::vector<std::string> names;
   if (!getInput("joint_names", names) || names.empty()) {
     throw BT::RuntimeError(
-	    "PublishJointStateAction: 'joint_names' must contain at least one joint");
+      "PublishJointStateAction: 'joint_names' must contain at least one joint");
   }
 
   std::vector<double> pos, vel, eff;
@@ -323,7 +323,7 @@ BT::NodeStatus PublishJointStateAction::tick()
   }
 
   const auto N = names.size();
-  auto broadcast_or_check = [&](std::vector<double>&v, const char*label)
+  auto broadcast_or_check = [&](std::vector<double> & v, const char * label)
 			    {
 			      if (v.empty()) {
 				return;
@@ -332,8 +332,9 @@ BT::NodeStatus PublishJointStateAction::tick()
 				v.assign(N, v[0]);                   // broadcast single value
 			      }
 			      if (v.size() != N) {
-				throw BT::RuntimeError(std::string("PublishJointStateAction: '") + label +
-				                       "' length must be 1 or equal to 'names' length");
+				throw BT::RuntimeError(std::string("PublishJointStateAction: '") +
+				  label +
+				  "' length must be 1 or equal to 'names' length");
 			      }
 			    };
 
@@ -356,9 +357,9 @@ BT::NodeStatus PublishJointStateAction::tick()
   pub_->publish(msg);
 
   RCLCPP_INFO(node_->get_logger(),
-              "[%s] Published JointState to '%s' (names=%zu, pos=%zu, vel=%zu, eff=%zu)",
-              name().c_str(), topic.c_str(),
-              msg.name.size(), msg.position.size(), msg.velocity.size(), msg.effort.size());
+    "[%s] Published JointState to '%s' (names=%zu, pos=%zu, vel=%zu, eff=%zu)",
+    name().c_str(), topic.c_str(),
+    msg.name.size(), msg.position.size(), msg.velocity.size(), msg.effort.size());
 
   return BT::NodeStatus::SUCCESS;
 }

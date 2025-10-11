@@ -64,15 +64,15 @@ struct RobotParams
  * @return A RobotParams struct populated from the parameter server or the defaults.
  */
 inline RobotParams defineRobotParams(
-  const rclcpp::Node::SharedPtr&node_ptr,
+  const rclcpp::Node::SharedPtr & node_ptr,
   BT::Blackboard::Ptr blackboard,
-  std::vector<manymove_cpp_trees::BlackboardEntry>&keys,
-  const std::string&ID = "",
-  const std::string&model = "",
-  const std::string&prefix = "",
-  const std::string&tcp_frame = "",
-  const std::string&gripper_action_server = "",
-  const std::vector<std::string>&contact_links = {},
+  std::vector<manymove_cpp_trees::BlackboardEntry> & keys,
+  const std::string & ID = "",
+  const std::string & model = "",
+  const std::string & prefix = "",
+  const std::string & tcp_frame = "",
+  const std::string & gripper_action_server = "",
+  const std::vector<std::string> & contact_links = {},
   bool is_real = false)
 {
   RobotParams rp;
@@ -91,11 +91,11 @@ inline RobotParams defineRobotParams(
 
   node_ptr->declare_parameter<std::string>("gripper_action_server" + ID, gripper_action_server);
   node_ptr->get_parameter_or<std::string>("gripper_action_server" + ID, rp.gripper_action_server,
-                                          gripper_action_server);
+    gripper_action_server);
 
   node_ptr->declare_parameter<std::vector<std::string> >("contact_links" + ID, contact_links);
   node_ptr->get_parameter_or<std::vector<std::string> >("contact_links" + ID, rp.contact_links,
-                                                        contact_links);
+    contact_links);
 
   node_ptr->declare_parameter<bool>("is_robot_real" + ID, is_real);
   node_ptr->get_parameter_or<bool>("is_robot_real" + ID, rp.is_real, is_real);
@@ -110,9 +110,18 @@ inline RobotParams defineRobotParams(
   blackboard->set(rp.prefix + "reset", false);
 
   // These keys need to be published for the HMI, adding them here:
-  keys.push_back({rp.prefix + "collision_detected", "bool"});
-  keys.push_back({rp.prefix + "stop_execution", "bool"});
-  keys.push_back({rp.prefix + "reset", "bool"});
+  keys.push_back(
+    {
+      rp.prefix + "collision_detected", "bool"
+    });
+  keys.push_back(
+    {
+      rp.prefix + "stop_execution", "bool"
+    });
+  keys.push_back(
+    {
+      rp.prefix + "reset", "bool"
+    });
 
   return rp;
 }

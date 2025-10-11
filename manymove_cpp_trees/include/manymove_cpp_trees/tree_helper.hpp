@@ -57,7 +57,7 @@
 
 namespace manymove_cpp_trees
 {
-inline void registerAllNodeTypes(BT::BehaviorTreeFactory&factory)
+inline void registerAllNodeTypes(BT::BehaviorTreeFactory & factory)
 {
 
   factory.registerNodeType<MoveManipulatorAction>("MoveManipulatorAction");
@@ -117,15 +117,15 @@ struct ObjectSnippets
  * blackboard, this function throws a BT::RuntimeError.
  */
 ObjectSnippets createObjectSnippets(BT::Blackboard::Ptr blackboard,
-                                    std::vector<manymove_cpp_trees::BlackboardEntry>&keys,
-                                    const std::string&name,
-                                    const std::string&shape_key,
-                                    const geometry_msgs::msg::Pose&pose,
-                                    const std::vector<double>&dimensions = {},
-                                    const std::string&mesh_file = "",
-                                    const std::vector<double>&scale = {1.0, 1.0, 1.0},
-                                    const std::string&link_name_key = "",
-                                    const std::string&touch_links_key = "");
+  std::vector<manymove_cpp_trees::BlackboardEntry> & keys,
+  const std::string & name,
+  const std::string & shape_key,
+  const geometry_msgs::msg::Pose & pose,
+  const std::vector<double> & dimensions = {},
+  const std::string & mesh_file = "",
+  const std::vector<double> & scale = {1.0, 1.0, 1.0},
+  const std::string & link_name_key = "",
+  const std::string & touch_links_key = "");
 
 // ----------------------------------------------------------------------------
 // Builder functions to build xml tree snippets programmatically
@@ -166,12 +166,12 @@ ObjectSnippets createObjectSnippets(BT::Blackboard::Ptr blackboard,
  * @param max_tries   The max number of tries to execute the move
  * @return A string with the generated XML snippet
  */
-std::string buildMoveXML(const std::string&robot_prefix,
-                         const std::string&node_prefix,
-                         const std::vector<Move>&moves,
-                         BT::Blackboard::Ptr blackboard,
-                         bool reset_trajs = false,
-                         int max_tries = 1);
+std::string buildMoveXML(const std::string & robot_prefix,
+  const std::string & node_prefix,
+  const std::vector<Move> & moves,
+  BT::Blackboard::Ptr blackboard,
+  bool reset_trajs = false,
+  int max_tries = 1);
 
 /**
  * @brief Build a self-contained sequence that subscribes to FoundationPose, selects a detection,
@@ -215,22 +215,22 @@ std::string buildMoveXML(const std::string&robot_prefix,
  * @return XML snippet with the configured sequence.
  */
 // Single signature with optional bounds check (6-vector bounds)
-std::string buildFoundationPoseSequenceXML(const std::string&sequence_name,
-                                           const std::string&input_topic,
-                                           const std::vector<double>&pick_transform,
-                                           const std::vector<double>&approach_transform,
-                                           double minimum_score,
-                                           double timeout,
-                                           const std::string&pick_pose_key,
-                                           const std::string&approach_pose_key,
-                                           const std::string&header_key,
-                                           const std::string&object_pose_key,
-                                           bool z_threshold_activation = false,
-                                           double z_threshold = 0.0,
-                                           bool normalize_pose = false,
-                                           bool force_z_vertical = false,
-                                           bool bounds_check = false,
-                                           const std::vector<double>&bounds = {});
+std::string buildFoundationPoseSequenceXML(const std::string & sequence_name,
+  const std::string & input_topic,
+  const std::vector<double> & pick_transform,
+  const std::vector<double> & approach_transform,
+  double minimum_score,
+  double timeout,
+  const std::string & pick_pose_key,
+  const std::string & approach_pose_key,
+  const std::string & header_key,
+  const std::string & object_pose_key,
+  bool z_threshold_activation = false,
+  double z_threshold = 0.0,
+  bool normalize_pose = false,
+  bool force_z_vertical = false,
+  bool bounds_check = false,
+  const std::vector<double> & bounds = {});
 
 /**
  * @brief Builds an XML snippet for a single object action node based on the provided ObjectAction.
@@ -239,7 +239,7 @@ std::string buildFoundationPoseSequenceXML(const std::string&sequence_name,
  * @return A string containing the XML snippet for the object action node.
  * @throws std::invalid_argument If an unsupported ObjectActionType is provided.
  */
-std::string buildObjectActionXML(const std::string&node_prefix, const ObjectAction&action);
+std::string buildObjectActionXML(const std::string & node_prefix, const ObjectAction & action);
 
 /**
  * @brief Build an XML snippet for SetOutputAction.
@@ -252,11 +252,11 @@ std::string buildObjectActionXML(const std::string&node_prefix, const ObjectActi
  * @param robot_prefix A prefix for the robot's action servers
  * @return A string of the XML snippet.
  */
-std::string buildSetOutputXML(const std::string&robot_prefix,
-                              const std::string&node_prefix,
-                              const std::string&io_type,
-                              int ionum,
-                              int value);
+std::string buildSetOutputXML(const std::string & robot_prefix,
+  const std::string & node_prefix,
+  const std::string & io_type,
+  int ionum,
+  int value);
 
 /**
  * @brief Build an XML snippet for GetInputAction.
@@ -266,10 +266,10 @@ std::string buildSetOutputXML(const std::string&robot_prefix,
  * @param robot_prefix A prefix for the robot's action servers
  * @return A string of the XML snippet.
  */
-std::string buildGetInputXML(const std::string&robot_prefix,
-                             const std::string&node_prefix,
-                             const std::string&io_type,
-                             int ionum);
+std::string buildGetInputXML(const std::string & robot_prefix,
+  const std::string & node_prefix,
+  const std::string & io_type,
+  int ionum);
 
 /**
  * @brief Build an XML snippet for to check if an input value corresponds to the one requested.
@@ -283,11 +283,11 @@ std::string buildGetInputXML(const std::string&robot_prefix,
  * @param timeout_ms   Milliseconds for timeout, if 0 then no timeout.
  * @return A string of the XML snippet.
  */
-std::string buildCheckInputXML(const std::string&robot_prefix,
-                               const std::string&node_prefix,
-                               const std::string&io_type,
-                               int ionum,
-                               int value);
+std::string buildCheckInputXML(const std::string & robot_prefix,
+  const std::string & node_prefix,
+  const std::string & io_type,
+  int ionum,
+  int value);
 
 /**
  * @brief Build an XML snippet for a single <WaitForInputAction> node.
@@ -300,13 +300,13 @@ std::string buildCheckInputXML(const std::string&robot_prefix,
  * @param poll_rate_ms  how often to check
  * @return XML snippet
  */
-std::string buildWaitForInput(const std::string&robot_prefix,
-                              const std::string&node_prefix,
-                              const std::string&io_type,
-                              int ionum,
-                              int desired_value = 1,
-                              int timeout_ms = 0,
-                              int poll_rate_ms = 100);
+std::string buildWaitForInput(const std::string & robot_prefix,
+  const std::string & node_prefix,
+  const std::string & io_type,
+  int ionum,
+  int desired_value = 1,
+  int timeout_ms = 0,
+  int poll_rate_ms = 100);
 
 /**
  * @brief Build an XML snippet for a single <WaitForObjectAction> node.
@@ -335,12 +335,12 @@ std::string buildWaitForInput(const std::string&robot_prefix,
  * @param timeout_ms    How long to wait (ms). If 0 => infinite wait
  * @return The generated XML snippet
  */
-std::string buildWaitForObject(const std::string&robot_prefix,
-                               const std::string&node_prefix,
-                               const std::string&object_id_key,
-                               const bool exists = true,
-                               const int timeout_ms = 0,
-                               const int poll_rate_ms = 100);
+std::string buildWaitForObject(const std::string & robot_prefix,
+  const std::string & node_prefix,
+  const std::string & object_id_key,
+  const bool exists = true,
+  const int timeout_ms = 0,
+  const int poll_rate_ms = 100);
 
 /**
  * @brief Build an XML snippet for SetKeyBool.
@@ -351,11 +351,11 @@ std::string buildWaitForObject(const std::string&robot_prefix,
  * @param value           The value to compare the blackboard key to.
  * @return A string with the generated XML snippet for the SetKeyValue node.
  */
-std::string buildCheckKeyBool(const std::string&robot_prefix,
-                              const std::string&node_prefix,
-                              const std::string&key,
-                              const bool&value,
-                              const bool&hmi_message_logic = true);
+std::string buildCheckKeyBool(const std::string & robot_prefix,
+  const std::string & node_prefix,
+  const std::string & key,
+  const bool & value,
+  const bool & hmi_message_logic = true);
 
 /**
  * @brief Build an XML snippet for a single <WaitForKeyBool> node.
@@ -367,12 +367,12 @@ std::string buildCheckKeyBool(const std::string&robot_prefix,
  * @param poll_rate_ms    how often to check
  * @return XML snippet
  */
-std::string buildWaitForKeyBool(const std::string&robot_prefix,
-                                const std::string&node_prefix,
-                                const std::string&key_id,
-                                const bool&expected_value,
-                                const int timeout_ms = 0,
-                                const int poll_rate_ms = 100);
+std::string buildWaitForKeyBool(const std::string & robot_prefix,
+  const std::string & node_prefix,
+  const std::string & key_id,
+  const bool & expected_value,
+  const int timeout_ms = 0,
+  const int poll_rate_ms = 100);
 
 /**
  * @brief Build an XML snippet for SetKeyBool.
@@ -383,10 +383,10 @@ std::string buildWaitForKeyBool(const std::string&robot_prefix,
  * @param value           The value to store in the blackboard key.
  * @return A string with the generated XML snippet for the SetKeyValue node.
  */
-std::string buildSetKeyBool(const std::string&robot_prefix,
-                            const std::string&node_prefix,
-                            const std::string&key,
-                            const bool&value);
+std::string buildSetKeyBool(const std::string & robot_prefix,
+  const std::string & node_prefix,
+  const std::string & key,
+  const bool & value);
 
 /**
  * @brief Build an XML snippet for CheckRobotStateAction.
@@ -399,13 +399,13 @@ std::string buildSetKeyBool(const std::string&robot_prefix,
  * @param message_key  (optional) Blackboard key for the "message" output.
  * @return A string of the XML snippet.
  */
-std::string buildCheckRobotStateXML(const std::string&robot_prefix,
-                                    const std::string&node_prefix,
-                                    const std::string&ready_key = "",
-                                    const std::string&err_key = "",
-                                    const std::string&mode_key = "",
-                                    const std::string&state_key = "",
-                                    const std::string&message_key = "");
+std::string buildCheckRobotStateXML(const std::string & robot_prefix,
+  const std::string & node_prefix,
+  const std::string & ready_key = "",
+  const std::string & err_key = "",
+  const std::string & mode_key = "",
+  const std::string & state_key = "",
+  const std::string & message_key = "");
 
 /**
  * @brief Build an XML snippet for ResetRobotStateAction.
@@ -414,9 +414,9 @@ std::string buildCheckRobotStateXML(const std::string&robot_prefix,
  *  The Blackboard key for the "success" output is always "robot_state_success".
  * @return A string of the XML snippet.
  */
-std::string buildResetRobotStateXML(const std::string&robot_prefix,
-                                    const std::string&node_prefix,
-                                    const std::string&robot_model = "");
+std::string buildResetRobotStateXML(const std::string & robot_prefix,
+  const std::string & node_prefix,
+  const std::string & robot_model = "");
 
 /**
  * @brief Build an XML snippet for a single <GetLinkPoseAction> node.
@@ -430,12 +430,12 @@ std::string buildResetRobotStateXML(const std::string&robot_prefix,
  * @param post_key        Second transform for the final pose derived from the link's pose.
  * @return XML snippet as std::string.
  */
-std::string buildGetLinkPoseXML(const std::string&node_prefix,
-                                const std::string&link_name_key,
-                                const std::string&pose_key,
-                                const std::string&ref_frame_key,
-                                const std::string&pre_key,
-                                const std::string&post_key);
+std::string buildGetLinkPoseXML(const std::string & node_prefix,
+  const std::string & link_name_key,
+  const std::string & pose_key,
+  const std::string & ref_frame_key,
+  const std::string & pre_key,
+  const std::string & post_key);
 
 /**
  * @brief Build an XML snippet for a <CopyPoseKey> action node.
@@ -449,10 +449,10 @@ std::string buildGetLinkPoseXML(const std::string&node_prefix,
  * @param target_key    Blackboard key to write Pose to.
  * @return XML snippet string.
  */
-std::string buildCopyPoseXML(const std::string&robot_prefix,
-                             const std::string&node_prefix,
-                             const std::string&source_key,
-                             const std::string&target_key);
+std::string buildCopyPoseXML(const std::string & robot_prefix,
+  const std::string & node_prefix,
+  const std::string & source_key,
+  const std::string & target_key);
 
 /**
  * @brief Build an XML snippet for a <CheckPoseDistance> condition node.
@@ -461,10 +461,10 @@ std::string buildCopyPoseXML(const std::string&robot_prefix,
  * @param target_pose_key    Blackboard key for the target pose.
  * @param tolerance          Distance tolerance in meters.
  */
-std::string buildCheckPoseDistanceXML(const std::string&node_prefix,
-                                      const std::string&reference_pose_key,
-                                      const std::string&target_pose_key,
-                                      double tolerance);
+std::string buildCheckPoseDistanceXML(const std::string & node_prefix,
+  const std::string & reference_pose_key,
+  const std::string & target_pose_key,
+  double tolerance);
 
 /**
  * @brief Build an XML snippet for a <CheckPoseBounds> condition node.
@@ -474,10 +474,10 @@ std::string buildCheckPoseDistanceXML(const std::string&node_prefix,
  * @param inclusive         Use inclusive comparisons (default true)
  * @return XML string
  */
-std::string buildCheckPoseBoundsXML(const std::string&node_prefix,
-                                    const std::string&pose_key,
-                                    const std::vector<double>&bounds,
-                                    bool inclusive = true);
+std::string buildCheckPoseBoundsXML(const std::string & node_prefix,
+  const std::string & pose_key,
+  const std::vector<double> & bounds,
+  bool inclusive = true);
 
 // ----------------------------------------------------------------------------
 // Wrappers
@@ -486,16 +486,16 @@ std::string buildCheckPoseBoundsXML(const std::string&node_prefix,
 /**
  * @brief Wrap multiple snippets in a <Sequence> with a given name.
  */
-std::string sequenceWrapperXML(const std::string&sequence_name,
-                               const std::vector<std::string>&branches);
+std::string sequenceWrapperXML(const std::string & sequence_name,
+  const std::vector<std::string> & branches);
 
 /**
  * @brief Wrap multiple snippets in a <Parallel> with a given name.
  */
-std::string parallelWrapperXML(const std::string&sequence_name,
-                               const std::vector<std::string>&branches,
-                               const int&success_threshold,
-                               const int&failure_threshold);
+std::string parallelWrapperXML(const std::string & sequence_name,
+  const std::vector<std::string> & branches,
+  const int & success_threshold,
+  const int & failure_threshold);
 
 /**
  * @brief Wrap multiple snippets in a <ReactiveSequence> with a given name.
@@ -507,8 +507,8 @@ std::string parallelWrapperXML(const std::string&sequence_name,
  * @param branches      A vector of XML snippets representing the child nodes.
  * @return A string containing the generated XML snippet.
  */
-std::string reactiveWrapperXML(const std::string&sequence_name,
-                               const std::vector<std::string>&branches);
+std::string reactiveWrapperXML(const std::string & sequence_name,
+  const std::vector<std::string> & branches);
 
 /**
  * @brief Wrap multiple snippets in a <RepeatNode> node with a given name.
@@ -521,9 +521,9 @@ std::string reactiveWrapperXML(const std::string&sequence_name,
  * @param num_cycles    Number of repeat attempts (-1 for infinite retries).
  * @return A string containing the generated XML snippet.
  */
-std::string repeatSequenceWrapperXML(const std::string&sequence_name,
-                                     const std::vector<std::string>&branches,
-                                     const int num_cycles = -1);
+std::string repeatSequenceWrapperXML(const std::string & sequence_name,
+  const std::vector<std::string> & branches,
+  const int num_cycles = -1);
 
 /**
  * @brief Wrap multiple snippets in a <RepeatNode> node with a given name.
@@ -536,9 +536,9 @@ std::string repeatSequenceWrapperXML(const std::string&sequence_name,
  * @param num_cycles    Number of repeat attempts (-1 for infinite retries).
  * @return A string containing the generated XML snippet.
  */
-std::string repeatFallbackWrapperXML(const std::string&sequence_name,
-                                     const std::vector<std::string>&branches,
-                                     const int num_cycles = -1);
+std::string repeatFallbackWrapperXML(const std::string & sequence_name,
+  const std::vector<std::string> & branches,
+  const int num_cycles = -1);
 
 /**
  * @brief Wrap multiple snippets in a <retryNode> node with a given name.
@@ -551,9 +551,9 @@ std::string repeatFallbackWrapperXML(const std::string&sequence_name,
  * @param num_cycles    Number of retry attempts (-1 for infinite retries).
  * @return A string containing the generated XML snippet.
  */
-std::string retrySequenceWrapperXML(const std::string&sequence_name,
-                                    const std::vector<std::string>&branches,
-                                    const int num_cycles = -1);
+std::string retrySequenceWrapperXML(const std::string & sequence_name,
+  const std::vector<std::string> & branches,
+  const int num_cycles = -1);
 
 /**
  * @brief Wrap multiple snippets in a <Fallback> with a given name.
@@ -565,15 +565,15 @@ std::string retrySequenceWrapperXML(const std::string&sequence_name,
  * @param branches      A vector of XML snippets representing the child nodes.
  * @return A string containing the generated XML snippet.
  */
-std::string fallbackWrapperXML(const std::string&sequence_name,
-                               const std::vector<std::string>&branches);
+std::string fallbackWrapperXML(const std::string & sequence_name,
+  const std::vector<std::string> & branches);
 
 /**
  * @brief Wrap a snippet in a top-level <root> with <BehaviorTree ID="...">
  *        so it can be loaded by BehaviorTreeFactory.
  */
-std::string mainTreeWrapperXML(const std::string&tree_id,
-                               const std::string&content);
+std::string mainTreeWrapperXML(const std::string & tree_id,
+  const std::string & content);
 
 // ----------------------------------------------------------------------------
 // Helper functions
@@ -583,7 +583,7 @@ std::string mainTreeWrapperXML(const std::string&tree_id,
  * @brief Create a geometry_msgs::msg::Pose easily.
  */
 geometry_msgs::msg::Pose createPose(double x, double y, double z,
-                                    double qx, double qy, double qz, double qw);
+  double qx, double qy, double qz, double qw);
 
 /**
  * @brief Returns a pose with quaterion built from rpy values.
@@ -595,12 +595,12 @@ geometry_msgs::msg::Pose createPose(double x, double y, double z,
  * @param yaw   rotation about Z axis.
  * @return geometry_msgs::msg::Pose corresponding to the values inserted
  */
-geometry_msgs::msg::Pose createPoseRPY(const double&x = 0.0,
-                                       const double&y = 0.0,
-                                       const double&z = 0.0,
-                                       const double&roll = 0.0,
-                                       const double&pitch = 0.0,
-                                       const double&yaw = 0.0);
+geometry_msgs::msg::Pose createPoseRPY(const double & x = 0.0,
+  const double & y = 0.0,
+  const double & z = 0.0,
+  const double & roll = 0.0,
+  const double & pitch = 0.0,
+  const double & yaw = 0.0);
 
 /**
  * @brief Helper function to convert ObjectActionType enum to corresponding string.
@@ -614,12 +614,12 @@ std::string objectActionTypeToString(ObjectActionType type);
  * @param pose The Pose message to serialize.
  * @return A string representation of the Pose.
  */
-std::string serializePose(const geometry_msgs::msg::Pose&pose);
+std::string serializePose(const geometry_msgs::msg::Pose & pose);
 
 void setHmiMessage(BT::Blackboard::Ptr blackboard,
-                   const std::string prefix,
-                   const std::string message,
-                   const std::string color);
+  const std::string prefix,
+  const std::string message,
+  const std::string color);
 
 } // namespace manymove_cpp_trees
 

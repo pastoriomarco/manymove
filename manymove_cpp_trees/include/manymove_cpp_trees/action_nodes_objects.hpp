@@ -65,65 +65,67 @@ namespace manymove_cpp_trees
  */
 class AddCollisionObjectAction : public BT::StatefulActionNode
 {
-public:
-using AddCollisionObject = manymove_msgs::action::AddCollisionObject;
-using GoalHandleAddCollisionObject = rclcpp_action::ClientGoalHandle<AddCollisionObject>;
+  public:
+  using AddCollisionObject = manymove_msgs::action::AddCollisionObject;
+  using GoalHandleAddCollisionObject = rclcpp_action::ClientGoalHandle<AddCollisionObject>;
 
 /**
  * @brief Constructor for the AddCollisionObjectAction node.
  * @param name The name of this BT node.
  * @param config The BT NodeConfiguration (ports, blackboard, etc.).
  */
-AddCollisionObjectAction(const std::string&name, const BT::NodeConfiguration&config);
+  AddCollisionObjectAction(const std::string & name, const BT::NodeConfiguration & config);
 
 /**
  * @brief Define the required ports for this node.
  * @return A list of input ports.
  */
-static BT::PortsList providedPorts()
-{
-  return {
-    BT::InputPort<std::string>("object_id", "Unique identifier for the object"),
-    BT::InputPort<std::string>("shape", "Shape type (e.g., box, mesh)"),
-    BT::InputPort<std::vector<double> >("dimensions", "Dimensions for primitive shapes"),
-    BT::InputPort<geometry_msgs::msg::Pose>("pose", "Pose of the object"),
-    BT::InputPort<std::string>("mesh_file", "", "Mesh file path (for mesh objects)"),
-    BT::InputPort<std::vector<double> >("scale_mesh", "Scale factor along X-axis (for mesh)")};
-}
+  static BT::PortsList providedPorts()
+  {
+    return
+      {
+        BT::InputPort<std::string>("object_id", "Unique identifier for the object"),
+        BT::InputPort<std::string>("shape", "Shape type (e.g., box, mesh)"),
+        BT::InputPort<std::vector<double> >("dimensions", "Dimensions for primitive shapes"),
+        BT::InputPort<geometry_msgs::msg::Pose>("pose", "Pose of the object"),
+        BT::InputPort<std::string>("mesh_file", "", "Mesh file path (for mesh objects)"),
+        BT::InputPort<std::vector<double> >("scale_mesh", "Scale factor along X-axis (for mesh)")
+      };
+  }
 
-protected:
+  protected:
 /**
  * @brief Called once when transitioning from IDLE to RUNNING.
  * @return The initial state of the node after starting.
  */
-BT::NodeStatus onStart() override;
+  BT::NodeStatus onStart() override;
 
 /**
  * @brief Called every tick while in RUNNING state.
  * @return The current status of the node.
  */
-BT::NodeStatus onRunning() override;
+  BT::NodeStatus onRunning() override;
 
 /**
  * @brief Called if this node is halted by force.
  */
-void onHalted() override;
+  void onHalted() override;
 
-private:
+  private:
 // Callbacks for action client
-void goalResponseCallback(std::shared_ptr<GoalHandleAddCollisionObject> goal_handle);
-void resultCallback(const GoalHandleAddCollisionObject::WrappedResult&result);
+  void goalResponseCallback(std::shared_ptr<GoalHandleAddCollisionObject> goal_handle);
+  void resultCallback(const GoalHandleAddCollisionObject::WrappedResult & result);
 
 // ROS2 members
-rclcpp::Node::SharedPtr node_;
-rclcpp_action::Client<AddCollisionObject>::SharedPtr action_client_;
+  rclcpp::Node::SharedPtr node_;
+  rclcpp_action::Client<AddCollisionObject>::SharedPtr action_client_;
 
 // Internal state
-bool goal_sent_;
-bool result_received_;
+  bool goal_sent_;
+  bool result_received_;
 
-AddCollisionObject::Result action_result_;
-std::string object_id_;         ///< Unique object identifier
+  AddCollisionObject::Result action_result_;
+  std::string object_id_;       ///< Unique object identifier
 };
 
 /**
@@ -133,60 +135,62 @@ std::string object_id_;         ///< Unique object identifier
  */
 class RemoveCollisionObjectAction : public BT::StatefulActionNode
 {
-public:
-using RemoveCollisionObject = manymove_msgs::action::RemoveCollisionObject;
-using GoalHandleRemoveCollisionObject = rclcpp_action::ClientGoalHandle<RemoveCollisionObject>;
+  public:
+  using RemoveCollisionObject = manymove_msgs::action::RemoveCollisionObject;
+  using GoalHandleRemoveCollisionObject = rclcpp_action::ClientGoalHandle<RemoveCollisionObject>;
 
 /**
  * @brief Constructor for the RemoveCollisionObjectAction node.
  * @param name The name of this BT node.
  * @param config The BT NodeConfiguration (ports, blackboard, etc.).
  */
-RemoveCollisionObjectAction(const std::string&name, const BT::NodeConfiguration&config);
+  RemoveCollisionObjectAction(const std::string & name, const BT::NodeConfiguration & config);
 
 /**
  * @brief Define the required ports for this node.
  * @return A list of input ports.
  */
-static BT::PortsList providedPorts()
-{
-  return {
-    BT::InputPort<std::string>("object_id", "Unique identifier for the object to remove")};
-}
+  static BT::PortsList providedPorts()
+  {
+    return
+      {
+        BT::InputPort<std::string>("object_id", "Unique identifier for the object to remove")
+      };
+  }
 
-protected:
+  protected:
 /**
  * @brief Called once when transitioning from IDLE to RUNNING.
  * @return The initial state of the node after starting.
  */
-BT::NodeStatus onStart() override;
+  BT::NodeStatus onStart() override;
 
 /**
  * @brief Called every tick while in RUNNING state.
  * @return The current status of the node.
  */
-BT::NodeStatus onRunning() override;
+  BT::NodeStatus onRunning() override;
 
 /**
  * @brief Called if this node is halted by force.
  */
-void onHalted() override;
+  void onHalted() override;
 
-private:
+  private:
 // Callbacks for action client
-void goalResponseCallback(std::shared_ptr<GoalHandleRemoveCollisionObject> goal_handle);
-void resultCallback(const GoalHandleRemoveCollisionObject::WrappedResult&result);
+  void goalResponseCallback(std::shared_ptr<GoalHandleRemoveCollisionObject> goal_handle);
+  void resultCallback(const GoalHandleRemoveCollisionObject::WrappedResult & result);
 
 // ROS2 members
-rclcpp::Node::SharedPtr node_;
-rclcpp_action::Client<RemoveCollisionObject>::SharedPtr action_client_;
+  rclcpp::Node::SharedPtr node_;
+  rclcpp_action::Client<RemoveCollisionObject>::SharedPtr action_client_;
 
 // Internal state
-bool goal_sent_;
-bool result_received_;
+  bool goal_sent_;
+  bool result_received_;
 
-RemoveCollisionObject::Result action_result_;
-std::string object_id_;         ///< Unique object identifier
+  RemoveCollisionObject::Result action_result_;
+  std::string object_id_;       ///< Unique object identifier
 };
 
 /**
@@ -196,67 +200,71 @@ std::string object_id_;         ///< Unique object identifier
  */
 class AttachDetachObjectAction : public BT::StatefulActionNode
 {
-public:
-using AttachDetachObject = manymove_msgs::action::AttachDetachObject;
-using GoalHandleAttachDetachObject = rclcpp_action::ClientGoalHandle<AttachDetachObject>;
+  public:
+  using AttachDetachObject = manymove_msgs::action::AttachDetachObject;
+  using GoalHandleAttachDetachObject = rclcpp_action::ClientGoalHandle<AttachDetachObject>;
 
 /**
  * @brief Constructor for the AttachDetachObjectAction node.
  * @param name The name of this BT node.
  * @param config The BT NodeConfiguration (ports, blackboard, etc.).
  */
-AttachDetachObjectAction(const std::string&name, const BT::NodeConfiguration&config);
+  AttachDetachObjectAction(const std::string & name, const BT::NodeConfiguration & config);
 
 /**
  * @brief Define the required ports for this node.
  * @return A list of input ports.
  */
-static BT::PortsList providedPorts()
-{
-  return {
-    BT::InputPort<std::string>("object_id", "Unique identifier for the object"),
-    BT::InputPort<std::string>("link_name", "Name of the link to attach/detach the object"),
-    BT::InputPort<bool>("attach", true, "True to attach, False to detach"),
-    BT::InputPort<std::vector<std::string> >("touch_links",
-                                             std::vector<std::string>{},
-                                             "List of robot links to exclude from collision checking")};
-}
+  static BT::PortsList providedPorts()
+  {
+    return
+      {
+        BT::InputPort<std::string>("object_id", "Unique identifier for the object"),
+        BT::InputPort<std::string>("link_name", "Name of the link to attach/detach the object"),
+        BT::InputPort<bool>("attach", true, "True to attach, False to detach"),
+        BT::InputPort<std::vector<std::string> >("touch_links",
+	  std::vector<std::string>
+	{
+	},
+	  "List of robot links to exclude from collision checking")
+      };
+  }
 
-protected:
+  protected:
 /**
  * @brief Called once when transitioning from IDLE to RUNNING.
  * @return The initial state of the node after starting.
  */
-BT::NodeStatus onStart() override;
+  BT::NodeStatus onStart() override;
 
 /**
  * @brief Called every tick while in RUNNING state.
  * @return The current status of the node.
  */
-BT::NodeStatus onRunning() override;
+  BT::NodeStatus onRunning() override;
 
 /**
  * @brief Called if this node is halted by force.
  */
-void onHalted() override;
+  void onHalted() override;
 
-private:
+  private:
 // Callbacks for action client
-void goalResponseCallback(std::shared_ptr<GoalHandleAttachDetachObject> goal_handle);
-void resultCallback(const GoalHandleAttachDetachObject::WrappedResult&result);
+  void goalResponseCallback(std::shared_ptr<GoalHandleAttachDetachObject> goal_handle);
+  void resultCallback(const GoalHandleAttachDetachObject::WrappedResult & result);
 
 // ROS2 members
-rclcpp::Node::SharedPtr node_;
-rclcpp_action::Client<AttachDetachObject>::SharedPtr action_client_;
+  rclcpp::Node::SharedPtr node_;
+  rclcpp_action::Client<AttachDetachObject>::SharedPtr action_client_;
 
 // Internal state
-bool goal_sent_;
-bool result_received_;
+  bool goal_sent_;
+  bool result_received_;
 
-AttachDetachObject::Result action_result_;
-std::string object_id_;         ///< Unique object identifier
-std::string link_name_;         ///< Link name to attach/detach
-bool attach_;                   ///< True to attach, False to detach
+  AttachDetachObject::Result action_result_;
+  std::string object_id_;       ///< Unique object identifier
+  std::string link_name_;       ///< Link name to attach/detach
+  bool attach_;                 ///< True to attach, False to detach
 };
 
 /**
@@ -266,64 +274,66 @@ bool attach_;                   ///< True to attach, False to detach
  */
 class CheckObjectExistsAction : public BT::StatefulActionNode
 {
-public:
-using CheckObjectExists = manymove_msgs::action::CheckObjectExists;
-using GoalHandleCheckObjectExists = rclcpp_action::ClientGoalHandle<CheckObjectExists>;
+  public:
+  using CheckObjectExists = manymove_msgs::action::CheckObjectExists;
+  using GoalHandleCheckObjectExists = rclcpp_action::ClientGoalHandle<CheckObjectExists>;
 
 /**
  * @brief Constructor for the CheckObjectExistsAction node.
  * @param name The name of this BT node.
  * @param config The BT NodeConfiguration (ports, blackboard, etc.).
  */
-CheckObjectExistsAction(const std::string&name, const BT::NodeConfiguration&config);
+  CheckObjectExistsAction(const std::string & name, const BT::NodeConfiguration & config);
 
 /**
  * @brief Define the required ports for this node.
  * @return A list of input and output ports.
  */
-static BT::PortsList providedPorts()
-{
-  return {
-    BT::InputPort<std::string>("object_id", "Unique identifier for the object"),
-    BT::OutputPort<bool>("exists", "Indicates if the object exists"),
-    BT::OutputPort<bool>("is_attached", "Indicates if the object is attached to a link"),
-    BT::OutputPort<std::string>("link_name",
-                                "Name of the link the object is attached to, if any")};
-}
+  static BT::PortsList providedPorts()
+  {
+    return
+      {
+        BT::InputPort<std::string>("object_id", "Unique identifier for the object"),
+        BT::OutputPort<bool>("exists", "Indicates if the object exists"),
+        BT::OutputPort<bool>("is_attached", "Indicates if the object is attached to a link"),
+        BT::OutputPort<std::string>("link_name",
+	  "Name of the link the object is attached to, if any")
+      };
+  }
 
-protected:
+  protected:
 /**
  * @brief Called once when transitioning from IDLE to RUNNING.
  * @return The initial state of the node after starting.
  */
-BT::NodeStatus onStart() override;
+  BT::NodeStatus onStart() override;
 
 /**
  * @brief Called every tick while in RUNNING state.
  * @return The current status of the node.
  */
-BT::NodeStatus onRunning() override;
+  BT::NodeStatus onRunning() override;
 
 /**
  * @brief Called if this node is halted by force.
  */
-void onHalted() override;
+  void onHalted() override;
 
-private:
+  private:
 // Callbacks for action client
-void goalResponseCallback(std::shared_ptr<GoalHandleCheckObjectExists> goal_handle);
-void resultCallback(const GoalHandleCheckObjectExists::WrappedResult&result);
+  void goalResponseCallback(std::shared_ptr<GoalHandleCheckObjectExists> goal_handle);
+  void resultCallback(const GoalHandleCheckObjectExists::WrappedResult & result);
 
 // ROS2 members
-rclcpp::Node::SharedPtr node_;
-rclcpp_action::Client<CheckObjectExists>::SharedPtr action_client_;
+  rclcpp::Node::SharedPtr node_;
+  rclcpp_action::Client<CheckObjectExists>::SharedPtr action_client_;
 
 // Internal state
-bool goal_sent_;
-bool result_received_;
+  bool goal_sent_;
+  bool result_received_;
 
-CheckObjectExists::Result action_result_;
-std::string object_id_;         ///< Unique object identifier
+  CheckObjectExists::Result action_result_;
+  std::string object_id_;       ///< Unique object identifier
 };
 
 /**
@@ -333,70 +343,72 @@ std::string object_id_;         ///< Unique object identifier
  */
 class GetObjectPoseAction : public BT::StatefulActionNode
 {
-public:
-using GetObjectPose = manymove_msgs::action::GetObjectPose;
-using GoalHandleGetObjectPose = rclcpp_action::ClientGoalHandle<GetObjectPose>;
+  public:
+  using GetObjectPose = manymove_msgs::action::GetObjectPose;
+  using GoalHandleGetObjectPose = rclcpp_action::ClientGoalHandle<GetObjectPose>;
 
 /**
  * @brief Constructor for the GetObjectPoseAction node.
  * @param name The name of this BT node.
  * @param config The BT NodeConfiguration (ports, blackboard, etc.).
  */
-GetObjectPoseAction(const std::string&name, const BT::NodeConfiguration&config);
+  GetObjectPoseAction(const std::string & name, const BT::NodeConfiguration & config);
 
 /**
  * @brief Define the required ports for this node.
  * @return A list of input and output ports.
  */
-static BT::PortsList providedPorts()
-{
-  return {
-    BT::InputPort<std::string>("object_id", "Identifier of the object"),
-    BT::InputPort<std::vector<double> >("pre_transform_xyz_rpy",
-                                        "First offset and rotation {x, y, z, roll, pitch, yaw}"),
-    BT::InputPort<std::vector<double> >("post_transform_xyz_rpy",
-                                        "Second offset and orientation {x, y, z, roll, pitch, yaw}"),
-    BT::InputPort<std::string>("pose_key", "Blackboard key to store the retrieved pose"),
-    BT::InputPort<std::string>("link_name", ""),
-    BT::OutputPort<geometry_msgs::msg::Pose>("pose", "Pose after transformations")};
-}
+  static BT::PortsList providedPorts()
+  {
+    return
+      {
+        BT::InputPort<std::string>("object_id", "Identifier of the object"),
+        BT::InputPort<std::vector<double> >("pre_transform_xyz_rpy",
+	  "First offset and rotation {x, y, z, roll, pitch, yaw}"),
+        BT::InputPort<std::vector<double> >("post_transform_xyz_rpy",
+	  "Second offset and orientation {x, y, z, roll, pitch, yaw}"),
+        BT::InputPort<std::string>("pose_key", "Blackboard key to store the retrieved pose"),
+        BT::InputPort<std::string>("link_name", ""),
+        BT::OutputPort<geometry_msgs::msg::Pose>("pose", "Pose after transformations")
+      };
+  }
 
-protected:
+  protected:
 /**
  * @brief Called once when transitioning from IDLE to RUNNING.
  * @return The initial state of the node after starting.
  */
-BT::NodeStatus onStart() override;
+  BT::NodeStatus onStart() override;
 
 /**
  * @brief Called every tick while in RUNNING state.
  * @return The current status of the node.
  */
-BT::NodeStatus onRunning() override;
+  BT::NodeStatus onRunning() override;
 
 /**
  * @brief Called if this node is halted by force.
  */
-void onHalted() override;
+  void onHalted() override;
 
-private:
+  private:
 // Callbacks for action client
-void goalResponseCallback(std::shared_ptr<GoalHandleGetObjectPose> goal_handle);
-void resultCallback(const GoalHandleGetObjectPose::WrappedResult&result);
+  void goalResponseCallback(std::shared_ptr<GoalHandleGetObjectPose> goal_handle);
+  void resultCallback(const GoalHandleGetObjectPose::WrappedResult & result);
 
 // ROS2 members
-rclcpp::Node::SharedPtr node_;
-rclcpp_action::Client<GetObjectPose>::SharedPtr action_client_;
+  rclcpp::Node::SharedPtr node_;
+  rclcpp_action::Client<GetObjectPose>::SharedPtr action_client_;
 
 // Internal state
-bool goal_sent_;
-bool result_received_;
+  bool goal_sent_;
+  bool result_received_;
 
-GetObjectPose::Result action_result_;
-std::string object_id_;                              ///< Unique object identifier
-std::vector<double> pre_transform_xyz_rpy_;          ///< Transformation offset and rotation
-std::vector<double> post_transform_xyz_rpy_;         ///< Reference orientation
-std::string pose_key_;                               ///< Blackboard key to store the pose
+  GetObjectPose::Result action_result_;
+  std::string object_id_;                            ///< Unique object identifier
+  std::vector<double> pre_transform_xyz_rpy_;        ///< Transformation offset and rotation
+  std::vector<double> post_transform_xyz_rpy_;       ///< Reference orientation
+  std::string pose_key_;                             ///< Blackboard key to store the pose
 };
 
 /**
@@ -415,66 +427,68 @@ std::string pose_key_;                               ///< Blackboard key to stor
  */
 class WaitForObjectAction : public BT::StatefulActionNode
 {
-public:
-using CheckObjectExists = manymove_msgs::action::CheckObjectExists;
-using GoalHandleCheckObjectExists = rclcpp_action::ClientGoalHandle<CheckObjectExists>;
+  public:
+  using CheckObjectExists = manymove_msgs::action::CheckObjectExists;
+  using GoalHandleCheckObjectExists = rclcpp_action::ClientGoalHandle<CheckObjectExists>;
 
-WaitForObjectAction(const std::string&name, const BT::NodeConfiguration&config);
+  WaitForObjectAction(const std::string & name, const BT::NodeConfiguration & config);
 
-static BT::PortsList providedPorts()
-{
-  return {
-    BT::InputPort<std::string>("object_id", "ID of the object to check"),
-    BT::InputPort<bool>("exists", true, "Wait for object to exist (true) or not exist (false)"),
-    BT::InputPort<double>("timeout", 10.0, "Time (seconds) before giving up (0 => infinite)"),
-    BT::InputPort<double>("poll_rate", 0.25, "Check frequency (seconds)"),
-    BT::InputPort<std::string>("prefix", "Prefix for HMI messages, optional"),
-    BT::OutputPort<bool>("exists", "Final check: was the object found?"),
-    BT::OutputPort<bool>("is_attached", "Is the object attached?"),
-    BT::OutputPort<std::string>("link_name", "Link name if attached")};
-}
+  static BT::PortsList providedPorts()
+  {
+    return
+      {
+        BT::InputPort<std::string>("object_id", "ID of the object to check"),
+        BT::InputPort<bool>("exists", true, "Wait for object to exist (true) or not exist (false)"),
+        BT::InputPort<double>("timeout", 10.0, "Time (seconds) before giving up (0 => infinite)"),
+        BT::InputPort<double>("poll_rate", 0.25, "Check frequency (seconds)"),
+        BT::InputPort<std::string>("prefix", "Prefix for HMI messages, optional"),
+        BT::OutputPort<bool>("exists", "Final check: was the object found?"),
+        BT::OutputPort<bool>("is_attached", "Is the object attached?"),
+        BT::OutputPort<std::string>("link_name", "Link name if attached")
+      };
+  }
 
-protected:
+  protected:
 // Called once when transitioning from IDLE to RUNNING
-BT::NodeStatus onStart() override;
+  BT::NodeStatus onStart() override;
 
 // Called every tick while in RUNNING
-BT::NodeStatus onRunning() override;
+  BT::NodeStatus onRunning() override;
 
 // Called if this node is halted by force
-void onHalted() override;
+  void onHalted() override;
 
-private:
+  private:
 // Helper: send the action goal
-void sendCheckRequest();
+  void sendCheckRequest();
 
 // Action client callbacks
-void goalResponseCallback(std::shared_ptr<GoalHandleCheckObjectExists> goal_handle);
-void resultCallback(const GoalHandleCheckObjectExists::WrappedResult&result);
+  void goalResponseCallback(std::shared_ptr<GoalHandleCheckObjectExists> goal_handle);
+  void resultCallback(const GoalHandleCheckObjectExists::WrappedResult & result);
 
-private:
-rclcpp::Node::SharedPtr node_;
-rclcpp_action::Client<CheckObjectExists>::SharedPtr action_client_;
+  private:
+  rclcpp::Node::SharedPtr node_;
+  rclcpp_action::Client<CheckObjectExists>::SharedPtr action_client_;
 
-std::string object_id_;         ///< The object ID to check
-bool desired_exists_;           ///< If true => succeed when object found, false => succeed when
+  std::string object_id_;       ///< The object ID to check
+  bool desired_exists_;         ///< If true => succeed when object found, false => succeed when
 // object not found
-double timeout_;                ///< Seconds to wait before giving up (0 => infinite)
-double poll_rate_;              ///< How often to re-check (seconds)
-std::string prefix_;            ///< Prefix for HMI messages
+  double timeout_;              ///< Seconds to wait before giving up (0 => infinite)
+  double poll_rate_;            ///< How often to re-check (seconds)
+  std::string prefix_;          ///< Prefix for HMI messages
 
 // Internal timestamps
-rclcpp::Time start_time_;
-rclcpp::Time next_check_time_;
+  rclcpp::Time start_time_;
+  rclcpp::Time next_check_time_;
 
 // Internal flags
-bool goal_sent_;
-bool result_received_;
+  bool goal_sent_;
+  bool result_received_;
 
 // Last result from the action server
-bool last_exists_;
-bool last_is_attached_;
-std::string last_link_name_;
+  bool last_exists_;
+  bool last_is_attached_;
+  std::string last_link_name_;
 };
 
 } // namespace manymove_cpp_trees

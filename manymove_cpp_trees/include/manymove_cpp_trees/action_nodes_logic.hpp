@@ -51,22 +51,24 @@ namespace manymove_cpp_trees
  */
 class RetryPauseResetNode : public BT::DecoratorNode
 {
-public:
-RetryPauseResetNode(const std::string&name, const BT::NodeConfiguration&config);
+  public:
+  RetryPauseResetNode(const std::string & name, const BT::NodeConfiguration & config);
 
-static BT::PortsList providedPorts()
-{
-  return {
-    BT::InputPort<bool>("stop_execution", false, "Pause execution when true"),
-    BT::InputPort<bool>("collision_detected", false,
-                        "Stops current move when true, then retries planning"),
-    BT::InputPort<bool>("reset", false, "Reset branch when true"),
-    BT::InputPort<std::string>("robot_prefix",
-                               "Robot prefix for setting correct blackboard key")};
-}
+  static BT::PortsList providedPorts()
+  {
+    return
+      {
+        BT::InputPort<bool>("stop_execution", false, "Pause execution when true"),
+        BT::InputPort<bool>("collision_detected", false,
+	  "Stops current move when true, then retries planning"),
+        BT::InputPort<bool>("reset", false, "Reset branch when true"),
+        BT::InputPort<std::string>("robot_prefix",
+	  "Robot prefix for setting correct blackboard key")
+      };
+  }
 
-BT::NodeStatus tick() override;
-void halt() override;
+  BT::NodeStatus tick() override;
+  void halt() override;
 };
 
 /**
@@ -76,36 +78,37 @@ void halt() override;
  */
 class CheckKeyBoolValue : public BT::ConditionNode
 {
-public:
+  public:
 /**
  * @brief Constructor
  * @param name The node's name in the XML
  * @param config The node's configuration (ports, blackboard, etc.)
  */
-CheckKeyBoolValue(const std::string&name,
-                  const BT::NodeConfiguration&config);
+  CheckKeyBoolValue(const std::string & name,
+    const BT::NodeConfiguration & config);
 
 /**
  * @brief Required BT ports: "key" (the blackboard key) and "value" (the expected value).
  */
-static BT::PortsList providedPorts()
-{
-  return {
-    BT::InputPort<std::string>("robot_prefix",
-                               "Prefix only for the HMI output, use \"hmi_\" for generic output"),
-    BT::InputPort<std::string>("key", "Name of the blackboard key to check"),
-    BT::InputPort<bool>("value", "Expected value"),
-    BT::InputPort<bool>("hmi_message_logic",
-                        "If true, outputs on hmi when check succeeds. If false, when it fails"),
-  };
-}
+  static BT::PortsList providedPorts()
+  {
+    return
+      {
+        BT::InputPort<std::string>("robot_prefix",
+	  "Prefix only for the HMI output, use \"hmi_\" for generic output"),
+        BT::InputPort<std::string>("key", "Name of the blackboard key to check"),
+        BT::InputPort<bool>("value", "Expected value"),
+        BT::InputPort<bool>("hmi_message_logic",
+	  "If true, outputs on hmi when check succeeds. If false, when it fails"),
+      };
+  }
 
-protected:
+  protected:
 /**
  * @brief The main check. Returns SUCCESS if the blackboard's "key"
  *        equals the expected "value", otherwise FAILURE.
  */
-BT::NodeStatus tick() override;
+  BT::NodeStatus tick() override;
 };
 
 /**
@@ -117,25 +120,27 @@ BT::NodeStatus tick() override;
  */
 class SetKeyBoolValue : public BT::SyncActionNode
 {
-public:
+  public:
 // Constructor
-SetKeyBoolValue(const std::string&name, const BT::NodeConfiguration&config)
-  : BT::SyncActionNode(name, config)
-{
-}
+  SetKeyBoolValue(const std::string & name, const BT::NodeConfiguration & config)
+    : BT::SyncActionNode(name, config)
+  {
+  }
 
 // Required interface: which ports are needed/offered?
-static BT::PortsList providedPorts()
-{
-  return {
-    BT::InputPort<std::string>("robot_prefix",
-                               "Prefix only for the HMI output, use \"hmi_\" for generic output"),
-    BT::InputPort<std::string>("key", "Blackboard key to set"),
-    BT::InputPort<bool>("value", "Value to set (as a bool)")};
-}
+  static BT::PortsList providedPorts()
+  {
+    return
+      {
+        BT::InputPort<std::string>("robot_prefix",
+	  "Prefix only for the HMI output, use \"hmi_\" for generic output"),
+        BT::InputPort<std::string>("key", "Blackboard key to set"),
+        BT::InputPort<bool>("value", "Value to set (as a bool)")
+      };
+  }
 
 // The main tick function; sets the blackboard key to the specified string
-BT::NodeStatus tick() override;
+  BT::NodeStatus tick() override;
 };
 
 /**
@@ -152,39 +157,41 @@ BT::NodeStatus tick() override;
  */
 class WaitForKeyBool : public BT::StatefulActionNode
 {
-public:
-WaitForKeyBool(const std::string&name,
-               const BT::NodeConfiguration&config);
+  public:
+  WaitForKeyBool(const std::string & name,
+    const BT::NodeConfiguration & config);
 
-static BT::PortsList providedPorts()
-{
-  return {
-    BT::InputPort<std::string>("key", "Blackboard key to read"),
-    BT::InputPort<bool>("expected_value", "Desired bool value"),
-    BT::InputPort<double>("timeout", 10.0, "Seconds before giving up (0 => infinite)"),
-    BT::InputPort<double>("poll_rate", 0.25, "Check frequency (seconds)"),
-    BT::InputPort<std::string>("prefix", "Prefix for HMI messages, optional")};
-}
+  static BT::PortsList providedPorts()
+  {
+    return
+      {
+        BT::InputPort<std::string>("key", "Blackboard key to read"),
+        BT::InputPort<bool>("expected_value", "Desired bool value"),
+        BT::InputPort<double>("timeout", 10.0, "Seconds before giving up (0 => infinite)"),
+        BT::InputPort<double>("poll_rate", 0.25, "Check frequency (seconds)"),
+        BT::InputPort<std::string>("prefix", "Prefix for HMI messages, optional")
+      };
+  }
 
-protected:
-BT::NodeStatus onStart() override;
-BT::NodeStatus onRunning() override;
-void onHalted() override;
+  protected:
+  BT::NodeStatus onStart() override;
+  BT::NodeStatus onRunning() override;
+  void onHalted() override;
 
-private:
+  private:
 // read from ports:
-std::string key_;
-bool expected_value_;
-double timeout_;
-double poll_rate_;
-std::string prefix_;
+  std::string key_;
+  bool expected_value_;
+  double timeout_;
+  double poll_rate_;
+  std::string prefix_;
 
 // time management
-rclcpp::Node::SharedPtr node_;
-rclcpp::Time start_time_;
-rclcpp::Time next_check_time_;
+  rclcpp::Node::SharedPtr node_;
+  rclcpp::Time start_time_;
+  rclcpp::Time next_check_time_;
 
-bool condition_met_;
+  bool condition_met_;
 };
 
 // ---------------------------------------------------------------------------
@@ -206,28 +213,30 @@ bool condition_met_;
  */
 class GetLinkPoseAction : public BT::SyncActionNode
 {
-public:
-GetLinkPoseAction(const std::string&name,
-                  const BT::NodeConfiguration&cfg);
+  public:
+  GetLinkPoseAction(const std::string & name,
+    const BT::NodeConfiguration & cfg);
 
-static BT::PortsList providedPorts()
-{
-  return {
-    BT::InputPort<std::string>("link_name", "Source link / frame"),
-    BT::InputPort<std::string>("reference_frame", "", "Target frame (default world)"),
-    BT::InputPort<std::vector<double> >("pre_transform_xyz_rpy", "6-tuple applied FIRST"),
-    BT::InputPort<std::vector<double> >("post_transform_xyz_rpy",
-                                        "6-tuple applied AFTER link pose"),
-    BT::InputPort<std::string>("pose_key", "", "If set, store pose in blackboard"),
-    BT::OutputPort<geometry_msgs::msg::Pose>("pose", "Final pose")};
-}
+  static BT::PortsList providedPorts()
+  {
+    return
+      {
+        BT::InputPort<std::string>("link_name", "Source link / frame"),
+        BT::InputPort<std::string>("reference_frame", "", "Target frame (default world)"),
+        BT::InputPort<std::vector<double> >("pre_transform_xyz_rpy", "6-tuple applied FIRST"),
+        BT::InputPort<std::vector<double> >("post_transform_xyz_rpy",
+	  "6-tuple applied AFTER link pose"),
+        BT::InputPort<std::string>("pose_key", "", "If set, store pose in blackboard"),
+        BT::OutputPort<geometry_msgs::msg::Pose>("pose", "Final pose")
+      };
+  }
 
-BT::NodeStatus tick() override;
+  BT::NodeStatus tick() override;
 
-private:
-rclcpp::Node::SharedPtr node_;
-std::unique_ptr<tf2_ros::Buffer> tf_buffer_;
-std::unique_ptr<tf2_ros::TransformListener> tf_listener_;
+  private:
+  rclcpp::Node::SharedPtr node_;
+  std::unique_ptr<tf2_ros::Buffer> tf_buffer_;
+  std::unique_ptr<tf2_ros::TransformListener> tf_listener_;
 };
 
 /**
@@ -242,21 +251,23 @@ std::unique_ptr<tf2_ros::TransformListener> tf_listener_;
  */
 class CheckPoseDistance : public BT::ConditionNode
 {
-public:
-CheckPoseDistance(const std::string&name, const BT::NodeConfiguration&cfg);
+  public:
+  CheckPoseDistance(const std::string & name, const BT::NodeConfiguration & cfg);
 
-static BT::PortsList providedPorts()
-{
-  return {
-    BT::InputPort<std::string>("reference_pose_key", "Blackboard key for reference pose"),
-    BT::InputPort<std::string>("target_pose_key", "Blackboard key for target pose"),
-    BT::InputPort<double>("tolerance", 0.01, "Distance tolerance")};
-}
+  static BT::PortsList providedPorts()
+  {
+    return
+      {
+        BT::InputPort<std::string>("reference_pose_key", "Blackboard key for reference pose"),
+        BT::InputPort<std::string>("target_pose_key", "Blackboard key for target pose"),
+        BT::InputPort<double>("tolerance", 0.01, "Distance tolerance")
+      };
+  }
 
-BT::NodeStatus tick() override;
+  BT::NodeStatus tick() override;
 
-private:
-rclcpp::Node::SharedPtr node_;
+  private:
+  rclcpp::Node::SharedPtr node_;
 };
 
 /**
@@ -269,21 +280,23 @@ rclcpp::Node::SharedPtr node_;
  */
 class CheckPoseBounds : public BT::ConditionNode
 {
-public:
-CheckPoseBounds(const std::string&name, const BT::NodeConfiguration&cfg);
+  public:
+  CheckPoseBounds(const std::string & name, const BT::NodeConfiguration & cfg);
 
-static BT::PortsList providedPorts()
-{
-  return {
-    BT::InputPort<std::string>("pose_key", "Blackboard key for pose to check"),
-    BT::InputPort<std::vector<double> >("bounds", "[min_x, min_y, min_z, max_x, max_y, max_z]"),
-    BT::InputPort<bool>("inclusive", true, "Inclusive bounds check")};
-}
+  static BT::PortsList providedPorts()
+  {
+    return
+      {
+        BT::InputPort<std::string>("pose_key", "Blackboard key for pose to check"),
+        BT::InputPort<std::vector<double> >("bounds", "[min_x, min_y, min_z, max_x, max_y, max_z]"),
+        BT::InputPort<bool>("inclusive", true, "Inclusive bounds check")
+      };
+  }
 
-BT::NodeStatus tick() override;
+  BT::NodeStatus tick() override;
 
-private:
-rclcpp::Node::SharedPtr node_;
+  private:
+  rclcpp::Node::SharedPtr node_;
 };
 
 /**
@@ -297,21 +310,23 @@ rclcpp::Node::SharedPtr node_;
  */
 class CopyPoseKey : public BT::SyncActionNode
 {
-public:
-CopyPoseKey(const std::string&name, const BT::NodeConfiguration&cfg)
-  : BT::SyncActionNode(name, cfg)
-{
-}
+  public:
+  CopyPoseKey(const std::string & name, const BT::NodeConfiguration & cfg)
+    : BT::SyncActionNode(name, cfg)
+  {
+  }
 
-static BT::PortsList providedPorts()
-{
-  return {
-    BT::InputPort<std::string>("source_key", "Blackboard key (Pose) to read"),
-    BT::InputPort<std::string>("target_key", "Blackboard key (Pose) to write"),
-    BT::InputPort<std::string>("robot_prefix", "Prefix for HMI messages, optional")};
-}
+  static BT::PortsList providedPorts()
+  {
+    return
+      {
+        BT::InputPort<std::string>("source_key", "Blackboard key (Pose) to read"),
+        BT::InputPort<std::string>("target_key", "Blackboard key (Pose) to write"),
+        BT::InputPort<std::string>("robot_prefix", "Prefix for HMI messages, optional")
+      };
+  }
 
-BT::NodeStatus tick() override;
+  BT::NodeStatus tick() override;
 };
 
 } // namespace manymove_cpp_trees

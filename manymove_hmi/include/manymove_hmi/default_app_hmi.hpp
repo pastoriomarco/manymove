@@ -35,14 +35,14 @@
  *  Nothing here except the list-builder.                             */
 class DefaultAppModule : public AppModule
 {
-public:
-explicit DefaultAppModule(QWidget*parent = nullptr)
-  : AppModule(buildKeys(), parent)
-{
-}
+  public:
+  explicit DefaultAppModule(QWidget * parent = nullptr)
+    : AppModule(buildKeys(), parent)
+  {
+  }
 
-private:
-static std::vector<KeyConfig> buildKeys();
+  private:
+  static std::vector<KeyConfig> buildKeys();
 };
 
 #endif   /* DEFAULT_APP_HMI_HPP */

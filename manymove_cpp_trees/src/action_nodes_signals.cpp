@@ -41,8 +41,8 @@ namespace manymove_cpp_trees
 // ------------------------------------------------------------------
 
 SetOutputAction::SetOutputAction(
-  const std::string&name,
-  const BT::NodeConfiguration&config)
+  const std::string & name,
+  const BT::NodeConfiguration & config)
   : BT::StatefulActionNode(name, config),
   goal_sent_(false),
   result_received_(false)
@@ -65,20 +65,20 @@ SetOutputAction::SetOutputAction(
   action_client_ = rclcpp_action::create_client<SetOutput>(node_, server_name);
 
   RCLCPP_INFO(node_->get_logger(),
-              "SetOutputAction [%s]: waiting up to 5s for '%s' action server...",
-              name.c_str(), server_name.c_str());
+    "SetOutputAction [%s]: waiting up to 5s for '%s' action server...",
+    name.c_str(), server_name.c_str());
 
   if (!action_client_->wait_for_action_server(std::chrono::seconds(5))) {
     throw BT::RuntimeError("SetOutputAction: server '" + server_name +
-                           "' not available after 5s.");
+      "' not available after 5s.");
   }
 }
 
 BT::NodeStatus SetOutputAction::onStart()
 {
   RCLCPP_DEBUG(node_->get_logger(),
-               "SetOutputAction [%s]: onStart() called.",
-               name().c_str());
+    "SetOutputAction [%s]: onStart() called.",
+    name().c_str());
 
   goal_sent_ = false;
   result_received_ = false;
@@ -87,20 +87,20 @@ BT::NodeStatus SetOutputAction::onStart()
   // Read input ports
   if (!getInput<std::string>("io_type", io_type_)) {
     RCLCPP_ERROR(node_->get_logger(),
-                 "SetOutputAction [%s]: missing 'io_type'.",
-                 name().c_str());
+      "SetOutputAction [%s]: missing 'io_type'.",
+      name().c_str());
     throw BT::RuntimeError("SetOutputAction [" + name() + "]: missing 'io_type'.");
   }
   if (!getInput<int>("ionum", ionum_)) {
     RCLCPP_ERROR(node_->get_logger(),
-                 "SetOutputAction [%s]: missing 'ionum'.",
-                 name().c_str());
+      "SetOutputAction [%s]: missing 'ionum'.",
+      name().c_str());
     throw BT::RuntimeError("SetOutputAction [" + name() + "]: missing 'ionum'.");
   }
   if (!getInput<int>("value", value_)) {
     RCLCPP_ERROR(node_->get_logger(),
-                 "SetOutputAction [%s]: missing 'value'.",
-                 name().c_str());
+      "SetOutputAction [%s]: missing 'value'.",
+      name().c_str());
     throw BT::RuntimeError("SetOutputAction [" + name() + "]: missing 'value'.");
   }
 
@@ -134,29 +134,29 @@ BT::NodeStatus SetOutputAction::onRunning()
 
   if (action_result_.success) {
     RCLCPP_DEBUG(node_->get_logger(),
-                 "SetOutputAction [%s]: IO type='%s', ionum=%d => SUCCESS",
-                 name().c_str(), io_type_.c_str(), ionum_);
+      "SetOutputAction [%s]: IO type='%s', ionum=%d => SUCCESS",
+      name().c_str(), io_type_.c_str(), ionum_);
 
     // HMI message
     setHMIMessage(config().blackboard,
-                  prefix_,
-                  "OUTPUT " + std::to_string(
-		    ionum_) + " OF " + io_type_ + " SET TO " + std::to_string(value_),
-                  "green");
+      prefix_,
+      "OUTPUT " + std::to_string(
+	ionum_) + " OF " + io_type_ + " SET TO " + std::to_string(value_),
+      "green");
 
     return BT::NodeStatus::SUCCESS;
   }
   else {
     RCLCPP_ERROR(node_->get_logger(),
-                 "SetOutputAction [%s]: IO type='%s', ionum=%d => FAIL: %s",
-                 name().c_str(), io_type_.c_str(), ionum_,
-                 action_result_.message.c_str());
+      "SetOutputAction [%s]: IO type='%s', ionum=%d => FAIL: %s",
+      name().c_str(), io_type_.c_str(), ionum_,
+      action_result_.message.c_str());
 
     // HMI message
     setHMIMessage(config().blackboard,
-                  prefix_,
-                  "SETTING OUTPUT " + std::to_string(ionum_) + " OF " + io_type_ + " FAILED!",
-                  "red");
+      prefix_,
+      "SETTING OUTPUT " + std::to_string(ionum_) + " OF " + io_type_ + " FAILED!",
+      "red");
 
     return BT::NodeStatus::FAILURE;
   }
@@ -165,8 +165,8 @@ BT::NodeStatus SetOutputAction::onRunning()
 void SetOutputAction::onHalted()
 {
   RCLCPP_WARN(node_->get_logger(),
-              "SetOutputAction [%s]: onHalted => cancel goal if needed.",
-              name().c_str());
+    "SetOutputAction [%s]: onHalted => cancel goal if needed.",
+    name().c_str());
 
   if (goal_sent_ && !result_received_) {
     action_client_->async_cancel_all_goals();
@@ -179,19 +179,19 @@ void SetOutputAction::goalResponseCallback(std::shared_ptr<GoalHandleSetOutput> 
 {
   if (!goal_handle) {
     RCLCPP_ERROR(node_->get_logger(),
-                 "SetOutputAction [%s]: Goal REJECTED by server.",
-                 name().c_str());
+      "SetOutputAction [%s]: Goal REJECTED by server.",
+      name().c_str());
     action_result_.success = false;
     result_received_ = true;
   }
   else {
     RCLCPP_INFO(node_->get_logger(),
-                "SetOutputAction [%s]: Goal ACCEPTED by server.",
-                name().c_str());
+      "SetOutputAction [%s]: Goal ACCEPTED by server.",
+      name().c_str());
   }
 }
 
-void SetOutputAction::resultCallback(const GoalHandleSetOutput::WrappedResult&wrapped_result)
+void SetOutputAction::resultCallback(const GoalHandleSetOutput::WrappedResult & wrapped_result)
 {
   if (wrapped_result.code == rclcpp_action::ResultCode::SUCCEEDED) {
     action_result_ = *(wrapped_result.result);
@@ -208,8 +208,8 @@ void SetOutputAction::resultCallback(const GoalHandleSetOutput::WrappedResult&wr
 // ------------------------------------------------------------------
 
 GetInputAction::GetInputAction(
-  const std::string&name,
-  const BT::NodeConfiguration&config)
+  const std::string & name,
+  const BT::NodeConfiguration & config)
   : BT::StatefulActionNode(name, config),
   goal_sent_(false),
   result_received_(false)
@@ -229,8 +229,8 @@ GetInputAction::GetInputAction(
   // Create action client
   action_client_ = rclcpp_action::create_client<GetInput>(node_, server_name);
   RCLCPP_INFO(node_->get_logger(),
-              "GetInputAction [%s]: waiting up to 5s for '%s' server...",
-              name.c_str(), server_name.c_str());
+    "GetInputAction [%s]: waiting up to 5s for '%s' server...",
+    name.c_str(), server_name.c_str());
 
   if (!action_client_->wait_for_action_server(std::chrono::seconds(5))) {
     throw BT::RuntimeError("'" + server_name + "' action server not available.");
@@ -240,8 +240,8 @@ GetInputAction::GetInputAction(
 BT::NodeStatus GetInputAction::onStart()
 {
   RCLCPP_DEBUG(node_->get_logger(),
-               "GetInputAction [%s]: onStart()",
-               name().c_str());
+    "GetInputAction [%s]: onStart()",
+    name().c_str());
 
   goal_sent_ = false;
   result_received_ = false;
@@ -250,14 +250,14 @@ BT::NodeStatus GetInputAction::onStart()
   // Read input ports
   if (!getInput<std::string>("io_type", io_type_)) {
     RCLCPP_ERROR(node_->get_logger(),
-                 "GetInputAction [%s]: missing input port 'io_type'",
-                 name().c_str());
+      "GetInputAction [%s]: missing input port 'io_type'",
+      name().c_str());
     throw BT::RuntimeError("GetInputAction [" + name() + "] missing input port 'io_type'.");
   }
   if (!getInput<int>("ionum", ionum_)) {
     RCLCPP_ERROR(node_->get_logger(),
-                 "GetInputAction [%s]: missing input port 'ionum'",
-                 name().c_str());
+      "GetInputAction [%s]: missing input port 'ionum'",
+      name().c_str());
     throw BT::RuntimeError("GetInputAction [" + name() + "] missing input port 'ionum'.");
   }
 
@@ -291,28 +291,28 @@ BT::NodeStatus GetInputAction::onRunning()
 
   if (action_result_.success) {
     RCLCPP_DEBUG(node_->get_logger(),
-                 "GetInputAction [%s]: read IO type='%s', ionum=%d => value=%d",
-                 name().c_str(), io_type_.c_str(), ionum_, action_result_.value);
+      "GetInputAction [%s]: read IO type='%s', ionum=%d => value=%d",
+      name().c_str(), io_type_.c_str(), ionum_, action_result_.value);
 
     // HMI message
     setHMIMessage(config().blackboard,
-                  prefix_,
-                  "INPUT " + std::to_string(ionum_) + " OF " + io_type_ + " HAS VALUE " +
-                  std::to_string(action_result_.value),
-                  "green");
+      prefix_,
+      "INPUT " + std::to_string(ionum_) + " OF " + io_type_ + " HAS VALUE " +
+      std::to_string(action_result_.value),
+      "green");
 
     return BT::NodeStatus::SUCCESS;
   }
   else {
     RCLCPP_ERROR(node_->get_logger(),
-                 "GetInputAction [%s]: FAILED => %s",
-                 name().c_str(), action_result_.message.c_str());
+      "GetInputAction [%s]: FAILED => %s",
+      name().c_str(), action_result_.message.c_str());
 
     // HMI message
     setHMIMessage(config().blackboard,
-                  prefix_,
-                  "READING INPUT " + std::to_string(ionum_) + " OF " + io_type_ + " FAILED!",
-                  "green");
+      prefix_,
+      "READING INPUT " + std::to_string(ionum_) + " OF " + io_type_ + " FAILED!",
+      "green");
 
     return BT::NodeStatus::FAILURE;
   }
@@ -321,8 +321,8 @@ BT::NodeStatus GetInputAction::onRunning()
 void GetInputAction::onHalted()
 {
   RCLCPP_WARN(node_->get_logger(),
-              "GetInputAction [%s]: onHalted => cancel if needed",
-              name().c_str());
+    "GetInputAction [%s]: onHalted => cancel if needed",
+    name().c_str());
 
   if (goal_sent_ && !result_received_) {
     action_client_->async_cancel_all_goals();
@@ -335,19 +335,19 @@ void GetInputAction::goalResponseCallback(std::shared_ptr<GoalHandleGetInput> go
 {
   if (!goal_handle) {
     RCLCPP_ERROR(node_->get_logger(),
-                 "GetInputAction [%s]: Goal REJECTED.",
-                 name().c_str());
+      "GetInputAction [%s]: Goal REJECTED.",
+      name().c_str());
     action_result_.success = false;
     result_received_ = true;
   }
   else {
     RCLCPP_DEBUG(node_->get_logger(),
-                 "GetInputAction [%s]: Goal ACCEPTED.",
-                 name().c_str());
+      "GetInputAction [%s]: Goal ACCEPTED.",
+      name().c_str());
   }
 }
 
-void GetInputAction::resultCallback(const GoalHandleGetInput::WrappedResult&wrapped_result)
+void GetInputAction::resultCallback(const GoalHandleGetInput::WrappedResult & wrapped_result)
 {
   if (wrapped_result.code == rclcpp_action::ResultCode::SUCCEEDED) {
     action_result_ = *(wrapped_result.result);
@@ -364,8 +364,8 @@ void GetInputAction::resultCallback(const GoalHandleGetInput::WrappedResult&wrap
 // ------------------------------------------------------------------
 
 CheckRobotStateAction::CheckRobotStateAction(
-  const std::string&name,
-  const BT::NodeConfiguration&config)
+  const std::string & name,
+  const BT::NodeConfiguration & config)
   : BT::StatefulActionNode(name, config),
   goal_sent_(false),
   result_received_(false)
@@ -387,20 +387,20 @@ CheckRobotStateAction::CheckRobotStateAction(
   action_client_ = rclcpp_action::create_client<CheckRobotState>(node_, server_name);
 
   RCLCPP_INFO(node_->get_logger(),
-              "CheckRobotStateAction [%s]: waiting 5s for server '%s'...",
-              name.c_str(), server_name.c_str());
+    "CheckRobotStateAction [%s]: waiting 5s for server '%s'...",
+    name.c_str(), server_name.c_str());
 
   if (!action_client_->wait_for_action_server(std::chrono::seconds(5))) {
     throw BT::RuntimeError(
-	    "CheckRobotStateAction: server '" + server_name + "' not available after 5s.");
+      "CheckRobotStateAction: server '" + server_name + "' not available after 5s.");
   }
 }
 
 BT::NodeStatus CheckRobotStateAction::onStart()
 {
   RCLCPP_DEBUG(node_->get_logger(),
-               "CheckRobotStateAction [%s]: onStart()",
-               name().c_str());
+    "CheckRobotStateAction [%s]: onStart()",
+    name().c_str());
 
   // Reset flags and result
   goal_sent_ = false;
@@ -440,8 +440,8 @@ BT::NodeStatus CheckRobotStateAction::onRunning()
 
   if (action_result_.ready) {
     RCLCPP_INFO(node_->get_logger(),
-                "CheckRobotStateAction [%s]: Robot is READY. (mode=%d, state=%d)",
-                name().c_str(), action_result_.mode, action_result_.state);
+      "CheckRobotStateAction [%s]: Robot is READY. (mode=%d, state=%d)",
+      name().c_str(), action_result_.mode, action_result_.state);
     return BT::NodeStatus::SUCCESS;
   }
   else {
@@ -460,8 +460,8 @@ BT::NodeStatus CheckRobotStateAction::onRunning()
 void CheckRobotStateAction::onHalted()
 {
   RCLCPP_WARN(node_->get_logger(),
-              "CheckRobotStateAction [%s]: onHalted => cancel if needed.",
-              name().c_str());
+    "CheckRobotStateAction [%s]: onHalted => cancel if needed.",
+    name().c_str());
 
   if (goal_sent_ && !result_received_) {
     action_client_->async_cancel_all_goals();
@@ -475,21 +475,21 @@ void CheckRobotStateAction::goalResponseCallback(
 {
   if (!goal_handle) {
     RCLCPP_ERROR(node_->get_logger(),
-                 "CheckRobotStateAction [%s]: Goal REJECTED by server.",
-                 name().c_str());
+      "CheckRobotStateAction [%s]: Goal REJECTED by server.",
+      name().c_str());
     action_result_.ready = false;
     action_result_.message = "check_robot_state goal was rejected";
     result_received_ = true;
   }
   else {
     RCLCPP_INFO(node_->get_logger(),
-                "CheckRobotStateAction [%s]: Goal ACCEPTED by server.",
-                name().c_str());
+      "CheckRobotStateAction [%s]: Goal ACCEPTED by server.",
+      name().c_str());
   }
 }
 
 void CheckRobotStateAction::resultCallback(
-  const GoalHandleCheckRobotState::WrappedResult&wrapped_result)
+  const GoalHandleCheckRobotState::WrappedResult & wrapped_result)
 {
   if (wrapped_result.code == rclcpp_action::ResultCode::SUCCEEDED) {
     // The server returned a valid result
@@ -498,9 +498,9 @@ void CheckRobotStateAction::resultCallback(
   else {
     // If aborted, canceled, or an error code => not ready
     RCLCPP_ERROR(node_->get_logger(),
-                 "CheckRobotStateAction [%s]: Action finished with code %d (not successful).",
-                 name().c_str(),
-                 static_cast<int>(wrapped_result.code));
+      "CheckRobotStateAction [%s]: Action finished with code %d (not successful).",
+      name().c_str(),
+      static_cast<int>(wrapped_result.code));
     action_result_.ready = false;
     action_result_.message = "check_robot_state aborted/canceled or failed";
   }
@@ -512,8 +512,8 @@ void CheckRobotStateAction::resultCallback(
 // ------------------------------------------------------------------
 
 ResetRobotStateAction::ResetRobotStateAction(
-  const std::string&name,
-  const BT::NodeConfiguration&config)
+  const std::string & name,
+  const BT::NodeConfiguration & config)
   : BT::StatefulActionNode(name, config),
   goal_sent_(false),
   result_received_(false),
@@ -540,8 +540,8 @@ ResetRobotStateAction::ResetRobotStateAction(
   computed_controller_name_ = prefix + model + "_traj_controller";
 
   RCLCPP_INFO(node_->get_logger(),
-              "ResetRobotStateAction [%s]: Using controller '%s'.",
-              name.c_str(), computed_controller_name_.c_str());
+    "ResetRobotStateAction [%s]: Using controller '%s'.",
+    name.c_str(), computed_controller_name_.c_str());
 
   // Initialize ResetRobotState action client
   std::string reset_robot_state_server = prefix + "reset_robot_state";
@@ -557,9 +557,9 @@ ResetRobotStateAction::ResetRobotStateAction(
   load_traj_client_ = rclcpp_action::create_client<LoadTrajController>(node_, load_traj_server);
 
   RCLCPP_INFO(node_->get_logger(),
-              "ResetRobotStateAction [%s]: waiting up to 5s for '%s', '%s', and '%s' servers...",
-              name.c_str(), reset_robot_state_server.c_str(),
-              unload_traj_server.c_str(), load_traj_server.c_str());
+    "ResetRobotStateAction [%s]: waiting up to 5s for '%s', '%s', and '%s' servers...",
+    name.c_str(), reset_robot_state_server.c_str(),
+    unload_traj_server.c_str(), load_traj_server.c_str());
 
   if (!action_client_->wait_for_action_server(std::chrono::seconds(5)) ||
       !unload_traj_client_->wait_for_action_server(std::chrono::seconds(5)) ||
@@ -571,8 +571,8 @@ ResetRobotStateAction::ResetRobotStateAction(
 BT::NodeStatus ResetRobotStateAction::onStart()
 {
   RCLCPP_DEBUG(node_->get_logger(),
-               "ResetRobotStateAction [%s]: onStart()",
-               name().c_str());
+    "ResetRobotStateAction [%s]: onStart()",
+    name().c_str());
 
   // Reset all flags
   goal_sent_ = false;
@@ -590,7 +590,7 @@ BT::NodeStatus ResetRobotStateAction::onStart()
   auto unload_traj_options = rclcpp_action::Client<UnloadTrajController>::SendGoalOptions();
   unload_traj_options.goal_response_callback =
     std::bind(&ResetRobotStateAction::goalResponseCallbackUnloadTraj, this,
-              std::placeholders::_1);
+      std::placeholders::_1);
   unload_traj_options.result_callback =
     std::bind(&ResetRobotStateAction::resultCallbackUnloadTraj, this, std::placeholders::_1);
 
@@ -635,7 +635,7 @@ BT::NodeStatus ResetRobotStateAction::onRunning()
     auto load_traj_options = rclcpp_action::Client<LoadTrajController>::SendGoalOptions();
     load_traj_options.goal_response_callback =
       std::bind(&ResetRobotStateAction::goalResponseCallbackLoadTraj, this,
-                std::placeholders::_1);
+	std::placeholders::_1);
     load_traj_options.result_callback =
       std::bind(&ResetRobotStateAction::resultCallbackLoadTraj, this, std::placeholders::_1);
 
@@ -652,16 +652,16 @@ BT::NodeStatus ResetRobotStateAction::onRunning()
   // All actions completed successfully
   setOutput("success", true);
   RCLCPP_INFO(node_->get_logger(),
-              "ResetRobotStateAction [%s]: SUCCESS => Full sequence completed",
-              name().c_str());
+    "ResetRobotStateAction [%s]: SUCCESS => Full sequence completed",
+    name().c_str());
   return BT::NodeStatus::SUCCESS;
 }
 
 void ResetRobotStateAction::onHalted()
 {
   RCLCPP_WARN(node_->get_logger(),
-              "ResetRobotStateAction [%s]: onHalted => cancel if needed.",
-              name().c_str());
+    "ResetRobotStateAction [%s]: onHalted => cancel if needed.",
+    name().c_str());
 
   if (goal_sent_ && !result_received_) {
     action_client_->async_cancel_all_goals();
@@ -684,20 +684,20 @@ void ResetRobotStateAction::goalResponseCallback(
 {
   if (!goal_handle) {
     RCLCPP_ERROR(node_->get_logger(),
-                 "ResetRobotStateAction [%s]: ResetRobotState Goal REJECTED by server.",
-                 name().c_str());
+      "ResetRobotStateAction [%s]: ResetRobotState Goal REJECTED by server.",
+      name().c_str());
     action_result_.success = false;
     result_received_ = true;
   }
   else {
     RCLCPP_INFO(node_->get_logger(),
-                "ResetRobotStateAction [%s]: ResetRobotState Goal ACCEPTED by server.",
-                name().c_str());
+      "ResetRobotStateAction [%s]: ResetRobotState Goal ACCEPTED by server.",
+      name().c_str());
   }
 }
 
 void ResetRobotStateAction::resultCallback(
-  const GoalHandleResetRobotState::WrappedResult&wrapped_result)
+  const GoalHandleResetRobotState::WrappedResult & wrapped_result)
 {
   if (wrapped_result.code == rclcpp_action::ResultCode::SUCCEEDED) {
     action_result_ = *(wrapped_result.result);
@@ -714,19 +714,19 @@ void ResetRobotStateAction::goalResponseCallbackUnloadTraj(
 {
   if (!goal_handle) {
     RCLCPP_ERROR(node_->get_logger(),
-                 "ResetRobotStateAction [%s]: UnloadTrajController Goal REJECTED by server.",
-                 name().c_str());
+      "ResetRobotStateAction [%s]: UnloadTrajController Goal REJECTED by server.",
+      name().c_str());
     unload_traj_success_ = false;
   }
   else {
     RCLCPP_INFO(node_->get_logger(),
-                "ResetRobotStateAction [%s]: UnloadTrajController Goal ACCEPTED by server.",
-                name().c_str());
+      "ResetRobotStateAction [%s]: UnloadTrajController Goal ACCEPTED by server.",
+      name().c_str());
   }
 }
 
 void ResetRobotStateAction::resultCallbackUnloadTraj(
-  const GoalHandleUnloadTrajController::WrappedResult&wrapped_result)
+  const GoalHandleUnloadTrajController::WrappedResult & wrapped_result)
 {
   if (wrapped_result.code == rclcpp_action::ResultCode::SUCCEEDED) {
     unload_traj_success_ = wrapped_result.result->success;
@@ -741,19 +741,19 @@ void ResetRobotStateAction::goalResponseCallbackLoadTraj(
 {
   if (!goal_handle) {
     RCLCPP_ERROR(node_->get_logger(),
-                 "ResetRobotStateAction [%s]: LoadTrajController Goal REJECTED by server.",
-                 name().c_str());
+      "ResetRobotStateAction [%s]: LoadTrajController Goal REJECTED by server.",
+      name().c_str());
     load_traj_success_ = false;
   }
   else {
     RCLCPP_INFO(node_->get_logger(),
-                "ResetRobotStateAction [%s]: LoadTrajController Goal ACCEPTED by server.",
-                name().c_str());
+      "ResetRobotStateAction [%s]: LoadTrajController Goal ACCEPTED by server.",
+      name().c_str());
   }
 }
 
 void ResetRobotStateAction::resultCallbackLoadTraj(
-  const GoalHandleLoadTrajController::WrappedResult&wrapped_result)
+  const GoalHandleLoadTrajController::WrappedResult & wrapped_result)
 {
   if (wrapped_result.code == rclcpp_action::ResultCode::SUCCEEDED) {
     load_traj_success_ = wrapped_result.result->success;
@@ -764,8 +764,8 @@ void ResetRobotStateAction::resultCallbackLoadTraj(
 }
 
 WaitForInputAction::WaitForInputAction(
-  const std::string&name,
-  const BT::NodeConfiguration&config)
+  const std::string & name,
+  const BT::NodeConfiguration & config)
   : BT::StatefulActionNode(name, config),
   goal_sent_(false),
   result_received_(false),
@@ -814,12 +814,12 @@ BT::NodeStatus WaitForInputAction::onStart()
     action_client_ = rclcpp_action::create_client<GetInput>(node_, server_name);
 
     RCLCPP_INFO(node_->get_logger(),
-                "[%s] WaitForInputAction: connecting to server '%s' (5s)...",
-                name().c_str(), server_name.c_str());
+      "[%s] WaitForInputAction: connecting to server '%s' (5s)...",
+      name().c_str(), server_name.c_str());
     if (!action_client_->wait_for_action_server(std::chrono::seconds(5))) {
       RCLCPP_ERROR(node_->get_logger(),
-                   "[%s] server '%s' not available.",
-                   name().c_str(), server_name.c_str());
+	"[%s] server '%s' not available.",
+	name().c_str(), server_name.c_str());
       return BT::NodeStatus::FAILURE;
     }
   }
@@ -840,11 +840,11 @@ BT::NodeStatus WaitForInputAction::onStart()
 
   // HMI message
   setHMIMessage(config().blackboard,
-                prefix_,
-                "WAITING FOR INPUT " + std::to_string(
-		  ionum_) + " OF " + io_type_ + " TO HAVE VALUE " + std::to_string(
-		  desired_value_),
-                "yellow");
+    prefix_,
+    "WAITING FOR INPUT " + std::to_string(
+      ionum_) + " OF " + io_type_ + " TO HAVE VALUE " + std::to_string(
+      desired_value_),
+    "yellow");
 
   return BT::NodeStatus::RUNNING;
 }
@@ -859,15 +859,15 @@ BT::NodeStatus WaitForInputAction::onRunning()
       // Condition satisfied => SUCCESS
       setOutput("value", last_value_);
       RCLCPP_DEBUG(node_->get_logger(),
-                   "[%s] read=%d => DESIRED => SUCCESS",
-                   name().c_str(), last_value_);
+	"[%s] read=%d => DESIRED => SUCCESS",
+	name().c_str(), last_value_);
 
       // HMI message
       setHMIMessage(config().blackboard,
-                    prefix_,
-                    "INPUT " + std::to_string(ionum_) + " OF " + io_type_ + " HAS VALUE " +
-                    std::to_string(desired_value_),
-                    "green");
+	prefix_,
+	"INPUT " + std::to_string(ionum_) + " OF " + io_type_ + " HAS VALUE " +
+	std::to_string(desired_value_),
+	"green");
 
       return BT::NodeStatus::SUCCESS;
     }
@@ -877,14 +877,14 @@ BT::NodeStatus WaitForInputAction::onRunning()
       double elapsed = (now - start_time_).seconds();
       if (elapsed >= timeout_) {
 	RCLCPP_WARN(node_->get_logger(),
-	            "[%s] Timeout => FAILURE (read=%d)",
-	            name().c_str(), last_value_);
+	  "[%s] Timeout => FAILURE (read=%d)",
+	  name().c_str(), last_value_);
 
 	// HMI message
 	setHMIMessage(config().blackboard,
-	              prefix_,
-	              "WAIT INPUT " + std::to_string(ionum_) + " OF " + io_type_ + " TIMED OUT",
-	              "red");
+	  prefix_,
+	  "WAIT INPUT " + std::to_string(ionum_) + " OF " + io_type_ + " TIMED OUT",
+	  "red");
 
 	return BT::NodeStatus::FAILURE;
       }
@@ -912,8 +912,8 @@ BT::NodeStatus WaitForInputAction::onRunning()
 void WaitForInputAction::onHalted()
 {
   RCLCPP_WARN(node_->get_logger(),
-              "[%s] onHalted() => cancel goal if needed",
-              name().c_str());
+    "[%s] onHalted() => cancel goal if needed",
+    name().c_str());
   if (goal_sent_ && !result_received_) {
     action_client_->async_cancel_all_goals();
   }
@@ -947,11 +947,11 @@ void WaitForInputAction::sendCheckRequest()
 
   // HMI message
   setHMIMessage(config().blackboard,
-                prefix_,
-                "WAITING FOR INPUT " + std::to_string(
-		  ionum_) + " OF " + io_type_ + " TO HAVE VALUE " + std::to_string(
-		  desired_value_),
-                "yellow");
+    prefix_,
+    "WAITING FOR INPUT " + std::to_string(
+      ionum_) + " OF " + io_type_ + " TO HAVE VALUE " + std::to_string(
+      desired_value_),
+    "yellow");
 
   action_client_->async_send_goal(goal_msg, opts);
 
@@ -964,21 +964,21 @@ void WaitForInputAction::goalResponseCallback(
 {
   if (!goal_handle) {
     RCLCPP_ERROR(node_->get_logger(),
-                 "[%s] Goal REJECTED by server",
-                 name().c_str());
+      "[%s] Goal REJECTED by server",
+      name().c_str());
     last_success_ = false;
     last_value_ = -1;
     result_received_ = true;
   }
   else {
     RCLCPP_DEBUG(node_->get_logger(),
-                 "[%s] Goal ACCEPTED by server",
-                 name().c_str());
+      "[%s] Goal ACCEPTED by server",
+      name().c_str());
   }
 }
 
 void WaitForInputAction::resultCallback(
-  const rclcpp_action::ClientGoalHandle<GetInput>::WrappedResult&wrapped_result)
+  const rclcpp_action::ClientGoalHandle<GetInput>::WrappedResult & wrapped_result)
 {
   if (wrapped_result.code == rclcpp_action::ResultCode::SUCCEEDED) {
     // Fill last_xxx with the server's result

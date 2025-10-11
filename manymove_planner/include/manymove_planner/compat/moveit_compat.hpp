@@ -50,25 +50,25 @@ namespace manymove_planner_compat
 // Accessor for MoveGroupInterface::Plan trajectory field, supporting both
 // Jazzy (plan.trajectory) and Humble (plan.trajectory_).
 template<typename PlanT>
-inline auto mgiPlanTrajectory(PlanT&plan) -> decltype((plan.trajectory))
+inline auto mgiPlanTrajectory(PlanT & plan) -> decltype((plan.trajectory))
 {
   return plan.trajectory;
 }
 
 template<typename PlanT>
-inline auto mgiPlanTrajectory(PlanT&plan) -> decltype((plan.trajectory_))
+inline auto mgiPlanTrajectory(PlanT & plan) -> decltype((plan.trajectory_))
 {
   return plan.trajectory_;
 }
 
 template<typename PlanT>
-inline auto mgiPlanTrajectory(const PlanT&plan) -> decltype((plan.trajectory))
+inline auto mgiPlanTrajectory(const PlanT & plan) -> decltype((plan.trajectory))
 {
   return plan.trajectory;
 }
 
 template<typename PlanT>
-inline auto mgiPlanTrajectory(const PlanT&plan) -> decltype((plan.trajectory_))
+inline auto mgiPlanTrajectory(const PlanT & plan) -> decltype((plan.trajectory_))
 {
   return plan.trajectory_;
 }
@@ -80,11 +80,14 @@ struct has_mgi_cartesian_with_jump
   private:
   template<typename T>
   static auto test(int) -> decltype(
-    std::declval<T&>().computeCartesianPath(std::declval<const std::vector<geometry_msgs::msg::Pose>&>(),
-                                            std::declval<double>(),
-                                            std::declval<double>(),
-                                            std::declval<moveit_msgs::msg::RobotTrajectory&>()),
-    std::true_type{});
+    std::declval<T&>().computeCartesianPath(std::declval<const
+                                                         std::vector<geometry_msgs::msg::Pose>&>(),
+      std::declval<double>(),
+      std::declval<double>(),
+      std::declval<moveit_msgs::msg::RobotTrajectory&>()),
+    std::true_type
+    {
+    });
 
   template<typename>
   static std::false_type test(...);
@@ -100,10 +103,13 @@ struct has_mgi_cartesian_no_jump
   private:
   template<typename T>
   static auto test(int) -> decltype(
-    std::declval<T&>().computeCartesianPath(std::declval<const std::vector<geometry_msgs::msg::Pose>&>(),
-                                            std::declval<double>(),
-                                            std::declval<moveit_msgs::msg::RobotTrajectory&>()),
-    std::true_type{});
+    std::declval<T&>().computeCartesianPath(std::declval<const
+                                                         std::vector<geometry_msgs::msg::Pose>&>(),
+      std::declval<double>(),
+      std::declval<moveit_msgs::msg::RobotTrajectory&>()),
+    std::true_type
+    {
+    });
 
   template<typename>
   static std::false_type test(...);
@@ -115,11 +121,11 @@ struct has_mgi_cartesian_no_jump
 // Wrapper that calls the appropriate MGI API depending on which signature exists.
 template<typename MGI, typename PlanT>
 inline double computeCartesianPathCompat(
-  MGI&mgi,
-  const std::vector<geometry_msgs::msg::Pose>&waypoints,
+  MGI & mgi,
+  const std::vector<geometry_msgs::msg::Pose> & waypoints,
   double eef_step,
   double jump_threshold,
-  PlanT&plan)
+  PlanT & plan)
 {
   (void)jump_threshold;       // unused in newer API
 
@@ -141,28 +147,28 @@ namespace detail
 {
 
 template<typename MoveItCppT>
-auto getPlanningSceneMonitorRwImpl(MoveItCppT&micpp, int)
+auto getPlanningSceneMonitorRwImpl(MoveItCppT & micpp, int)
 -> decltype(micpp.getPlanningSceneMonitorNonConst())
 {
   return micpp.getPlanningSceneMonitorNonConst();
 }
 
 template<typename MoveItCppT>
-auto getPlanningSceneMonitorRwImpl(MoveItCppT&micpp, long)
+auto getPlanningSceneMonitorRwImpl(MoveItCppT & micpp, long)
 -> decltype(micpp.getPlanningSceneMonitor())
 {
   return micpp.getPlanningSceneMonitor();
 }
 
 template<typename PlanningComponentT>
-auto executePlanningComponentImpl(PlanningComponentT&pc, bool blocking, int)
+auto executePlanningComponentImpl(PlanningComponentT & pc, bool blocking, int)
 -> decltype(pc.execute(blocking), bool ())
 {
   return pc.execute(blocking);
 }
 
 template<typename PlanningComponentT>
-auto executePlanningComponentImpl(PlanningComponentT&pc, bool /*blocking*/, long)
+auto executePlanningComponentImpl(PlanningComponentT & pc, bool /*blocking*/, long)
 -> decltype(pc.execute(), bool ())
 {
   return pc.execute();
@@ -171,13 +177,15 @@ auto executePlanningComponentImpl(PlanningComponentT&pc, bool /*blocking*/, long
 template<typename MoveItCppT>
 auto detect_execute_with_controllers(int)
 -> decltype(
-  std::declval<MoveItCppT&>().execute(std::declval<robot_trajectory::RobotTrajectoryPtr>(),
-                                      std::declval<const std::vector<std::string>&>()),
+  std::declval<MoveItCppT &>().execute(std::declval<robot_trajectory::RobotTrajectoryPtr>(),
+    std::declval<const std::vector<std::string> &>()),
   std::true_type
     {
     })
 {
-  return {};
+  return
+    {
+    };
 }
 
 template<typename MoveItCppT>
@@ -192,14 +200,18 @@ struct has_execute_with_controllers
 template<typename MoveItCppT>
 auto detect_execute_with_blocking(int)
 -> decltype(
-  std::declval<MoveItCppT&>().execute(std::declval<robot_trajectory::RobotTrajectoryPtr>(),
-                                      bool
+  std::declval<MoveItCppT &>().execute(std::declval<robot_trajectory::RobotTrajectoryPtr>(),
+    bool
     {
     },
-                                      std::declval<const std::vector<std::string>&>()),
-  std::true_type{})
+    std::declval<const std::vector<std::string>&>()),
+  std::true_type
+    {
+    })
 {
-  return {};
+  return
+    {
+    };
 }
 
 template<typename MoveItCppT>
@@ -214,13 +226,15 @@ struct has_execute_with_blocking
 template<typename MoveItCppT>
 auto detect_execute_with_group(int)
 -> decltype(
-  std::declval<MoveItCppT&>().execute(std::declval<const std::string&>(),
-                                      std::declval<robot_trajectory::RobotTrajectoryPtr>()),
+  std::declval<MoveItCppT &>().execute(std::declval<const std::string &>(),
+    std::declval<robot_trajectory::RobotTrajectoryPtr>()),
   std::true_type
     {
     })
 {
-  return {};
+  return
+    {
+    };
 }
 
 template<typename MoveItCppT>
@@ -233,21 +247,21 @@ struct has_execute_with_group
 };
 
 template<typename MoveItCppT>
-auto getPlanningPipelineNamesImpl(MoveItCppT&micpp, const std::string&planning_group, int)
+auto getPlanningPipelineNamesImpl(MoveItCppT & micpp, const std::string & planning_group, int)
 -> decltype(micpp.getPlanningPipelineNames(planning_group))
 {
   return micpp.getPlanningPipelineNames(planning_group);
 }
 
 template<typename MoveItCppT>
-auto getPlanningPipelineNamesImpl(MoveItCppT&micpp, const std::string& /*planning_group*/,
-                                  long)
+auto getPlanningPipelineNamesImpl(MoveItCppT & micpp, const std::string& /*planning_group*/,
+  long)
 -> std::vector<std::string>
 {
   std::vector<std::string> names;
-  const auto&pipelines = micpp.getPlanningPipelines();
+  const auto & pipelines = micpp.getPlanningPipelines();
   names.reserve(pipelines.size());
-  for (const auto&kv : pipelines) {
+  for (const auto & kv : pipelines) {
     names.push_back(kv.first);
   }
   return names;
@@ -257,21 +271,21 @@ auto getPlanningPipelineNamesImpl(MoveItCppT&micpp, const std::string& /*plannin
 
 // Unified accessor for a non-const PlanningSceneMonitor pointer across MoveIt versions.
 template<typename MoveItCppT>
-auto getPlanningSceneMonitorRw(MoveItCppT&micpp)
+auto getPlanningSceneMonitorRw(MoveItCppT & micpp)
 -> decltype(detail::getPlanningSceneMonitorRwImpl(micpp, 0))
 {
   return detail::getPlanningSceneMonitorRwImpl(micpp, 0);
 }
 
 template<typename MoveItCppT>
-auto getPlanningSceneMonitorRw(const MoveItCppT&micpp)
--> decltype(detail::getPlanningSceneMonitorRwImpl(const_cast<MoveItCppT&>(micpp), 0))
+auto getPlanningSceneMonitorRw(const MoveItCppT & micpp)
+-> decltype(detail::getPlanningSceneMonitorRwImpl(const_cast<MoveItCppT &>(micpp), 0))
 {
   return detail::getPlanningSceneMonitorRwImpl(const_cast<MoveItCppT&>(micpp), 0);
 }
 
 template<typename MoveItCppT>
-auto getPlanningSceneMonitorRw(const std::shared_ptr<MoveItCppT>&micpp)
+auto getPlanningSceneMonitorRw(const std::shared_ptr<MoveItCppT> & micpp)
 -> decltype(getPlanningSceneMonitorRw(*micpp))
 {
   return getPlanningSceneMonitorRw(*micpp);
@@ -279,7 +293,7 @@ auto getPlanningSceneMonitorRw(const std::shared_ptr<MoveItCppT>&micpp)
 
 // Execute PlanningComponent plans with graceful handling of API drift.
 template<typename PlanningComponentT>
-bool executePlanningComponent(PlanningComponentT&pc, bool blocking = true)
+bool executePlanningComponent(PlanningComponentT & pc, bool blocking = true)
 {
   return detail::executePlanningComponentImpl(pc, blocking, 0);
 }
@@ -287,10 +301,10 @@ bool executePlanningComponent(PlanningComponentT&pc, bool blocking = true)
 // Execute trajectories via MoveItCpp regardless of signature differences.
 template<typename MoveItCppT>
 auto executeTrajectory(
-  MoveItCppT&micpp,
-  const std::string&planning_group,
-  const robot_trajectory::RobotTrajectoryPtr&trajectory,
-  const std::vector<std::string>&controllers = {},
+  MoveItCppT & micpp,
+  const std::string & planning_group,
+  const robot_trajectory::RobotTrajectoryPtr & trajectory,
+  const std::vector<std::string> & controllers = {},
   bool blocking = true)
 -> decltype(auto)
 {
@@ -305,7 +319,7 @@ auto executeTrajectory(
   }
   else {
     static_assert(detail::has_execute_with_group<MoveItCppT>::value,
-                  "Unsupported MoveItCpp::execute signature for the provided MoveIt version");
+      "Unsupported MoveItCpp::execute signature for the provided MoveIt version");
     (void)controllers;
     (void)blocking;
     return micpp.execute(planning_group, trajectory);
@@ -313,7 +327,7 @@ auto executeTrajectory(
 }
 
 template<typename MoveItCppT>
-auto getPlanningPipelineNames(MoveItCppT&micpp, const std::string&planning_group)
+auto getPlanningPipelineNames(MoveItCppT & micpp, const std::string & planning_group)
 -> decltype(detail::getPlanningPipelineNamesImpl(micpp, planning_group, 0))
 {
   return detail::getPlanningPipelineNamesImpl(micpp, planning_group, 0);

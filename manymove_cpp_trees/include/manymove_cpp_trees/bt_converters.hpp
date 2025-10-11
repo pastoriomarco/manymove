@@ -83,7 +83,7 @@ inline geometry_msgs::msg::Pose convertFromString(StringView str)
     pose.orientation.y = std::stod(s.substr(oy_pos + 2));
     pose.orientation.z = std::stod(s.substr(oz_pos + 2));
     pose.orientation.w = std::stod(s.substr(ow_pos + 2));
-  } catch (const std::exception&e) {
+  } catch (const std::exception & e) {
     throw BT::RuntimeError(std::string("Failed to parse Pose string: ") + e.what());
   }
 
@@ -118,7 +118,7 @@ inline std::vector<double> convertFromString(StringView str)
   return vec;
 }
 
-inline std::string convertToString(const std::vector<double>&vec)
+inline std::string convertToString(const std::vector<double> & vec)
 {
   std::ostringstream oss;
   oss << "[";
@@ -156,7 +156,7 @@ inline std::vector<std::string> convertFromString(StringView str)
   return vec;
 }
 
-inline std::string convertToString(const std::vector<std::string>&vec)
+inline std::string convertToString(const std::vector<std::string> & vec)
 {
   std::ostringstream oss;
   oss << "[";

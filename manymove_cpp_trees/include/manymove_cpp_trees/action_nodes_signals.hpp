@@ -64,46 +64,47 @@ namespace manymove_cpp_trees
  */
 class SetOutputAction : public BT::StatefulActionNode
 {
-public:
-using SetOutput = manymove_msgs::action::SetOutput;
-using GoalHandleSetOutput = rclcpp_action::ClientGoalHandle<SetOutput>;
+  public:
+  using SetOutput = manymove_msgs::action::SetOutput;
+  using GoalHandleSetOutput = rclcpp_action::ClientGoalHandle<SetOutput>;
 
-SetOutputAction(const std::string&name,
-                const BT::NodeConfiguration&config);
+  SetOutputAction(const std::string & name,
+    const BT::NodeConfiguration & config);
 
-static BT::PortsList providedPorts()
-{
-  return {
-    BT::InputPort<std::string>("io_type", "IO type: 'tool' or 'controller'"),
-    BT::InputPort<int>("ionum", "Which IO channel number"),
-    BT::InputPort<int>("value", "Desired output value (0 or 1)"),
-    BT::InputPort<std::string>("robot_prefix",
-                               "Optional robot namespace prefix, e.g. 'R_' or 'L_'."),
-    BT::OutputPort<bool>("success", "Whether set_output succeeded"),
-  };
-}
+  static BT::PortsList providedPorts()
+  {
+    return
+      {
+        BT::InputPort<std::string>("io_type", "IO type: 'tool' or 'controller'"),
+        BT::InputPort<int>("ionum", "Which IO channel number"),
+        BT::InputPort<int>("value", "Desired output value (0 or 1)"),
+        BT::InputPort<std::string>("robot_prefix",
+	  "Optional robot namespace prefix, e.g. 'R_' or 'L_'."),
+        BT::OutputPort<bool>("success", "Whether set_output succeeded"),
+      };
+  }
 
-protected:
-BT::NodeStatus onStart() override;
-BT::NodeStatus onRunning() override;
-void onHalted() override;
+  protected:
+  BT::NodeStatus onStart() override;
+  BT::NodeStatus onRunning() override;
+  void onHalted() override;
 
-private:
-void goalResponseCallback(std::shared_ptr<GoalHandleSetOutput> goal_handle);
-void resultCallback(const GoalHandleSetOutput::WrappedResult&result);
+  private:
+  void goalResponseCallback(std::shared_ptr<GoalHandleSetOutput> goal_handle);
+  void resultCallback(const GoalHandleSetOutput::WrappedResult & result);
 
-rclcpp::Node::SharedPtr node_;
-rclcpp_action::Client<SetOutput>::SharedPtr action_client_;
+  rclcpp::Node::SharedPtr node_;
+  rclcpp_action::Client<SetOutput>::SharedPtr action_client_;
 
-bool goal_sent_;
-bool result_received_;
-std::string prefix_;
+  bool goal_sent_;
+  bool result_received_;
+  std::string prefix_;
 
-std::string io_type_;
-int ionum_;
-int value_;
+  std::string io_type_;
+  int ionum_;
+  int value_;
 
-SetOutput::Result action_result_;
+  SetOutput::Result action_result_;
 };
 
 /**
@@ -112,45 +113,46 @@ SetOutput::Result action_result_;
  */
 class GetInputAction : public BT::StatefulActionNode
 {
-public:
-using GetInput = manymove_msgs::action::GetInput;
-using GoalHandleGetInput = rclcpp_action::ClientGoalHandle<GetInput>;
+  public:
+  using GetInput = manymove_msgs::action::GetInput;
+  using GoalHandleGetInput = rclcpp_action::ClientGoalHandle<GetInput>;
 
-GetInputAction(const std::string&name,
-               const BT::NodeConfiguration&config);
+  GetInputAction(const std::string & name,
+    const BT::NodeConfiguration & config);
 
-static BT::PortsList providedPorts()
-{
-  return {
-    BT::InputPort<std::string>("io_type", "IO type: 'tool' or 'controller'"),
-    BT::InputPort<int>("ionum", "Which IO channel to read"),
-    BT::InputPort<std::string>("robot_prefix",
-                               "Optional robot namespace prefix, e.g. 'R_' or 'L_'."),
-    BT::OutputPort<int>("value", "Read value from the input (0 or 1)"),
-  };
-}
+  static BT::PortsList providedPorts()
+  {
+    return
+      {
+        BT::InputPort<std::string>("io_type", "IO type: 'tool' or 'controller'"),
+        BT::InputPort<int>("ionum", "Which IO channel to read"),
+        BT::InputPort<std::string>("robot_prefix",
+	  "Optional robot namespace prefix, e.g. 'R_' or 'L_'."),
+        BT::OutputPort<int>("value", "Read value from the input (0 or 1)"),
+      };
+  }
 
-protected:
-BT::NodeStatus onStart() override;
-BT::NodeStatus onRunning() override;
-void onHalted() override;
+  protected:
+  BT::NodeStatus onStart() override;
+  BT::NodeStatus onRunning() override;
+  void onHalted() override;
 
-private:
-void goalResponseCallback(std::shared_ptr<GoalHandleGetInput> goal_handle);
-void resultCallback(const GoalHandleGetInput::WrappedResult&result);
+  private:
+  void goalResponseCallback(std::shared_ptr<GoalHandleGetInput> goal_handle);
+  void resultCallback(const GoalHandleGetInput::WrappedResult & result);
 
-rclcpp::Node::SharedPtr node_;
-rclcpp_action::Client<GetInput>::SharedPtr action_client_;
+  rclcpp::Node::SharedPtr node_;
+  rclcpp_action::Client<GetInput>::SharedPtr action_client_;
 
-bool goal_sent_;
-bool result_received_;
-std::string prefix_;
+  bool goal_sent_;
+  bool result_received_;
+  std::string prefix_;
 
-std::string io_type_;
-int ionum_;
-int value_;
+  std::string io_type_;
+  int ionum_;
+  int value_;
 
-GetInput::Result action_result_;
+  GetInput::Result action_result_;
 };
 
 /**
@@ -159,41 +161,43 @@ GetInput::Result action_result_;
  */
 class CheckRobotStateAction : public BT::StatefulActionNode
 {
-public:
-using CheckRobotState = manymove_msgs::action::CheckRobotState;
-using GoalHandleCheckRobotState = rclcpp_action::ClientGoalHandle<CheckRobotState>;
+  public:
+  using CheckRobotState = manymove_msgs::action::CheckRobotState;
+  using GoalHandleCheckRobotState = rclcpp_action::ClientGoalHandle<CheckRobotState>;
 
-CheckRobotStateAction(const std::string&name,
-                      const BT::NodeConfiguration&config);
+  CheckRobotStateAction(const std::string & name,
+    const BT::NodeConfiguration & config);
 
-static BT::PortsList providedPorts()
-{
-  return {
-    BT::InputPort<std::string>("robot_prefix",
-                               "Optional robot namespace prefix, e.g. 'R_' or 'L_'."),
-    BT::OutputPort<bool>("ready", "True if robot is ready"),
-    BT::OutputPort<int>("err", "Current error code"),
-    BT::OutputPort<int>("mode", "Robot mode"),
-    BT::OutputPort<int>("state", "Robot state"),
-    BT::OutputPort<std::string>("message", "Status message")};
-}
+  static BT::PortsList providedPorts()
+  {
+    return
+      {
+        BT::InputPort<std::string>("robot_prefix",
+	  "Optional robot namespace prefix, e.g. 'R_' or 'L_'."),
+        BT::OutputPort<bool>("ready", "True if robot is ready"),
+        BT::OutputPort<int>("err", "Current error code"),
+        BT::OutputPort<int>("mode", "Robot mode"),
+        BT::OutputPort<int>("state", "Robot state"),
+        BT::OutputPort<std::string>("message", "Status message")
+      };
+  }
 
-protected:
-BT::NodeStatus onStart() override;
-BT::NodeStatus onRunning() override;
-void onHalted() override;
+  protected:
+  BT::NodeStatus onStart() override;
+  BT::NodeStatus onRunning() override;
+  void onHalted() override;
 
-private:
-void goalResponseCallback(std::shared_ptr<GoalHandleCheckRobotState> goal_handle);
-void resultCallback(const GoalHandleCheckRobotState::WrappedResult&result);
+  private:
+  void goalResponseCallback(std::shared_ptr<GoalHandleCheckRobotState> goal_handle);
+  void resultCallback(const GoalHandleCheckRobotState::WrappedResult & result);
 
-rclcpp::Node::SharedPtr node_;
-rclcpp_action::Client<CheckRobotState>::SharedPtr action_client_;
+  rclcpp::Node::SharedPtr node_;
+  rclcpp_action::Client<CheckRobotState>::SharedPtr action_client_;
 
-bool goal_sent_;
-bool result_received_;
+  bool goal_sent_;
+  bool result_received_;
 
-CheckRobotState::Result action_result_;
+  CheckRobotState::Result action_result_;
 };
 
 /**
@@ -202,62 +206,63 @@ CheckRobotState::Result action_result_;
  */
 class ResetRobotStateAction : public BT::StatefulActionNode
 {
-public:
-using ResetRobotState = manymove_msgs::action::ResetRobotState;
-using GoalHandleResetRobotState = rclcpp_action::ClientGoalHandle<ResetRobotState>;
+  public:
+  using ResetRobotState = manymove_msgs::action::ResetRobotState;
+  using GoalHandleResetRobotState = rclcpp_action::ClientGoalHandle<ResetRobotState>;
 
-using UnloadTrajController = manymove_msgs::action::UnloadTrajController;
-using GoalHandleUnloadTrajController = rclcpp_action::ClientGoalHandle<UnloadTrajController>;
+  using UnloadTrajController = manymove_msgs::action::UnloadTrajController;
+  using GoalHandleUnloadTrajController = rclcpp_action::ClientGoalHandle<UnloadTrajController>;
 
-using LoadTrajController = manymove_msgs::action::LoadTrajController;
-using GoalHandleLoadTrajController = rclcpp_action::ClientGoalHandle<LoadTrajController>;
+  using LoadTrajController = manymove_msgs::action::LoadTrajController;
+  using GoalHandleLoadTrajController = rclcpp_action::ClientGoalHandle<LoadTrajController>;
 
-ResetRobotStateAction(const std::string&name,
-                      const BT::NodeConfiguration&config);
+  ResetRobotStateAction(const std::string & name,
+    const BT::NodeConfiguration & config);
 
-static BT::PortsList providedPorts()
-{
-  return {
-    BT::InputPort<std::string>("robot_prefix",
-                               "Optional robot namespace prefix, e.g. 'R_' or 'L_'."),
-    BT::InputPort<std::string>("robot_model", "Name of the robot model, e.g. 'lite6'."),
-    BT::OutputPort<bool>("success", "True if robot reset is successful"),
-  };
-}
+  static BT::PortsList providedPorts()
+  {
+    return
+      {
+        BT::InputPort<std::string>("robot_prefix",
+	  "Optional robot namespace prefix, e.g. 'R_' or 'L_'."),
+        BT::InputPort<std::string>("robot_model", "Name of the robot model, e.g. 'lite6'."),
+        BT::OutputPort<bool>("success", "True if robot reset is successful"),
+      };
+  }
 
-protected:
-BT::NodeStatus onStart() override;
-BT::NodeStatus onRunning() override;
-void onHalted() override;
+  protected:
+  BT::NodeStatus onStart() override;
+  BT::NodeStatus onRunning() override;
+  void onHalted() override;
 
-private:
-void goalResponseCallback(std::shared_ptr<GoalHandleResetRobotState> goal_handle);
-void resultCallback(const GoalHandleResetRobotState::WrappedResult&result);
+  private:
+  void goalResponseCallback(std::shared_ptr<GoalHandleResetRobotState> goal_handle);
+  void resultCallback(const GoalHandleResetRobotState::WrappedResult & result);
 
-void goalResponseCallbackUnloadTraj(
-  std::shared_ptr<GoalHandleUnloadTrajController> goal_handle);
-void resultCallbackUnloadTraj(const GoalHandleUnloadTrajController::WrappedResult&result);
+  void goalResponseCallbackUnloadTraj(
+    std::shared_ptr<GoalHandleUnloadTrajController> goal_handle);
+  void resultCallbackUnloadTraj(const GoalHandleUnloadTrajController::WrappedResult & result);
 
-void goalResponseCallbackLoadTraj(std::shared_ptr<GoalHandleLoadTrajController> goal_handle);
-void resultCallbackLoadTraj(const GoalHandleLoadTrajController::WrappedResult&result);
+  void goalResponseCallbackLoadTraj(std::shared_ptr<GoalHandleLoadTrajController> goal_handle);
+  void resultCallbackLoadTraj(const GoalHandleLoadTrajController::WrappedResult & result);
 
-rclcpp::Node::SharedPtr node_;
-rclcpp_action::Client<ResetRobotState>::SharedPtr action_client_;
-rclcpp_action::Client<UnloadTrajController>::SharedPtr unload_traj_client_;
-rclcpp_action::Client<LoadTrajController>::SharedPtr load_traj_client_;
+  rclcpp::Node::SharedPtr node_;
+  rclcpp_action::Client<ResetRobotState>::SharedPtr action_client_;
+  rclcpp_action::Client<UnloadTrajController>::SharedPtr unload_traj_client_;
+  rclcpp_action::Client<LoadTrajController>::SharedPtr load_traj_client_;
 
-bool goal_sent_;
-bool result_received_;
-bool unload_traj_success_;
-bool load_traj_success_;
+  bool goal_sent_;
+  bool result_received_;
+  bool unload_traj_success_;
+  bool load_traj_success_;
 
-bool unload_goal_sent_;
-bool reset_goal_sent_;
-bool load_goal_sent_;
+  bool unload_goal_sent_;
+  bool reset_goal_sent_;
+  bool load_goal_sent_;
 
-std::string computed_controller_name_;
+  std::string computed_controller_name_;
 
-ResetRobotState::Result action_result_;
+  ResetRobotState::Result action_result_;
 };
 
 /**
@@ -267,61 +272,63 @@ ResetRobotState::Result action_result_;
  */
 class WaitForInputAction : public BT::StatefulActionNode
 {
-public:
-WaitForInputAction(const std::string&name,
-                   const BT::NodeConfiguration&config);
+  public:
+  WaitForInputAction(const std::string & name,
+    const BT::NodeConfiguration & config);
 
 // ...
-static BT::PortsList providedPorts()
-{
-  return {
-    BT::InputPort<std::string>("io_type", "IO type: 'tool' or 'controller'"),
-    BT::InputPort<int>("ionum", "Which IO channel to read"),
-    BT::InputPort<int>("desired_value", 1, "Desired input value (0 or 1)"),
-    BT::InputPort<double>("timeout", 10.0, "Seconds before giving up (0 => infinite)"),
-    BT::InputPort<double>("poll_rate", 0.25, "Check frequency (s)"),
-    BT::InputPort<std::string>("robot_prefix", "", "Optional namespace prefix"),
-    BT::OutputPort<int>("value",
-                        "Final read value (0 or 1)")};
-}
+  static BT::PortsList providedPorts()
+  {
+    return
+      {
+        BT::InputPort<std::string>("io_type", "IO type: 'tool' or 'controller'"),
+        BT::InputPort<int>("ionum", "Which IO channel to read"),
+        BT::InputPort<int>("desired_value", 1, "Desired input value (0 or 1)"),
+        BT::InputPort<double>("timeout", 10.0, "Seconds before giving up (0 => infinite)"),
+        BT::InputPort<double>("poll_rate", 0.25, "Check frequency (s)"),
+        BT::InputPort<std::string>("robot_prefix", "", "Optional namespace prefix"),
+        BT::OutputPort<int>("value",
+	  "Final read value (0 or 1)")
+      };
+  }
 
-protected:
-BT::NodeStatus onStart() override;
-BT::NodeStatus onRunning() override;
-void onHalted() override;
+  protected:
+  BT::NodeStatus onStart() override;
+  BT::NodeStatus onRunning() override;
+  void onHalted() override;
 
-private:
+  private:
 // Helper to send the "get_input" request
-void sendCheckRequest();
+  void sendCheckRequest();
 
 // Action callbacks
-void goalResponseCallback(
-  std::shared_ptr<rclcpp_action::ClientGoalHandle<manymove_msgs::action::GetInput> > goal_handle);
-void resultCallback(
-  const rclcpp_action::ClientGoalHandle<manymove_msgs::action::GetInput>::WrappedResult&result);
+  void goalResponseCallback(
+    std::shared_ptr<rclcpp_action::ClientGoalHandle<manymove_msgs::action::GetInput> > goal_handle);
+  void resultCallback(
+    const rclcpp_action::ClientGoalHandle<manymove_msgs::action::GetInput>::WrappedResult & result);
 
-using GetInput = manymove_msgs::action::GetInput;
+  using GetInput = manymove_msgs::action::GetInput;
 
-rclcpp::Node::SharedPtr node_;
-rclcpp_action::Client<GetInput>::SharedPtr action_client_;
+  rclcpp::Node::SharedPtr node_;
+  rclcpp_action::Client<GetInput>::SharedPtr action_client_;
 
 // from Ports:
-std::string io_type_;
-int ionum_;
-int desired_value_;
-double timeout_;
-double poll_rate_;
-std::string prefix_;
+  std::string io_type_;
+  int ionum_;
+  int desired_value_;
+  double timeout_;
+  double poll_rate_;
+  std::string prefix_;
 
 // internal state
-bool goal_sent_;
-bool result_received_;
-rclcpp::Time start_time_;
-rclcpp::Time next_check_time_;
+  bool goal_sent_;
+  bool result_received_;
+  rclcpp::Time start_time_;
+  rclcpp::Time next_check_time_;
 
 // last read from the server
-bool last_success_;
-int last_value_;
+  bool last_success_;
+  int last_value_;
 };
 
 } // namespace manymove_cpp_trees

@@ -54,7 +54,7 @@
 using geometry_msgs::msg::Pose;
 using namespace manymove_cpp_trees;
 
-int main(int argc, char**argv)
+int main(int argc, char ** argv)
 {
   rclcpp::init(argc, argv);
 
@@ -91,10 +91,15 @@ int main(int argc, char**argv)
   // Utility world frame key
   blackboard->set("world_frame_key", "world");
   // The gripper is pneumatic so the jaws are not dynamically updated, we don't want touch links:
-  std::vector<std::string> touch_links_empty = {};
+  std::vector<std::string> touch_links_empty =
+  {
+  };
   blackboard->set("touch_links_empty_key", touch_links_empty);
   // Empty transform frame for identity transforms
-  blackboard->set("identity_transform_key", std::vector<double>{0.0, 0.0, 0.0, 0.0, 0.0, 0.0});
+  blackboard->set("identity_transform_key", std::vector<double>
+  {
+    0.0, 0.0, 0.0, 0.0, 0.0, 0.0
+  });
   // Neutral/identity scale key
   blackboard->set("identity_scale_key", "[1.0, 1.0, 1.0]");
 
@@ -125,12 +130,15 @@ int main(int argc, char**argv)
    * in the future we can also make so the dimensions depend on a blackboard key and let the user
    * modify it from the HMI.
    */
-  std::vector<double> graspable_mesh_scale = {0.01, 0.01, tube_length};
+  std::vector<double> graspable_mesh_scale =
+  {
+    0.01, 0.01, tube_length
+  };
   std::string graspable_mesh_scale_key_name = "tube_scale_key";
   defineVariableKey<std::vector<double> >(node, blackboard, keys,
-                                          graspable_mesh_scale_key_name,
-                                          "double_array",
-                                          graspable_mesh_scale);
+    graspable_mesh_scale_key_name,
+    "double_array",
+    graspable_mesh_scale);
 
   /**
    * This is the pose for the object, aligned so the X+ axis corresponds to the exit direction from
@@ -141,33 +149,35 @@ int main(int argc, char**argv)
    * specific direction for grasping.
    */
   Pose graspable_mesh_pose = createPoseRPY(((tube_length / 2) + 0.973 + 0.005), -0.6465, 0.8055,
-                                           1.57, 2.05, 1.57);
+    1.57, 2.05, 1.57);
   std::string graspable_mesh_pose_key_name = "tube_spawn_pose_key";
   defineVariableKey<Pose>(node, blackboard, keys,
-                          graspable_mesh_pose_key_name,
-                          "pose",
-                          graspable_mesh_pose);
+    graspable_mesh_pose_key_name,
+    "pose",
+    graspable_mesh_pose);
 
   //
   std::string check_graspable_mesh_obj_xml = buildObjectActionXML("check_" + object_to_manipulate_1,
-                                                                  createCheckObjectExists(
-								    object_to_manipulate_1_key_name));
+    createCheckObjectExists(
+      object_to_manipulate_1_key_name));
 
   // We create the xml snippet to add the mesh to the scene through a behaviortree action.
   std::string add_graspable_mesh_obj_xml = buildObjectActionXML("add_graspable_mesh",
-                                                                createAddObject(
-								  object_to_manipulate_1_key_name,
-								  "mesh_shape_key",
-								  "",
-								  graspable_mesh_pose_key_name,
-								  graspable_mesh_scale_key_name,
-								  graspable_mesh_file_key_name));
+    createAddObject(
+      object_to_manipulate_1_key_name,
+      "mesh_shape_key",
+      "",
+      graspable_mesh_pose_key_name,
+      graspable_mesh_scale_key_name,
+      graspable_mesh_file_key_name));
 
   // We define a logic fallback to check if the object is already on the scene, and if not we add
   // it.
   std::string init_graspable_mesh_obj_xml = fallbackWrapperXML("init_graspable_mesh_obj",
-                                                               {check_graspable_mesh_obj_xml,
-                                                                add_graspable_mesh_obj_xml});
+  {
+    check_graspable_mesh_obj_xml,
+    add_graspable_mesh_obj_xml
+  });
 
   // We define the name of the link to attach the object to
   std::string tcp_frame_name_1 = rp_1.prefix + rp_1.tcp_frame;
@@ -177,21 +187,25 @@ int main(int argc, char**argv)
   // Then we create the xml snippets to attach, detach the object to/from a link, and to remove it
   // from the scene.
   std::string attach_obj_1_xml = buildObjectActionXML("attach_obj_to_manipulate_1",
-                                                      createAttachObject(
-							object_to_manipulate_1_key_name,
-							tcp_frame_name_1_key_name,
-							"touch_links_empty_key"));
+    createAttachObject(
+      object_to_manipulate_1_key_name,
+      tcp_frame_name_1_key_name,
+      "touch_links_empty_key"));
   std::string detach_obj_1_xml = fallbackWrapperXML("detach_obj_to_manipulate_1_always_success",
-                                                    {buildObjectActionXML("detach_obj_to_manipulate_1",
-                                                                          createDetachObject(
-									    object_to_manipulate_1_key_name,
-									    tcp_frame_name_1_key_name)),
-                                                     "<AlwaysSuccess />"});
+  {
+    buildObjectActionXML("detach_obj_to_manipulate_1",
+      createDetachObject(
+	object_to_manipulate_1_key_name,
+	tcp_frame_name_1_key_name)),
+    "<AlwaysSuccess />"
+  });
   std::string remove_obj_1_xml = fallbackWrapperXML("detach_obj_to_manipulate_1_always_success",
-                                                    {buildObjectActionXML("remove_obj_to_manipulate_1",
-                                                                          createRemoveObject(
-									    object_to_manipulate_1_key_name)),
-                                                     "<AlwaysSuccess />"});
+  {
+    buildObjectActionXML("remove_obj_to_manipulate_1",
+      createRemoveObject(
+	object_to_manipulate_1_key_name)),
+    "<AlwaysSuccess />"
+  });
 
   // Now that we have all we need for the first object, we can create the first poses relative to
   // it.
@@ -236,11 +250,17 @@ int main(int argc, char**argv)
    *-7cm is about ok.
    */
   // Define the transformation and reference orientation
-  blackboard->set("pick_pre_transform_xyz_rpy_1_key", std::vector<double>{-0.002, 0.0, 0.0, 0.0,
-                                                                          1.57, 0.0});
+  blackboard->set("pick_pre_transform_xyz_rpy_1_key", std::vector<double>
+  {
+    -0.002, 0.0, 0.0, 0.0,
+    1.57, 0.0
+  });
 
-  blackboard->set("approach_pick_pre_transform_xyz_rpy_1_key", std::vector<double>{-0.07, 0.0, 0.0,
-                                                                                   0.0, 1.57, 0.0});
+  blackboard->set("approach_pick_pre_transform_xyz_rpy_1_key", std::vector<double>
+  {
+    -0.07, 0.0, 0.0,
+    0.0, 1.57, 0.0
+  });
 
   // We want the pick pose to be at a fixed distance from the end of the tube regardless of the
   // length so we set a grasp offset:
@@ -249,10 +269,12 @@ int main(int argc, char**argv)
 
   // This will be variable depending on tube_length and grasp_offset, so we
   std::vector<double> pick_post_transform_xyz_rpy_1_start_value =
-  {0.0, 0.0, ((-tube_length) / 2) + grasp_offset, 3.14, 0.0, 0.0};
+  {
+    0.0, 0.0, ((-tube_length) / 2) + grasp_offset, 3.14, 0.0, 0.0
+  };
   defineVariableKey<std::vector<double> >(node, blackboard, keys,
-                                          "pick_post_transform_xyz_rpy_1_key", "double_array",
-                                          pick_post_transform_xyz_rpy_1_start_value);
+    "pick_post_transform_xyz_rpy_1_key", "double_array",
+    pick_post_transform_xyz_rpy_1_start_value);
 
   /**
    * Now we use all the variables we created until now to define the xml snippets that will get the
@@ -260,20 +282,20 @@ int main(int argc, char**argv)
    * modified as we set in the transforms and relative to the "world" frame.
    */
   std::string get_pick_pose_1_xml = buildObjectActionXML("get_pick_pose_1",
-                                                         createGetObjectPose(
-							   object_to_manipulate_1_key_name,
-							   pick_target_1_key_name,
-							   "world_frame_key",
-							   "pick_pre_transform_xyz_rpy_1_key",
-							   "pick_post_transform_xyz_rpy_1_key"));
+    createGetObjectPose(
+      object_to_manipulate_1_key_name,
+      pick_target_1_key_name,
+      "world_frame_key",
+      "pick_pre_transform_xyz_rpy_1_key",
+      "pick_post_transform_xyz_rpy_1_key"));
 
   std::string get_approach_pose_1_xml = buildObjectActionXML("get_approach_pose_1",
-                                                             createGetObjectPose(
-							       object_to_manipulate_1_key_name,
-							       approach_pick_target_1_key_name,
-							       "world_frame_key",
-							       "approach_pick_pre_transform_xyz_rpy_1_key",
-							       "pick_post_transform_xyz_rpy_1_key"));
+    createGetObjectPose(
+      object_to_manipulate_1_key_name,
+      approach_pick_target_1_key_name,
+      "world_frame_key",
+      "approach_pick_pre_transform_xyz_rpy_1_key",
+      "pick_post_transform_xyz_rpy_1_key"));
 
   // ----------------------------------------------------------------------------
   /**
@@ -320,8 +342,8 @@ int main(int argc, char**argv)
   // Create object actions xml snippets (the object are created directly in the create*() functions
   // relative to each type of object action)
   std::string check_renamed_mesh_obj_xml = buildObjectActionXML("check_" + object_to_manipulate_2,
-                                                                createCheckObjectExists(
-								  object_to_manipulate_2_key_name));
+    createCheckObjectExists(
+      object_to_manipulate_2_key_name));
 
   /**
    * Once the object will be moved, the drop position will have to be retrieved with the new pose of
@@ -345,13 +367,13 @@ int main(int argc, char**argv)
    * robot to plan while checking for collisions
    */
   std::string add_renamed_mesh_obj_xml = buildObjectActionXML("add_renamed_mesh",
-                                                              createAddObject(
-								object_to_manipulate_2_key_name,
-								"mesh_shape_key",
-								"",
-								dropped_target_key_name,
-								graspable_mesh_scale_key_name,
-								graspable_mesh_file_key_name));
+    createAddObject(
+      object_to_manipulate_2_key_name,
+      "mesh_shape_key",
+      "",
+      dropped_target_key_name,
+      graspable_mesh_scale_key_name,
+      graspable_mesh_file_key_name));
 
   /**
    * We get the pose of the dropped object to use it to insert the renamed object
@@ -362,18 +384,20 @@ int main(int argc, char**argv)
    * We also set a key for world frame for transforms
    */
   std::string get_dropped_object_pose_xml = buildObjectActionXML("get_dropped_obj_pose",
-                                                                 createGetObjectPose(
-								   object_to_manipulate_1_key_name,
-								   dropped_target_key_name,
-								   "world_frame_key",
-								   "identity_transform_key",
-								   "identity_transform_key"));
+    createGetObjectPose(
+      object_to_manipulate_1_key_name,
+      dropped_target_key_name,
+      "world_frame_key",
+      "identity_transform_key",
+      "identity_transform_key"));
 
   // Here we put together all the snippets to rename the object
   std::string rename_obj_1_xml = sequenceWrapperXML("rename_obj_to_manipulate_1",
-                                                    {get_dropped_object_pose_xml, remove_obj_1_xml,
-                                                     add_renamed_mesh_obj_xml,
-                                                     check_renamed_mesh_obj_xml});
+  {
+    get_dropped_object_pose_xml, remove_obj_1_xml,
+    add_renamed_mesh_obj_xml,
+    check_renamed_mesh_obj_xml
+  });
 
   //
 
@@ -394,62 +418,66 @@ int main(int argc, char**argv)
   // We define the other elements on the scene.
   blackboard->set("machine_id_key", "machine_mesh");
   blackboard->set("machine_mesh_file_key",
-                  "package://manymove_object_manager/meshes/custom_scene/machine.stl");
+    "package://manymove_object_manager/meshes/custom_scene/machine.stl");
 
   blackboard->set("slider_id_key", "slider_mesh");
   blackboard->set("slider_mesh_file_key",
-                  "package://manymove_object_manager/meshes/custom_scene/slider.stl");
+    "package://manymove_object_manager/meshes/custom_scene/slider.stl");
 
   blackboard->set("endplate_id_key", "endplate_mesh");
   blackboard->set("endplate_mesh_file_key",
-                  "package://manymove_object_manager/meshes/custom_scene/end_plate.stl");
+    "package://manymove_object_manager/meshes/custom_scene/end_plate.stl");
 
   // We set the machine 1mm lower in Z to avoid colliding with the base of the robots.
   blackboard->set("machine_pose_key", createPoseRPY(0.0, 0.0, -0.001, 0.0, 0.0, 0.0));
 
   std::string check_machine_mesh_obj_xml = buildObjectActionXML("check_machine_mesh",
-                                                                createCheckObjectExists(
-								  "machine_id_key"));
+    createCheckObjectExists(
+      "machine_id_key"));
   std::string check_slider_mesh_obj_xml = buildObjectActionXML("check_slider_mesh",
-                                                               createCheckObjectExists(
-								 "slider_id_key"));
+    createCheckObjectExists(
+      "slider_id_key"));
   std::string check_endplate_mesh_obj_xml = buildObjectActionXML("check_endplate_mesh",
-                                                                 createCheckObjectExists(
-								   "endplate_id_key"));
+    createCheckObjectExists(
+      "endplate_id_key"));
 
   // We might want to remove the objects with variable position to replace them
   std::string remove_slider_mesh_obj_xml = fallbackWrapperXML("remove_slider_mesh_always_success",
-                                                              {buildObjectActionXML(
-								 "remove_slider_mesh",
-								 createRemoveObject(
-								   "slider_id_key")),
-                                                               "<AlwaysSuccess />"});
+  {
+    buildObjectActionXML(
+      "remove_slider_mesh",
+      createRemoveObject(
+	"slider_id_key")),
+    "<AlwaysSuccess />"
+  });
   std::string remove_endplate_mesh_obj_xml = fallbackWrapperXML(
     "remove_endplate_mesh_always_success",
-    {buildObjectActionXML(
-       "remove_endplate_mesh", createRemoveObject("endplate_id_key")),
-     "<AlwaysSuccess />"});
+  {
+    buildObjectActionXML(
+      "remove_endplate_mesh", createRemoveObject("endplate_id_key")),
+    "<AlwaysSuccess />"
+  });
 
   // Here we add the objects that create the scene. The machine is in a fixed position
   std::string add_machine_mesh_obj_xml = buildObjectActionXML("add_machine_mesh",
-                                                              createAddObject("machine_id_key",
-                                                                              "mesh_shape_key",
-                                                                              "",
-                                                                              "machine_pose_key",
-                                                                              "identity_scale_key",
-                                                                              "machine_mesh_file_key"));
+    createAddObject("machine_id_key",
+      "mesh_shape_key",
+      "",
+      "machine_pose_key",
+      "identity_scale_key",
+      "machine_mesh_file_key"));
 
   // The slider is in a variable position. We set a variable key accordingly
   Pose slider_pose = createPoseRPY(((tube_length) + 0.01), 0.0, 0.0, 0.0, 0.0, 0.0);
   defineVariableKey<Pose>(node, blackboard, keys, "slider_pose_key", "pose", slider_pose);
 
   std::string add_slider_mesh_obj_xml = buildObjectActionXML("add_slider_mesh",
-                                                             createAddObject("slider_id_key",
-                                                                             "mesh_shape_key",
-                                                                             "",
-                                                                             "slider_pose_key",
-                                                                             "identity_scale_key",
-                                                                             "slider_mesh_file_key"));
+    createAddObject("slider_id_key",
+      "mesh_shape_key",
+      "",
+      "slider_pose_key",
+      "identity_scale_key",
+      "slider_mesh_file_key"));
 
   // Save the name of the endplate mesh since we'll use it to get the pose for the second robot to
   // load the object in the machine
@@ -464,26 +492,32 @@ int main(int argc, char**argv)
   std::string approach_load_target_2_key_name = "approach_load_target_2_key";
   defineVariableKey<Pose>(node, blackboard, keys, load_target_2_key_name, "pose", endplate_pose);
   defineVariableKey<Pose>(node, blackboard, keys, approach_load_target_2_key_name, "pose",
-                          endplate_approach_pose);
+    endplate_approach_pose);
 
   std::string add_endplate_mesh_obj_xml = buildObjectActionXML("add_endplate_mesh",
-                                                               createAddObject("endplate_id_key",
-                                                                               "mesh_shape_key",
-                                                                               "",
-                                                                               "endplate_pose_key",
-                                                                               "identity_scale_key",
-                                                                               "endplate_mesh_file_key"));
+    createAddObject("endplate_id_key",
+      "mesh_shape_key",
+      "",
+      "endplate_pose_key",
+      "identity_scale_key",
+      "endplate_mesh_file_key"));
 
   // Compose the check and add sequence for objects
   std::string init_machine_mesh_obj_xml = fallbackWrapperXML("init_machine_mesh_obj",
-                                                             {check_machine_mesh_obj_xml,
-                                                              add_machine_mesh_obj_xml});
+  {
+    check_machine_mesh_obj_xml,
+    add_machine_mesh_obj_xml
+  });
   std::string init_endplate_mesh_obj_xml = fallbackWrapperXML("init_endplate_mesh_obj",
-                                                              {check_endplate_mesh_obj_xml,
-                                                               add_endplate_mesh_obj_xml});
+  {
+    check_endplate_mesh_obj_xml,
+    add_endplate_mesh_obj_xml
+  });
   std::string init_slider_mesh_obj_xml = fallbackWrapperXML("init_slider_mesh_obj",
-                                                            {check_slider_mesh_obj_xml,
-                                                             add_slider_mesh_obj_xml});
+  {
+    check_slider_mesh_obj_xml,
+    add_slider_mesh_obj_xml
+  });
 
   // Set the name for the TCP of ROBOT 2
   std::string tcp_frame_name_2 = rp_2.prefix + rp_2.tcp_frame;
@@ -493,38 +527,50 @@ int main(int argc, char**argv)
   // Create the xml snippets to attach/detach the second object to manipulate to/from a link, and to
   // remove it from the scene
   std::string attach_obj_2_xml = buildObjectActionXML("attach_obj_to_manipulate_2",
-                                                      createAttachObject(
-							object_to_manipulate_2_key_name,
-							tcp_frame_name_2_key_name,
-							"touch_links_empty_key"));
+    createAttachObject(
+      object_to_manipulate_2_key_name,
+      tcp_frame_name_2_key_name,
+      "touch_links_empty_key"));
   std::string detach_obj_2_xml = fallbackWrapperXML("detach_obj_to_manipulate_2_always_success",
-                                                    {buildObjectActionXML("detach_obj_to_manipulate_2",
-                                                                          createDetachObject(
-									    object_to_manipulate_2_key_name,
-									    tcp_frame_name_2_key_name)),
-                                                     "<AlwaysSuccess />"});
+  {
+    buildObjectActionXML("detach_obj_to_manipulate_2",
+      createDetachObject(
+	object_to_manipulate_2_key_name,
+	tcp_frame_name_2_key_name)),
+    "<AlwaysSuccess />"
+  });
   std::string remove_obj_2_xml = fallbackWrapperXML("detach_obj_to_manipulate_2_always_success",
-                                                    {buildObjectActionXML("remove_obj_to_manipulate_2",
-                                                                          createRemoveObject(
-									    object_to_manipulate_2_key_name)),
-                                                     "<AlwaysSuccess />"});
+  {
+    buildObjectActionXML("remove_obj_to_manipulate_2",
+      createRemoveObject(
+	object_to_manipulate_2_key_name)),
+    "<AlwaysSuccess />"
+  });
 
   //
 
   // Now for the object to drop on the loading shaft of the second robot's gripper:
 
   // Define the transformation and reference orientation
-  blackboard->set("insert_pre_transform_xyz_rpy_2_key", std::vector<double>{0.0, 0.0, 0.0, 0.0, 0.0,
-                                                                            0.0});
-  blackboard->set("approach_insert_pre_transform_xyz_rpy_2_key", std::vector<double>{0.0, 0.0,
-                                                                                     -0.05, 0.0,
-                                                                                     0.0, 0.0});
+  blackboard->set("insert_pre_transform_xyz_rpy_2_key", std::vector<double>
+  {
+    0.0, 0.0, 0.0, 0.0, 0.0,
+    0.0
+  });
+  blackboard->set("approach_insert_pre_transform_xyz_rpy_2_key", std::vector<double>
+  {
+    0.0, 0.0,
+    -0.05, 0.0,
+    0.0, 0.0
+  });
 
   std::vector<double> post_insert_transform_xyz_rpy_2_start_value =
-  {0.0, 0.0, ((-tube_length) / 2), 0.0, 0.0, -0.785};
+  {
+    0.0, 0.0, ((-tube_length) / 2), 0.0, 0.0, -0.785
+  };
   defineVariableKey<std::vector<double> >(node, blackboard, keys,
-                                          "insert_post_transform_xyz_rpy_2_key", "double_array",
-                                          post_insert_transform_xyz_rpy_2_start_value);
+    "insert_post_transform_xyz_rpy_2_key", "double_array",
+    post_insert_transform_xyz_rpy_2_start_value);
 
   /**
    * A little note here: we can use both object_to_manipulate_1 or object_to_manipulate_2 to get the
@@ -535,71 +581,82 @@ int main(int argc, char**argv)
    */
   // Translate get_pose_action to xml tree leaf
   std::string get_insert_pose_2_xml = buildObjectActionXML("get_insert_pose_2",
-                                                           createGetObjectPose(
-							     object_to_manipulate_1_key_name,
-							     insert_target_2_key_name,
-							     "world_frame_key",
-							     "insert_pre_transform_xyz_rpy_2_key",
-							     "insert_post_transform_xyz_rpy_2_key"));
+    createGetObjectPose(
+      object_to_manipulate_1_key_name,
+      insert_target_2_key_name,
+      "world_frame_key",
+      "insert_pre_transform_xyz_rpy_2_key",
+      "insert_post_transform_xyz_rpy_2_key"));
 
   std::string get_approach_insert_pose_2_xml = buildObjectActionXML("get_approach_insert_pose_2",
-                                                                    createGetObjectPose(
-								      object_to_manipulate_1_key_name,
-								      approach_insert_target_2_key_name,
-								      "world_frame_key",
-								      "approach_insert_pre_transform_xyz_rpy_2_key",
-								      "insert_post_transform_xyz_rpy_2_key"));
+    createGetObjectPose(
+      object_to_manipulate_1_key_name,
+      approach_insert_target_2_key_name,
+      "world_frame_key",
+      "approach_insert_pre_transform_xyz_rpy_2_key",
+      "insert_post_transform_xyz_rpy_2_key"));
 
   //
 
   // Now for the endplate to load the object in the machine:
 
   // Define the transformation and reference orientation
-  blackboard->set("load_pre_transform_xyz_rpy_2_key", std::vector<double>{0.0, 0.0, 0.0, 0.0, 0.0,
-                                                                          0.0});
-  blackboard->set("approach_load_pre_transform_xyz_rpy_2_key", std::vector<double>{0.0, 0.0, -0.025,
-                                                                                   0.0, 0.0, 0.0});
+  blackboard->set("load_pre_transform_xyz_rpy_2_key", std::vector<double>
+  {
+    0.0, 0.0, 0.0, 0.0, 0.0,
+    0.0
+  });
+  blackboard->set("approach_load_pre_transform_xyz_rpy_2_key", std::vector<double>
+  {
+    0.0, 0.0, -0.025,
+    0.0, 0.0, 0.0
+  });
 
-  std::vector<double> load_post_transform_xyz_rpy_2 = {0.0, 0.0, -tube_length / 3, 0.0, 0.0, 0.0};
+  std::vector<double> load_post_transform_xyz_rpy_2 =
+  {
+    0.0, 0.0, -tube_length / 3, 0.0, 0.0, 0.0
+  };
   defineVariableKey<std::vector<double> >(node, blackboard, keys,
-                                          "load_post_transform_xyz_rpy_2_key", "double_array",
-                                          load_post_transform_xyz_rpy_2);
+    "load_post_transform_xyz_rpy_2_key", "double_array",
+    load_post_transform_xyz_rpy_2);
 
   // std::vector<double> load_post_transform_xyz_rpy_2 = {0.0, 0.0, -tube_length/3, 0.0, 0.0, 0.0};
   // // to check for collision
 
   // Translate get_pose_action to xml tree leaf
   std::string get_load_pose_2_xml = buildObjectActionXML("get_load_pose_2",
-                                                         createGetObjectPose("endplate_id_key",
-                                                                             load_target_2_key_name,
-                                                                             "world_frame_key",
-                                                                             "load_pre_transform_xyz_rpy_2_key",
-                                                                             "load_post_transform_xyz_rpy_2_key"));
+    createGetObjectPose("endplate_id_key",
+      load_target_2_key_name,
+      "world_frame_key",
+      "load_pre_transform_xyz_rpy_2_key",
+      "load_post_transform_xyz_rpy_2_key"));
 
   std::string get_approach_load_pose_2_xml = buildObjectActionXML("get_approach_load_pose_2",
-                                                                  createGetObjectPose(
-								    "endplate_id_key",
-								    approach_load_target_2_key_name,
-								    "world_frame_key",
-								    "approach_load_pre_transform_xyz_rpy_2_key",
-								    "load_post_transform_xyz_rpy_2_key"));
+    createGetObjectPose(
+      "endplate_id_key",
+      approach_load_target_2_key_name,
+      "world_frame_key",
+      "approach_load_pre_transform_xyz_rpy_2_key",
+      "load_post_transform_xyz_rpy_2_key"));
 
   // Wrapping load pose retrieval in a sequence
   std::string get_load_poses_from_endplate_xml = sequenceWrapperXML("get_load_poses_from_endplate",
-                                                                    {get_load_pose_2_xml,
-                                                                     get_approach_load_pose_2_xml});
+  {
+    get_load_pose_2_xml,
+    get_approach_load_pose_2_xml
+  });
 
   // To help coordinating robot cycles, I create branches to wait for the existance (or absence) of
   // an object.
   std::string wait_for_renamed_drop_obj_xml = buildWaitForObject(rp_2.prefix,
-                                                                 "renamed_drop_exists",
-                                                                 object_to_manipulate_2_key_name,
-                                                                 true);
+    "renamed_drop_exists",
+    object_to_manipulate_2_key_name,
+    true);
 
   std::string wait_for_renamed_obj_removed_xml = buildWaitForObject(rp_2.prefix,
-                                                                    "renamed_drop_removed",
-                                                                    object_to_manipulate_2_key_name,
-                                                                    false);
+    "renamed_drop_removed",
+    object_to_manipulate_2_key_name,
+    false);
 
   //
 
@@ -611,9 +668,9 @@ int main(int argc, char**argv)
 
   // Now I create branches to wait for the robots to be in position, or outside the working zone.
   std::string wait_for_cycle_on = buildWaitForKeyBool("",
-                                                      "wait_for_cycle_on",
-                                                      "cycle_on_key",
-                                                      true);
+    "wait_for_cycle_on",
+    "cycle_on_key",
+    true);
 
   // Define the blackboard keys for the robots to interact with each other
   std::string robot_1_in_working_position_key_name = "robot_1_in_working_position_key";
@@ -624,45 +681,45 @@ int main(int argc, char**argv)
 
   // Now I create branches to wait for the robots to be in position, or outside the working zone.
   std::string wait_for_robot_1_in_working_position_xml = buildWaitForKeyBool(rp_1.prefix,
-                                                                             "robot_1_in_working_position",
-                                                                             robot_1_in_working_position_key_name,
-                                                                             true);
+    "robot_1_in_working_position",
+    robot_1_in_working_position_key_name,
+    true);
 
   std::string wait_for_robot_1_out_of_working_position_xml = buildWaitForKeyBool(rp_1.prefix,
-                                                                                 "robot_1_out_of_working_position",
-                                                                                 robot_1_in_working_position_key_name,
-                                                                                 false);
+    "robot_1_out_of_working_position",
+    robot_1_in_working_position_key_name,
+    false);
 
   std::string wait_for_robot_2_in_working_position_xml = buildWaitForKeyBool(rp_2.prefix,
-                                                                             "robot_2_in_working_position",
-                                                                             robot_2_in_working_position_key_name,
-                                                                             true);
+    "robot_2_in_working_position",
+    robot_2_in_working_position_key_name,
+    true);
 
   std::string wait_for_robot_2_out_of_working_position_xml = buildWaitForKeyBool(rp_2.prefix,
-                                                                                 "robot_2_out_of_working_position",
-                                                                                 robot_2_in_working_position_key_name,
-                                                                                 false);
+    "robot_2_out_of_working_position",
+    robot_2_in_working_position_key_name,
+    false);
 
   // Branches to set the blackboard keys
   std::string set_robot_1_in_working_position_xml = buildSetKeyBool(rp_1.prefix,
-                                                                    "robot_1_in_working_position",
-                                                                    robot_1_in_working_position_key_name,
-                                                                    true);
+    "robot_1_in_working_position",
+    robot_1_in_working_position_key_name,
+    true);
 
   std::string set_robot_1_out_of_working_position = buildSetKeyBool(rp_1.prefix,
-                                                                    "robot_1_out_of_working_position",
-                                                                    robot_1_in_working_position_key_name,
-                                                                    false);
+    "robot_1_out_of_working_position",
+    robot_1_in_working_position_key_name,
+    false);
 
   std::string set_robot_2_in_working_position = buildSetKeyBool(rp_2.prefix,
-                                                                "robot_2_in_working_position",
-                                                                robot_2_in_working_position_key_name,
-                                                                true);
+    "robot_2_in_working_position",
+    robot_2_in_working_position_key_name,
+    true);
 
   std::string set_robot_2_out_of_working_position_xml = buildSetKeyBool(rp_2.prefix,
-                                                                        "robot_2_out_of_working_position",
-                                                                        robot_2_in_working_position_key_name,
-                                                                        false);
+    "robot_2_out_of_working_position",
+    robot_2_in_working_position_key_name,
+    false);
 
   //
 
@@ -674,10 +731,19 @@ int main(int argc, char**argv)
 
   // We define the joint targets we need for the joint moves as vectors of doubles.
   // Be careful that the number of values must match the number of DOF of the robot (here, 6 DOF)
-  std::vector<double> joint_rest_1 = {0.0, -0.785, 0.785, 0.0, 1.57, 0.0};
+  std::vector<double> joint_rest_1 =
+  {
+    0.0, -0.785, 0.785, 0.0, 1.57, 0.0
+  };
 
-  std::vector<double> joint_rest_2 = {0.0, 0.785, -0.785, 0.0, -1.57, 0.0};
-  std::vector<double> joint_ready_2 = {0.4148, -0.4549, -1.7041, 1.7057, 1.9652, 0.3485};
+  std::vector<double> joint_rest_2 =
+  {
+    0.0, 0.785, -0.785, 0.0, -1.57, 0.0
+  };
+  std::vector<double> joint_ready_2 =
+  {
+    0.4148, -0.4549, -1.7041, 1.7057, 1.9652, 0.3485
+  };
 
   std::string named_home_1 = "home";
   std::string named_home_2 = "home";
@@ -687,99 +753,163 @@ int main(int argc, char**argv)
   // build the xml snippets for the single moves of robot 1
   // or translate them directly if they are only used once
   std::string rest_move_parallel_1_xml = buildMoveXML(rp_1.prefix, rp_1.prefix + "toRest",
-                                                      {{rp_1.prefix, tcp_frame_name_1, "joint",
-							move_configs["max_move"], "", joint_rest_1}},
-                                                      blackboard);
+  {
+    {
+      rp_1.prefix, tcp_frame_name_1, "joint",
+      move_configs["max_move"], "", joint_rest_1
+    }
+  },
+    blackboard);
 
   std::string pick_move_parallel_1_xml = buildMoveXML(rp_1.prefix, rp_1.prefix + "pick",
-                                                      {{rp_1.prefix, tcp_frame_name_1, "pose",
-							move_configs["max_move"],
-							approach_pick_target_1_key_name},
-							{rp_1.prefix, tcp_frame_name_1, "cartesian",
-							 move_configs["cartesian_slow_move"],
-							 pick_target_1_key_name}},
-                                                      blackboard);
+  {
+    {
+      rp_1.prefix, tcp_frame_name_1, "pose",
+      move_configs["max_move"],
+      approach_pick_target_1_key_name
+    },
+    {
+      rp_1.prefix, tcp_frame_name_1, "cartesian",
+      move_configs["cartesian_slow_move"],
+      pick_target_1_key_name
+    }
+  },
+    blackboard);
 
   std::string drop_move_parallel_1_xml = buildMoveXML(rp_1.prefix, rp_1.prefix + "drop",
-                                                      {{rp_1.prefix, tcp_frame_name_1, "cartesian",
-							move_configs["cartesian_max_move"],
-							drop_target_1_key_name}},
-                                                      blackboard);
+  {
+    {
+      rp_1.prefix, tcp_frame_name_1, "cartesian",
+      move_configs["cartesian_max_move"],
+      drop_target_1_key_name
+    }
+  },
+    blackboard);
 
   std::string wait_move_parallel_1_xml = buildMoveXML(rp_1.prefix, rp_1.prefix + "wait",
-                                                      {{rp_1.prefix, tcp_frame_name_1, "cartesian",
-							move_configs["cartesian_mid_move"],
-							approach_pick_target_1_key_name},
-							{rp_1.prefix, tcp_frame_name_1, "pose",
-							 move_configs["max_move"],
-							 approach_drop_target_1_key_name}},
-                                                      blackboard);
+  {
+    {
+      rp_1.prefix, tcp_frame_name_1, "cartesian",
+      move_configs["cartesian_mid_move"],
+      approach_pick_target_1_key_name
+    },
+    {
+      rp_1.prefix, tcp_frame_name_1, "pose",
+      move_configs["max_move"],
+      approach_drop_target_1_key_name
+    }
+  },
+    blackboard);
 
   std::string ready_move_parallel_1_xml = buildMoveXML(rp_1.prefix, rp_1.prefix + "ready",
-                                                       {{rp_1.prefix, tcp_frame_name_1, "pose",
-							 move_configs["max_move"],
-							 approach_drop_target_1_key_name}},
-                                                       blackboard);
+  {
+    {
+      rp_1.prefix, tcp_frame_name_1, "pose",
+      move_configs["max_move"],
+      approach_drop_target_1_key_name
+    }
+  },
+    blackboard);
 
   std::string home_move_parallel_1_xml = buildMoveXML(rp_1.prefix, rp_1.prefix + "home",
-                                                      {{rp_1.prefix, tcp_frame_name_1, "named",
-							move_configs["max_move"], "", {},
-							named_home_1}},
-                                                      blackboard);
+  {
+    {
+      rp_1.prefix, tcp_frame_name_1, "named",
+      move_configs["max_move"], "",
+      {
+      },
+      named_home_1
+    }
+  },
+    blackboard);
 
   // We can compose sequences together into a xml tree leaf or branch
   std::string home_sequence_1_xml = sequenceWrapperXML(rp_1.prefix + "ComposedHomeSequence_1",
-                                                       {home_move_parallel_1_xml,
-                                                        rest_move_parallel_1_xml});
+  {
+    home_move_parallel_1_xml,
+    rest_move_parallel_1_xml
+  });
 
   // ROBOT 2
   // build the xml snippets for the single moves of robot 2
   std::string rest_move_parallel_2_xml = buildMoveXML(rp_2.prefix, rp_2.prefix + "toRest",
-                                                      {{rp_2.prefix, tcp_frame_name_2, "joint",
-							move_configs["max_move"], "", joint_rest_2}},
-                                                      blackboard);
+  {
+    {
+      rp_2.prefix, tcp_frame_name_2, "joint",
+      move_configs["max_move"], "", joint_rest_2
+    }
+  },
+    blackboard);
 
   std::string insert_move_parallel_2_xml = buildMoveXML(rp_2.prefix, rp_2.prefix + "pick",
-                                                        {{rp_2.prefix, tcp_frame_name_2, "pose",
-							  move_configs["max_move"],
-							  approach_insert_target_2_key_name},
-							  {rp_2.prefix, tcp_frame_name_2, "cartesian",
-							   move_configs["cartesian_slow_move"],
-							   insert_target_2_key_name}},
-                                                        blackboard);
+  {
+    {
+      rp_2.prefix, tcp_frame_name_2, "pose",
+      move_configs["max_move"],
+      approach_insert_target_2_key_name
+    },
+    {
+      rp_2.prefix, tcp_frame_name_2, "cartesian",
+      move_configs["cartesian_slow_move"],
+      insert_target_2_key_name
+    }
+  },
+    blackboard);
 
   std::string load_move_parallel_2_xml = buildMoveXML(rp_2.prefix, rp_2.prefix + "drop",
-                                                      {{rp_2.prefix, tcp_frame_name_2, "cartesian",
-							move_configs["cartesian_mid_move"],
-							approach_load_target_2_key_name},
-							{rp_2.prefix, tcp_frame_name_2, "cartesian",
-							 move_configs["cartesian_slow_move"],
-							 load_target_2_key_name}},
-                                                      blackboard);
+  {
+    {
+      rp_2.prefix, tcp_frame_name_2, "cartesian",
+      move_configs["cartesian_mid_move"],
+      approach_load_target_2_key_name
+    },
+    {
+      rp_2.prefix, tcp_frame_name_2, "cartesian",
+      move_configs["cartesian_slow_move"],
+      load_target_2_key_name
+    }
+  },
+    blackboard);
 
   std::string exit_move_parallel_2_xml = buildMoveXML(rp_2.prefix, rp_2.prefix + "exit",
-                                                      {{rp_2.prefix, tcp_frame_name_2, "cartesian",
-							move_configs["cartesian_max_move"],
-							approach_insert_target_2_key_name}},
-                                                      blackboard);
+  {
+    {
+      rp_2.prefix, tcp_frame_name_2, "cartesian",
+      move_configs["cartesian_max_move"],
+      approach_insert_target_2_key_name
+    }
+  },
+    blackboard);
 
   std::string ready_move_parallel_2_xml = buildMoveXML(rp_2.prefix,
-                                                       rp_2.prefix + "toReady",
-                                                       {{rp_2.prefix, tcp_frame_name_2, "joint",
-							 move_configs["max_move"], "",
-							 joint_ready_2}},
-                                                       blackboard);
+    rp_2.prefix + "toReady",
+  {
+    {
+      rp_2.prefix, tcp_frame_name_2, "joint",
+      move_configs["max_move"], "",
+      joint_ready_2
+    }
+  },
+    blackboard);
 
   std::string home_move_parallel_2_xml = buildMoveXML(rp_2.prefix, rp_2.prefix + "home",
-                                                      {{rp_2.prefix, tcp_frame_name_2, "named",
-							move_configs["max_move"], "", {},
-							named_home_2}},
-                                                      blackboard);
+  {
+    {
+      rp_2.prefix, tcp_frame_name_2, "named",
+      move_configs["max_move"], "",
+      {
+      },
+      named_home_2
+    }
+  },
+    blackboard);
 
   // We can compose sequences together into a xml tree leaf or branch
   std::string home_sequence_2_xml = sequenceWrapperXML(rp_2.prefix + "ComposedHomeSequence_2",
-                                                       {home_move_parallel_2_xml,
-                                                        rest_move_parallel_2_xml});
+  {
+    home_move_parallel_2_xml,
+    rest_move_parallel_2_xml
+  });
 
   //
 
@@ -796,37 +926,41 @@ int main(int argc, char**argv)
     (rp_1.is_real ? buildSetOutputXML(rp_1.prefix, "GripperOpen", "controller", 0, 0) : "");
   std::string wait_for_gripper_close_1_xml =
     (rp_1.is_real ? buildWaitForInput(rp_1.prefix, "WaitForSensor", "controller", 0,
-                                      1) :
+      1) :
      "<Delay delay_msec=\"250\">\n<AlwaysSuccess />\n</Delay>\n");
   std::string wait_for_gripper_open_1_xml =
     (rp_1.is_real ? buildWaitForInput(rp_1.prefix, "WaitForSensor", "controller", 0,
-                                      0) :
+      0) :
      "<Delay delay_msec=\"250\">\n  <AlwaysSuccess />\n</Delay>\n");
   std::string check_robot_state_1_xml = buildCheckRobotStateXML(rp_1.prefix, "CheckRobot",
-                                                                "robot_ready", "error_code",
-                                                                "robot_mode", "robot_state",
-                                                                "robot_msg");
+    "robot_ready", "error_code",
+    "robot_mode", "robot_state",
+    "robot_msg");
   std::string reset_robot_state_1_xml = buildResetRobotStateXML(rp_1.prefix, "ResetRobot",
-                                                                rp_1.model);
+    rp_1.model);
 
   std::string check_reset_robot_1_xml =
     (rp_1.is_real ? fallbackWrapperXML(rp_1.prefix + "CheckResetFallback",
-                                       {check_robot_state_1_xml,
-                                        reset_robot_state_1_xml}) :
+  {
+    check_robot_state_1_xml,
+    reset_robot_state_1_xml
+  }) :
      "<Delay delay_msec=\"100\">\n<AlwaysSuccess />\n</Delay>\n");
 
   // Robot 2
   std::string check_robot_state_2_xml = buildCheckRobotStateXML(rp_2.prefix, "CheckRobot",
-                                                                "robot_ready", "error_code",
-                                                                "robot_mode", "robot_state",
-                                                                "robot_msg");
+    "robot_ready", "error_code",
+    "robot_mode", "robot_state",
+    "robot_msg");
   std::string reset_robot_state_2_xml = buildResetRobotStateXML(rp_2.prefix, "ResetRobot",
-                                                                rp_2.model);
+    rp_2.model);
 
   std::string check_reset_robot_2_xml =
     (rp_2.is_real ? fallbackWrapperXML(rp_2.prefix + "CheckResetFallback",
-                                       {check_robot_state_2_xml,
-                                        reset_robot_state_2_xml}) :
+  {
+    check_robot_state_2_xml,
+    reset_robot_state_2_xml
+  }) :
      "<Delay delay_msec=\"100\">\n<AlwaysSuccess />\n</Delay>\n");
 
   //
@@ -838,72 +972,123 @@ int main(int argc, char**argv)
   // Let's build the full sequence in logically separated blocks:
   // General
   std::string spawn_fixed_objects_xml = sequenceWrapperXML("SpawnFixedObjects",
-                                                           {init_machine_mesh_obj_xml});                        //,
+  {
+    init_machine_mesh_obj_xml
+  });                                                                                                           //,
                                                                                                                 // init_endplate_mesh_obj_xml,
                                                                                                                 // init_slider_mesh_obj_xml});
 
   // Robot 1
   std::string go_to_rest_pose_1_xml =
-    sequenceWrapperXML("GoToRestPose", {rest_move_parallel_1_xml});
+    sequenceWrapperXML("GoToRestPose",
+  {
+    rest_move_parallel_1_xml
+  });
   std::string get_grasp_object_poses_1_xml = sequenceWrapperXML("GetGraspPoses",
-                                                                {get_pick_pose_1_xml,
-                                                                 get_approach_pose_1_xml});
+  {
+    get_pick_pose_1_xml,
+    get_approach_pose_1_xml
+  });
   std::string go_to_pick_pose_1_xml =
-    sequenceWrapperXML("GoToPickPose", {pick_move_parallel_1_xml});
-  std::string close_gripper_1_xml = sequenceWrapperXML("CloseGripper", {signal_gripper_close_1_xml,
-                                                                        wait_for_gripper_close_1_xml,
-                                                                        attach_obj_1_xml});
+    sequenceWrapperXML("GoToPickPose",
+  {
+    pick_move_parallel_1_xml
+  });
+  std::string close_gripper_1_xml = sequenceWrapperXML("CloseGripper",
+  {
+    signal_gripper_close_1_xml,
+    wait_for_gripper_close_1_xml,
+    attach_obj_1_xml
+  });
   std::string go_to_wait_pose_1_xml =
-    sequenceWrapperXML("GoToWaitPose", {wait_move_parallel_1_xml});
+    sequenceWrapperXML("GoToWaitPose",
+  {
+    wait_move_parallel_1_xml
+  });
   std::string go_to_drop_pose_1_xml =
-    sequenceWrapperXML("GoToDropPose", {drop_move_parallel_1_xml});
-  std::string open_gripper_1_xml = sequenceWrapperXML("OpenGripper", {signal_gripper_open_1_xml,
-                                                                      detach_obj_1_xml,
-                                                                      wait_for_gripper_open_1_xml});
+    sequenceWrapperXML("GoToDropPose",
+  {
+    drop_move_parallel_1_xml
+  });
+  std::string open_gripper_1_xml = sequenceWrapperXML("OpenGripper",
+  {
+    signal_gripper_open_1_xml,
+    detach_obj_1_xml,
+    wait_for_gripper_open_1_xml
+  });
   std::string go_to_ready_pose_1_xml = sequenceWrapperXML("GoToExitPose",
-                                                          {ready_move_parallel_1_xml});
+  {
+    ready_move_parallel_1_xml
+  });
 
   // Robot 2
   std::string go_to_rest_pose_2_xml =
-    sequenceWrapperXML("GoToRestPose", {rest_move_parallel_2_xml});
+    sequenceWrapperXML("GoToRestPose",
+  {
+    rest_move_parallel_2_xml
+  });
   std::string get_grasp_object_poses_2_xml = sequenceWrapperXML("GetGraspPoses",
-                                                                {get_insert_pose_2_xml,
-                                                                 get_approach_insert_pose_2_xml});
+  {
+    get_insert_pose_2_xml,
+    get_approach_insert_pose_2_xml
+  });
   std::string go_to_ready_pose_2_xml = sequenceWrapperXML("GoToReadyPose",
-                                                          {ready_move_parallel_2_xml});
+  {
+    ready_move_parallel_2_xml
+  });
   std::string go_to_insert_pose_2_xml = sequenceWrapperXML("GoToPickPose",
-                                                           {insert_move_parallel_2_xml});
+  {
+    insert_move_parallel_2_xml
+  });
   std::string go_to_load_pose_2_xml =
-    sequenceWrapperXML("GoToLoadPose", {load_move_parallel_2_xml});
+    sequenceWrapperXML("GoToLoadPose",
+  {
+    load_move_parallel_2_xml
+  });
   std::string go_to_exit_pose_2_xml =
-    sequenceWrapperXML("GoToExitPose", {exit_move_parallel_2_xml});
+    sequenceWrapperXML("GoToExitPose",
+  {
+    exit_move_parallel_2_xml
+  });
 
   // Reset sequence of variable objects
   std::string reset_movable_objects_xml = sequenceWrapperXML("reset_movable_objects",
-                                                             {remove_slider_mesh_obj_xml,
-                                                              add_slider_mesh_obj_xml,
-                                                              remove_endplate_mesh_obj_xml,
-                                                              add_endplate_mesh_obj_xml});
+  {
+    remove_slider_mesh_obj_xml,
+    add_slider_mesh_obj_xml,
+    remove_endplate_mesh_obj_xml,
+    add_endplate_mesh_obj_xml
+  });
   std::string reset_graspable_objects_xml = sequenceWrapperXML("reset_graspable_objects",
-                                                               {open_gripper_1_xml,
-                                                                remove_obj_1_xml, detach_obj_2_xml,
-                                                                remove_obj_2_xml});
+  {
+    open_gripper_1_xml,
+    remove_obj_1_xml, detach_obj_2_xml,
+    remove_obj_2_xml
+  });
 
   // Dedicated spawnable objects per robot:
   std::string spawn_graspable_object_1_xml = sequenceWrapperXML("SpawnGraspableObjects",
-                                                                {init_graspable_mesh_obj_xml});
+  {
+    init_graspable_mesh_obj_xml
+  });
 
   // Parallel startup subsequences:
   std::string startup_sequence_1_xml = sequenceWrapperXML("StartUpSequence_1",
-                                                          {check_reset_robot_1_xml,
-                                                           rest_move_parallel_1_xml});
+  {
+    check_reset_robot_1_xml,
+    rest_move_parallel_1_xml
+  });
   std::string startup_sequence_2_xml = sequenceWrapperXML("StartUpSequence_2",
-                                                          {check_reset_robot_2_xml,
-                                                           rest_move_parallel_2_xml});
+  {
+    check_reset_robot_2_xml,
+    rest_move_parallel_2_xml
+  });
   std::string parallel_sub_startup_sequences_xml = parallelWrapperXML("Parallel_startupSequences",
-                                                                      {startup_sequence_1_xml,
-                                                                       startup_sequence_2_xml}, 2,
-                                                                      1);
+  {
+    startup_sequence_1_xml,
+    startup_sequence_2_xml
+  }, 2,
+    1);
 
   // General startup/reset sequence:
   std::string startup_sequence_xml = sequenceWrapperXML("StartUpSequence",
@@ -943,7 +1128,7 @@ int main(int argc, char**argv)
     rename_obj_1_xml,                                     //< Rename the object for the other robot
                                                           // to use
   },
-                                                                      -1);       //< num_cycles=-1
+    -1);                                                                         //< num_cycles=-1
                                                                                  // for
                                                                                  // infinite
 
@@ -975,25 +1160,32 @@ int main(int argc, char**argv)
                                                           // on the next cycle in the original
                                                           // position
   },
-                                                                      -1);       //< num_cycles=-1
+    -1);                                                                         //< num_cycles=-1
                                                                                  // for
                                                                                  // infinite
 
   // Runningh both robot sequences in parallel:
   std::string parallel_repeat_forever_sequences_xml = parallelWrapperXML(
     "PARALLEL_MOTION_SEQUENCES",
-    {repeat_forever_wrapper_1_xml, repeat_forever_wrapper_2_xml},
+  {
+    repeat_forever_wrapper_1_xml, repeat_forever_wrapper_2_xml
+  },
     2,
     1);
 
   std::string retry_forever_wrapper_xml = retrySequenceWrapperXML("CycleForever",
-                                                                  {startup_sequence_xml,
-                                                                   parallel_repeat_forever_sequences_xml},
-                                                                  -1);
+  {
+    startup_sequence_xml,
+    parallel_repeat_forever_sequences_xml
+  },
+    -1);
 
   // MasterSequence with startup sequence and RepeatForever as child to set BehaviorTree ID and root
   // main_tree_to_execute in the XML
-  std::vector<std::string> master_branches_xml = {retry_forever_wrapper_xml};
+  std::vector<std::string> master_branches_xml =
+  {
+    retry_forever_wrapper_xml
+  };
   std::string master_body = sequenceWrapperXML("GlobalMasterSequence", master_branches_xml);
 
   //
@@ -1005,8 +1197,8 @@ int main(int argc, char**argv)
   std::string final_tree_xml = mainTreeWrapperXML("MasterTree", master_body);
 
   RCLCPP_INFO(node->get_logger(),
-              "=== Programmatically Generated Tree XML ===\n%s",
-              final_tree_xml.c_str());
+    "=== Programmatically Generated Tree XML ===\n%s",
+    final_tree_xml.c_str());
 
   //
 
@@ -1020,7 +1212,7 @@ int main(int argc, char**argv)
   BT::Tree tree;
   try {
     tree = factory.createTreeFromText(final_tree_xml, blackboard);
-  } catch (const std::exception&ex) {
+  } catch (const std::exception & ex) {
     RCLCPP_ERROR(node->get_logger(), "Failed to create tree: %s", ex.what());
     return 1;
   }
@@ -1030,7 +1222,7 @@ int main(int argc, char**argv)
 
   // Create the HMI Service Node and pass the same blackboard ***
   auto hmi_node = std::make_shared<manymove_cpp_trees::HMIServiceNode>("hmi_service_node",
-                                                                       blackboard, keys);
+    blackboard, keys);
   RCLCPP_INFO(node->get_logger(), "HMI Service Nodes instantiated.");
 
   // Create a MultiThreadedExecutor so that both nodes can be spun concurrently.

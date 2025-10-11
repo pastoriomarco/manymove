@@ -45,7 +45,7 @@ namespace manymove_cpp_trees
 {
 
 HMIServiceNode::HMIServiceNode(
-  const std::string&node_name,
+  const std::string & node_name,
   BT::Blackboard::Ptr blackboard,
   std::vector<BlackboardEntry> keys)
   : Node(node_name),
@@ -55,15 +55,15 @@ HMIServiceNode::HMIServiceNode(
   // Create the update_blackboard service.
   update_blackboard_srv_ =
     this->create_service<manymove_msgs::srv::SetBlackboardValues>("update_blackboard",
-                                                                  std::bind(&HMIServiceNode::
-                                                                            handleUpdateBlackboard,
-                                                                            this,
-                                                                            std::placeholders::_1,
-                                                                            std::placeholders::_2));
+      std::bind(&HMIServiceNode::
+	handleUpdateBlackboard,
+	this,
+	std::placeholders::_1,
+	std::placeholders::_2));
 
   RCLCPP_INFO(this->get_logger(),
-              "[%s] HMIServiceNode started: service 'update_blackboard' is ready.",
-              node_name.c_str());
+    "[%s] HMIServiceNode started: service 'update_blackboard' is ready.",
+    node_name.c_str());
 
   // Create the publisher for blackboard status.
   publisher_ = this->create_publisher<std_msgs::msg::String>("blackboard_status", 10);
@@ -93,8 +93,8 @@ void HMIServiceNode::handleUpdateBlackboard(
     std::string data = request->value_data[i];
 
     RCLCPP_INFO(this->get_logger(),
-                "Updating BB key='%s' type='%s' data='%s'",
-                key.c_str(), type.c_str(), data.c_str());
+      "Updating BB key='%s' type='%s' data='%s'",
+      key.c_str(), type.c_str(), data.c_str());
 
     try {
       if (type == "bool") {
@@ -119,9 +119,9 @@ void HMIServiceNode::handleUpdateBlackboard(
       else {
 	throw std::runtime_error("Unsupported value_type or wrong nomenclature: " + type);
       }
-    } catch (const std::exception&e) {
+    } catch (const std::exception & e) {
       RCLCPP_ERROR(this->get_logger(),
-                   "Error updating key='%s': %s", key.c_str(), e.what());
+	"Error updating key='%s': %s", key.c_str(), e.what());
     }
   }
 
@@ -129,7 +129,7 @@ void HMIServiceNode::handleUpdateBlackboard(
   response->message = "Updated " + std::to_string(n) + " blackboard keys";
 }
 
-std::string HMIServiceNode::serializePoseRPY(const geometry_msgs::msg::Pose&pose)
+std::string HMIServiceNode::serializePoseRPY(const geometry_msgs::msg::Pose & pose)
 {
   // Convert quaternion to roll, pitch, yaw.
   tf2::Quaternion q(
@@ -157,7 +157,7 @@ void HMIServiceNode::publishBlackboardStatus()
   std::ostringstream ss;
   ss << "{";
   bool first_item = true;
-  for (const auto&entry : keys_) {
+  for (const auto & entry : keys_) {
     if (!first_item) {
       ss << ", ";
     }
@@ -207,7 +207,7 @@ void HMIServiceNode::publishBlackboardStatus()
       if (blackboard_->get(entry.key, arr)) {
 	ss << "\"" << entry.key << "\": [";
 	bool first = true;
-	for (auto&v : arr) {
+	for (auto & v : arr) {
 	  if (!first) {
 	    ss << ", ";
 	  }
@@ -236,7 +236,7 @@ void HMIServiceNode::publishBlackboardStatus()
   publisher_->publish(msg);
 }
 
-std::vector<double> HMIServiceNode::parseJsonDoubleArray(const std::string&json_str)
+std::vector<double> HMIServiceNode::parseJsonDoubleArray(const std::string & json_str)
 {
   auto start = json_str.find_first_not_of(" \t\r\n");
   auto end = json_str.find_last_not_of(" \t\r\n");
@@ -267,9 +267,9 @@ std::vector<double> HMIServiceNode::parseJsonDoubleArray(const std::string&json_
   return result;
 }
 
-geometry_msgs::msg::Pose HMIServiceNode::parseJsonPose(const std::string&json_str)
+geometry_msgs::msg::Pose HMIServiceNode::parseJsonPose(const std::string & json_str)
 {
-  auto findValue = [&](const std::string&label) -> double
+  auto findValue = [&](const std::string & label) -> double
 		   {
 		     auto pos = json_str.find(label);
 		     if (pos == std::string::npos) {

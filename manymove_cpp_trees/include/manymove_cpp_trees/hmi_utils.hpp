@@ -37,16 +37,18 @@
 namespace manymove_cpp_trees
 {
 inline void setHMIMessage(
-  const BT::Blackboard::Ptr&blackboard,
-  const std::string&key,
-  const std::string&value,
-  const std::string&color,
+  const BT::Blackboard::Ptr & blackboard,
+  const std::string & key,
+  const std::string & value,
+  const std::string & color,
   double rate_hz = 5.0)
 {
   using clock = std::chrono::steady_clock;
   struct State
   {
-    clock::time_point last_time{};
+    clock::time_point last_time
+    {
+    };
     std::string last_value;
     std::string last_color;
   };
@@ -55,7 +57,7 @@ inline void setHMIMessage(
   auto now = clock::now();
   auto period = std::chrono::duration<double>(1.0 / rate_hz);
 
-  State&st = states[key];
+  State & st = states[key];
   bool should_update = false;
   if (st.last_value != value || st.last_color != color) {
     should_update = true;

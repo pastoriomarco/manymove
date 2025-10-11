@@ -40,57 +40,57 @@
 
 class HmiGui : public QMainWindow
 {
-Q_OBJECT
+  Q_OBJECT
 
-public:
+  public:
 /// The new constructor accepts a list of robot prefixes.
-explicit HmiGui(const std::vector<std::string>&robotPrefixes,
-                std::vector<std::string>&robotNames, QWidget*parent = nullptr);
-~HmiGui();
+  explicit HmiGui(const std::vector<std::string> & robotPrefixes,
+    std::vector<std::string> & robotNames, QWidget * parent = nullptr);
+  ~HmiGui();
 
-public slots:
+  public slots:
 /// Update the GUI for a given robot (by prefix).
-void updateStatus(const QString&robotPrefix,
-                  bool stop_execution,
-                  bool reset,
-                  bool collision_detected);
+  void updateStatus(const QString & robotPrefix,
+    bool stop_execution,
+    bool reset,
+    bool collision_detected);
 
 /// Update a textual message for a given robot.
-void updateRobotMessage(const QString&robotPrefix,
-                        const QString&message,
-                        const QString&color);
+  void updateRobotMessage(const QString & robotPrefix,
+    const QString & message,
+    const QString & color);
 
 // TCP server slots
-void onNewConnection();
-void onSocketDisconnected();
+  void onNewConnection();
+  void onSocketDisconnected();
 
-signals:
+  signals:
 /// Signals that include the robot prefix.
-void startExecutionRequested(const std::string&robotPrefix);
-void stopExecutionRequested(const std::string&robotPrefix);
-void resetProgramRequested(const std::string&robotPrefix);
+  void startExecutionRequested(const std::string & robotPrefix);
+  void stopExecutionRequested(const std::string & robotPrefix);
+  void resetProgramRequested(const std::string & robotPrefix);
 
-private:
-QWidget*centralWidget_;
-QTcpServer*tcpServer_;
-QTcpSocket*clientSocket_;
+  private:
+  QWidget * centralWidget_;
+  QTcpServer * tcpServer_;
+  QTcpSocket * clientSocket_;
 
 // Structure holding one robot’s UI elements.
-struct RobotInterface
-{
-  std::string prefix;
-  QLabel*prefixLabel;
-  QPushButton*startButton;
-  QPushButton*stopButton;
-  QPushButton*resetButton;
-  QLabel*messageLabel;
-};
+  struct RobotInterface
+  {
+    std::string prefix;
+    QLabel * prefixLabel;
+    QPushButton * startButton;
+    QPushButton * stopButton;
+    QPushButton * resetButton;
+    QLabel * messageLabel;
+  };
 
-std::vector<RobotInterface> robotInterfaces_;
-std::vector<std::string> robotNames_;
+  std::vector<RobotInterface> robotInterfaces_;
+  std::vector<std::string> robotNames_;
 
 // (Optional) For TCP status broadcasting.
-QString lastStatusJson_;
+  QString lastStatusJson_;
 };
 
 #endif // HMI_GUI_HPP

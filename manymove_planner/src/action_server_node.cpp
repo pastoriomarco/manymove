@@ -31,7 +31,7 @@
 #include "manymove_planner/moveit_cpp_planner.hpp"
 #include "manymove_planner/action_server.hpp"
 
-int main(int argc, char**argv)
+int main(int argc, char ** argv)
 {
   rclcpp::init(argc, argv);
 
@@ -89,8 +89,8 @@ int main(int argc, char**argv)
   }
   else {
     RCLCPP_ERROR(node->get_logger(),
-                 "Unknown planner_type: %s. Valid options are 'moveitcpp' and 'movegroup'.",
-                 planner_type.c_str());
+      "Unknown planner_type: %s. Valid options are 'moveitcpp' and 'movegroup'.",
+      planner_type.c_str());
     return 1;
   }
 

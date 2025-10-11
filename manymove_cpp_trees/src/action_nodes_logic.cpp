@@ -34,8 +34,8 @@ namespace manymove_cpp_trees
 {
 
 RetryPauseResetNode::RetryPauseResetNode(
-  const std::string&name,
-  const BT::NodeConfiguration&config)
+  const std::string & name,
+  const BT::NodeConfiguration & config)
   : BT::DecoratorNode(name, config)
 {
 }
@@ -131,8 +131,8 @@ void RetryPauseResetNode::halt()
 // ---------------------------------------------------------------
 
 CheckKeyBoolValue::CheckKeyBoolValue(
-  const std::string&name,
-  const BT::NodeConfiguration&config)
+  const std::string & name,
+  const BT::NodeConfiguration & config)
   : BT::ConditionNode(name, config)
 {
   // If you need to confirm the blackboard is present:
@@ -169,17 +169,17 @@ BT::NodeStatus CheckKeyBoolValue::tick()
   }
 
   RCLCPP_DEBUG(rclcpp::get_logger("CheckKeyBoolValue"),
-               "Key: %s; Expected value: %s; Actual value: %s",
-               key.c_str(),
-               (expected_value ? "true" : "false"),
-               (actual_value ? "true" : "false"));
+    "Key: %s; Expected value: %s; Actual value: %s",
+    key.c_str(),
+    (expected_value ? "true" : "false"),
+    (actual_value ? "true" : "false"));
 
   // 3) Compare the blackboard value to the expected value
   if (actual_value == expected_value) {
     // HMI message
     if (hmi_message_logic) {
       setHMIMessage(config().blackboard, robot_prefix, "KEY VALUE CHECK SUCCEEDED: " + key,
-                    "green");
+	"green");
     }
 
     // Condition satisfied => SUCCESS
@@ -224,7 +224,7 @@ BT::NodeStatus SetKeyBoolValue::tick()
 
   // HMI message
   setHMIMessage(config().blackboard, robot_prefix,
-                "KEY " + key + " SET TO " + (value ? "true" : "false"), "green");
+    "KEY " + key + " SET TO " + (value ? "true" : "false"), "green");
 
   // Return SUCCESS to indicate we’ve completed setting the key
   return BT::NodeStatus::SUCCESS;
@@ -234,8 +234,8 @@ BT::NodeStatus SetKeyBoolValue::tick()
 // WaitForKeyBool
 // ---------------------------------------------------------
 WaitForKeyBool::WaitForKeyBool(
-  const std::string&name,
-  const BT::NodeConfiguration&config)
+  const std::string & name,
+  const BT::NodeConfiguration & config)
   : BT::StatefulActionNode(name, config),
   condition_met_(false)
 {
@@ -253,12 +253,12 @@ BT::NodeStatus WaitForKeyBool::onStart()
   // Read ports
   if (!getInput<std::string>("key", key_)) {
     RCLCPP_ERROR(node_ ? node_->get_logger() : rclcpp::get_logger("WaitForKeyBool"),
-                 "[%s] missing 'key' input", name().c_str());
+      "[%s] missing 'key' input", name().c_str());
     return BT::NodeStatus::FAILURE;
   }
   if (!getInput<bool>("expected_value", expected_value_)) {
     RCLCPP_ERROR(node_ ? node_->get_logger() : rclcpp::get_logger("WaitForKeyBool"),
-                 "[%s] missing 'expected_value' input", name().c_str());
+      "[%s] missing 'expected_value' input", name().c_str());
     return BT::NodeStatus::FAILURE;
   }
   getInput<double>("timeout", timeout_);
@@ -272,8 +272,8 @@ BT::NodeStatus WaitForKeyBool::onStart()
   if (!node_) {
     // fallback if no node in blackboard => we cannot do usual timing
     RCLCPP_WARN(rclcpp::get_logger("WaitForKeyBool"),
-                "[%s] No rclcpp::Node found. We'll set times to 0 => single pass only.",
-                name().c_str());
+      "[%s] No rclcpp::Node found. We'll set times to 0 => single pass only.",
+      name().c_str());
     start_time_ = rclcpp::Time(0, 0, RCL_ROS_TIME);
     next_check_time_ = rclcpp::Time(0, 0, RCL_ROS_TIME);
   }
@@ -283,17 +283,17 @@ BT::NodeStatus WaitForKeyBool::onStart()
   }
 
   RCLCPP_INFO(node_ ? node_->get_logger() : rclcpp::get_logger(
-		"WaitForKeyBool"),
-              "[%s] WaitForKeyBool starting: key='%s', expected='%s', timeout=%.2f, poll_rate=%.2f",
-              name().c_str(),
-              key_.c_str(),
-              (expected_value_ ? "true" : "false"),
-              timeout_,
-              poll_rate_);
+    "WaitForKeyBool"),
+    "[%s] WaitForKeyBool starting: key='%s', expected='%s', timeout=%.2f, poll_rate=%.2f",
+    name().c_str(),
+    key_.c_str(),
+    (expected_value_ ? "true" : "false"),
+    timeout_,
+    poll_rate_);
 
   // HMI message
   setHMIMessage(config().blackboard, prefix_,
-                "[" + name() + "]" + "WAITING FOR KEY " + key_, "yellow");
+    "[" + name() + "]" + "WAITING FOR KEY " + key_, "yellow");
 
   return BT::NodeStatus::RUNNING;
 }
@@ -324,14 +324,14 @@ BT::NodeStatus WaitForKeyBool::onRunning()
   }
 
   RCLCPP_DEBUG(node_ ? node_->get_logger() : rclcpp::get_logger(
-		 "WaitForKeyBool"),
-               "[%s] WaitForKeyBool polling: key='%s', expected='%s', actual='%s' timeout=%.2f, poll_rate=%.2f",
-               name().c_str(),
-               key_.c_str(),
-               (expected_value_ ? "true" : "false"),
-               (actual_value ? "true" : "false"),
-               timeout_,
-               poll_rate_);
+    "WaitForKeyBool"),
+    "[%s] WaitForKeyBool polling: key='%s', expected='%s', actual='%s' timeout=%.2f, poll_rate=%.2f",
+    name().c_str(),
+    key_.c_str(),
+    (expected_value_ ? "true" : "false"),
+    (actual_value ? "true" : "false"),
+    timeout_,
+    poll_rate_);
 
   if (actual_value == expected_value_) {
     // HMI message
@@ -346,15 +346,15 @@ BT::NodeStatus WaitForKeyBool::onRunning()
     double elapsed = (now - start_time_).seconds();
     if (elapsed >= timeout_) {
       RCLCPP_WARN(node_->get_logger(),
-                  "[%s] Timeout after %.2f s => FAILURE. last_value='%s'",
-                  name().c_str(), elapsed, (actual_value ? "true" : "false"));
+	"[%s] Timeout after %.2f s => FAILURE. last_value='%s'",
+	name().c_str(), elapsed, (actual_value ? "true" : "false"));
       return BT::NodeStatus::FAILURE;
     }
   }
 
   // HMI message
   setHMIMessage(config().blackboard, prefix_, "[" + name() + "]: " + "WAITING FOR " + key_,
-                "yellow");
+    "yellow");
 
   // Otherwise schedule the next check in poll_rate_ s
   next_check_time_ = now + rclcpp::Duration::from_seconds(poll_rate_);
@@ -364,8 +364,8 @@ BT::NodeStatus WaitForKeyBool::onRunning()
 void WaitForKeyBool::onHalted()
 {
   RCLCPP_WARN(node_ ? node_->get_logger() : rclcpp::get_logger("WaitForKeyBool"),
-              "[%s] Halted => reset state",
-              name().c_str());
+    "[%s] Halted => reset state",
+    name().c_str());
   condition_met_ = false;
 }
 
@@ -378,13 +378,13 @@ constexpr double TF_TIMEOUT_SEC = 0.1;
 }     // 100 ms
 
 GetLinkPoseAction::GetLinkPoseAction(
-  const std::string&name,
-  const BT::NodeConfiguration&cfg)
+  const std::string & name,
+  const BT::NodeConfiguration & cfg)
   : BT::SyncActionNode(name, cfg)
 {
   if (!cfg.blackboard || !cfg.blackboard->get("node", node_)) {
     throw BT::RuntimeError("GetLinkPoseAction: cannot retrieve rclcpp::Node "
-                           "from blackboard (key 'node').");
+      "from blackboard (key 'node').");
   }
 
   tf_buffer_ = std::make_unique<tf2_ros::Buffer>(node_->get_clock());
@@ -409,7 +409,7 @@ BT::NodeStatus GetLinkPoseAction::tick()
   if ((!pre.empty() && pre.size() != 6) ||
       (!post.empty() && post.size() != 6)) {
     RCLCPP_ERROR(node_->get_logger(),
-                 "[%s] pre/post vectors must contain exactly 6 elements", name().c_str());
+      "[%s] pre/post vectors must contain exactly 6 elements", name().c_str());
     return BT::NodeStatus::FAILURE;
   }
 
@@ -417,24 +417,24 @@ BT::NodeStatus GetLinkPoseAction::tick()
   geometry_msgs::msg::TransformStamped tf_link_to_ref;
   try {
     tf_link_to_ref = tf_buffer_->lookupTransform(ref_frame.empty() ? "world" : ref_frame,             // target
-                                                 link_name,             // source
-                                                 tf2::TimePointZero,
-                                                 tf2::durationFromSec(TF_TIMEOUT_SEC));
-  } catch (const tf2::TransformException&ex) {
+      link_name,                                                        // source
+      tf2::TimePointZero,
+      tf2::durationFromSec(TF_TIMEOUT_SEC));
+  } catch (const tf2::TransformException & ex) {
     RCLCPP_ERROR(node_->get_logger(), "[%s] TF error: %s", name().c_str(), ex.what());
     return BT::NodeStatus::FAILURE;
   }
 
   RCLCPP_INFO(node_->get_logger(),
-              "GetLinkPoseAction - [%s] - RAW tf: {%.3f, %.3f, %.3f, %.3f, %.3f, %.3f, %.3f}",
-              name().c_str(),
-              tf_link_to_ref.transform.translation.x,
-              tf_link_to_ref.transform.translation.y,
-              tf_link_to_ref.transform.translation.z,
-              tf_link_to_ref.transform.rotation.x,
-              tf_link_to_ref.transform.rotation.y,
-              tf_link_to_ref.transform.rotation.z,
-              tf_link_to_ref.transform.rotation.w);
+    "GetLinkPoseAction - [%s] - RAW tf: {%.3f, %.3f, %.3f, %.3f, %.3f, %.3f, %.3f}",
+    name().c_str(),
+    tf_link_to_ref.transform.translation.x,
+    tf_link_to_ref.transform.translation.y,
+    tf_link_to_ref.transform.translation.z,
+    tf_link_to_ref.transform.rotation.x,
+    tf_link_to_ref.transform.rotation.y,
+    tf_link_to_ref.transform.rotation.z,
+    tf_link_to_ref.transform.rotation.w);
 
   /* ── build the 8-step combined transform ─────────────────────────── */
   tf2::Transform combined;
@@ -445,7 +445,7 @@ BT::NodeStatus GetLinkPoseAction::tick()
     q_pre.setRPY(pre[3], pre[4], pre[5]);
     combined = tf2::Transform(q_pre) *
                tf2::Transform(tf2::Quaternion::getIdentity(),
-                              tf2::Vector3(pre[0], pre[1], pre[2])) *
+      tf2::Vector3(pre[0], pre[1], pre[2])) *
                combined;
   }
 
@@ -454,17 +454,17 @@ BT::NodeStatus GetLinkPoseAction::tick()
     q_post.setRPY(post[3], post[4], post[5]);
     combined = tf2::Transform(q_post) *
                tf2::Transform(tf2::Quaternion::getIdentity(),
-                              tf2::Vector3(post[0], post[1], post[2])) *
+      tf2::Vector3(post[0], post[1], post[2])) *
                combined;
   }
 
   /* link orientation + translation */
-  const auto&tr = tf_link_to_ref.transform;
+  const auto & tr = tf_link_to_ref.transform;
   tf2::Quaternion q_link(tr.rotation.x, tr.rotation.y, tr.rotation.z, tr.rotation.w);
   combined = tf2::Transform(tf2::Quaternion::getIdentity(),
-                            tf2::Vector3(tr.translation.x,
-                                         tr.translation.y,
-                                         tr.translation.z)) *
+    tf2::Vector3(tr.translation.x,
+      tr.translation.y,
+      tr.translation.z)) *
              tf2::Transform(q_link) *
              combined;
 
@@ -500,13 +500,13 @@ BT::NodeStatus GetLinkPoseAction::tick()
   if (getInput("pose_key", pose_key) && !pose_key.empty()) {
     config().blackboard->set(pose_key, final_pose);
     RCLCPP_INFO(node_->get_logger(),
-                "GetLinkPoseAction - [%s] - Pose written to %s", name().c_str(),
-                pose_key.c_str());
+      "GetLinkPoseAction - [%s] - Pose written to %s", name().c_str(),
+      pose_key.c_str());
   }
   else {
     RCLCPP_DEBUG(node_->get_logger(),
-                 "GetLinkPoseAction - [%s] - No pose_key provided, skipping BB write",
-                 name().c_str());
+      "GetLinkPoseAction - [%s] - No pose_key provided, skipping BB write",
+      name().c_str());
   }
 
   return BT::NodeStatus::SUCCESS;
@@ -517,8 +517,8 @@ BT::NodeStatus GetLinkPoseAction::tick()
 // =========================================================================
 
 CheckPoseDistance::CheckPoseDistance(
-  const std::string&name,
-  const BT::NodeConfiguration&cfg)
+  const std::string & name,
+  const BT::NodeConfiguration & cfg)
   : BT::ConditionNode(name, cfg)
 {
   if (!cfg.blackboard) {
@@ -543,12 +543,12 @@ BT::NodeStatus CheckPoseDistance::tick()
   geometry_msgs::msg::Pose reference_pose, target_pose;
   if (!config().blackboard->get(reference_key, reference_pose)) {
     RCLCPP_ERROR(node_ ? node_->get_logger() : rclcpp::get_logger("CheckPoseDistance"),
-                 "[%s] key '%s' not found", name().c_str(), reference_key.c_str());
+      "[%s] key '%s' not found", name().c_str(), reference_key.c_str());
     return BT::NodeStatus::FAILURE;
   }
   if (!config().blackboard->get(target_key, target_pose)) {
     RCLCPP_ERROR(node_ ? node_->get_logger() : rclcpp::get_logger("CheckPoseDistance"),
-                 "[%s] key '%s' not found", name().c_str(), target_key.c_str());
+      "[%s] key '%s' not found", name().c_str(), target_key.c_str());
     return BT::NodeStatus::FAILURE;
   }
 
@@ -558,19 +558,19 @@ BT::NodeStatus CheckPoseDistance::tick()
   double dist = std::sqrt(dx * dx + dy * dy + dz * dz);
 
   RCLCPP_INFO(node_ ? node_->get_logger() : rclcpp::get_logger("CheckPoseDistance"),
-              "[%s] Target pose: [%3f, %3f, %3f]",
-              name().c_str(),
-              target_pose.position.x,
-              target_pose.position.y,
-              target_pose.position.z);
+    "[%s] Target pose: [%3f, %3f, %3f]",
+    name().c_str(),
+    target_pose.position.x,
+    target_pose.position.y,
+    target_pose.position.z);
 
   RCLCPP_INFO(node_ ? node_->get_logger() : rclcpp::get_logger("CheckPoseDistance"),
-              "[%s] Reference pose: [%3f, %3f, %3f]",
-              name().c_str(), reference_pose.position.x, reference_pose.position.y,
-              reference_pose.position.z);
+    "[%s] Reference pose: [%3f, %3f, %3f]",
+    name().c_str(), reference_pose.position.x, reference_pose.position.y,
+    reference_pose.position.z);
 
   RCLCPP_INFO(node_ ? node_->get_logger() : rclcpp::get_logger("CheckPoseDistance"),
-              "[%s] distance=%.4f, tol=%.4f", name().c_str(), dist, tol);
+    "[%s] distance=%.4f, tol=%.4f", name().c_str(), dist, tol);
 
   if (dist <= tol) {
     return BT::NodeStatus::SUCCESS;
@@ -583,8 +583,8 @@ BT::NodeStatus CheckPoseDistance::tick()
 // =========================================================================
 
 CheckPoseBounds::CheckPoseBounds(
-  const std::string&name,
-  const BT::NodeConfiguration&cfg)
+  const std::string & name,
+  const BT::NodeConfiguration & cfg)
   : BT::ConditionNode(name, cfg)
 {
   if (!cfg.blackboard) {
@@ -606,7 +606,7 @@ BT::NodeStatus CheckPoseBounds::tick()
   }
   if (bounds.size() != 6) {
     throw BT::RuntimeError(
-	    "CheckPoseBounds: 'bounds' must have 6 elements [min_x,min_y,min_z,max_x,max_y,max_z]");
+      "CheckPoseBounds: 'bounds' must have 6 elements [min_x,min_y,min_z,max_x,max_y,max_z]");
   }
 
   bool inclusive = true;
@@ -615,7 +615,7 @@ BT::NodeStatus CheckPoseBounds::tick()
   geometry_msgs::msg::Pose pose;
   if (!config().blackboard->get(pose_key, pose)) {
     RCLCPP_ERROR(node_ ? node_->get_logger() : rclcpp::get_logger("CheckPoseBounds"),
-                 "[%s] key '%s' not found", name().c_str(), pose_key.c_str());
+      "[%s] key '%s' not found", name().c_str(), pose_key.c_str());
     return BT::NodeStatus::FAILURE;
   }
 
@@ -644,19 +644,19 @@ BT::NodeStatus CheckPoseBounds::tick()
   }
 
   RCLCPP_INFO(node_ ? node_->get_logger() : rclcpp::get_logger(
-		"CheckPoseBounds"),
-              "[%s] Pose: [%.3f, %.3f, %.3f], Bounds X:[%.3f, %.3f] Y:[%.3f, %.3f] Z:[%.3f, %.3f] => %s",
-              name().c_str(),
-              x,
-              y,
-              z,
-              min_x,
-              max_x,
-              min_y,
-              max_y,
-              min_z,
-              max_z,
-              inside ? "INSIDE" : "OUTSIDE");
+    "CheckPoseBounds"),
+    "[%s] Pose: [%.3f, %.3f, %.3f], Bounds X:[%.3f, %.3f] Y:[%.3f, %.3f] Z:[%.3f, %.3f] => %s",
+    name().c_str(),
+    x,
+    y,
+    z,
+    min_x,
+    max_x,
+    min_y,
+    max_y,
+    min_z,
+    max_z,
+    inside ? "INSIDE" : "OUTSIDE");
 
   return inside ? BT::NodeStatus::SUCCESS : BT::NodeStatus::FAILURE;
 }
@@ -684,24 +684,24 @@ BT::NodeStatus CopyPoseKey::tick()
   if (!config().blackboard->get(source_key, pose)) {
     // If the source key does not exist or is of a different type, fail
     setHMIMessage(config().blackboard, robot_prefix.empty() ? std::string("hmi_") : robot_prefix,
-                  "COPY POSE FAILED: missing '" + source_key + "'", "red");
+      "COPY POSE FAILED: missing '" + source_key + "'", "red");
     RCLCPP_ERROR(rclcpp::get_logger("CopyPoseKey"),
-                 "[%s] Source key '%s' not found or wrong type",
-                 name().c_str(),
-                 source_key.c_str());
+      "[%s] Source key '%s' not found or wrong type",
+      name().c_str(),
+      source_key.c_str());
     return BT::NodeStatus::FAILURE;
   }
 
   config().blackboard->set(target_key, pose);
 
   setHMIMessage(config().blackboard, robot_prefix.empty() ? std::string("hmi_") : robot_prefix,
-                "POSE COPIED: " + source_key + " -> " + target_key, "green");
+    "POSE COPIED: " + source_key + " -> " + target_key, "green");
 
   RCLCPP_INFO(rclcpp::get_logger("CopyPoseKey"),
-              "[%s] Copied Pose from '%s' to '%s'",
-              name().c_str(),
-              source_key.c_str(),
-              target_key.c_str());
+    "[%s] Copied Pose from '%s' to '%s'",
+    name().c_str(),
+    source_key.c_str(),
+    target_key.c_str());
 
   return BT::NodeStatus::SUCCESS;
 }

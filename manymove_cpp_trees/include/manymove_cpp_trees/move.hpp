@@ -219,37 +219,66 @@ defineMovementConfigs()
   // CHOMP_max_move_config.planning_attempts = 1;
   // CHOMP_max_move_config.plan_number_target = 1;
 
-  return {
-    // Standard moves for joint and pose for OMPL planning library
-    {"max_move", max_move_config},
-    {"mid_move", mid_move_config},
-    {"slow_move", slow_move_config},
+  return
+    {
+      // Standard moves for joint and pose for OMPL planning library
+      {
+	"max_move", max_move_config
+      },
+      {
+	"mid_move", mid_move_config
+      },
+      {
+	"slow_move", slow_move_config
+      },
 
-    // Params for cartesian moves
-    {"cartesian_max_move", cartesian_max_move_config},
-    {"cartesian_mid_move", cartesian_mid_move_config},
-    {"cartesian_slow_move", cartesian_slow_move_config},
+      // Params for cartesian moves
+      {
+	"cartesian_max_move", cartesian_max_move_config
+      },
+      {
+	"cartesian_mid_move", cartesian_mid_move_config
+      },
+      {
+	"cartesian_slow_move", cartesian_slow_move_config
+      },
 
-    // Moves for search/interrupt movements
-    {"search_mid_move", search_mid_move_config},
-    {"search_slow_move", search_slow_move_config},
+      // Moves for search/interrupt movements
+      {
+	"search_mid_move", search_mid_move_config
+      },
+      {
+	"search_slow_move", search_slow_move_config
+      },
 
-    // Params for pilz_industrial_planner planning library
-    {"PTP_max_move", PTP_max_move_config},
-    {"LIN_max_move", LIN_max_move_config},
-    {"LIN_mid_move", LIN_mid_move_config},
-    {"LIN_slow_move", LIN_slow_move_config},
+      // Params for pilz_industrial_planner planning library
+      {
+	"PTP_max_move", PTP_max_move_config
+      },
+      {
+	"LIN_max_move", LIN_max_move_config
+      },
+      {
+	"LIN_mid_move", LIN_mid_move_config
+      },
+      {
+	"LIN_slow_move", LIN_slow_move_config
+      },
 
-    // Params for CHOMP planning library
-    {"CHOMP_max_move", CHOMP_max_move_config},
+      // Params for CHOMP planning library
+      {
+	"CHOMP_max_move", CHOMP_max_move_config
+      },
 
-    // // Params for STOMP planning library (uncomment here and modify
-    // src/manymove/manymove_planner/config/moveit_cpp.yaml to add STOMP in Jazzy)
-    // {"STOMP_max_move", STOMP_max_move_config},
+      // // Params for STOMP planning library (uncomment here and modify
+      // src/manymove/manymove_planner/config/moveit_cpp.yaml to add STOMP in Jazzy)
+      // {"STOMP_max_move", STOMP_max_move_config},
 
-    // Test for moves with cuMotion planning library
-    {"cumotion_max_move", cumotion_max_move_config},
-  };
+      // Test for moves with cuMotion planning library
+      {
+	"cumotion_max_move", cumotion_max_move_config
+      },
+    };
 }
 
 /**
@@ -273,14 +302,14 @@ struct Move
   std::string tcp_frame;                           ///< TCP for cartesian speed calculations
 
   Move(
-    const std::string&robot_prefix,
-    const std::string&tcp_frame,
-    const std::string&type,
-    const manymove_msgs::msg::MovementConfig&config,
-    const std::string&pose_key = "",
-    const std::vector<double>&joint_values = {},
-    const std::string&named_target = "",
-    const std::vector<double>&start_joint_values = {})
+    const std::string & robot_prefix,
+    const std::string & tcp_frame,
+    const std::string & type,
+    const manymove_msgs::msg::MovementConfig & config,
+    const std::string & pose_key = "",
+    const std::vector<double> & joint_values = {},
+    const std::string & named_target = "",
+    const std::vector<double> & start_joint_values = {})
     : type(type),
     pose_key(pose_key),
     joint_values(joint_values),

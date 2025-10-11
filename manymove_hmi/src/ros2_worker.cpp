@@ -37,17 +37,17 @@
 using namespace std::chrono_literals;
 
 Ros2Worker::Ros2Worker(
-  const std::string&node_name, HmiGui*gui,
-  const std::string&robot_prefix)
+  const std::string & node_name, HmiGui * gui,
+  const std::string & robot_prefix)
   : Node(node_name), gui_(gui), robot_prefix_(robot_prefix)
 {
   RCLCPP_INFO_STREAM(this->get_logger(), "Ros2Worker node started with prefix: " << robot_prefix_);
 
   // Subscribe to the blackboard_status topic.
   subscription_ = this->create_subscription<std_msgs::msg::String>("blackboard_status", 10,
-                                                                   std::bind(&Ros2Worker::
-                                                                             statusCallback, this,
-                                                                             std::placeholders::_1));
+    std::bind(&Ros2Worker::
+      statusCallback, this,
+      std::placeholders::_1));
 
   // Create a client for the update_blackboard service.
   update_blackboard_client_ =
@@ -56,11 +56,11 @@ Ros2Worker::Ros2Worker(
   // Wait a little for the service.
   if (!update_blackboard_client_->wait_for_service(2s)) {
     RCLCPP_WARN(this->get_logger(),
-                "Service 'update_blackboard' not available yet. Will still attempt calls.");
+      "Service 'update_blackboard' not available yet. Will still attempt calls.");
   }
 
   RCLCPP_INFO(this->get_logger(), "Ros2Worker fully initialized for prefix '%s'.",
-              robot_prefix_.c_str());
+    robot_prefix_.c_str());
 }
 
 void Ros2Worker::statusCallback(const std_msgs::msg::String::SharedPtr msg)
@@ -79,20 +79,20 @@ void Ros2Worker::statusCallback(const std_msgs::msg::String::SharedPtr msg)
     data.find("\"" + robot_prefix_ + "collision_detected\": true") != std::string::npos;
 
   QMetaObject::invokeMethod(gui_, "updateStatus", Qt::QueuedConnection,
-                            Q_ARG(QString, QString::fromStdString(robot_prefix_)),
-                            Q_ARG(bool, stop_execution),
-                            Q_ARG(bool, reset),
-                            Q_ARG(bool, collision_detected));
+    Q_ARG(QString, QString::fromStdString(robot_prefix_)),
+    Q_ARG(bool, stop_execution),
+    Q_ARG(bool, reset),
+    Q_ARG(bool, collision_detected));
 
   /* ---------- HMI keys ----------------------------------------- */
-  AppModule*appModule = gui_->findChild<AppModule*>();
+  AppModule * appModule = gui_->findChild<AppModule*>();
   if (!appModule) {
     return;
   }
 
-  const auto&knownKeys = appModule->getKnownKeys();
+  const auto & knownKeys = appModule->getKnownKeys();
 
-  auto stripQuotes = [](std::string&s)
+  auto stripQuotes = [](std::string & s)
 		     {
 		       if (!s.empty() && s.front() == '"') {
 			 s.erase(0, 1);
@@ -102,13 +102,13 @@ void Ros2Worker::statusCallback(const std_msgs::msg::String::SharedPtr msg)
 		       }
 		     };
 
-  for (const auto&bk : knownKeys) {
+  for (const auto & bk : knownKeys) {
     /* keys in the JSON are *not* prefixed – keep original pattern */
     const std::string pattern = "\"" + bk.key.toStdString() + "\":";
     size_t pos = data.find(pattern);
     if (pos == std::string::npos) {
       QMetaObject::invokeMethod(appModule, "updateField", Qt::QueuedConnection,
-                                Q_ARG(QString, bk.key), Q_ARG(QString, QString()));
+	Q_ARG(QString, bk.key), Q_ARG(QString, QString()));
       continue;
     }
 
@@ -199,12 +199,12 @@ void Ros2Worker::statusCallback(const std_msgs::msg::String::SharedPtr msg)
 
     /* push to GUI -------------------------------------------- */
     QMetaObject::invokeMethod(appModule, "updateField", Qt::QueuedConnection,
-                              Q_ARG(QString, bk.key),
-                              Q_ARG(QString, QString::fromStdString(valueStr)));
+      Q_ARG(QString, bk.key),
+      Q_ARG(QString, QString::fromStdString(valueStr)));
   }
 
   /* ---------- per-robot message -------------------------------- */
-  auto findString = [&](const std::string&key) -> std::string
+  auto findString = [&](const std::string & key) -> std::string
 		    {
 		      std::string pattern = "\"" + key + "\":";
 		      size_t pos = data.find(pattern);
@@ -231,16 +231,16 @@ void Ros2Worker::statusCallback(const std_msgs::msg::String::SharedPtr msg)
   std::string msgText = findString(msgKey);
   std::string msgColor = findString(colorKey);
   QMetaObject::invokeMethod(gui_, "updateRobotMessage", Qt::QueuedConnection,
-                            Q_ARG(QString, QString::fromStdString(robot_prefix_)),
-                            Q_ARG(QString, QString::fromStdString(msgText)),
-                            Q_ARG(QString, QString::fromStdString(msgColor)));
+    Q_ARG(QString, QString::fromStdString(robot_prefix_)),
+    Q_ARG(QString, QString::fromStdString(msgText)),
+    Q_ARG(QString, QString::fromStdString(msgColor)));
 
   /* ---------- general message ---------------------------------- */
   std::string genMsg = findString("hmi_message");
   std::string genColor = findString("hmi_message_color");
   QMetaObject::invokeMethod(appModule, "updateGeneralMessage", Qt::QueuedConnection,
-                            Q_ARG(QString, QString::fromStdString(genMsg)),
-                            Q_ARG(QString, QString::fromStdString(genColor)));
+    Q_ARG(QString, QString::fromStdString(genMsg)),
+    Q_ARG(QString, QString::fromStdString(genColor)));
 }
 
 void Ros2Worker::callStartExecution()
