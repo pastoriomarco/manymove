@@ -80,7 +80,6 @@ if(BUILD_TESTING)
   set(ament_cmake_cpplint_FOUND TRUE)
   # Disable flake8 checks for this package; launch style is enforced elsewhere
   set(ament_cmake_flake8_FOUND TRUE)
-  set(ament_cmake_copyright_FOUND TRUE)
   set(AMENT_UNCRUSTIFY_CONFIG_FILE ${CMAKE_CURRENT_SOURCE_DIR}/../uncrustify.cfg)
   ament_lint_auto_find_test_dependencies()
 endif()

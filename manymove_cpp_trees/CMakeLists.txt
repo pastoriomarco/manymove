@@ -132,7 +132,6 @@ if(BUILD_TESTING)
   set(ament_cmake_flake8_FOUND TRUE)
   # Disable checks that are not applicable for this package's current state
   # (e.g. copyright headers not present in all files).
-  set(ament_cmake_copyright_FOUND TRUE)
   set(AMENT_UNCRUSTIFY_CONFIG_FILE ${CMAKE_CURRENT_SOURCE_DIR}/../uncrustify.cfg)
   ament_lint_auto_find_test_dependencies()
 endif()
