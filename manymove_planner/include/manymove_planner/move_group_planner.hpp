@@ -69,8 +69,8 @@
 class MoveGroupPlanner : public PlannerInterface
 {
 public:
-  using FollowJointTrajectory = control_msgs::action::FollowJointTrajectory;
-  using GoalHandleFollowJointTrajectory = rclcpp_action::ClientGoalHandle<FollowJointTrajectory>;
+using FollowJointTrajectory = control_msgs::action::FollowJointTrajectory;
+using GoalHandleFollowJointTrajectory = rclcpp_action::ClientGoalHandle<FollowJointTrajectory>;
 
 /**
  * @brief Constructor for MoveGroupPlanner.
@@ -79,23 +79,23 @@ public:
  * @param base_frame The base frame of the robot.
  * @param traj_controller Name of the trajectory controller to use for execution.
  */
-  MoveGroupPlanner(const rclcpp::Node::SharedPtr& node,
-                   const std::string& planning_group,
-                   const std::string& base_frame,
-                   const std::string& traj_controller);
+MoveGroupPlanner(const rclcpp::Node::SharedPtr& node,
+                 const std::string& planning_group,
+                 const std::string& base_frame,
+                 const std::string& traj_controller);
 
 /**
  * @brief Default destructor.
  */
-  ~MoveGroupPlanner() override = default;
+~MoveGroupPlanner() override = default;
 
 /**
  * @brief Plan a trajectory for a single goal.
  * @param goal The PlanManipulator goal containing movement type and parameters.
  * @return A pair containing a success flag and the planned robot trajectory.
  */
-  std::pair<bool, moveit_msgs::msg::RobotTrajectory> plan(
-    const manymove_msgs::action::PlanManipulator::Goal& goal) override;
+std::pair<bool, moveit_msgs::msg::RobotTrajectory> plan(
+	const manymove_msgs::action::PlanManipulator::Goal& goal) override;
 
 /**
  * @brief Apply time parameterization to a single trajectory.
@@ -127,9 +127,9 @@ public:
  * keep the velocity and acceleration scaling factors coherent with the maximum cartesian speed
  * you set.
  */
-  std::pair<bool, moveit_msgs::msg::RobotTrajectory> applyTimeParameterization(
-    const moveit_msgs::msg::RobotTrajectory& input_traj,
-    const manymove_msgs::msg::MovementConfig& config);
+std::pair<bool, moveit_msgs::msg::RobotTrajectory> applyTimeParameterization(
+	const moveit_msgs::msg::RobotTrajectory& input_traj,
+	const manymove_msgs::msg::MovementConfig& config);
 
 /**
  * @brief Send a controlled stop command to the robot.
@@ -149,23 +149,23 @@ public:
  * Increasing the deceleration_time leads to a smoother stop, but also increases
  * the movement required to decelerate.
  */
-  bool sendControlledStop(const manymove_msgs::msg::MovementConfig& move_cfg,
-                          const moveit_msgs::msg::RobotTrajectory& running_traj = moveit_msgs::msg::RobotTrajectory(),
-                          double elapsed_s = 0.0);
+bool sendControlledStop(const manymove_msgs::msg::MovementConfig& move_cfg,
+                        const moveit_msgs::msg::RobotTrajectory& running_traj = moveit_msgs::msg::RobotTrajectory(),
+                        double elapsed_s = 0.0);
 
 /**
  * @brief Retrieve the action client for FollowJointTrajectory.
  * @return A shared pointer to the action client used to send joint trajectory execution goals.
  */
-  rclcpp_action::Client<control_msgs::action::FollowJointTrajectory>::SharedPtr
-  getFollowJointTrajClient() const;
+rclcpp_action::Client<control_msgs::action::FollowJointTrajectory>::SharedPtr
+getFollowJointTrajClient() const;
 
 /**
  * @brief Check whether a given set of joint positions is valid (i.e. collision free).
  * @param joint_positions A vector of joint positions.
  * @return True if the joint state is valid (no collisions), false otherwise.
  */
-  bool isJointStateValid(const std::vector<double>& joint_positions) const;
+bool isJointStateValid(const std::vector<double>& joint_positions) const;
 
 /**
  * @brief Checks if the start of the trajectory (the first waypoint)
@@ -175,20 +175,20 @@ public:
  * @param tolerance The maximum allowed difference (in radians) for each joint.
  * @return true if each joint position in the first waypoint is within tolerance, false otherwise.
  */
-  bool isTrajectoryStartValid(const moveit_msgs::msg::RobotTrajectory& traj,
-                              const manymove_msgs::msg::MoveManipulatorGoal& move_request,
-                              const std::vector<double>& current_joint_state) const;
+bool isTrajectoryStartValid(const moveit_msgs::msg::RobotTrajectory& traj,
+                            const manymove_msgs::msg::MoveManipulatorGoal& move_request,
+                            const std::vector<double>& current_joint_state) const;
 
-  bool isTrajectoryEndValid(const moveit_msgs::msg::RobotTrajectory& traj,
-                            const manymove_msgs::msg::MoveManipulatorGoal& move_request) const;
+bool isTrajectoryEndValid(const moveit_msgs::msg::RobotTrajectory& traj,
+                          const manymove_msgs::msg::MoveManipulatorGoal& move_request) const;
 
-  bool isTrajectoryValid(const trajectory_msgs::msg::JointTrajectory& joint_traj_msg,
-                         const moveit_msgs::msg::Constraints& path_constraints,
-                         const double time_from_start) const;
+bool isTrajectoryValid(const trajectory_msgs::msg::JointTrajectory& joint_traj_msg,
+                       const moveit_msgs::msg::Constraints& path_constraints,
+                       const double time_from_start) const;
 
-  bool isTrajectoryValid(const robot_trajectory::RobotTrajectory& trajectory,
-                         const moveit_msgs::msg::Constraints& path_constraints,
-                         const double time_from_start) const;
+bool isTrajectoryValid(const robot_trajectory::RobotTrajectory& trajectory,
+                       const moveit_msgs::msg::Constraints& path_constraints,
+                       const double time_from_start) const;
 
 private:
 /**
@@ -196,8 +196,8 @@ private:
  * @param trajectory The input trajectory message.
  * @return The computed path length, combining joint and Cartesian distance.
  */
-  double computePathLength(const moveit_msgs::msg::RobotTrajectory& trajectory,
-                           const manymove_msgs::msg::MovementConfig& config) const;
+double computePathLength(const moveit_msgs::msg::RobotTrajectory& trajectory,
+                         const manymove_msgs::msg::MovementConfig& config) const;
 
 /**
  * @brief Calculate the pose relative to a frame from a robot state.
@@ -206,8 +206,8 @@ private:
  * robot state.
  * @return The computed distance between the two poses.
  */
-  geometry_msgs::msg::Pose getPoseFromRobotState(const moveit::core::RobotState& robot_state,
-                                                 const std::string& link_frame) const;
+geometry_msgs::msg::Pose getPoseFromRobotState(const moveit::core::RobotState& robot_state,
+                                               const std::string& link_frame) const;
 
 /**
  * @brief Compute the euclidean distance between two poses.
@@ -215,8 +215,8 @@ private:
  * @param target_pose The target pose to calculate the distance to.
  * @return The computed distance between the two poses.
  */
-  double computeCartesianDistance(const geometry_msgs::msg::Pose& start_pose,
-                                  const geometry_msgs::msg::Pose& target_pose) const;
+double computeCartesianDistance(const geometry_msgs::msg::Pose& start_pose,
+                                const geometry_msgs::msg::Pose& target_pose) const;
 
 /**
  * @brief Calculate the pose relative to a frame from the first or the last point of a trajectory.
@@ -227,18 +227,18 @@ private:
  * point.
  * @return The computed distance between the two poses.
  */
-  geometry_msgs::msg::Pose getPoseFromTrajectory(const moveit_msgs::msg::RobotTrajectory& traj_msg,
-                                                 const moveit::core::RobotState& robot_state,
-                                                 const std::string& link_frame,
-                                                 bool use_last_point = true) const;
+geometry_msgs::msg::Pose getPoseFromTrajectory(const moveit_msgs::msg::RobotTrajectory& traj_msg,
+                                               const moveit::core::RobotState& robot_state,
+                                               const std::string& link_frame,
+                                               bool use_last_point = true) const;
 
 /**
  * @brief Compute the maximum Cartesian speed within a trajectory.
  * @param trajectory A pointer to the robot trajectory to analyze.
  * @return The maximum speed in meters/second found along the trajectory.
  */
-  double computeMaxCartesianSpeed(const robot_trajectory::RobotTrajectoryPtr& trajectory,
-                                  const manymove_msgs::msg::MovementConfig& config) const;
+double computeMaxCartesianSpeed(const robot_trajectory::RobotTrajectoryPtr& trajectory,
+                                const manymove_msgs::msg::MovementConfig& config) const;
 
 /**
  * @brief Compare two sets of joint targets for equality within a tolerance.
@@ -247,10 +247,10 @@ private:
  * @param tolerance The maximum allowed difference for each joint.
  * @return True if all joints match within the tolerance, false otherwise.
  */
-  bool areSameJointTargets(const std::vector<double>& j1, const std::vector<double>& j2,
-                           double tolerance) const;
+bool areSameJointTargets(const std::vector<double>& j1, const std::vector<double>& j2,
+                         double tolerance) const;
 
-  void jointStateCallback(const sensor_msgs::msg::JointState::SharedPtr msg);
+void jointStateCallback(const sensor_msgs::msg::JointState::SharedPtr msg);
 
 /**
  * @brief Collision-check callback.
@@ -271,36 +271,36 @@ private:
  * Planning Scene to verify whether the @p state is in collision. If a collision is
  * detected, the function logs a warning and returns false. Otherwise, it returns true.
  */
-  bool isStateValid(const moveit::core::RobotState* state,
-                    const moveit::core::JointModelGroup* group) const;
+bool isStateValid(const moveit::core::RobotState* state,
+                  const moveit::core::JointModelGroup* group) const;
 
-  rclcpp::Node::SharedPtr node_;   ///< Shared pointer to the ROS2 node.
-  rclcpp::Logger logger_;          ///< Logger for output messages.
-  std::string planning_group_;     ///< The planning group name in MoveIt.
-  std::string base_frame_;         ///< Base frame of the robot.
-  std::string traj_controller_;    ///< Name of the trajectory controller to be used.
+rclcpp::Node::SharedPtr node_;     ///< Shared pointer to the ROS2 node.
+rclcpp::Logger logger_;            ///< Logger for output messages.
+std::string planning_group_;       ///< The planning group name in MoveIt.
+std::string base_frame_;           ///< Base frame of the robot.
+std::string traj_controller_;      ///< Name of the trajectory controller to be used.
 
-  std::shared_ptr<moveit::planning_interface::MoveGroupInterface> move_group_interface_;   ///<
+std::shared_ptr<moveit::planning_interface::MoveGroupInterface> move_group_interface_;     ///<
 // Shared
 // pointer
 // to
 // MoveGroupInterface.
-  planning_scene_monitor::PlanningSceneMonitorPtr planning_scene_monitor_;                 ///<
+planning_scene_monitor::PlanningSceneMonitorPtr planning_scene_monitor_;                   ///<
 // Planning
 // scene
 // monitor
 
-  rclcpp_action::Client<control_msgs::action::FollowJointTrajectory>::SharedPtr
-    follow_joint_traj_client_;                                                                               ///<
+rclcpp_action::Client<control_msgs::action::FollowJointTrajectory>::SharedPtr
+        follow_joint_traj_client_;                                                                           ///<
 // Action
 // client
 // for
 // FollowJointTrajectory.
-  rclcpp::Subscription<sensor_msgs::msg::JointState>::SharedPtr joint_state_sub_;                            ///<
+rclcpp::Subscription<sensor_msgs::msg::JointState>::SharedPtr joint_state_sub_;                              ///<
 // /joint_states
 // subscriber.
 
-  mutable std::mutex js_mutex_;
-  std::map<std::string, double> current_positions_;
-  std::map<std::string, double> current_velocities_;
+mutable std::mutex js_mutex_;
+std::map<std::string, double> current_positions_;
+std::map<std::string, double> current_velocities_;
 };
