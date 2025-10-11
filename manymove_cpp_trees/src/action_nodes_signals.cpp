@@ -56,7 +56,7 @@ namespace manymove_cpp_trees
     }
 
     if (!getInput<std::string>("robot_prefix", prefix_)) {
-      prefix_ = "";       // default if not provided
+      prefix_ = "";           // default if not provided
     }
 
     std::string server_name = prefix_ + "set_output";
@@ -126,7 +126,7 @@ namespace manymove_cpp_trees
   BT::NodeStatus SetOutputAction::onRunning()
   {
     if (!result_received_) {
-      return BT::NodeStatus::RUNNING;       // still waiting
+      return BT::NodeStatus::RUNNING;           // still waiting
     }
 
     // We have the final result now
@@ -282,7 +282,7 @@ namespace manymove_cpp_trees
   BT::NodeStatus GetInputAction::onRunning()
   {
     if (!result_received_) {
-      return BT::NodeStatus::RUNNING;       // still waiting
+      return BT::NodeStatus::RUNNING;           // still waiting
     }
 
     // We have the final result
@@ -618,7 +618,7 @@ namespace manymove_cpp_trees
         std::bind(&ResetRobotStateAction::resultCallback, this, std::placeholders::_1);
 
       action_client_->async_send_goal(goal_msg, send_goal_options);
-      reset_goal_sent_ = true;       // Mark that the Reset goal has been sent
+      reset_goal_sent_ = true;           // Mark that the Reset goal has been sent
       return BT::NodeStatus::RUNNING;
     }
 
@@ -640,7 +640,7 @@ namespace manymove_cpp_trees
         std::bind(&ResetRobotStateAction::resultCallbackLoadTraj, this, std::placeholders::_1);
 
       load_traj_client_->async_send_goal(load_traj_goal, load_traj_options);
-      load_goal_sent_ = true;       // Mark that the Load goal has been sent
+      load_goal_sent_ = true;           // Mark that the Load goal has been sent
       return BT::NodeStatus::RUNNING;
     }
 

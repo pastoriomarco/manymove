@@ -91,18 +91,35 @@ int main(int argc, char** argv)
   // This is the new unified helper function to create all the snippets to handle any kind of
   // objects
   ObjectSnippets ground = createObjectSnippets(blackboard, keys,
-                                               "ground", /* object name */
-                                               "box",   /* shape */
-                                               createPoseRPY(0.0, 0.0, -0.051, 0.0, 0.0, 0.0), /*
-                                                                                                * pose
-                                                                                                * of
-                                                                                                * the
-                                                                                                * object
-                                                                                                * */
-                                               {1.0, 1.0, 0.1}, /* primitive dimensions */
-                                               "",      /* mesh file path */
-                                               {1.0, 1.0, 1.0}, /* scale */
-                                               "",      /* link name to attach/detach */
+                                               "ground",       /* object name */
+                                               "box",       /* shape */
+                                               createPoseRPY(0.0, 0.0, -0.051, 0.0, 0.0, 0.0),       /*
+                                                                                                      *
+                                                                                                      *
+                                                                                                      *
+                                                                                                      *
+                                                                                                      *pose
+                                                                                                      *
+                                                                                                      *
+                                                                                                      *
+                                                                                                      *
+                                                                                                      *of
+                                                                                                      *
+                                                                                                      *
+                                                                                                      *
+                                                                                                      *
+                                                                                                      *the
+                                                                                                      *
+                                                                                                      *
+                                                                                                      *
+                                                                                                      *
+                                                                                                      *object
+                                                                                                      *
+                                                                                                      **/
+                                               {1.0, 1.0, 0.1},       /* primitive dimensions */
+                                               "",       /* mesh file path */
+                                               {1.0, 1.0, 1.0},       /* scale */
+                                               "",       /* link name to attach/detach */
                                                {}       /* contact links to attach/detach */
                                                );
 
@@ -257,7 +274,7 @@ int main(int argc, char** argv)
 
   // We can further combine the move sequence blocks in logic sequences.
   std::string home_sequence_xml = sequenceWrapperXML(rp.prefix + "ComposedHomeSequence",
-                                                   {to_home_xml, to_rest_xml});
+                                                     {to_home_xml, to_rest_xml});
 
   // ----------------------------------------------------------------------------
   // 5. Assembling the tree
@@ -271,38 +288,44 @@ int main(int argc, char** argv)
   // Repeat node must have only one children, so it also wrap a Sequence child that wraps the other
   // children
   std::string repeat_forever_wrapper_xml = repeatSequenceWrapperXML("RobotCycle",
-                                                                  {spawn_graspable_objects_xml, //< Add
-                                                                                                // the
-                                                                                                // graspable
-                                                                                                // object
-                                                                                                // to
-                                                                                                // the
-                                                                                                // scene
-                                                                                                // and
-                                                                                                // update
-                                                                                                // the
-                                                                                                // relative
-                                                                                                // poses
-                                                                   pick_sequence_xml, //< Pick
-                                                                                      // sequence
-                                                                   drop_sequence_xml, //< Drop
-                                                                                      // sequence
-                                                                   home_sequence_xml, //< Homing
-                                                                                      // sequence
-                                                                   graspable.remove_xml}, //< Delete
-                                                                                          // the
-                                                                                          // object
-                                                                                          // for it
-                                                                                          // to be
-                                                                                          // added
-                                                                                          // on the
-                                                                                          // next
-                                                                                          // cycle
-                                                                                          // in the
-                                                                                          // original
-                                                                                          // position
-                                                                    -1); //< num_cycles=-1 for
-                                                                         // infinite
+                                                                  {spawn_graspable_objects_xml,         //<
+                                                                                                        // Add
+                                                                                                        // the
+                                                                                                        // graspable
+                                                                                                        // object
+                                                                                                        // to
+                                                                                                        // the
+                                                                                                        // scene
+                                                                                                        // and
+                                                                                                        // update
+                                                                                                        // the
+                                                                                                        // relative
+                                                                                                        // poses
+                                                                   pick_sequence_xml,         //< Pick
+                                                                                              // sequence
+                                                                   drop_sequence_xml,         //< Drop
+                                                                                              // sequence
+                                                                   home_sequence_xml,         //< Homing
+                                                                                              // sequence
+                                                                   graspable.remove_xml},         //<
+                                                                                                  // Delete
+                                                                                                  // the
+                                                                                                  // object
+                                                                                                  // for
+                                                                                                  // it
+                                                                                                  // to
+                                                                                                  // be
+                                                                                                  // added
+                                                                                                  // on
+                                                                                                  // the
+                                                                                                  // next
+                                                                                                  // cycle
+                                                                                                  // in
+                                                                                                  // the
+                                                                                                  // original
+                                                                                                  // position
+                                                                    -1);       //< num_cycles=-1 for
+                                                                               // infinite
 
   std::string retry_forever_wrapper_xml = retrySequenceWrapperXML("ResetHandler",
                                                                 {startup_sequence_xml,

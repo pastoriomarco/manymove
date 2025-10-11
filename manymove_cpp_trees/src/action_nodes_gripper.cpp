@@ -329,7 +329,7 @@ namespace manymove_cpp_trees
           return;
         }
         if (v.size() == 1 && N > 1) {
-          v.assign(N, v[0]); // broadcast single value
+          v.assign(N, v[0]);                                         // broadcast single value
         }
         if (v.size() != N) {
           throw BT::RuntimeError(std::string("PublishJointStateAction: '") + label +

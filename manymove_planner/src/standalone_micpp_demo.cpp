@@ -173,7 +173,8 @@ int main(int argc, char** argv)
     visual_tools.trigger();
 
     /* Uncomment if you want to execute the plan */
-    manymove_planner_compat::executePlanningComponent(*planning_components);     // Execute the plan
+    manymove_planner_compat::executePlanningComponent(*planning_components);             // Execute
+                                                                                         // the plan
   }
 
   // Plan #1 visualization:
@@ -221,7 +222,8 @@ int main(int argc, char** argv)
     visual_tools.trigger();
 
     // Execute the plan
-    manymove_planner_compat::executePlanningComponent(*planning_components);     // Execute the plan
+    manymove_planner_compat::executePlanningComponent(*planning_components);             // Execute
+                                                                                         // the plan
   }
 
   // Visualization
@@ -333,7 +335,8 @@ int main(int argc, char** argv)
     visual_tools.trigger();
 
     /* Uncomment if you want to execute the plan */
-    manymove_planner_compat::executePlanningComponent(*planning_components);     // Execute the plan
+    manymove_planner_compat::executePlanningComponent(*planning_components);             // Execute
+                                                                                         // the plan
   }
 
   // Plan #4 visualization:
@@ -364,8 +367,9 @@ int main(int argc, char** argv)
 
   // setting the goal as the rest joint target to give a move to do for the next collision avoidance
   // planning_components->setGoal("home");
-  planning_components->setGoal(target_pose1, "link_tcp");   // WARNING: if modified it will have to
-                                                            // be set anew
+  planning_components->setGoal(target_pose1, "link_tcp");       // WARNING: if modified it will have
+                                                                // to
+                                                                // be set anew
 
   // Again we will reuse the old start that we had and plan from it.
   auto plan_solution4 = planning_components->plan();
@@ -380,7 +384,8 @@ int main(int argc, char** argv)
     visual_tools.trigger();
 
     /* Uncomment if you want to execute the plan */
-    manymove_planner_compat::executePlanningComponent(*planning_components);     // Execute the plan
+    manymove_planner_compat::executePlanningComponent(*planning_components);             // Execute
+                                                                                         // the plan
   }
 
   // Plan #5 visualization:
@@ -421,10 +426,10 @@ int main(int argc, char** argv)
   collision_object.operation = collision_object.ADD;
 
   // Add object to planning scene
-  {   // Lock PlanningScene
+  {       // Lock PlanningScene
     planning_scene_monitor::LockedPlanningSceneRW scene(planning_scene_monitor);
     scene->processCollisionObjectMsg(collision_object);
-  }   // Unlock PlanningScene
+  }       // Unlock PlanningScene
   planning_components->setStartStateToCurrentState();
   planning_components->setGoal("home");
 
@@ -436,7 +441,8 @@ int main(int argc, char** argv)
     visual_tools.trigger();
 
     /* Uncomment if you want to execute the plan */
-    manymove_planner_compat::executePlanningComponent(*planning_components);     // Execute the plan
+    manymove_planner_compat::executePlanningComponent(*planning_components);             // Execute
+                                                                                         // the plan
   }
 
   // Plan #6 visualization:
@@ -458,11 +464,11 @@ int main(int argc, char** argv)
   waypoints.push_back(wp_start_pose);
 
   Eigen::Isometry3d waypoint1 = wp_start_pose;
-  waypoint1.translate(Eigen::Vector3d(0.1, 0.0, 0.0));   // Move 10 cm upward
+  waypoint1.translate(Eigen::Vector3d(0.1, 0.0, 0.0));       // Move 10 cm upward
   waypoints.push_back(waypoint1);
 
   Eigen::Isometry3d waypoint2 = waypoint1;
-  waypoint2.translate(Eigen::Vector3d(0.0, 0.1, 0.0));   // Move 10 cm sideways
+  waypoint2.translate(Eigen::Vector3d(0.0, 0.1, 0.0));       // Move 10 cm sideways
   waypoints.push_back(waypoint2);
 
   // Retrieve joint_model_group and link_model
@@ -505,8 +511,8 @@ int main(int argc, char** argv)
                                                                         kinematics::KinematicsQueryOptions(),
                                                                         // Default kinematics
                                                                         // options
-                                                                        nullptr // No IK cost
-                                                                                // function
+                                                                        nullptr       // No IK cost
+                                                                                      // function
                                                                         );
 
   // Check if the path was successfully computed
@@ -515,7 +521,7 @@ int main(int argc, char** argv)
 
     // Build a RobotTrajectory from the computed states
     robot_trajectory::RobotTrajectory trajectory(moveit_cpp_ptr->getRobotModel(), PLANNING_GROUP);
-    double dt = 0.1;     // time interval between waypoints
+    double dt = 0.1;             // time interval between waypoints
     for (const auto& rs : trajectory_states) {
       trajectory.addSuffixWayPoint(*rs, dt);
     }

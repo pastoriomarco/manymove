@@ -271,7 +271,7 @@ public:
     WaitForInputAction(const std::string& name,
                        const BT::NodeConfiguration& config);
 
-    // ...
+// ...
     static BT::PortsList providedPorts()
     {
       return {
@@ -291,10 +291,10 @@ protected:
     void onHalted() override;
 
 private:
-    // Helper to send the "get_input" request
+// Helper to send the "get_input" request
     void sendCheckRequest();
 
-    // Action callbacks
+// Action callbacks
     void goalResponseCallback(
       std::shared_ptr<rclcpp_action::ClientGoalHandle<manymove_msgs::action::GetInput> > goal_handle);
     void resultCallback(
@@ -305,7 +305,7 @@ private:
     rclcpp::Node::SharedPtr node_;
     rclcpp_action::Client<GetInput>::SharedPtr action_client_;
 
-    // from Ports:
+// from Ports:
     std::string io_type_;
     int ionum_;
     int desired_value_;
@@ -313,13 +313,13 @@ private:
     double poll_rate_;
     std::string prefix_;
 
-    // internal state
+// internal state
     bool goal_sent_;
     bool result_received_;
     rclcpp::Time start_time_;
     rclcpp::Time next_check_time_;
 
-    // last read from the server
+// last read from the server
     bool last_success_;
     int last_value_;
   };

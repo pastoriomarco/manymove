@@ -131,7 +131,7 @@ void AppModule::setupUI()
     }
 
     /* ---------------------------------------------------------- */
-    if (cfg.value_type == "bool") {   /* TOGGLE  */
+    if (cfg.value_type == "bool") {             /* TOGGLE  */
       QToolButton* t = new QToolButton(rowWidget);
       t->setCheckable(true);
       if (cfg.widget_width > 0) {
@@ -162,7 +162,7 @@ void AppModule::setupUI()
       row->addWidget(t);
       keyWidgets_[cfg.key] = t;
     }
-    else if (cfg.editable) {   /* LINE EDIT */
+    else if (cfg.editable) {             /* LINE EDIT */
       QLineEdit* le = new QLineEdit("N/A", rowWidget);
       le->setAlignment(Qt::AlignRight);
       le->setFixedHeight(50);
@@ -181,7 +181,7 @@ void AppModule::setupUI()
       row->addWidget(le);
       keyWidgets_[cfg.key] = le;
     }
-    else {   /* COMPUTED  */
+    else {             /* COMPUTED  */
       QLabel* v = new QLabel("N/A", rowWidget);
       v->setAlignment(Qt::AlignRight);
       v->setFixedWidth(cfg.widget_width);

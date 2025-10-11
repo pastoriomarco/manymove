@@ -54,11 +54,11 @@ MoveItCppPlanner::MoveItCppPlanner(
 
   /**
    * The following functions were used to publish the standard topics and services needed by the
-   *manymove_object_manager package.
+   * manymove_object_manager package.
    * Correctly configuring /config/moveit_cpp.yaml and the package launchers seems to offer the same
-   *results, while adding
+   * results, while adding
    * these lines seems to compromise the package functionality in some contexts: for example, inside
-   *the current
+   * the current
    * NVIDIA Isaac ROS 3.1/3.2 docker container for Isaac Manipulator.
    */
   // // moveit_cpp_ptr_->getPlanningSceneMonitor()->requestPlanningSceneState("get_planning_scene");
@@ -515,7 +515,7 @@ std::pair<bool, moveit_msgs::msg::RobotTrajectory> MoveItCppPlanner::plan(
         if (traj_msg.joint_trajectory.points.empty()) {
           RCLCPP_WARN(logger_, "%s target planning attempt %d failed: trajectory is empty.",
                       goal_msg.goal.movement_type.c_str(), attempts + 1);
-          break;           // the traj is empty
+          break;                               // the traj is empty
         }
 
         // I'm having trouble with plans succeeding with empty or almost empty trajectories
@@ -955,12 +955,12 @@ bool MoveItCppPlanner::isStateValid(
       }
     }
   }
-  temp_state.update(true);   // update transforms
+  temp_state.update(true);       // update transforms
 
   collision_detection::CollisionRequest collision_request;
   collision_detection::CollisionResult collision_result;
-  collision_request.contacts = true;    // Enable contact reporting
-  collision_request.max_contacts = 1;   // Adjust as needed
+  collision_request.contacts = true;       // Enable contact reporting
+  collision_request.max_contacts = 1;       // Adjust as needed
 
   locked_scene->checkCollision(collision_request, collision_result, temp_state);
 
@@ -982,7 +982,7 @@ bool MoveItCppPlanner::isJointStateValid(const std::vector<double>& joint_positi
   auto robot_model = moveit_cpp_ptr_->getRobotModel();
   if (!robot_model) {
     RCLCPP_ERROR(logger_, "Robot model is null in isJointStateValid()");
-    return false;     // or throw
+    return false;             // or throw
   }
 
   const moveit::core::JointModelGroup* jmg = robot_model->getJointModelGroup(planning_group_);

@@ -72,11 +72,11 @@ namespace manymove_cpp_trees
  *
  * Outputs:
  * - pose (geometry_msgs/Pose): the retrieved Pose (also stored into the blackboard key specified by
- *pose_key).
+ * pose_key).
  *
  * Behavior & failures
  * - If the service is not available yet, the node keeps returning RUNNING (logs throttled
- *warnings).
+ * warnings).
  * - FAILS if the required blackboard keys are not provided or if the service returns an error.
  */
   class GetEntityPoseNode : public BT::StatefulActionNode
@@ -114,7 +114,7 @@ private:
     std::shared_ptr<GetClient> get_client_;
     std::string current_get_service_name_;
 
-    // per-run state
+// per-run state
     bool request_sent_{false};
     std::string entity_path_;
     std::string pose_key_;
@@ -142,7 +142,7 @@ private:
  *
  * Behavior & failures
  * - If the service is not available yet, the node keeps returning RUNNING (logs throttled
- *warnings).
+ * warnings).
  * - FAILS if the required blackboard keys are missing, or the service returns an error.
  */
   class SetEntityPoseNode : public BT::StatefulActionNode
@@ -178,7 +178,7 @@ private:
     std::shared_ptr<SetClient> set_client_;
     std::string current_set_service_name_;
 
-    // per-run state
+// per-run state
     bool request_sent_{false};
     std::string entity_path_;
     std::string pose_key_;
@@ -215,20 +215,20 @@ private:
 /**
  * Node summary
  * - Subscribes to a FoundationPose Detection3DArray topic, selects a detection according to
- *filters,
+ * filters,
  *   transforms and optionally normalizes the pose, applies local offsets, and returns/stores
- *results.
+ * results.
  * - Asynchronous: returns RUNNING while waiting for messages or TF transforms.
  *
  * Ports
  * Always used (but many have defaults):
  * - input_topic (string, default: "pose_estimation/output"): Detection3DArray topic.
  * - pick_pose_key (string, REQUIRED): blackboard key to store the final pick pose. If empty or
- *missing, the node
+ * missing, the node
  *   will not store into the blackboard (only outputs), but downstream behaviors that expect the key
- *may fail.
+ * may fail.
  * - planning_frame (string, default: "world"): target frame for outputs (pose, approach_pose,
- *header).
+ * header).
  * - transform_timeout (double, default: 0.1): TF timeout when transforming poses to planning_frame.
  * - minimum_score (double, default: 0.0): discard results with lower score.
  * - timeout (double, default: 1.0): how long to wait for a valid detection (<=0 means forever).
@@ -238,19 +238,19 @@ private:
  * - header_key (string, default: ""): blackboard key to store the (possibly rewritten) header.
  * - approach_pose_key (string, default: ""): blackboard key to store the computed approach pose.
  * - object_pose_key (string, default: ""): blackboard key to store the aligned pose before local
- *offsets
+ * offsets
  *   (useful for planning scene updates).
  * - pick_transform (double[6], xyzrpy, optional): local transform applied after alignment (pick
- *pose).
+ * pose).
  * - approach_transform (double[6], xyzrpy, optional): local transform applied after alignment
  *(approach pose).
  * - z_threshold_activation (bool, default: false) and z_threshold (double, default: 0.0): when
- *enabled, enforce a
+ * enabled, enforce a
  *   minimum Z value in planning_frame before applying local transforms.
  * - normalize_pose (bool, default: false): when true, normalize the orientation to align with
- *vertical.
+ * vertical.
  * - force_z_vertical (bool, default: false): when normalizing, forces Z axis to be exactly
- *vertical.
+ * vertical.
  *
  * Outputs
  * - pose (geometry_msgs/Pose): final pick pose after alignment and pick_transform.
@@ -260,7 +260,7 @@ private:
  * Behavior & failures
  * - RUNNING while waiting for new detections or TF transforms.
  * - FAILS if no valid detection arrives within timeout, or if TF transform to alignment/planning
- *frames times out.
+ * frames times out.
  */
   class FoundationPoseAlignmentNode : public BT::StatefulActionNode
   {

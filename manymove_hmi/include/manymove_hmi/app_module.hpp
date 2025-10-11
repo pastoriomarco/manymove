@@ -51,11 +51,11 @@ class QEvent;
 struct KeyConfig // how one line of the HMI behaves
 {
   QString key;             // black-board key name
-  QString value_type;      // bool | double | int | pose | …
-  bool editable = false;   // user can type?
-  bool visible = true;     // row shown?
+  QString value_type;       // bool | double | int | pose | …
+  bool editable = false;       // user can type?
+  bool visible = true;       // row shown?
   std::function<QString(const QMap<QString, QString>&)> computeFunction;
-  double display_scale = 1.0;   // multiply by this for GUI
+  double display_scale = 1.0;       // multiply by this for GUI
   QString unit;                 // unit label shown in GUI
   bool show_label = true;       // display the key label?
   int widget_width = 500;       // width of the input/control widget
@@ -105,12 +105,12 @@ class AppModule : public QWidget
   Q_OBJECT
 
 public:
-  ///  Construct from a *list* of KeyConfig. Nothing is hard-coded.
+///  Construct from a *list* of KeyConfig. Nothing is hard-coded.
   explicit AppModule(const std::vector<KeyConfig>& key_cfg,
                      QWidget* parent = nullptr);
   ~AppModule() override = default;
 
-  ///  Keys understood by this instance – Ros2Worker uses this.
+///  Keys understood by this instance – Ros2Worker uses this.
   const std::vector<BlackboardKey>& getKnownKeys() const
   {
     return bb_keys_;
@@ -133,7 +133,7 @@ private slots:
   void onEditableChanged(const QString& text);
 
 private:
-  /* helpers ------------------------------------------------------- */
+/* helpers ------------------------------------------------------- */
   void setupUI();
   void updateComputedFields();
   void updateSendButtonState();
@@ -142,11 +142,11 @@ private:
   QString toDisplay(const QString& key, const QString& val) const;
   QString toInternal(const QString& key, const QString& val) const;
 
-  /* QWidget override --------------------------------------------- */
+/* QWidget override --------------------------------------------- */
   bool eventFilter(QObject* obj, QEvent* event) override;
 
 protected:
-  /* configuration & runtime state -------------------------------- */
+/* configuration & runtime state -------------------------------- */
   std::vector<KeyConfig> keyConfigs_;
   std::vector<BlackboardKey> bb_keys_;   // derived once
 

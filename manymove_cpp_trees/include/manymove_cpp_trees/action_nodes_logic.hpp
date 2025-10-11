@@ -46,7 +46,7 @@ namespace manymove_cpp_trees
  * @brief A custom retry node that keeps retrying indefinitely but
  *        if the "reset" blackboard key is true, it halts the child and returns FAILURE;
  *        if the "stop_execution" key is true, it halts the child and returns RUNNING (i.e. it
- *pauses execution).
+ * pauses execution).
  *        Otherwise, it ticks its child.
  */
   class RetryPauseResetNode : public BT::DecoratorNode
@@ -77,17 +77,17 @@ public:
   class CheckKeyBoolValue : public BT::ConditionNode
   {
 public:
-    /**
-     * @brief Constructor
-     * @param name The node's name in the XML
-     * @param config The node's configuration (ports, blackboard, etc.)
-     */
+/**
+ * @brief Constructor
+ * @param name The node's name in the XML
+ * @param config The node's configuration (ports, blackboard, etc.)
+ */
     CheckKeyBoolValue(const std::string& name,
                       const BT::NodeConfiguration& config);
 
-    /**
-     * @brief Required BT ports: "key" (the blackboard key) and "value" (the expected value).
-     */
+/**
+ * @brief Required BT ports: "key" (the blackboard key) and "value" (the expected value).
+ */
     static BT::PortsList providedPorts()
     {
       return {
@@ -101,10 +101,10 @@ public:
     }
 
 protected:
-    /**
-     * @brief The main check. Returns SUCCESS if the blackboard's "key"
-     *        equals the expected "value", otherwise FAILURE.
-     */
+/**
+ * @brief The main check. Returns SUCCESS if the blackboard's "key"
+ *        equals the expected "value", otherwise FAILURE.
+ */
     BT::NodeStatus tick() override;
   };
 
@@ -118,13 +118,13 @@ protected:
   class SetKeyBoolValue : public BT::SyncActionNode
   {
 public:
-    // Constructor
+// Constructor
     SetKeyBoolValue(const std::string& name, const BT::NodeConfiguration& config)
       : BT::SyncActionNode(name, config)
     {
     }
 
-    // Required interface: which ports are needed/offered?
+// Required interface: which ports are needed/offered?
     static BT::PortsList providedPorts()
     {
       return {
@@ -134,7 +134,7 @@ public:
         BT::InputPort<bool>("value", "Value to set (as a bool)")};
     }
 
-    // The main tick function; sets the blackboard key to the specified string
+// The main tick function; sets the blackboard key to the specified string
     BT::NodeStatus tick() override;
   };
 
@@ -172,14 +172,14 @@ protected:
     void onHalted() override;
 
 private:
-    // read from ports:
+// read from ports:
     std::string key_;
     bool expected_value_;
     double timeout_;
     double poll_rate_;
     std::string prefix_;
 
-    // time management
+// time management
     rclcpp::Node::SharedPtr node_;
     rclcpp::Time start_time_;
     rclcpp::Time next_check_time_;

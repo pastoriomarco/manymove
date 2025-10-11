@@ -117,28 +117,28 @@ private:
   class ResetTrajectories : public BT::SyncActionNode
   {
 public:
-    /**
-     * @brief Constructor for the ResetTrajectories node.
-     * @param name The name of the BT node.
-     * @param config The BT NodeConfiguration (ports, blackboard, etc.).
-     */
+/**
+ * @brief Constructor for the ResetTrajectories node.
+ * @param name The name of the BT node.
+ * @param config The BT NodeConfiguration (ports, blackboard, etc.).
+ */
     ResetTrajectories(const std::string& name, const BT::NodeConfiguration& config);
 
-    /**
-     * @brief Define the required/optional ports for this node.
-     */
+/**
+ * @brief Define the required/optional ports for this node.
+ */
     static BT::PortsList providedPorts()
     {
       return {BT::InputPort<std::string>("move_ids", "Comma-separated list of move IDs to reset")};
     }
 
-    /**
-     * @brief Tick function that performs the reset actions.
-     */
+/**
+ * @brief Tick function that performs the reset actions.
+ */
     BT::NodeStatus tick() override;
 
 private:
-    // ROS2 node
+// ROS2 node
     rclcpp::Node::SharedPtr node_;
   };
 

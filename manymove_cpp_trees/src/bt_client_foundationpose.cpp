@@ -96,18 +96,35 @@ int main(int argc, char** argv)
   // This is the new unified helper function to create all the snippets to handle any kind of
   // objects
   ObjectSnippets ground = createObjectSnippets(blackboard, keys,
-                                               "ground", /* object name */
-                                               "box",   /* shape */
-                                               createPoseRPY(0.0, 0.0, -0.051, 0.0, 0.0, 0.0), /*
-                                                                                                * pose
-                                                                                                * of
-                                                                                                * the
-                                                                                                * object
-                                                                                                * */
-                                               {1.0, 1.0, 0.1}, /* primitive dimensions */
-                                               "",      /* mesh file path */
-                                               {1.0, 1.0, 1.0}, /* scale */
-                                               "",      /* link name to attach/detach */
+                                               "ground",       /* object name */
+                                               "box",       /* shape */
+                                               createPoseRPY(0.0, 0.0, -0.051, 0.0, 0.0, 0.0),       /*
+                                                                                                      *
+                                                                                                      *
+                                                                                                      *
+                                                                                                      *
+                                                                                                      *pose
+                                                                                                      *
+                                                                                                      *
+                                                                                                      *
+                                                                                                      *
+                                                                                                      *of
+                                                                                                      *
+                                                                                                      *
+                                                                                                      *
+                                                                                                      *
+                                                                                                      *the
+                                                                                                      *
+                                                                                                      *
+                                                                                                      *
+                                                                                                      *
+                                                                                                      *object
+                                                                                                      *
+                                                                                                      **/
+                                               {1.0, 1.0, 0.1},       /* primitive dimensions */
+                                               "",       /* mesh file path */
+                                               {1.0, 1.0, 1.0},       /* scale */
+                                               "",       /* link name to attach/detach */
                                                {}       /* contact links to attach/detach */
                                                );
 
@@ -390,14 +407,15 @@ int main(int argc, char** argv)
   {
     // spawn_graspable_objects_xml, //< Acquire detection and spawn planning object
     move_gripper_open_xml,                //< Ensure gripper open before pick
-    wait_for_pick_pose_valid_xml,         //<
+    wait_for_pick_pose_valid_xml,             //<
     pick_sequence_xml,                    //< Pick sequence
-    set_pick_pose_invalid_xml,            //<
+    set_pick_pose_invalid_xml,             //<
     drop_sequence_xml,                    //< Drop sequence
     graspable.remove_xml,                 //< Remove from planning scene
-    set_graspable_deleted_xml,            //<
+    set_graspable_deleted_xml,             //<
   },                                      //<
-                                                                 -1); //< num_cycles=-1 for infinite
+                                                                 -1);       //< num_cycles=-1 for
+                                                                            // infinite
 
   std::string parallel_sequences_xml = parallelWrapperXML("ParallelWrapper",
                                                         {spawn_graspable_objects_xml,
@@ -405,7 +423,7 @@ int main(int argc, char** argv)
 
   std::string retry_forever_wrapper_xml = retrySequenceWrapperXML("ResetHandler",
                                                                 {startup_sequence_xml,
-                                                                   parallel_sequences_xml}, -1);
+                                                                 parallel_sequences_xml}, -1);
 
   // GlobalMasterSequence with RepeatForever as child to set BehaviorTree ID and root
   // main_tree_to_execute in the XML

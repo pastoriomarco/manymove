@@ -62,7 +62,7 @@ public:
                                    const std::string& planner_prefix = "");
 
 private:
-  // Internal types
+// Internal types
   using MoveManipulator = manymove_msgs::action::MoveManipulator;
   using GoalHandleMoveManipulator = rclcpp_action::ServerGoalHandle<MoveManipulator>;
 
@@ -72,21 +72,21 @@ private:
   using LoadTrajController = manymove_msgs::action::LoadTrajController;
   using GoalHandleLoadTrajController = rclcpp_action::ServerGoalHandle<LoadTrajController>;
 
-  // ROS Node and Planner Interface
+// ROS Node and Planner Interface
   rclcpp::Node::SharedPtr node_;
   std::shared_ptr<PlannerInterface> planner_;
   std::string planner_prefix_;
 
-  // Callback groups
+// Callback groups
   rclcpp::CallbackGroup::SharedPtr action_callback_group_;
   rclcpp::CallbackGroup::SharedPtr param_callback_group_;
 
-  // Action Servers
+// Action Servers
   rclcpp_action::Server<MoveManipulator>::SharedPtr move_manipulator_server_;
   rclcpp_action::Server<UnloadTrajController>::SharedPtr unload_traj_controller_server_;
   rclcpp_action::Server<LoadTrajController>::SharedPtr load_traj_controller_server_;
 
-  // Service Clients
+// Service Clients
   rclcpp::Client<controller_manager_msgs::srv::UnloadController>::SharedPtr
     unload_controller_client_;
   rclcpp::Client<controller_manager_msgs::srv::LoadController>::SharedPtr load_controller_client_;
@@ -95,7 +95,7 @@ private:
   rclcpp::Client<controller_manager_msgs::srv::ConfigureController>::SharedPtr
     configure_controller_client_;
 
-  // Joint States
+// Joint States
   rclcpp::Subscription<sensor_msgs::msg::JointState>::SharedPtr joint_states_sub_;
   std::mutex joint_states_mutex_;
   std::unordered_map<std::string, double> current_joint_positions_;
@@ -107,7 +107,7 @@ private:
   rclcpp::Time executing_start_time_;
   manymove_msgs::msg::MoveManipulatorGoal move_manipulator_goal_;
 
-  // MoveManipulator Callbacks
+// MoveManipulator Callbacks
   rclcpp_action::GoalResponse handle_move_goal(const rclcpp_action::GoalUUID&,
                                                std::shared_ptr<const MoveManipulator::Goal> );
   rclcpp_action::CancelResponse handle_move_cancel(
@@ -115,7 +115,7 @@ private:
   void handle_move_accepted(const std::shared_ptr<GoalHandleMoveManipulator> goal_handle);
   void execute_move(const std::shared_ptr<GoalHandleMoveManipulator> goal_handle);
 
-  // UnloadTrajController Callbacks
+// UnloadTrajController Callbacks
   rclcpp_action::GoalResponse handle_unload_traj_goal(const rclcpp_action::GoalUUID&,
                                                       std::shared_ptr<const UnloadTrajController::Goal> );
   rclcpp_action::CancelResponse handle_unload_traj_cancel(
@@ -123,7 +123,7 @@ private:
   void handle_unload_traj_accepted(const std::shared_ptr<GoalHandleUnloadTrajController> );
   void execute_unload_traj_controller(const std::shared_ptr<GoalHandleUnloadTrajController>&);
 
-  // LoadTrajController Callbacks
+// LoadTrajController Callbacks
   rclcpp_action::GoalResponse handle_load_traj_goal(const rclcpp_action::GoalUUID&,
                                                     std::shared_ptr<const LoadTrajController::Goal> );
   rclcpp_action::CancelResponse handle_load_traj_cancel(
@@ -131,7 +131,7 @@ private:
   void handle_load_traj_accepted(const std::shared_ptr<GoalHandleLoadTrajController> );
   void execute_load_traj_controller(const std::shared_ptr<GoalHandleLoadTrajController>&);
 
-  // Async controller management helpers
+// Async controller management helpers
   void unloadControllerAsync(const std::string&,
                              std::function<void()>, std::function<void(const std::string&)> );
   void loadControllerAsync(const std::string&,
@@ -143,7 +143,7 @@ private:
   void configureControllerAsync(const std::string&,
                                 std::function<void()>, std::function<void(const std::string&)> );
 
-  // Helper functions
+// Helper functions
   bool executeTrajectoryWithCollisionChecks(
     const std::shared_ptr<GoalHandleMoveManipulator>& goal_handle,
     const moveit_msgs::msg::RobotTrajectory& traj,

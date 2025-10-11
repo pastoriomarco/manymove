@@ -175,7 +175,7 @@ namespace manymove_cpp_trees
     std::ostringstream execution_seq;
 
     for (const auto& move : moves) {
-      int this_move_id = g_global_move_id;       // unique ID for this move
+      int this_move_id = g_global_move_id;           // unique ID for this move
       move_ids.push_back(this_move_id);
 
       // Check that the move's robot prefix is compatible

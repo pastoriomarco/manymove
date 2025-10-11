@@ -748,8 +748,9 @@ void ManipulatorActionServer::deactivateControllerAsync(
   auto request = std::make_shared<controller_manager_msgs::srv::SwitchController::Request>();
   request->activate_controllers.clear();                        // We are not starting any new
                                                                 // controllers
-  request->deactivate_controllers.push_back(controller_name);   // We want to deactivate/stop this
-                                                                // controller
+  request->deactivate_controllers.push_back(controller_name);       // We want to deactivate/stop
+                                                                    // this
+                                                                    // controller
   request->strictness = request->STRICT;                        // STRICT means all requested
                                                                 // switches must succeed
   setSwitchActivateAsap(*request, false);                                  // You can set this to

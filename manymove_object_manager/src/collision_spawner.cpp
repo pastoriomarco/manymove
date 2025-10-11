@@ -375,9 +375,9 @@ private:
     }
   }
 
-  // ----------------------------------------------------------------------------
-  // New Utility Function: isObjectPresent
-  // ----------------------------------------------------------------------------
+// ----------------------------------------------------------------------------
+// New Utility Function: isObjectPresent
+// ----------------------------------------------------------------------------
   bool isObjectPresent(const std::string& object_id)
   {
     if (!check_object_exists_action_client_->action_server_is_ready()) {
@@ -437,9 +437,9 @@ private:
     return result->exists;
   }
 
-  // ----------------------------------------------------------------------------
-  // Existing Utility Function: generateRandomPose
-  // ----------------------------------------------------------------------------
+// ----------------------------------------------------------------------------
+// Existing Utility Function: generateRandomPose
+// ----------------------------------------------------------------------------
   geometry_msgs::msg::Pose generateRandomPose()
   {
     geometry_msgs::msg::Pose pose;
@@ -456,9 +456,9 @@ private:
     return pose;
   }
 
-  // ----------------------------------------------------------------------------
-  // Existing Utility Function: rpyToQuaternion
-  // ----------------------------------------------------------------------------
+// ----------------------------------------------------------------------------
+// Existing Utility Function: rpyToQuaternion
+// ----------------------------------------------------------------------------
   geometry_msgs::msg::Quaternion rpyToQuaternion(double roll, double pitch, double yaw)
   {
     tf2::Quaternion q;

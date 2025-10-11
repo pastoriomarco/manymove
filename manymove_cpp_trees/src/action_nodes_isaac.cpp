@@ -678,14 +678,17 @@ namespace manymove_cpp_trees
         q_delta.setRPY(v[3], v[4], v[5]);
 
         tf2::Vector3 t_delta(v[0], v[1], v[2]);
-        tf2::Vector3 t_world = R_base * t_delta;     // local -> world translation
+        tf2::Vector3 t_world = R_base * t_delta;                                   // local -> world
+                                                                                   // translation
 
         geometry_msgs::msg::Pose out = base;
         out.position.x += t_world.x();
         out.position.y += t_world.y();
         out.position.z += t_world.z();
 
-        tf2::Quaternion q_out = q_base * q_delta;     // local rotation composition
+        tf2::Quaternion q_out = q_base * q_delta;                                   // local
+                                                                                    // rotation
+                                                                                    // composition
         if (q_out.length2() > 0.0) {
           q_out.normalize();
         }

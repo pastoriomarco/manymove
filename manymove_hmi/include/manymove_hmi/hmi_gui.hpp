@@ -43,29 +43,29 @@ class HmiGui : public QMainWindow
   Q_OBJECT
 
 public:
-  /// The new constructor accepts a list of robot prefixes.
+/// The new constructor accepts a list of robot prefixes.
   explicit HmiGui(const std::vector<std::string>& robotPrefixes,
                   std::vector<std::string>& robotNames, QWidget* parent = nullptr);
   ~HmiGui();
 
 public slots:
-  /// Update the GUI for a given robot (by prefix).
+/// Update the GUI for a given robot (by prefix).
   void updateStatus(const QString& robotPrefix,
                     bool stop_execution,
                     bool reset,
                     bool collision_detected);
 
-  /// Update a textual message for a given robot.
+/// Update a textual message for a given robot.
   void updateRobotMessage(const QString& robotPrefix,
                           const QString& message,
                           const QString& color);
 
-  // TCP server slots
+// TCP server slots
   void onNewConnection();
   void onSocketDisconnected();
 
 signals:
-  /// Signals that include the robot prefix.
+/// Signals that include the robot prefix.
   void startExecutionRequested(const std::string& robotPrefix);
   void stopExecutionRequested(const std::string& robotPrefix);
   void resetProgramRequested(const std::string& robotPrefix);
@@ -75,7 +75,7 @@ private:
   QTcpServer* tcpServer_;
   QTcpSocket* clientSocket_;
 
-  // Structure holding one robot’s UI elements.
+// Structure holding one robot’s UI elements.
   struct RobotInterface
   {
     std::string prefix;
@@ -89,7 +89,7 @@ private:
   std::vector<RobotInterface> robotInterfaces_;
   std::vector<std::string> robotNames_;
 
-  // (Optional) For TCP status broadcasting.
+// (Optional) For TCP status broadcasting.
   QString lastStatusJson_;
 };
 

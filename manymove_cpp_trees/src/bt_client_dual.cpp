@@ -186,13 +186,13 @@ int main(int argc, char** argv)
 
   // Translate it to xml tree leaf or branch
   std::string prep_sequence_1_xml = sequenceWrapperXML(rp_1.prefix + "ComposedPrepSequence",
-                                                     {to_rest_1_xml});
+                                                       {to_rest_1_xml});
   std::string pick_sequence_1_xml = sequenceWrapperXML(rp_1.prefix + "ComposedPickSequence",
-                                                     {pick_object_1_xml});
+                                                       {pick_object_1_xml});
   std::string drop_sequence_1_xml = sequenceWrapperXML(rp_1.prefix + "ComposedDropSequence",
-                                                     {drop_object_1_xml});
+                                                       {drop_object_1_xml});
   std::string home_sequence_1_xml = sequenceWrapperXML(rp_1.prefix + "ComposedHomeSequence",
-                                                     {to_home_1_xml, to_rest_1_xml});
+                                                       {to_home_1_xml, to_rest_1_xml});
 
   // build the xml snippets for the single moves of robot 1
   std::string to_rest_2_xml = buildMoveXML(rp_2.prefix,
@@ -217,13 +217,13 @@ int main(int argc, char** argv)
 
   // Translate it to xml tree leaf or branch
   std::string prep_sequence_2_xml = sequenceWrapperXML(rp_2.prefix + "ComposedPrepSequence",
-                                                     {to_rest_2_xml});
+                                                       {to_rest_2_xml});
   std::string pick_sequence_2_xml = sequenceWrapperXML(rp_2.prefix + "ComposedPickSequence",
-                                                     {pick_object_2_xml});
+                                                       {pick_object_2_xml});
   std::string drop_sequence_2_xml = sequenceWrapperXML(rp_2.prefix + "ComposedDropSequence",
-                                                     {drop_object_2_xml});
+                                                       {drop_object_2_xml});
   std::string home_sequence_2_xml = sequenceWrapperXML(rp_2.prefix + "ComposedHomeSequence",
-                                                     {to_home_2_xml, to_rest_2_xml});
+                                                       {to_home_2_xml, to_rest_2_xml});
 
   // ----------------------------------------------------------------------------
   // 3) Build blocks for objects handling
@@ -262,18 +262,21 @@ int main(int argc, char** argv)
                                                                                           // it to
                                                                                           // 10x10x100
                                                                                           // mm
-  blackboard->set("mesh_pose_key", createPoseRPY(0.1, -0.2, 0.2005, 0.785, 1.57, 0.0));   //< We
-                                                                                          // place
-                                                                                          // it on
-                                                                                          // the
-                                                                                          // floor
-                                                                                          // and lay
-                                                                                          // it on
-                                                                                          // its
-                                                                                          // side,
-                                                                                          // X+
-                                                                                          // facing
-                                                                                          // down
+  blackboard->set("mesh_pose_key", createPoseRPY(0.1, -0.2, 0.2005, 0.785, 1.57, 0.0));       //< We
+                                                                                              // place
+                                                                                              // it
+                                                                                              // on
+                                                                                              // the
+                                                                                              // floor
+                                                                                              // and
+                                                                                              // lay
+                                                                                              // it
+                                                                                              // on
+                                                                                              // its
+                                                                                              // side,
+                                                                                              // X+
+                                                                                              // facing
+                                                                                              // down
 
   // Create object actions xml snippets (the object are created directly in the create*() functions
   // relative to each type of object action)
@@ -545,139 +548,163 @@ int main(int argc, char** argv)
   // Repeat node must have only one children, so it also wrap a Sequence child that wraps the other
   // children
   std::string repeat_forever_wrapper_1_xml = repeatSequenceWrapperXML("RepeatForever",
-                                                                    {check_reset_robot_1_xml, //< We
-                                                                                              // check
-                                                                                              // if
-                                                                                              // the
-                                                                                              // robot
-                                                                                              // is
-                                                                                              // active,
-                                                                                              // if
-                                                                                              // not
-                                                                                              // we
-                                                                                              // try
-                                                                                              // to
-                                                                                              // reset
-                                                                                              // it
-                                                                     spawn_graspable_objects_1_xml, //<
-                                                                                                    // We
-                                                                                                    // add
-                                                                                                    // all
-                                                                                                    // the
-                                                                                                    // objects
-                                                                                                    // to
-                                                                                                    // the
-                                                                                                    // scene
-                                                                     get_grasp_object_poses_1_xml, //<
-                                                                                                   // We
-                                                                                                   // get
-                                                                                                   // the
-                                                                                                   // updated
-                                                                                                   // poses
-                                                                                                   // relative
-                                                                                                   // to
-                                                                                                   // the
-                                                                                                   // objects
-                                                                     go_to_pick_pose_1_xml, //< Prep
-                                                                                            // sequence
-                                                                                            // and
-                                                                                            // pick
-                                                                                            // sequence
-                                                                     close_gripper_1_xml, //< We
-                                                                                          // attach
-                                                                                          // the
-                                                                                          // object
-                                                                     drop_sequence_1_xml, //< Drop
-                                                                                          // sequence
-                                                                     open_gripper_1_xml, //< We
-                                                                                         // detach
-                                                                                         // the
-                                                                                         // object
-                                                                     home_sequence_1_xml, //< Homing
-                                                                                          // sequence
-                                                                     remove_obj_1_xml}, //< We
-                                                                                        // delete
-                                                                                        // the
-                                                                                        // object
-                                                                                        // for it to
-                                                                                        // be added
-                                                                                        // on the
-                                                                                        // next
-                                                                                        // cycle in
-                                                                                        // the
-                                                                                        // original
-                                                                                        // position
-                                                                      -1); //< num_cycles=-1 for
-                                                                           // infinite
+                                                                    {check_reset_robot_1_xml,         //<
+                                                                                                      // We
+                                                                                                      // check
+                                                                                                      // if
+                                                                                                      // the
+                                                                                                      // robot
+                                                                                                      // is
+                                                                                                      // active,
+                                                                                                      // if
+                                                                                                      // not
+                                                                                                      // we
+                                                                                                      // try
+                                                                                                      // to
+                                                                                                      // reset
+                                                                                                      // it
+                                                                     spawn_graspable_objects_1_xml,         //<
+                                                                                                            // We
+                                                                                                            // add
+                                                                                                            // all
+                                                                                                            // the
+                                                                                                            // objects
+                                                                                                            // to
+                                                                                                            // the
+                                                                                                            // scene
+                                                                     get_grasp_object_poses_1_xml,         //<
+                                                                                                           // We
+                                                                                                           // get
+                                                                                                           // the
+                                                                                                           // updated
+                                                                                                           // poses
+                                                                                                           // relative
+                                                                                                           // to
+                                                                                                           // the
+                                                                                                           // objects
+                                                                     go_to_pick_pose_1_xml,         //<
+                                                                                                    // Prep
+                                                                                                    // sequence
+                                                                                                    // and
+                                                                                                    // pick
+                                                                                                    // sequence
+                                                                     close_gripper_1_xml,         //<
+                                                                                                  // We
+                                                                                                  // attach
+                                                                                                  // the
+                                                                                                  // object
+                                                                     drop_sequence_1_xml,         //<
+                                                                                                  // Drop
+                                                                                                  // sequence
+                                                                     open_gripper_1_xml,         //<
+                                                                                                 // We
+                                                                                                 // detach
+                                                                                                 // the
+                                                                                                 // object
+                                                                     home_sequence_1_xml,         //<
+                                                                                                  // Homing
+                                                                                                  // sequence
+                                                                     remove_obj_1_xml},         //< We
+                                                                                                // delete
+                                                                                                // the
+                                                                                                // object
+                                                                                                // for
+                                                                                                // it
+                                                                                                // to
+                                                                                                // be
+                                                                                                // added
+                                                                                                // on
+                                                                                                // the
+                                                                                                // next
+                                                                                                // cycle
+                                                                                                // in
+                                                                                                // the
+                                                                                                // original
+                                                                                                // position
+                                                                      -1);       //< num_cycles=-1
+                                                                                 // for
+                                                                                 // infinite
 
   // ROBOT 2
   // Repeat node must have only one children, so it also wrap a Sequence child that wraps the other
   // children
   std::string repeat_forever_wrapper_2_xml = repeatSequenceWrapperXML("RepeatForever",
-                                                                    {check_reset_robot_2_xml, //< We
-                                                                                              // check
-                                                                                              // if
-                                                                                              // the
-                                                                                              // robot
-                                                                                              // is
-                                                                                              // active,
-                                                                                              // if
-                                                                                              // not
-                                                                                              // we
-                                                                                              // try
-                                                                                              // to
-                                                                                              // reset
-                                                                                              // it
-                                                                     spawn_graspable_objects_2_xml, //<
-                                                                                                    // We
-                                                                                                    // add
-                                                                                                    // all
-                                                                                                    // the
-                                                                                                    // objects
-                                                                                                    // to
-                                                                                                    // the
-                                                                                                    // scene
-                                                                     get_grasp_object_poses_2_xml, //<
-                                                                                                   // We
-                                                                                                   // get
-                                                                                                   // the
-                                                                                                   // updated
-                                                                                                   // poses
-                                                                                                   // relative
-                                                                                                   // to
-                                                                                                   // the
-                                                                                                   // objects
-                                                                     go_to_pick_pose_2_xml, //< Prep
-                                                                                            // sequence
-                                                                                            // and
-                                                                                            // pick
-                                                                                            // sequence
-                                                                     close_gripper_2_xml, //< We
-                                                                                          // attach
-                                                                                          // the
-                                                                                          // object
-                                                                     drop_sequence_2_xml, //< Drop
-                                                                                          // sequence
-                                                                     open_gripper_2_xml, //< We
-                                                                                         // detach
-                                                                                         // the
-                                                                                         // object
-                                                                     home_sequence_2_xml, //< Homing
-                                                                                          // sequence
-                                                                     remove_obj_2_xml}, //< We
-                                                                                        // delete
-                                                                                        // the
-                                                                                        // object
-                                                                                        // for it to
-                                                                                        // be added
-                                                                                        // on the
-                                                                                        // next
-                                                                                        // cycle in
-                                                                                        // the
-                                                                                        // original
-                                                                                        // position
-                                                                      -1); //< num_cycles=-1 for
-                                                                           // infinite
+                                                                    {check_reset_robot_2_xml,         //<
+                                                                                                      // We
+                                                                                                      // check
+                                                                                                      // if
+                                                                                                      // the
+                                                                                                      // robot
+                                                                                                      // is
+                                                                                                      // active,
+                                                                                                      // if
+                                                                                                      // not
+                                                                                                      // we
+                                                                                                      // try
+                                                                                                      // to
+                                                                                                      // reset
+                                                                                                      // it
+                                                                     spawn_graspable_objects_2_xml,         //<
+                                                                                                            // We
+                                                                                                            // add
+                                                                                                            // all
+                                                                                                            // the
+                                                                                                            // objects
+                                                                                                            // to
+                                                                                                            // the
+                                                                                                            // scene
+                                                                     get_grasp_object_poses_2_xml,         //<
+                                                                                                           // We
+                                                                                                           // get
+                                                                                                           // the
+                                                                                                           // updated
+                                                                                                           // poses
+                                                                                                           // relative
+                                                                                                           // to
+                                                                                                           // the
+                                                                                                           // objects
+                                                                     go_to_pick_pose_2_xml,         //<
+                                                                                                    // Prep
+                                                                                                    // sequence
+                                                                                                    // and
+                                                                                                    // pick
+                                                                                                    // sequence
+                                                                     close_gripper_2_xml,         //<
+                                                                                                  // We
+                                                                                                  // attach
+                                                                                                  // the
+                                                                                                  // object
+                                                                     drop_sequence_2_xml,         //<
+                                                                                                  // Drop
+                                                                                                  // sequence
+                                                                     open_gripper_2_xml,         //<
+                                                                                                 // We
+                                                                                                 // detach
+                                                                                                 // the
+                                                                                                 // object
+                                                                     home_sequence_2_xml,         //<
+                                                                                                  // Homing
+                                                                                                  // sequence
+                                                                     remove_obj_2_xml},         //< We
+                                                                                                // delete
+                                                                                                // the
+                                                                                                // object
+                                                                                                // for
+                                                                                                // it
+                                                                                                // to
+                                                                                                // be
+                                                                                                // added
+                                                                                                // on
+                                                                                                // the
+                                                                                                // next
+                                                                                                // cycle
+                                                                                                // in
+                                                                                                // the
+                                                                                                // original
+                                                                                                // position
+                                                                      -1);       //< num_cycles=-1
+                                                                                 // for
+                                                                                 // infinite
 
   // Runningh both robot sequences in parallel:
   std::string parallel_repeat_forever_sequences_xml = parallelWrapperXML(

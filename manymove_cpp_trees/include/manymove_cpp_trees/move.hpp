@@ -56,19 +56,19 @@ namespace manymove_cpp_trees
      * # manymove parameters
      * float64 max_cartesian_speed             # max cartesian speed for the move, referred to TCP
      * int32 plan_number_target                # number of valid plans to find before declaring
-     *success
+     * success
      * int32 plan_number_limit                 # max planning tries before fail
      * string smoothing_type                   # "time-optimal" / "ruckig" (## under construction
      *##)
      * string tcp_frame                        # End-effector (TCP) frame for this request
      * float64 linear_precision                # Linear precision for end-point trajectory position
-     *check
+     * check
      * float64 rotational_precision            # Rotational precision for end-point trajectory
-     *position check
+     * position check
      * float64 deceleration_time               # Time to decelerate the robot to arrive at a full
-     *stop
+     * stop
      * float64 min_stop_time                   # Minimum time to perform a controlled stop, if less
-     *time remains the traj will just end
+     * time remains the traj will just end
      *
      * # moveit planner parameters
      * float64 velocity_scaling_factor         # 0.0 to 1.0
@@ -88,13 +88,13 @@ namespace manymove_cpp_trees
      * Note about plan_number_target:
      * Increasing the plan_number_target increase time to plan but produce trajs closer to optimal.
      * With 4 plans I noticed a quite good result, 8 to 12 plans reach almost always a very good
-     *result but with planning time increases.
+     * result but with planning time increases.
      * Some robots may need more, expecially if they have a wider range of movement on each joint.
      */
 
     /**
      * Note about tcp_frame: it's to be set on move basis, so we give it as an input to the Move
-     *constructor
+     * constructor
      */
 
     MovementConfig max_move_config;
@@ -178,7 +178,7 @@ namespace manymove_cpp_trees
     PTP_max_move_config.planning_attempts = 1;
     PTP_max_move_config.plan_number_target = 1;
     PTP_max_move_config.velocity_scaling_factor = 1.0;     ///< This scales the max_rot_vel in
-                                                           // pilz_cartesian_limits.yaml
+    // pilz_cartesian_limits.yaml
 
     // Pilz LIN moves
     MovementConfig LIN_max_move_config = max_move_config;
@@ -188,9 +188,9 @@ namespace manymove_cpp_trees
     LIN_max_move_config.planning_attempts = 1;
     LIN_max_move_config.plan_number_target = 1;
     LIN_max_move_config.velocity_scaling_factor = 0.5;         ///< This scales the max_trans_vel in
-                                                               // pilz_cartesian_limits.yaml
+    // pilz_cartesian_limits.yaml
     LIN_max_move_config.acceleration_scaling_factor = 0.5;     ///< This scales the max_trans_acc in
-                                                               // pilz_cartesian_limits.yaml
+    // pilz_cartesian_limits.yaml
 
     MovementConfig LIN_mid_move_config = LIN_max_move_config;
     LIN_mid_move_config.velocity_scaling_factor = 0.2;
@@ -269,7 +269,7 @@ namespace manymove_cpp_trees
     manymove_msgs::msg::MovementConfig config;     ///< Movement configuration parameters.
     std::vector<double> start_joint_values;        ///< Starting joint values for planning.
     std::string robot_prefix;                      ///< Prefix to correctly reference previous
-                                                   // moves.
+    // moves.
     std::string tcp_frame;                         ///< TCP for cartesian speed calculations
 
     Move(

@@ -408,8 +408,9 @@ std::pair<bool, moveit_msgs::msg::RobotTrajectory> MoveGroupPlanner::plan(
   if (!cfg.planning_pipeline.empty() && !cfg.planner_id.empty()) {
     // e.g. "chomp/CHOMP" or "ompl/RRTConnect" or "pilz_industrial_motion_planner/LIN"
     move_group_interface_->setPlanningPipelineId(cfg.planning_pipeline);
-    move_group_interface_->setPlannerId(cfg.planner_id);     // cfg.planning_pipeline + "/" +
-                                                             // cfg.planner_id);
+    move_group_interface_->setPlannerId(cfg.planner_id);             // cfg.planning_pipeline + "/"
+                                                                     // +
+                                                                     // cfg.planner_id);
   }
   // If the user uses only movegroup version and needs compatibility, he can set the full string in
   // planner_id only:
@@ -616,7 +617,7 @@ bool MoveGroupPlanner::sendControlledStop(
                 "Remaining time (%.3f) in trajectory is less than min_stop_time (%.3f). Stopping motion naturally.",
                 remaining_time,
                 move_cfg.min_stop_time);
-    return true;     // Do nothing and succeed as the motion will stop naturally
+    return true;             // Do nothing and succeed as the motion will stop naturally
   }
 
   /* -------------------------------------------------------------
@@ -717,12 +718,12 @@ bool MoveGroupPlanner::isStateValid(
       }
     }
   }
-  temp_state.update(true);   // update transforms
+  temp_state.update(true);       // update transforms
 
   collision_detection::CollisionRequest collision_request;
   collision_detection::CollisionResult collision_result;
-  collision_request.contacts = true;    // Enable contact reporting
-  collision_request.max_contacts = 1;   // Adjust as needed
+  collision_request.contacts = true;       // Enable contact reporting
+  collision_request.max_contacts = 1;       // Adjust as needed
 
   locked_scene->checkCollision(collision_request, collision_result, temp_state);
 

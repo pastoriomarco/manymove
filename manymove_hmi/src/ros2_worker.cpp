@@ -156,8 +156,8 @@ void Ros2Worker::statusCallback(const std_msgs::msg::String::SharedPtr msg)
     else if (bk.type == "double_array") {
       if (data[valStart] == '"') {
         ++valStart;
-      }       // skip leading quote
-      if (data[valStart] == '[') {     // keep the brackets
+      }                   // skip leading quote
+      if (data[valStart] == '[') {                   // keep the brackets
         size_t end = data.find(']', valStart);
         if (end != std::string::npos) {
           valueStr = data.substr(valStart, end - valStart + 1);
@@ -168,7 +168,7 @@ void Ros2Worker::statusCallback(const std_msgs::msg::String::SharedPtr msg)
     /* ---------------- pose (JSON object) --------------------- */
     else if (bk.type == "pose") {
       if (data[valStart] == '"') {
-        ++valStart;         // optional quote
+        ++valStart;                         // optional quote
 
       }
       if (data[valStart] == '{') {
@@ -249,7 +249,7 @@ void Ros2Worker::callStartExecution()
 
   request->key.push_back(robot_prefix_ + "stop_execution");
   request->value_type.push_back("bool");
-  request->value_data.push_back("false");   // JSON "false"
+  request->value_data.push_back("false");       // JSON "false"
 
   auto future = update_blackboard_client_->async_send_request(request);
 

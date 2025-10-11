@@ -116,9 +116,9 @@ int main(int argc, char** argv)
   /**
    * We'll create all the necessary constructs for each object.
    * The first object is the one that will be picked by the first robot. Here we assume it is placed
-   *in a known position by a mechanical
+   * in a known position by a mechanical
    * distributor. We will need to have the pose recognized by a vision system in the future, so we
-   *already create all the constructs necessary
+   * already create all the constructs necessary
    * to be able to update the pose dynamically during execution.`
    */
 
@@ -134,11 +134,11 @@ int main(int argc, char** argv)
 
   /**
    * The tube is 1m diameter x 1m high, with the center of mass corrisponding to the origin with the
-   *axis aligned to Z axis.
+   * axis aligned to Z axis.
    * This way, thanks to the variable for tube lenght defined previously, we can scale as needed. To
-   *make the application more versatile,
+   * make the application more versatile,
    * in the future we can also make so the dimensions depend on a blackboard key and let the user
-   *modify it from the HMI.
+   * modify it from the HMI.
    */
   std::vector<double> graspable_mesh_scale = {0.01, 0.01, tube_length};
   std::string graspable_mesh_scale_key_name = "tube_scale_key";
@@ -149,11 +149,11 @@ int main(int argc, char** argv)
 
   /**
    * This is the pose for the object, aligned so the X+ axis corresponds to the exit direction from
-   *the distributor's holder.
+   * the distributor's holder.
    * Since the gripper is aligned to the Z axis, we'll have to modify it later to get the grasp
-   *pose. Note we could approach from any direction
+   * pose. Note we could approach from any direction
    * perpendicular to the Z axis of the object, but defining one specific alignment lets us define a
-   *specific direction for grasping.
+   * specific direction for grasping.
    */
   Pose graspable_mesh_pose = createPoseRPY(((tube_length / 2) + 0.973 + 0.005), -0.6465, 0.8055,
                                            1.57, 2.05, 1.57);
@@ -216,19 +216,19 @@ int main(int argc, char** argv)
    * Be careful not to use names that may conflict with the keys automatically
    * created for the moves. (Usually move_{move_id})
    * We also create a string to store the key name, or we'll risk to misuse it later if we change it
-   *here.
+   * here.
    * The original pick pose will be overwritten by the blackboard key that will be dynamically
-   *updated getting the grasp pose object, so we
+   * updated getting the grasp pose object, so we
    * set an empty Pose.
    * Note that the pose obtained from an object will refer to the object itself and will have to be
-   *modified if you want to align
+   * modified if you want to align
    * the TCP orientation to a direction that is not the object's Z+ (more about it later).
    * We may also define a pick pose here to align the TCP as we want since we know the position of
-   *the object, but this mechanism
+   * the object, but this mechanism
    * will allow to get the pose recognized by a vision system and to realign the TCP Z+ to the
-   *desired pick orientation.
+   * desired pick orientation.
    * Since this pose will be overwritten, we use an all zeros pose that would not be reachable
-   *anyway.
+   * anyway.
    */
   std::string pick_target_1_key_name = "pick_target_1_key";
   blackboard->set(pick_target_1_key_name, Pose());
@@ -238,15 +238,15 @@ int main(int argc, char** argv)
 
   /**
    * Next we define how we pick the object. When we get a pose from an object in the scene, the
-   *orientation will depend on how the object was
+   * orientation will depend on how the object was
    * inserted in the scene and, if it's a mesh, from the object's orientation in the original file.
-   *The gripper's approach direction is oriented
+   * The gripper's approach direction is oriented
    * on its Z axis, but this object should be grasped perpendicularly to the object's Z axis. thus
-   *we need to modify the orientation to align it.
+   * we need to modify the orientation to align it.
    * Given the original mesh file and the shape of the gripper's jaws, we want to move the reference
-   *pick point -2mm in the x direction, and rotate
+   * pick point -2mm in the x direction, and rotate
    * it 90 degrees on Y axis, thus obtaining a pick orientation that aligns with the object's X
-   *axis.
+   * axis.
    * The approach direction will just have to be some cm further, depending on the applcation: here,
    *-7cm is about ok.
    */
@@ -271,7 +271,7 @@ int main(int argc, char** argv)
 
   /**
    * Now we use all the variables we created until now to define the xml snippets that will get the
-   *pick and approach poses of the object dynamically,
+   * pick and approach poses of the object dynamically,
    * modified as we set in the transforms and relative to the "world" frame.
    */
   std::string get_pick_pose_1_xml = buildObjectActionXML("get_pick_pose_1",
@@ -294,17 +294,17 @@ int main(int argc, char** argv)
   /**
    * With this the completed all the required snippets to handle the fist object and the first pose.
    * We'll proceed here with all the other objects and poses, commenting only where something
-   *changes from what we saw until now.
+   * changes from what we saw until now.
    */
   // ----------------------------------------------------------------------------
 
   /**
    * Drop pose: this is not overwritten later, as it doesn't need to change dynamically in this
-   *application.
+   * application.
    * Note that this pose directly refer to the pose that the TCP will allign to and it's referred to
-   *the world frame.
+   * the world frame.
    * For example, this pose has the Z+ facing downard, 45 degrees in the XZ plane, in between X- and
-   *Z-.
+   * Z-.
    */
   Pose drop_target_1 = createPoseRPY(0.571, -0.2, 0.725, -0.785, -3.14, 1.57);
 
@@ -340,7 +340,7 @@ int main(int argc, char** argv)
 
   /**
    * Once the object will be moved, the drop position will have to be retrieved with the new pose of
-   *the object, so I need a new blackboard
+   * the object, so I need a new blackboard
    * key for the new pose. Note the
    */
   std::string dropped_target_key_name = "dropped_target_key";
@@ -354,9 +354,9 @@ int main(int argc, char** argv)
 
   /**
    * When we switch from a robot to another we remove the object from the scene to free up the name
-   *to add it again concurrently
+   * to add it again concurrently
    * Then we add it again in the same position as the removed object but with another name, so it
-   *will be used by the other
+   * will be used by the other
    * robot to plan while checking for collisions
    */
   std::string add_renamed_mesh_obj_xml = buildObjectActionXML("add_renamed_mesh",
@@ -371,7 +371,7 @@ int main(int argc, char** argv)
   /**
    * We get the pose of the dropped object to use it to insert the renamed object
    * Note that this pose is only used to reinsert the object in the scene: to get the insert pose
-   *for the second object we will get
+   * for the second object we will get
    * the pose of the newly created object and transform that for the TCP pose.
    * We don't need to make transforms, so we create a key for emtpy transforms
    * We also set a key for world frame for transforms
@@ -443,7 +443,7 @@ int main(int argc, char** argv)
     "remove_endplate_mesh_always_success",
     {buildObjectActionXML(
       "remove_endplate_mesh", createRemoveObject("endplate_id_key")),
-     "<AlwaysSuccess />"});
+                                                               "<AlwaysSuccess />"});
 
   // Here we add the objects that create the scene. The machine is in a fixed position
   std::string add_machine_mesh_obj_xml = buildObjectActionXML("add_machine_mesh",
@@ -543,9 +543,9 @@ int main(int argc, char** argv)
 
   /**
    * A little note here: we can use both object_to_manipulate_1 or object_to_manipulate_2 to get the
-   *object pose, the difference is when you want
+   * object pose, the difference is when you want
    * to read the pose. Below you'll see where the get_grasp_object_poses_2_xml is placed, which is
-   *BEFORE the object is released from the gripper
+   * BEFORE the object is released from the gripper
    * of the first robot, thus the renamed object doesn't exist yet.
    */
   // Translate get_pose_action to xml tree leaf
@@ -945,8 +945,9 @@ int main(int argc, char** argv)
     go_to_pick_pose_1_xml,                                //< Pick move sequence
     close_gripper_1_xml,                                  //< Attach the object
     go_to_wait_pose_1_xml,                                //< Go to wait pose
-    wait_for_robot_2_out_of_working_position_xml,         //< Wait for other robot out of working
-                                                          // position
+    wait_for_robot_2_out_of_working_position_xml,             //< Wait for other robot out of
+                                                              // working
+                                                              // position
     wait_for_renamed_obj_removed_xml,                     //< Wait for other robot to unload the
                                                           // graspable object
     go_to_drop_pose_1_xml,                                //< Drop move sequence
@@ -957,8 +958,9 @@ int main(int argc, char** argv)
     rename_obj_1_xml,                                     //< Rename the object for the other robot
                                                           // to use
   },
-                                                                      -1); //< num_cycles=-1 for
-                                                                           // infinite
+                                                                      -1);       //< num_cycles=-1
+                                                                                 // for
+                                                                                 // infinite
 
   // ROBOT 2
   // Repeat node must have only one children, so it also wrap a Sequence child that wraps the other
@@ -975,8 +977,9 @@ int main(int argc, char** argv)
                                                           // machine's end plate
     go_to_insert_pose_2_xml,                              //< Go to insert pose
     set_robot_2_in_working_position,                      //< Signal robot 2 in working position
-    wait_for_robot_1_out_of_working_position_xml,         //< Wait for other robot out of working
-                                                          // position
+    wait_for_robot_1_out_of_working_position_xml,             //< Wait for other robot out of
+                                                              // working
+                                                              // position
     wait_for_renamed_drop_obj_xml,                        //< Wait for other robot to release the
                                                           // graspable object and rename it
     attach_obj_2_xml,                                     //< Attach the renamed graspable object
@@ -987,8 +990,9 @@ int main(int argc, char** argv)
                                                           // on the next cycle in the original
                                                           // position
   },
-                                                                      -1); //< num_cycles=-1 for
-                                                                           // infinite
+                                                                      -1);       //< num_cycles=-1
+                                                                                 // for
+                                                                                 // infinite
 
   // Runningh both robot sequences in parallel:
   std::string parallel_repeat_forever_sequences_xml = parallelWrapperXML(

@@ -75,7 +75,7 @@ private:
     bool goal_sent_;
     bool result_received_;
 
-    // Store the final result from the action server
+// Store the final result from the action server
     GripperCommand::Result action_result_;
   };
 

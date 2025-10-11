@@ -149,20 +149,20 @@ namespace manymove_cpp_trees
  *
  * WARNING:This function will require the output XML to be wrapped in a Control leaf node,
  *  since ResetTrajectories is detached from its own buildMoveXML leaf node. This is done inside
- *this
+ * this
  *  function to allow grouping several buildMoveXML in a single sequence to reduce tree's
- *complexity. Moreover,
+ * complexity. Moreover,
  *  you can set @p reset_trajs to false to avoid generating ResetTrajectories if your control logic
- *don't require it,
+ * don't require it,
  *  further simplifying the tree's structure and to be able to reuse the already successful
- *trajectories in the previous cycle.
+ * trajectories in the previous cycle.
  *
  * @param robot_prefix A prefix for the robot's action servers
  * @param node_prefix A label for the parallel block (e.g., "preparatory" or "pickAndHoming")
  * @param moves       The vector of Move that we plan/execute in this parallel block
  * @param blackboard  The blackboard to populate with move IDs
  * @param reset_trajs This condition generates the ResetTrajectories leaf node to reset all the
- *sequence's trajs before planning and executing
+ * sequence's trajs before planning and executing
  * @param max_tries   The max number of tries to execute the move
  * @return A string with the generated XML snippet
  */
@@ -186,7 +186,7 @@ namespace manymove_cpp_trees
  * @param input_topic            Topic publishing vision_msgs/Detection3DArray from FoundationPose.
  * @param pick_transform         Local transform [x,y,z,r,p,y] applied to the final pose after all
  *                               other processing (including Z clamp). Applied only to @p
- *pick_pose_key output
+ * pick_pose_key output
  *                               (not to @p object_pose_key). Units: meters + radians.
  * @param approach_transform     Local transform [x,y,z,r,p,y] applied to the final pose after all
  *                               other processing (including Z clamp) to produce the approach pose;
@@ -197,19 +197,19 @@ namespace manymove_cpp_trees
  * @param approach_pose_key      Blackboard key to store the approach pose (optional).
  * @param header_key             Blackboard key to store the detection header (optional).
  * @param object_pose_key        Blackboard key to store the aligned pose for planning scene (no
- *transforms).
+ * transforms).
  * @param z_threshold_activation If true, enforce a minimum Z in the planning frame; if the final
  *                               base pose.z < @p z_threshold, it is set to @p z_threshold. If
- *false,
+ * false,
  *                               no Z clamping is applied. The clamp is applied before local
- *transforms.
+ * transforms.
  * @param z_threshold            The minimum allowed Z (meters) used when @p z_threshold_activation
- *is true.
+ * is true.
  * @param normalize_pose         If true, normalize orientation using
- *align_foundationpose_orientation;
+ * align_foundationpose_orientation;
  *                               if false, leave the incoming orientation unchanged.
  * @param force_z_vertical       Passed to align_foundationpose_orientation when @p normalize_pose
- *is true:
+ * is true:
  *                               - true: force local Z to world vertical (down), make X horizontal.
  *                               - false: keep X, make Z as vertical as possible about X.
  * @return XML snippet with the configured sequence.
@@ -244,11 +244,11 @@ namespace manymove_cpp_trees
 /**
  * @brief Build an XML snippet for SetOutputAction.
  * @param node_prefix  Used to construct a unique name attribute, e.g. "<SetOutputAction
- *name='node_prefix_SetOutput' .../>".
+ * name='node_prefix_SetOutput' .../>".
  * @param io_type      The IO type input port (e.g. "tool" or "controller").
  * @param ionum        The IO channel number.
  * @param value        The value of the input to compare to. Accepts 0 or 1, any value that is not 0
- *will be considered 1.
+ * will be considered 1.
  * @param robot_prefix A prefix for the robot's action servers
  * @return A string of the XML snippet.
  */
@@ -277,7 +277,7 @@ namespace manymove_cpp_trees
  * @param io_type      The IO type input port (e.g. "tool" or "controller").
  * @param ionum        The IO channel number to read.
  * @param value        The value of the input to compare to. Accepts 0 or 1, any value that is not 0
- *will be considered 1.
+ * will be considered 1.
  * @param robot_prefix A prefix for the robot's action servers
  * @param wait         If true the function waits for the input to have the right value.
  * @param timeout_ms   Milliseconds for timeout, if 0 then no timeout.

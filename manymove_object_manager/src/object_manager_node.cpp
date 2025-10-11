@@ -214,22 +214,27 @@ namespace manymove_object_manager
                                                                                              ::
                                                                                              handleAttachDetachGoal,
                                                                                              this,
-                                                                                             std::
-                                                                                             placeholders
-                                                                                             ::_1,
                                                                                              std
                                                                                              ::
                                                                                              placeholders
-                                                                                             ::_2),
+                                                                                             ::
+                                                                                             _1,
+                                                                                             std
+                                                                                             ::
+                                                                                             placeholders
+                                                                                             ::
+                                                                                             _2),
                                                                                            std::bind(
                                                                                              &
                                                                                              ObjectManagerNode
                                                                                              ::
                                                                                              handleAttachDetachCancel,
                                                                                              this,
-                                                                                             std::
+                                                                                             std
+                                                                                             ::
                                                                                              placeholders
-                                                                                             ::_1),
+                                                                                             ::
+                                                                                             _1),
                                                                                            std::bind(
                                                                                              &
                                                                                              ObjectManagerNode
@@ -239,7 +244,8 @@ namespace manymove_object_manager
                                                                                              std
                                                                                              ::
                                                                                              placeholders
-                                                                                             ::_1),
+                                                                                             ::
+                                                                                             _1),
                                                                                            serverOptions,
                                                                                            action_callback_group_);
 
@@ -298,7 +304,7 @@ namespace manymove_object_manager
   rclcpp_action::CancelResponse
   ObjectManagerNode::handleCheckExistCancel(const std::shared_ptr<CheckGoalHandle> goal_handle)
   {
-    (void)goal_handle; // Suppress unused parameter warning
+    (void)goal_handle;     // Suppress unused parameter warning
     RCLCPP_INFO(this->get_logger(), "CheckExist operation canceled.");
     return rclcpp_action::CancelResponse::ACCEPT;
   }
@@ -512,7 +518,7 @@ namespace manymove_object_manager
   rclcpp_action::CancelResponse
   ObjectManagerNode::handleRemoveCancel(const std::shared_ptr<RemoveGoalHandle> goal_handle)
   {
-    (void)goal_handle; // Suppress unused parameter warning
+    (void)goal_handle;     // Suppress unused parameter warning
     RCLCPP_INFO(this->get_logger(), "Remove operation canceled.");
     return rclcpp_action::CancelResponse::ACCEPT;
   }
@@ -869,7 +875,7 @@ namespace manymove_object_manager
     geometry_msgs::msg::Pose object_pose = collision_object_opt->pose;
 
     bool is_attached = attachedObjectExists(goal->object_id);
-    std::string object_frame = frame_id_; // assume 'world' by default
+    std::string object_frame = frame_id_;     // assume 'world' by default
     if (is_attached) {
       auto maybe_link = getAttachedObjectLinkById(goal->object_id);
       if (!maybe_link) {
@@ -892,8 +898,8 @@ namespace manymove_object_manager
 
       try {
         geometry_msgs::msg::TransformStamped transformStamped =
-          tfBuffer.lookupTransform(goal->link_name,   // target frame
-                                   object_frame,      // source frame
+          tfBuffer.lookupTransform(goal->link_name,                       // target frame
+                                   object_frame,                       // source frame
                                    tf2::TimePointZero, tf2::durationFromSec(1.0));
 
         // Apply that transform
@@ -1215,15 +1221,15 @@ namespace manymove_object_manager
       shapes::Mesh* mesh = shapes::createMeshFromResource(mesh_file);
       if (!mesh) {
         RCLCPP_ERROR(this->get_logger(), "Failed to load mesh from file: %s", mesh_file.c_str());
-        return collision_object; // Exit early if mesh loading fails
+        return collision_object;                 // Exit early if mesh loading fails
       }
 
       try {
         // Apply scaling to the mesh vertices
         for (unsigned int i = 0; i < mesh->vertex_count; ++i) {
-          mesh->vertices[3 * i + 0] *= scale_mesh[0]; // Scale X
-          mesh->vertices[3 * i + 1] *= scale_mesh[1]; // Scale Y
-          mesh->vertices[3 * i + 2] *= scale_mesh[2]; // Scale Z
+          mesh->vertices[3 * i + 0] *= scale_mesh[0];                       // Scale X
+          mesh->vertices[3 * i + 1] *= scale_mesh[1];                       // Scale Y
+          mesh->vertices[3 * i + 2] *= scale_mesh[2];                       // Scale Z
         }
         // Convert the scaled mesh into a shape_msgs::Mesh
         shape_msgs::msg::Mesh mesh_msg;
@@ -1271,8 +1277,8 @@ namespace manymove_object_manager
         primitive.type = primitive.CYLINDER;
         primitive.dimensions.resize(2);
         if (dimensions.size() >= 2) {
-          primitive.dimensions[0] = dimensions[0]; // height
-          primitive.dimensions[1] = dimensions[1]; // radius
+          primitive.dimensions[0] = dimensions[0];                       // height
+          primitive.dimensions[1] = dimensions[1];                       // radius
         }
         else {
           RCLCPP_WARN(this->get_logger(),
@@ -1285,7 +1291,7 @@ namespace manymove_object_manager
         primitive.type = primitive.SPHERE;
         primitive.dimensions.resize(1);
         if (dimensions.size() >= 1) {
-          primitive.dimensions[0] = dimensions[0]; // radius
+          primitive.dimensions[0] = dimensions[0];                       // radius
         }
         else {
           RCLCPP_WARN(this->get_logger(),

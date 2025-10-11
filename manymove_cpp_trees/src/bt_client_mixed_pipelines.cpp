@@ -119,10 +119,10 @@ int main(int argc, char** argv)
    * Then we compose the sequences of moves. Each of the following sequences represent a logic
    * sequence of moves that are somehow correlated, and not interrupted by operations on I/Os,
    * objects and logic conditions. For example the pick_sequence is a short sequence of moves
-   *composed by
+   * composed by
    * a "pose" move to get in a position to be ready to approach the object, and the "cartesian"
    * move to get the gripper to the grasp position moving linearly to minimize chances of
-   *collisions.
+   * collisions.
    * As we'll se later, we can then compose these sequences of moves together to build bigger blocks
    * of logically corralated moves.
    * We could also keep all moves separated, but it'd be harder to obtain an easily understandable
@@ -160,20 +160,20 @@ int main(int argc, char** argv)
   /*
    * Build move sequence blocks
    * The buildMoveXML creates the xml tree branch that manages the planning and execution of each
-   *move with the given
+   * move with the given
    * parameters. Unless the reset_trajs is set to true, each move that will plan and execute
-   *successfully will store the
+   * successfully will store the
    * trajectory in the blackboard, thus avoiding recalculating it the next cycle. This allow to save
-   *cycle time on all but
+   * cycle time on all but
    * the first logic cycle, unless the scene changes. If a previously planned trajectory fails on
-   *execution it gets reset,
+   * execution it gets reset,
    * and a new one is planned. The manymove_planner checks for collisions before sending the traj,
-   *but also during the execution.
+   * but also during the execution.
    *
    * Notice that on any string representing an XML snippet I use _xml at the end of the name to give
-   *better sense of
+   * better sense of
    * what's in that variable: if it ends with _xml, it could potentially be directly inserted as a
-   *tree branch or leaf.
+   * tree branch or leaf.
    */
   std::string to_rest_reset_xml = buildMoveXML(rp.prefix,
                                                rp.prefix + "toRest",
@@ -208,26 +208,26 @@ int main(int argc, char** argv)
    * This allows reusing and combining moves or sequences that are used more than once in the scene,
    * or that are used in different contexts, without risking to reuse the wrong trajectory.
    * When we call buildMoveXML() we create a new move with its own unique ID. If that move is used
-   *in more than one leaf,
+   * in more than one leaf,
    * we need to decide if we always want to try to reuse the previously successfull trajectory or
-   *not.
+   * not.
    * The manymove_planner logic checks for the start point of the traj to be valid and within
-   *tolerance, so we shouldn't
+   * tolerance, so we shouldn't
    * worry too much of undefined behavior, but it helps me reason on the moves sequence structure.
-   *Keeping the Move vectors at
+   * Keeping the Move vectors at
    * minimum, using only the moves logically interconnected, makes the sequences easier to
-   *understand and debug.
+   * understand and debug.
    * It's also important if we want to combine sequences that retain their previously successful
-   *trajectory with sequences that don't:
+   * trajectory with sequences that don't:
    * if we need to repeat the prep sequence at some point we may be in a unkown position, so we
-   *don't want the traj to be reused.
+   * don't want the traj to be reused.
    */
 
   // Translate it to xml tree leaf or branch
   std::string prep_sequence_xml = sequenceWrapperXML(rp.prefix + "ComposedPrepSequence",
-                                                   {to_rest_reset_xml, scan_around_xml});
+                                                     {to_rest_reset_xml, scan_around_xml});
   std::string home_sequence_xml = sequenceWrapperXML(rp.prefix + "ComposedHomeSequence",
-                                                   {to_home_xml, to_rest_xml});
+                                                     {to_home_xml, to_rest_xml});
 
   // ----------------------------------------------------------------------------
   // 3) Build blocks for objects handling
@@ -268,18 +268,21 @@ int main(int argc, char** argv)
                                                                                             // it to
                                                                                             // 10x10x100
                                                                                             // mm
-  blackboard->set("mesh_pose_key", createPoseRPY(0.15, -0.25, 0.05, 0.785, 1.57, 0.0));   //< We
-                                                                                          // place
-                                                                                          // it on
-                                                                                          // the
-                                                                                          // floor
-                                                                                          // and lay
-                                                                                          // it on
-                                                                                          // its
-                                                                                          // side,
-                                                                                          // X+
-                                                                                          // facing
-                                                                                          // down
+  blackboard->set("mesh_pose_key", createPoseRPY(0.15, -0.25, 0.05, 0.785, 1.57, 0.0));       //< We
+                                                                                              // place
+                                                                                              // it
+                                                                                              // on
+                                                                                              // the
+                                                                                              // floor
+                                                                                              // and
+                                                                                              // lay
+                                                                                              // it
+                                                                                              // on
+                                                                                              // its
+                                                                                              // side,
+                                                                                              // X+
+                                                                                              // facing
+                                                                                              // down
 
   // Create object actions xml snippets (the object are created directly in the create*() functions
   // relative to each type of object action)
@@ -357,19 +360,19 @@ int main(int argc, char** argv)
   // Define the transformation and reference orientation
   /*
    * The reference orientation determines how the tranform behaves: if we leave the reference
-   *orientation to all zeroes, the
+   * orientation to all zeroes, the
    * transform of the object will be referred to the frame we specify, here the "world" frame.
    * The object here is modelled vertically, with the simmetry axis aligned to Z.
    * We want to grasp the object aligning the Z axis of the gripper perpendicularly to the X axis of
-   *the object, thus we need
+   * the object, thus we need
    * to rotate the Y 90 degrees, so 1.57 radians. The approach position is further away of about 5
-   *cm in the X direction.
+   * cm in the X direction.
    * Getting this right with just one transform can be not very intuitive, so I also set up the
-   *function to enable a second transform.
+   * function to enable a second transform.
    * Here, the second transform is the same for both poses, and creates a decentered grasping pose
-   *sliding in the original Z axis.
+   * sliding in the original Z axis.
    * We then flip the grasp direction 180 degrees, or 3.14 radians, as we want the TCP's Z axis to
-   *be facing down.
+   * be facing down.
    */
   blackboard->set("pick_pre_transform_xyz_rpy_1_key", std::vector<double>{-0.002, 0.0, 0.0, 0.0,
                                                                           1.57, 0.0});
@@ -460,55 +463,75 @@ int main(int argc, char** argv)
   // Repeat node must have only one children, so it also wrap a Sequence child that wraps the other
   // children
   std::string repeat_forever_wrapper_xml = repeatSequenceWrapperXML("RepeatForever",
-                                                                  {check_reset_robot_xml, //< We
-                                                                                          // check
-                                                                                          // if the
-                                                                                          // robot
-                                                                                          // is
-                                                                                          // active,
-                                                                                          // if not
-                                                                                          // we try
-                                                                                          // to
-                                                                                          // reset
-                                                                                          // it
-                                                                   spawn_graspable_objects_xml, //< We
-                                                                                                // add
-                                                                                                // all
-                                                                                                // the
-                                                                                                // objects
-                                                                                                // to
-                                                                                                // the
-                                                                                                // scene
-                                                                   get_grasp_object_poses_xml, //< We
-                                                                                               // get
-                                                                                               // the
-                                                                                               // updated
-                                                                                               // poses
-                                                                                               // relative
-                                                                                               // to
-                                                                                               // the
-                                                                                               // objects
-                                                                   go_to_pick_pose_xml, //< Prep
-                                                                                        // sequence
-                                                                                        // and pick
-                                                                                        // sequence
-                                                                   close_gripper_xml, //< We attach
-                                                                                      // the object
-                                                                   drop_object_xml, //< Drop
-                                                                                    // sequence
-                                                                   open_gripper_xml, //< We detach
-                                                                                     // the object
-                                                                   home_sequence_xml, //< Homing
-                                                                                      // sequence
-                                                                   remove_obj_xml}, //< We delete
-                                                                                    // the object
-                                                                                    // for it to be
-                                                                                    // added on the
-                                                                                    // next cycle in
-                                                                                    // the original
-                                                                                    // position
-                                                                    -1); //< num_cycles=-1 for
-                                                                         // infinite
+                                                                  {check_reset_robot_xml,         //<
+                                                                                                  // We
+                                                                                                  // check
+                                                                                                  // if
+                                                                                                  // the
+                                                                                                  // robot
+                                                                                                  // is
+                                                                                                  // active,
+                                                                                                  // if
+                                                                                                  // not
+                                                                                                  // we
+                                                                                                  // try
+                                                                                                  // to
+                                                                                                  // reset
+                                                                                                  // it
+                                                                   spawn_graspable_objects_xml,         //<
+                                                                                                        // We
+                                                                                                        // add
+                                                                                                        // all
+                                                                                                        // the
+                                                                                                        // objects
+                                                                                                        // to
+                                                                                                        // the
+                                                                                                        // scene
+                                                                   get_grasp_object_poses_xml,         //<
+                                                                                                       // We
+                                                                                                       // get
+                                                                                                       // the
+                                                                                                       // updated
+                                                                                                       // poses
+                                                                                                       // relative
+                                                                                                       // to
+                                                                                                       // the
+                                                                                                       // objects
+                                                                   go_to_pick_pose_xml,         //< Prep
+                                                                                                // sequence
+                                                                                                // and
+                                                                                                // pick
+                                                                                                // sequence
+                                                                   close_gripper_xml,         //< We
+                                                                                              // attach
+                                                                                              // the
+                                                                                              // object
+                                                                   drop_object_xml,         //< Drop
+                                                                                            // sequence
+                                                                   open_gripper_xml,         //< We
+                                                                                             // detach
+                                                                                             // the
+                                                                                             // object
+                                                                   home_sequence_xml,         //< Homing
+                                                                                              // sequence
+                                                                   remove_obj_xml},         //< We
+                                                                                            // delete
+                                                                                            // the
+                                                                                            // object
+                                                                                            // for
+                                                                                            // it to
+                                                                                            // be
+                                                                                            // added
+                                                                                            // on
+                                                                                            // the
+                                                                                            // next
+                                                                                            // cycle
+                                                                                            // in
+                                                                                            // the
+                                                                                            // original
+                                                                                            // position
+                                                                    -1);       //< num_cycles=-1 for
+                                                                               // infinite
 
   std::string retry_forever_wrapper_xml = retrySequenceWrapperXML("CycleForever",
                                                                 {startup_sequence_xml,

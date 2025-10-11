@@ -61,7 +61,7 @@ namespace manymove_cpp_trees
 /**
  * @class AddCollisionObjectAction
  * @brief A Behavior Tree node that adds a collision object to the planning scene using the
- *AddCollisionObject action server.
+ * AddCollisionObject action server.
  */
   class AddCollisionObjectAction : public BT::StatefulActionNode
   {
@@ -69,17 +69,17 @@ public:
     using AddCollisionObject = manymove_msgs::action::AddCollisionObject;
     using GoalHandleAddCollisionObject = rclcpp_action::ClientGoalHandle<AddCollisionObject>;
 
-    /**
-     * @brief Constructor for the AddCollisionObjectAction node.
-     * @param name The name of this BT node.
-     * @param config The BT NodeConfiguration (ports, blackboard, etc.).
-     */
+/**
+ * @brief Constructor for the AddCollisionObjectAction node.
+ * @param name The name of this BT node.
+ * @param config The BT NodeConfiguration (ports, blackboard, etc.).
+ */
     AddCollisionObjectAction(const std::string& name, const BT::NodeConfiguration& config);
 
-    /**
-     * @brief Define the required ports for this node.
-     * @return A list of input ports.
-     */
+/**
+ * @brief Define the required ports for this node.
+ * @return A list of input ports.
+ */
     static BT::PortsList providedPorts()
     {
       return {
@@ -92,33 +92,33 @@ public:
     }
 
 protected:
-    /**
-     * @brief Called once when transitioning from IDLE to RUNNING.
-     * @return The initial state of the node after starting.
-     */
+/**
+ * @brief Called once when transitioning from IDLE to RUNNING.
+ * @return The initial state of the node after starting.
+ */
     BT::NodeStatus onStart() override;
 
-    /**
-     * @brief Called every tick while in RUNNING state.
-     * @return The current status of the node.
-     */
+/**
+ * @brief Called every tick while in RUNNING state.
+ * @return The current status of the node.
+ */
     BT::NodeStatus onRunning() override;
 
-    /**
-     * @brief Called if this node is halted by force.
-     */
+/**
+ * @brief Called if this node is halted by force.
+ */
     void onHalted() override;
 
 private:
-    // Callbacks for action client
+// Callbacks for action client
     void goalResponseCallback(std::shared_ptr<GoalHandleAddCollisionObject> goal_handle);
     void resultCallback(const GoalHandleAddCollisionObject::WrappedResult& result);
 
-    // ROS2 members
+// ROS2 members
     rclcpp::Node::SharedPtr node_;
     rclcpp_action::Client<AddCollisionObject>::SharedPtr action_client_;
 
-    // Internal state
+// Internal state
     bool goal_sent_;
     bool result_received_;
 
@@ -129,7 +129,7 @@ private:
 /**
  * @class RemoveCollisionObjectAction
  * @brief A Behavior Tree node that removes a collision object from the planning scene using the
- *RemoveCollisionObject action server.
+ * RemoveCollisionObject action server.
  */
   class RemoveCollisionObjectAction : public BT::StatefulActionNode
   {
@@ -137,17 +137,17 @@ public:
     using RemoveCollisionObject = manymove_msgs::action::RemoveCollisionObject;
     using GoalHandleRemoveCollisionObject = rclcpp_action::ClientGoalHandle<RemoveCollisionObject>;
 
-    /**
-     * @brief Constructor for the RemoveCollisionObjectAction node.
-     * @param name The name of this BT node.
-     * @param config The BT NodeConfiguration (ports, blackboard, etc.).
-     */
+/**
+ * @brief Constructor for the RemoveCollisionObjectAction node.
+ * @param name The name of this BT node.
+ * @param config The BT NodeConfiguration (ports, blackboard, etc.).
+ */
     RemoveCollisionObjectAction(const std::string& name, const BT::NodeConfiguration& config);
 
-    /**
-     * @brief Define the required ports for this node.
-     * @return A list of input ports.
-     */
+/**
+ * @brief Define the required ports for this node.
+ * @return A list of input ports.
+ */
     static BT::PortsList providedPorts()
     {
       return {
@@ -155,33 +155,33 @@ public:
     }
 
 protected:
-    /**
-     * @brief Called once when transitioning from IDLE to RUNNING.
-     * @return The initial state of the node after starting.
-     */
+/**
+ * @brief Called once when transitioning from IDLE to RUNNING.
+ * @return The initial state of the node after starting.
+ */
     BT::NodeStatus onStart() override;
 
-    /**
-     * @brief Called every tick while in RUNNING state.
-     * @return The current status of the node.
-     */
+/**
+ * @brief Called every tick while in RUNNING state.
+ * @return The current status of the node.
+ */
     BT::NodeStatus onRunning() override;
 
-    /**
-     * @brief Called if this node is halted by force.
-     */
+/**
+ * @brief Called if this node is halted by force.
+ */
     void onHalted() override;
 
 private:
-    // Callbacks for action client
+// Callbacks for action client
     void goalResponseCallback(std::shared_ptr<GoalHandleRemoveCollisionObject> goal_handle);
     void resultCallback(const GoalHandleRemoveCollisionObject::WrappedResult& result);
 
-    // ROS2 members
+// ROS2 members
     rclcpp::Node::SharedPtr node_;
     rclcpp_action::Client<RemoveCollisionObject>::SharedPtr action_client_;
 
-    // Internal state
+// Internal state
     bool goal_sent_;
     bool result_received_;
 
@@ -192,7 +192,7 @@ private:
 /**
  * @class AttachDetachObjectAction
  * @brief A Behavior Tree node that attaches or detaches a collision object to/from a robot link
- *using the AttachDetachObject action server.
+ * using the AttachDetachObject action server.
  */
   class AttachDetachObjectAction : public BT::StatefulActionNode
   {
@@ -200,17 +200,17 @@ public:
     using AttachDetachObject = manymove_msgs::action::AttachDetachObject;
     using GoalHandleAttachDetachObject = rclcpp_action::ClientGoalHandle<AttachDetachObject>;
 
-    /**
-     * @brief Constructor for the AttachDetachObjectAction node.
-     * @param name The name of this BT node.
-     * @param config The BT NodeConfiguration (ports, blackboard, etc.).
-     */
+/**
+ * @brief Constructor for the AttachDetachObjectAction node.
+ * @param name The name of this BT node.
+ * @param config The BT NodeConfiguration (ports, blackboard, etc.).
+ */
     AttachDetachObjectAction(const std::string& name, const BT::NodeConfiguration& config);
 
-    /**
-     * @brief Define the required ports for this node.
-     * @return A list of input ports.
-     */
+/**
+ * @brief Define the required ports for this node.
+ * @return A list of input ports.
+ */
     static BT::PortsList providedPorts()
     {
       return {
@@ -223,33 +223,33 @@ public:
     }
 
 protected:
-    /**
-     * @brief Called once when transitioning from IDLE to RUNNING.
-     * @return The initial state of the node after starting.
-     */
+/**
+ * @brief Called once when transitioning from IDLE to RUNNING.
+ * @return The initial state of the node after starting.
+ */
     BT::NodeStatus onStart() override;
 
-    /**
-     * @brief Called every tick while in RUNNING state.
-     * @return The current status of the node.
-     */
+/**
+ * @brief Called every tick while in RUNNING state.
+ * @return The current status of the node.
+ */
     BT::NodeStatus onRunning() override;
 
-    /**
-     * @brief Called if this node is halted by force.
-     */
+/**
+ * @brief Called if this node is halted by force.
+ */
     void onHalted() override;
 
 private:
-    // Callbacks for action client
+// Callbacks for action client
     void goalResponseCallback(std::shared_ptr<GoalHandleAttachDetachObject> goal_handle);
     void resultCallback(const GoalHandleAttachDetachObject::WrappedResult& result);
 
-    // ROS2 members
+// ROS2 members
     rclcpp::Node::SharedPtr node_;
     rclcpp_action::Client<AttachDetachObject>::SharedPtr action_client_;
 
-    // Internal state
+// Internal state
     bool goal_sent_;
     bool result_received_;
 
@@ -262,7 +262,7 @@ private:
 /**
  * @class CheckObjectExistsAction
  * @brief A Behavior Tree node that checks if a collision object exists and whether it's attached
- *using the CheckObjectExists action server.
+ * using the CheckObjectExists action server.
  */
   class CheckObjectExistsAction : public BT::StatefulActionNode
   {
@@ -270,17 +270,17 @@ public:
     using CheckObjectExists = manymove_msgs::action::CheckObjectExists;
     using GoalHandleCheckObjectExists = rclcpp_action::ClientGoalHandle<CheckObjectExists>;
 
-    /**
-     * @brief Constructor for the CheckObjectExistsAction node.
-     * @param name The name of this BT node.
-     * @param config The BT NodeConfiguration (ports, blackboard, etc.).
-     */
+/**
+ * @brief Constructor for the CheckObjectExistsAction node.
+ * @param name The name of this BT node.
+ * @param config The BT NodeConfiguration (ports, blackboard, etc.).
+ */
     CheckObjectExistsAction(const std::string& name, const BT::NodeConfiguration& config);
 
-    /**
-     * @brief Define the required ports for this node.
-     * @return A list of input and output ports.
-     */
+/**
+ * @brief Define the required ports for this node.
+ * @return A list of input and output ports.
+ */
     static BT::PortsList providedPorts()
     {
       return {
@@ -292,33 +292,33 @@ public:
     }
 
 protected:
-    /**
-     * @brief Called once when transitioning from IDLE to RUNNING.
-     * @return The initial state of the node after starting.
-     */
+/**
+ * @brief Called once when transitioning from IDLE to RUNNING.
+ * @return The initial state of the node after starting.
+ */
     BT::NodeStatus onStart() override;
 
-    /**
-     * @brief Called every tick while in RUNNING state.
-     * @return The current status of the node.
-     */
+/**
+ * @brief Called every tick while in RUNNING state.
+ * @return The current status of the node.
+ */
     BT::NodeStatus onRunning() override;
 
-    /**
-     * @brief Called if this node is halted by force.
-     */
+/**
+ * @brief Called if this node is halted by force.
+ */
     void onHalted() override;
 
 private:
-    // Callbacks for action client
+// Callbacks for action client
     void goalResponseCallback(std::shared_ptr<GoalHandleCheckObjectExists> goal_handle);
     void resultCallback(const GoalHandleCheckObjectExists::WrappedResult& result);
 
-    // ROS2 members
+// ROS2 members
     rclcpp::Node::SharedPtr node_;
     rclcpp_action::Client<CheckObjectExists>::SharedPtr action_client_;
 
-    // Internal state
+// Internal state
     bool goal_sent_;
     bool result_received_;
 
@@ -329,7 +329,7 @@ private:
 /**
  * @class GetObjectPoseAction
  * @brief A Behavior Tree node that retrieves and modifies the pose of a collision object using the
- *GetObjectPose action server.
+ * GetObjectPose action server.
  */
   class GetObjectPoseAction : public BT::StatefulActionNode
   {
@@ -337,17 +337,17 @@ public:
     using GetObjectPose = manymove_msgs::action::GetObjectPose;
     using GoalHandleGetObjectPose = rclcpp_action::ClientGoalHandle<GetObjectPose>;
 
-    /**
-     * @brief Constructor for the GetObjectPoseAction node.
-     * @param name The name of this BT node.
-     * @param config The BT NodeConfiguration (ports, blackboard, etc.).
-     */
+/**
+ * @brief Constructor for the GetObjectPoseAction node.
+ * @param name The name of this BT node.
+ * @param config The BT NodeConfiguration (ports, blackboard, etc.).
+ */
     GetObjectPoseAction(const std::string& name, const BT::NodeConfiguration& config);
 
-    /**
-     * @brief Define the required ports for this node.
-     * @return A list of input and output ports.
-     */
+/**
+ * @brief Define the required ports for this node.
+ * @return A list of input and output ports.
+ */
     static BT::PortsList providedPorts()
     {
       return {
@@ -362,33 +362,33 @@ public:
     }
 
 protected:
-    /**
-     * @brief Called once when transitioning from IDLE to RUNNING.
-     * @return The initial state of the node after starting.
-     */
+/**
+ * @brief Called once when transitioning from IDLE to RUNNING.
+ * @return The initial state of the node after starting.
+ */
     BT::NodeStatus onStart() override;
 
-    /**
-     * @brief Called every tick while in RUNNING state.
-     * @return The current status of the node.
-     */
+/**
+ * @brief Called every tick while in RUNNING state.
+ * @return The current status of the node.
+ */
     BT::NodeStatus onRunning() override;
 
-    /**
-     * @brief Called if this node is halted by force.
-     */
+/**
+ * @brief Called if this node is halted by force.
+ */
     void onHalted() override;
 
 private:
-    // Callbacks for action client
+// Callbacks for action client
     void goalResponseCallback(std::shared_ptr<GoalHandleGetObjectPose> goal_handle);
     void resultCallback(const GoalHandleGetObjectPose::WrappedResult& result);
 
-    // ROS2 members
+// ROS2 members
     rclcpp::Node::SharedPtr node_;
     rclcpp_action::Client<GetObjectPose>::SharedPtr action_client_;
 
-    // Internal state
+// Internal state
     bool goal_sent_;
     bool result_received_;
 
@@ -435,20 +435,20 @@ public:
     }
 
 protected:
-    // Called once when transitioning from IDLE to RUNNING
+// Called once when transitioning from IDLE to RUNNING
     BT::NodeStatus onStart() override;
 
-    // Called every tick while in RUNNING
+// Called every tick while in RUNNING
     BT::NodeStatus onRunning() override;
 
-    // Called if this node is halted by force
+// Called if this node is halted by force
     void onHalted() override;
 
 private:
-    // Helper: send the action goal
+// Helper: send the action goal
     void sendCheckRequest();
 
-    // Action client callbacks
+// Action client callbacks
     void goalResponseCallback(std::shared_ptr<GoalHandleCheckObjectExists> goal_handle);
     void resultCallback(const GoalHandleCheckObjectExists::WrappedResult& result);
 
@@ -458,20 +458,20 @@ private:
 
     std::string object_id_;     ///< The object ID to check
     bool desired_exists_;       ///< If true => succeed when object found, false => succeed when
-                                // object not found
+// object not found
     double timeout_;            ///< Seconds to wait before giving up (0 => infinite)
     double poll_rate_;          ///< How often to re-check (seconds)
     std::string prefix_;        ///< Prefix for HMI messages
 
-    // Internal timestamps
+// Internal timestamps
     rclcpp::Time start_time_;
     rclcpp::Time next_check_time_;
 
-    // Internal flags
+// Internal flags
     bool goal_sent_;
     bool result_received_;
 
-    // Last result from the action server
+// Last result from the action server
     bool last_exists_;
     bool last_is_attached_;
     std::string last_link_name_;

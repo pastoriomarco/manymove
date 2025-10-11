@@ -113,7 +113,7 @@ namespace manymove_cpp_trees
 
       return BT::NodeStatus::SUCCESS;
     }
-    else {   // if (child_status == RUNNING)
+    else {     // if (child_status == RUNNING)
       return BT::NodeStatus::RUNNING;
     }
   }
@@ -416,8 +416,8 @@ namespace manymove_cpp_trees
     /* ── look-up TF transform link → ref_frame ───────────────────────── */
     geometry_msgs::msg::TransformStamped tf_link_to_ref;
     try {
-      tf_link_to_ref = tf_buffer_->lookupTransform(ref_frame.empty() ? "world" : ref_frame, // target
-                                                   link_name, // source
+      tf_link_to_ref = tf_buffer_->lookupTransform(ref_frame.empty() ? "world" : ref_frame,           // target
+                                                   link_name,           // source
                                                    tf2::TimePointZero,
                                                    tf2::durationFromSec(TF_TIMEOUT_SEC));
     } catch (const tf2::TransformException& ex) {

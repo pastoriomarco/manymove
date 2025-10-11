@@ -121,7 +121,7 @@ public:
     double jump_threshold,
     PlanT& plan)
   {
-    (void)jump_threshold; // unused in newer API
+    (void)jump_threshold;     // unused in newer API
 
     if constexpr (has_mgi_cartesian_with_jump<MGI>::value) {
       return mgi.computeCartesianPath(waypoints, eef_step, jump_threshold, mgiPlanTrajectory(plan));
