@@ -72,12 +72,10 @@ jobs:
       - name: Select uncrustify profile
         run: |
           if [ "$ROS_DISTRO" = "jazzy" ]; then
-            cp uncrustify_0.78.cfg uncrustify.cfg
+            cp ${ROS_WS}/src/manymove/uncrustify_0.78.cfg ${ROS_WS}/src/manymove/uncrustify.cfg
           else
-            cp uncrustify_0.72.cfg uncrustify.cfg
+            cp ${ROS_WS}/src/manymove/uncrustify_0.72.cfg ${ROS_WS}/src/manymove/uncrustify.cfg
           fi
-        working-directory: src/manymove
-
 
       - name: Build workspace
         shell: bash
