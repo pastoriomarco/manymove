@@ -86,7 +86,8 @@ public:
   using GetClient = rclcpp::Client<GetEntityState>;
   using GetFuture = GetClient::SharedFuture;
 
-  explicit GetEntityPoseNode(const std::string & name,
+  explicit GetEntityPoseNode(
+    const std::string & name,
     const BT::NodeConfiguration & config);
 
   static BT::PortsList providedPorts()
@@ -162,7 +163,8 @@ public:
   using SetClient = rclcpp::Client<SetEntityState>;
   using SetFuture = SetClient::SharedFuture;
 
-  explicit SetEntityPoseNode(const std::string & name,
+  explicit SetEntityPoseNode(
+    const std::string & name,
     const BT::NodeConfiguration & config);
 
   static BT::PortsList providedPorts()
@@ -285,7 +287,8 @@ class FoundationPoseAlignmentNode : public BT::StatefulActionNode
 public:
   using DetectionArray = vision_msgs::msg::Detection3DArray;
 
-  explicit FoundationPoseAlignmentNode(const std::string & name,
+  explicit FoundationPoseAlignmentNode(
+    const std::string & name,
     const BT::NodeConfiguration & config);
 
   static BT::PortsList providedPorts()
@@ -315,10 +318,10 @@ public:
           "timeout",
           1.0,
           "Seconds to wait for a valid detection (<=0: wait forever)"),
-        BT::InputPort<std::vector<double> >(
+        BT::InputPort<std::vector<double>>(
           "pick_transform",
           "Local transform [x,y,z,r,p,y] applied after alignment to 'pose'"),
-        BT::InputPort<std::vector<double> >(
+        BT::InputPort<std::vector<double>>(
           "approach_transform",
           "Local transform [x,y,z,r,p,y] applied after alignment to 'approach_pose'"),
         BT::InputPort<std::string>(

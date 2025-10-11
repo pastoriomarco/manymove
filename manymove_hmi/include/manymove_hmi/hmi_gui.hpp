@@ -44,19 +44,22 @@ class HmiGui : public QMainWindow
 
 public:
 /// The new constructor accepts a list of robot prefixes.
-  explicit HmiGui(const std::vector<std::string> & robotPrefixes,
+  explicit HmiGui(
+    const std::vector<std::string> & robotPrefixes,
     std::vector<std::string> & robotNames, QWidget * parent = nullptr);
   ~HmiGui();
 
 public slots:
 /// Update the GUI for a given robot (by prefix).
-  void updateStatus(const QString & robotPrefix,
+  void updateStatus(
+    const QString & robotPrefix,
     bool stop_execution,
     bool reset,
     bool collision_detected);
 
 /// Update a textual message for a given robot.
-  void updateRobotMessage(const QString & robotPrefix,
+  void updateRobotMessage(
+    const QString & robotPrefix,
     const QString & message,
     const QString & color);
 

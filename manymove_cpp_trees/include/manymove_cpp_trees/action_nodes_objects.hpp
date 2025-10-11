@@ -90,7 +90,7 @@ public:
         BT::InputPort<std::string>(
           "shape",
           "Shape type (e.g., box, mesh)"),
-        BT::InputPort<std::vector<double> >(
+        BT::InputPort<std::vector<double>>(
           "dimensions",
           "Dimensions for primitive shapes"),
         BT::InputPort<geometry_msgs::msg::Pose>(
@@ -100,7 +100,7 @@ public:
           "mesh_file",
           "",
           "Mesh file path (for mesh objects)"),
-        BT::InputPort<std::vector<double> >(
+        BT::InputPort<std::vector<double>>(
           "scale_mesh",
           "Scale factor along X-axis (for mesh)")
       };
@@ -244,7 +244,7 @@ public:
           "attach",
           true,
           "True to attach, False to detach"),
-        BT::InputPort<std::vector<std::string> >(
+        BT::InputPort<std::vector<std::string>>(
           "touch_links",
           std::vector<std::string>
         {
@@ -395,10 +395,10 @@ public:
         BT::InputPort<std::string>(
           "object_id",
           "Identifier of the object"),
-        BT::InputPort<std::vector<double> >(
+        BT::InputPort<std::vector<double>>(
           "pre_transform_xyz_rpy",
           "First offset and rotation {x, y, z, roll, pitch, yaw}"),
-        BT::InputPort<std::vector<double> >(
+        BT::InputPort<std::vector<double>>(
           "post_transform_xyz_rpy",
           "Second offset and orientation {x, y, z, roll, pitch, yaw}"),
         BT::InputPort<std::string>(

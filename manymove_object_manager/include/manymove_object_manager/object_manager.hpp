@@ -104,7 +104,8 @@ private:
  * @param goal The goal details to add a collision object.
  * @return A response indicating acceptance or rejection.
  */
-  rclcpp_action::GoalResponse handleAddGoal(const rclcpp_action::GoalUUID & uuid,
+  rclcpp_action::GoalResponse handleAddGoal(
+    const rclcpp_action::GoalUUID & uuid,
     std::shared_ptr<const AddCollisionObject::Goal> goal);
 
 /**
@@ -128,7 +129,8 @@ private:
  * @param goal The goal details to remove a collision object.
  * @return A response indicating acceptance or rejection.
  */
-  rclcpp_action::GoalResponse handleRemoveGoal(const rclcpp_action::GoalUUID & uuid,
+  rclcpp_action::GoalResponse handleRemoveGoal(
+    const rclcpp_action::GoalUUID & uuid,
     std::shared_ptr<const RemoveCollisionObject::Goal> goal);
 
 /**
@@ -153,7 +155,8 @@ private:
  * @param goal The goal details to check object existence.
  * @return A response indicating acceptance or rejection.
  */
-  rclcpp_action::GoalResponse handleCheckExistGoal(const rclcpp_action::GoalUUID & uuid,
+  rclcpp_action::GoalResponse handleCheckExistGoal(
+    const rclcpp_action::GoalUUID & uuid,
     std::shared_ptr<const CheckObjectExists::Goal> goal);
 
 /**
@@ -178,7 +181,8 @@ private:
  * @param goal The goal details to attach or detach a collision object.
  * @return A response indicating acceptance or rejection.
  */
-  rclcpp_action::GoalResponse handleAttachDetachGoal(const rclcpp_action::GoalUUID & uuid,
+  rclcpp_action::GoalResponse handleAttachDetachGoal(
+    const rclcpp_action::GoalUUID & uuid,
     std::shared_ptr<const AttachDetachObject::Goal> goal);
 
 /**
@@ -203,7 +207,8 @@ private:
  * @param goal The goal details to retrieve and optionally align the object pose.
  * @return A response indicating acceptance or rejection.
  */
-  rclcpp_action::GoalResponse handleGetObjectPoseGoal(const rclcpp_action::GoalUUID & uuid,
+  rclcpp_action::GoalResponse handleGetObjectPoseGoal(
+    const rclcpp_action::GoalUUID & uuid,
     std::shared_ptr<const GetObjectPose::Goal> goal);
 
 /**
@@ -235,7 +240,8 @@ private:
  * @return A fully populated CollisionObject message.
  */
   moveit_msgs::msg::CollisionObject
-  createCollisionObject(const std::string & id,
+  createCollisionObject(
+    const std::string & id,
     const std::string & shape,
     const std::vector<double> & dimensions,
     const geometry_msgs::msg::Pose & pose,
@@ -254,7 +260,8 @@ private:
  * @param mesh_file Optional mesh file path if shape is 'mesh'.
  * @return True if valid, false otherwise.
  */
-  bool validateShapeAndDimensions(const std::string & shape, const std::vector<double> & dimensions,
+  bool validateShapeAndDimensions(
+    const std::string & shape, const std::vector<double> & dimensions,
     const std::optional<std::string> & mesh_file) const;
 
 /**

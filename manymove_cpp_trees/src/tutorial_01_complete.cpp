@@ -154,7 +154,7 @@ int main(int argc, char ** argv)
     "",                                                  /* link name to attach/detach */
   {
   }                                                     /* contact links to attach/detach */
-    );
+  );
 
   ObjectSnippets wall = createObjectSnippets(
     blackboard,
@@ -219,23 +219,23 @@ int main(int argc, char ** argv)
   // Translate get_pose_action to xml tree leaf
   std::string get_pick_pose_xml =
     buildObjectActionXML(
-      "get_pick_pose",
-      createGetObjectPose(
-        "graspable_key",
-        "pick_target_key",
-        "world_frame_key",
-        "identity_transform_key",
-        "post_transform_xyz_rpy_1_key"));
+    "get_pick_pose",
+    createGetObjectPose(
+      "graspable_key",
+      "pick_target_key",
+      "world_frame_key",
+      "identity_transform_key",
+      "post_transform_xyz_rpy_1_key"));
 
   std::string get_approach_pose_xml =
     buildObjectActionXML(
-      "get_approach_pose",
-      createGetObjectPose(
-        "graspable_key",
-        "approach_pick_target_key",
-        "world_frame_key",
-        "approach_pre_transform_xyz_rpy_1_key",
-        "post_transform_xyz_rpy_1_key"));
+    "get_approach_pose",
+    createGetObjectPose(
+      "graspable_key",
+      "approach_pick_target_key",
+      "world_frame_key",
+      "approach_pre_transform_xyz_rpy_1_key",
+      "post_transform_xyz_rpy_1_key"));
 
   // ----------------------------------------------------------------------------
   // 3. Define the moves
@@ -338,10 +338,10 @@ int main(int argc, char ** argv)
   // Build move sequence blocks
   std::string to_rest_xml =
     buildMoveXML(
-      rp.prefix,
-      rp.prefix + "toRest",
-      rest_position,
-      blackboard);
+    rp.prefix,
+    rp.prefix + "toRest",
+    rest_position,
+    blackboard);
 
   std::string pick_object_xml = buildMoveXML(
     rp.prefix,
@@ -556,8 +556,7 @@ int main(int argc, char ** argv)
         node->get_logger(),
         "BT ended SUCCESS.");
       break;
-    }
-    else if (status == BT::NodeStatus::FAILURE) {
+    } else if (status == BT::NodeStatus::FAILURE) {
       RCLCPP_ERROR(
         node->get_logger(),
         "BT ended FAILURE.");

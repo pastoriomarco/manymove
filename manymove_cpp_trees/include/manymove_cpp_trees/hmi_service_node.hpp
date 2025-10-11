@@ -54,7 +54,8 @@ class HMIServiceNode : public rclcpp::Node
 {
 public:
 // Constructor: pass the complete vector of keys.
-  explicit HMIServiceNode(const std::string & node_name,
+  explicit HMIServiceNode(
+    const std::string & node_name,
     BT::Blackboard::Ptr blackboard,
     std::vector<BlackboardEntry> keys = {});
 

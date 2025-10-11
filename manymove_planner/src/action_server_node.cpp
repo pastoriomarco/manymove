@@ -121,8 +121,7 @@ int main(int argc, char ** argv)
     RCLCPP_INFO(
       node->get_logger(),
       "===================================================");
-  }
-  else if (planner_type == "movegroup") {
+  } else if (planner_type == "movegroup") {
     planner = std::make_shared<MoveGroupPlanner>(
       node,
       planning_group,
@@ -137,8 +136,7 @@ int main(int argc, char ** argv)
     RCLCPP_INFO(
       node->get_logger(),
       "===================================================");
-  }
-  else {
+  } else {
     RCLCPP_ERROR(
       node->get_logger(),
       "Unknown planner_type: %s. Valid options are 'moveitcpp' and 'movegroup'.",

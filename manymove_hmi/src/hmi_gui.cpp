@@ -37,8 +37,8 @@
 
 HmiGui::HmiGui(
   const std::vector<std::string> & robotPrefixes,
-  std::vector<std::string> & robotNames, QWidget * parent) :
-  QMainWindow(parent), tcpServer_(nullptr), clientSocket_(nullptr)
+  std::vector<std::string> & robotNames, QWidget * parent)
+: QMainWindow(parent), tcpServer_(nullptr), clientSocket_(nullptr)
 {
   // Keep the window always on top
   setWindowFlags(
@@ -53,7 +53,8 @@ HmiGui::HmiGui(
   for (size_t i
   {
     0
-  }; i < robotPrefixes.size(); i++) {
+  }; i < robotPrefixes.size(); i++)
+  {
     std::string prefix = robotPrefixes[i];
     std::string name = robotNames[i];
 
@@ -120,25 +121,25 @@ HmiGui::HmiGui(
       &QPushButton::clicked,
       this,
       [this, prefix]()
-    {
-      emit startExecutionRequested(prefix);
-    });
+      {
+        emit startExecutionRequested(prefix);
+      });
     connect(
       stopButton,
       &QPushButton::clicked,
       this,
       [this, prefix]()
-    {
-      emit stopExecutionRequested(prefix);
-    });
+      {
+        emit stopExecutionRequested(prefix);
+      });
     connect(
       resetButton,
       &QPushButton::clicked,
       this,
       [this, prefix]()
-    {
-      emit resetProgramRequested(prefix);
-    });
+      {
+        emit resetProgramRequested(prefix);
+      });
   }
 
   // Set up a TCP server listening on port 5000
@@ -149,11 +150,11 @@ HmiGui::HmiGui(
     this,
     &HmiGui::onNewConnection);
   if (!tcpServer_->listen(
-    QHostAddress::Any,
-    5000)) {
+      QHostAddress::Any,
+      5000))
+  {
     qWarning() << "TCP Server could not start!";
-  }
-  else {
+  } else {
     qDebug() << "TCP Server listening on port 5000";
   }
 }
@@ -179,8 +180,7 @@ void HmiGui::updateStatus(
         ri.startButton->setEnabled(true);
         ri.resetButton->setEnabled(true);
         ri.stopButton->setEnabled(false);
-      }
-      else {
+      } else {
         ri.startButton->setEnabled(false);
         ri.resetButton->setEnabled(false);
         ri.stopButton->setEnabled(true);
@@ -202,7 +202,8 @@ void HmiGui::updateStatus(
 
   // If a TCP client is connected, send the updated status
   if (clientSocket_ && clientSocket_->state() ==
-      QAbstractSocket::ConnectedState) {
+    QAbstractSocket::ConnectedState)
+  {
     clientSocket_->write(
       lastStatusJson_.toUtf8());
     clientSocket_->flush();
@@ -221,8 +222,7 @@ void HmiGui::updateRobotMessage(
         ri.messageLabel->setStyleSheet(
           QString("color: %1; border: 2px solid %1; padding:2px;").arg(
             color));
-      }
-      else {
+      } else {
         ri.messageLabel->setStyleSheet("");
       }
       break;

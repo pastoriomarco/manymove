@@ -80,12 +80,12 @@ struct has_mgi_cartesian_with_jump
 private:
   template<typename T>
   static auto test(int) -> decltype(
-    std::declval<T&>().computeCartesianPath(
+    std::declval<T &>().computeCartesianPath(
       std::declval<const
-                   std::vector<geometry_msgs::msg::Pose>&>(),
+      std::vector<geometry_msgs::msg::Pose> &>(),
       std::declval<double>(),
       std::declval<double>(),
-      std::declval<moveit_msgs::msg::RobotTrajectory&>()),
+      std::declval<moveit_msgs::msg::RobotTrajectory &>()),
     std::true_type
     {
     });
@@ -104,11 +104,11 @@ struct has_mgi_cartesian_no_jump
 private:
   template<typename T>
   static auto test(int) -> decltype(
-    std::declval<T&>().computeCartesianPath(
+    std::declval<T &>().computeCartesianPath(
       std::declval<const
-                   std::vector<geometry_msgs::msg::Pose>&>(),
+      std::vector<geometry_msgs::msg::Pose> &>(),
       std::declval<double>(),
-      std::declval<moveit_msgs::msg::RobotTrajectory&>()),
+      std::declval<moveit_msgs::msg::RobotTrajectory &>()),
     std::true_type
     {
     });
@@ -137,14 +137,12 @@ inline double computeCartesianPathCompat(
       eef_step,
       jump_threshold,
       mgiPlanTrajectory(plan));
-  }
-  else if constexpr (has_mgi_cartesian_no_jump<MGI>::value) {
+  } else if constexpr (has_mgi_cartesian_no_jump<MGI>::value) {
     return mgi.computeCartesianPath(
       waypoints,
       eef_step,
       mgiPlanTrajectory(plan));
-  }
-  else {
+  } else {
     static_assert(
       has_mgi_cartesian_with_jump<MGI>::value || has_mgi_cartesian_no_jump<MGI>::value,
       "Unsupported MoveGroupInterface::computeCartesianPath signature");
@@ -215,7 +213,7 @@ auto detect_execute_with_blocking(int)
     bool
     {
     },
-    std::declval<const std::vector<std::string>&>()),
+    std::declval<const std::vector<std::string> &>()),
   std::true_type
     {
     })
@@ -266,7 +264,8 @@ auto getPlanningPipelineNamesImpl(MoveItCppT & micpp, const std::string & planni
 }
 
 template<typename MoveItCppT>
-auto getPlanningPipelineNamesImpl(MoveItCppT & micpp, const std::string& /*planning_group*/,
+auto getPlanningPipelineNamesImpl(
+  MoveItCppT & micpp, const std::string & /*planning_group*/,
   long)
 -> std::vector<std::string>
 {
@@ -301,7 +300,7 @@ auto getPlanningSceneMonitorRw(const MoveItCppT & micpp)
   0))
 {
   return detail::getPlanningSceneMonitorRwImpl(
-    const_cast<MoveItCppT&>(micpp),
+    const_cast<MoveItCppT &>(micpp),
     0);
 }
 
@@ -338,15 +337,13 @@ auto executeTrajectory(
     return micpp.execute(
       trajectory,
       controllers);
-  }
-  else if constexpr (detail::has_execute_with_blocking<MoveItCppT>::value) {
+  } else if constexpr (detail::has_execute_with_blocking<MoveItCppT>::value) {
     (void)planning_group;
     return micpp.execute(
       trajectory,
       blocking,
       controllers);
-  }
-  else {
+  } else {
     static_assert(
       detail::has_execute_with_group<MoveItCppT>::value,
       "Unsupported MoveItCpp::execute signature for the provided MoveIt version");

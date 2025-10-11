@@ -93,7 +93,8 @@ public:
  * @param name The node's name in the XML
  * @param config The node's configuration (ports, blackboard, etc.)
  */
-  CheckKeyBoolValue(const std::string & name,
+  CheckKeyBoolValue(
+    const std::string & name,
     const BT::NodeConfiguration & config);
 
 /**
@@ -137,8 +138,8 @@ class SetKeyBoolValue : public BT::SyncActionNode
 {
 public:
 // Constructor
-  SetKeyBoolValue(const std::string & name, const BT::NodeConfiguration & config) :
-    BT::SyncActionNode(name, config)
+  SetKeyBoolValue(const std::string & name, const BT::NodeConfiguration & config)
+  : BT::SyncActionNode(name, config)
   {
   }
 
@@ -178,7 +179,8 @@ public:
 class WaitForKeyBool : public BT::StatefulActionNode
 {
 public:
-  WaitForKeyBool(const std::string & name,
+  WaitForKeyBool(
+    const std::string & name,
     const BT::NodeConfiguration & config);
 
   static BT::PortsList providedPorts()
@@ -246,7 +248,8 @@ private:
 class GetLinkPoseAction : public BT::SyncActionNode
 {
 public:
-  GetLinkPoseAction(const std::string & name,
+  GetLinkPoseAction(
+    const std::string & name,
     const BT::NodeConfiguration & cfg);
 
   static BT::PortsList providedPorts()
@@ -260,10 +263,10 @@ public:
           "reference_frame",
           "",
           "Target frame (default world)"),
-        BT::InputPort<std::vector<double> >(
+        BT::InputPort<std::vector<double>>(
           "pre_transform_xyz_rpy",
           "6-tuple applied FIRST"),
-        BT::InputPort<std::vector<double> >(
+        BT::InputPort<std::vector<double>>(
           "post_transform_xyz_rpy",
           "6-tuple applied AFTER link pose"),
         BT::InputPort<std::string>(
@@ -342,7 +345,7 @@ public:
         BT::InputPort<std::string>(
           "pose_key",
           "Blackboard key for pose to check"),
-        BT::InputPort<std::vector<double> >(
+        BT::InputPort<std::vector<double>>(
           "bounds",
           "[min_x, min_y, min_z, max_x, max_y, max_z]"),
         BT::InputPort<bool>(
@@ -370,8 +373,8 @@ private:
 class CopyPoseKey : public BT::SyncActionNode
 {
 public:
-  CopyPoseKey(const std::string & name, const BT::NodeConfiguration & cfg) :
-    BT::SyncActionNode(name, cfg)
+  CopyPoseKey(const std::string & name, const BT::NodeConfiguration & cfg)
+  : BT::SyncActionNode(name, cfg)
   {
   }
 

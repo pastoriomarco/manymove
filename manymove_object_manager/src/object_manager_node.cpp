@@ -48,8 +48,8 @@
 namespace manymove_object_manager
 {
 
-ObjectManagerNode::ObjectManagerNode() :
-  Node("object_manager_node")
+ObjectManagerNode::ObjectManagerNode()
+: Node("object_manager_node")
 {
   // Declare and get the frame_id parameter
   this->declare_parameter<std::string>(
@@ -65,8 +65,8 @@ ObjectManagerNode::ObjectManagerNode() :
   // Publisher for attached collision objects
   attached_collision_object_publisher_ =
     this->create_publisher<moveit_msgs::msg::AttachedCollisionObject>(
-      "/attached_collision_object",
-      10);
+    "/attached_collision_object",
+    10);
 
   // Create a Reentrant callback group for the service client
   service_callback_group_ = this->create_callback_group(rclcpp::CallbackGroupType::Reentrant);
@@ -79,7 +79,8 @@ ObjectManagerNode::ObjectManagerNode() :
     this->get_logger(),
     "Waiting for /get_planning_scene service...");
   if (!get_planning_scene_client_->wait_for_service(
-    std::chrono::seconds(10))) {
+      std::chrono::seconds(10)))
+  {
     RCLCPP_ERROR(
       this->get_logger(),
       "/get_planning_scene service not available. Exiting.");
@@ -368,8 +369,7 @@ void ObjectManagerNode::handleCheckExistExecute(
       "CheckExist: Object '%s' exists attached to link '%s'.",
       goal->object_id.c_str(),
       result->link_name.c_str());
-  }
-  else {
+  } else {
     result->link_name = "";
     result->message =
       exists ? "Object exists in the planning scene." : "Object not found in the planning scene.";
@@ -389,8 +389,8 @@ void ObjectManagerNode::printPlanningScene()
 {
   auto request = std::make_shared<moveit_msgs::srv::GetPlanningScene::Request>();
   request->components.components = moveit_msgs::msg::PlanningSceneComponents::WORLD_OBJECT_NAMES |
-                                   moveit_msgs::msg::PlanningSceneComponents::
-                                   ROBOT_STATE_ATTACHED_OBJECTS;
+    moveit_msgs::msg::PlanningSceneComponents::
+    ROBOT_STATE_ATTACHED_OBJECTS;
 
   RCLCPP_INFO(
     this->get_logger(),
@@ -407,16 +407,18 @@ void ObjectManagerNode::printPlanningScene()
     rclcpp::spin_some(
       this->get_node_base_interface());
     if (future_response.wait_for(
-      std::chrono::milliseconds(100)) ==
-        std::future_status::ready) {
+        std::chrono::milliseconds(100)) ==
+      std::future_status::ready)
+    {
       break;
     }
   }
 
   // Handle the service response
   if (future_response.wait_for(
-    std::chrono::milliseconds(0)) ==
-      std::future_status::ready) {
+      std::chrono::milliseconds(0)) ==
+    std::future_status::ready)
+  {
     auto response = future_response.get();
     if (response) {
       RCLCPP_INFO(
@@ -428,8 +430,7 @@ void ObjectManagerNode::printPlanningScene()
         RCLCPP_INFO(
           this->get_logger(),
           "  No collision objects found in the planning scene.");
-      }
-      else {
+      } else {
         RCLCPP_INFO(
           this->get_logger(),
           "  Found %zu collision object(s):",
@@ -449,8 +450,7 @@ void ObjectManagerNode::printPlanningScene()
         RCLCPP_INFO(
           this->get_logger(),
           "  No attached collision objects found in the planning scene.");
-      }
-      else {
+      } else {
         RCLCPP_INFO(
           this->get_logger(),
           "  Found %zu attached collision object(s):",
@@ -462,14 +462,12 @@ void ObjectManagerNode::printPlanningScene()
             attached_obj.object.id.c_str());
         }
       }
-    }
-    else {
+    } else {
       RCLCPP_ERROR(
         this->get_logger(),
         "Received null response from /get_planning_scene.");
     }
-  }
-  else {
+  } else {
     RCLCPP_ERROR(
       this->get_logger(),
       "Timeout while waiting for /get_planning_scene response.");
@@ -489,21 +487,20 @@ rclcpp_action::GoalResponse ObjectManagerNode::handleAddGoal(
     goal->id.c_str());
 
   if (!validateShapeAndDimensions(
-    goal->shape,
-    goal->dimensions,
-    goal->mesh_file)) {
+      goal->shape,
+      goal->dimensions,
+      goal->mesh_file))
+  {
     RCLCPP_WARN(
       this->get_logger(),
       "Invalid shape/dimensions or missing mesh file for object.");
     return rclcpp_action::GoalResponse::REJECT;
-  }
-  else if (objectExists(goal->id)) {
+  } else if (objectExists(goal->id)) {
     RCLCPP_WARN(
       this->get_logger(),
       "Object already in the planning scene.");
     return rclcpp_action::GoalResponse::REJECT;
-  }
-  else if (attachedObjectExists(goal->id)) {
+  } else if (attachedObjectExists(goal->id)) {
     RCLCPP_WARN(
       this->get_logger(),
       "Object already in the planning scene, attached to %s.",
@@ -532,12 +529,12 @@ void ObjectManagerNode::handleAddExecute(const std::shared_ptr<AddGoalHandle> go
   // Publish the collision object
   auto collision_object =
     createCollisionObject(
-      goal->id,
-      goal->shape,
-      goal->dimensions,
-      goal->pose,
-      goal->mesh_file,
-      goal->scale_mesh);
+    goal->id,
+    goal->shape,
+    goal->dimensions,
+    goal->pose,
+    goal->mesh_file,
+    goal->scale_mesh);
   collision_object_publisher_->publish(collision_object);
   RCLCPP_INFO(
     this->get_logger(),
@@ -632,7 +629,8 @@ void ObjectManagerNode::handleRemoveExecute(const std::shared_ptr<RemoveGoalHand
 
   // Check if the object exists before trying to remove
   if ((!objectExists(goal->id)) && (!attachedObjectExists(
-    goal->id))) {
+      goal->id)))
+  {
     result->success = true;
     result->message = "Object not found in the scene.";
     goal_handle->succeed(result);
@@ -720,7 +718,8 @@ ObjectManagerNode::handleAttachDetachGoal(
 
   // Basic validation
   if (goal->object_id.empty() || (goal->attach &&
-                                  goal->link_name.empty())) {
+    goal->link_name.empty()))
+  {
     RCLCPP_WARN(
       this->get_logger(),
       "Invalid object_id or link_name in the request.");
@@ -754,7 +753,7 @@ void ObjectManagerNode::handleAttachDetachExecute(
   if ((!attached_object_exists && !collision_object_exists)) {
     result->success = false;
     result->message = std::string("'") + goal->object_id +
-                      "' does not exist in the planning scene.";
+      "' does not exist in the planning scene.";
     goal_handle->abort(result);
     return;
   }
@@ -763,17 +762,17 @@ void ObjectManagerNode::handleAttachDetachExecute(
   if (goal->attach && (attached_object_exists)) {
 
     if (goal->link_name == getAttachedObjectLinkById(
-      goal->object_id)) {
+        goal->object_id))
+    {
       result->success = true;
       result->message = std::string("'") + goal->object_id + "' already attached to " +
-                        getAttachedObjectLinkById(goal->object_id)->c_str() + ".";
+        getAttachedObjectLinkById(goal->object_id)->c_str() + ".";
       goal_handle->succeed(result);
       return;
-    }
-    else {
+    } else {
       result->success = false;
       result->message = std::string("'") + goal->object_id + "' already attached to " +
-                        getAttachedObjectLinkById(goal->object_id)->c_str() + ".";
+        getAttachedObjectLinkById(goal->object_id)->c_str() + ".";
       goal_handle->abort(result);
       return;
     }
@@ -783,7 +782,7 @@ void ObjectManagerNode::handleAttachDetachExecute(
   if (!goal->attach && !attached_object_exists) {
     result->success = false;
     result->message = std::string("'") + goal->object_id + "' not attached to " +
-                      getAttachedObjectLinkById(goal->object_id)->c_str() + ".";
+      getAttachedObjectLinkById(goal->object_id)->c_str() + ".";
     goal_handle->abort(result);
     return;
   }
@@ -803,8 +802,7 @@ void ObjectManagerNode::handleAttachDetachExecute(
     if (!goal->touch_links.empty()) {
       attached_object.touch_links = goal->touch_links;
     }
-  }
-  else {
+  } else {
     attached_object.object.operation = moveit_msgs::msg::CollisionObject::REMOVE;
 
     // Retrieve object data from planning scene
@@ -860,8 +858,9 @@ void ObjectManagerNode::handleAttachDetachExecute(
 
     // Wait for the response with timeout
     if (future_response.wait_for(
-      std::chrono::milliseconds(500)) ==
-        std::future_status::ready) {
+        std::chrono::milliseconds(500)) ==
+      std::future_status::ready)
+    {
       auto response = future_response.get();
       if (response) {
         bool found = attachedObjectExists(goal->object_id);
@@ -874,8 +873,7 @@ void ObjectManagerNode::handleAttachDetachExecute(
             goal->link_name.c_str());
           operation_successful = true;
           break;
-        }
-        else if (!goal->attach && !found) {
+        } else if (!goal->attach && !found) {
           RCLCPP_INFO(
             this->get_logger(),
             "Object '%s' successfully detached from link '%s'.",
@@ -910,27 +908,23 @@ void ObjectManagerNode::handleAttachDetachExecute(
                 goal->object_id.c_str());
               operation_successful = true;
               break;
-            }
-            else {
+            } else {
               RCLCPP_WARN(
                 this->get_logger(),
                 "Failed to re-add object '%s' to the planning scene.",
                 goal->object_id.c_str());
             }
-          }
-          else {
+          } else {
             operation_successful = true;
             break;
           }
         }
-      }
-      else {
+      } else {
         RCLCPP_ERROR(
           this->get_logger(),
           "Received null response from /get_planning_scene.");
       }
-    }
-    else {
+    } else {
       RCLCPP_ERROR(
         this->get_logger(),
         "Timeout while waiting for /get_planning_scene response.");
@@ -953,8 +947,7 @@ void ObjectManagerNode::handleAttachDetachExecute(
       goal->attach ? "Attach" : "Detach",
       goal->object_id.c_str(),
       goal->link_name.c_str());
-  }
-  else {
+  } else {
     result->success = false;
     result->message = goal->attach ? "Failed to attach object." : "Failed to detach object.";
     goal_handle->abort(result);
@@ -1047,10 +1040,10 @@ void ObjectManagerNode::handleGetObjectPoseExecute(
     try {
       geometry_msgs::msg::TransformStamped transformStamped =
         tfBuffer.lookupTransform(
-          goal->link_name,                                                // target frame
-          object_frame,                                                // source frame
-          tf2::TimePointZero,
-          tf2::durationFromSec(1.0));
+        goal->link_name,                                                  // target frame
+        object_frame,                                                  // source frame
+        tf2::TimePointZero,
+        tf2::durationFromSec(1.0));
 
       // Apply that transform
       geometry_msgs::msg::Pose transformed_pose;
@@ -1079,11 +1072,11 @@ void ObjectManagerNode::handleGetObjectPoseExecute(
     // Validate arrays
     if (goal->pre_transform_xyz_rpy.size() != 6) {
       throw std::invalid_argument(
-        "pre_transform_xyz_rpy must have exactly 6 elements (x,y,z,roll,pitch,yaw).");
+              "pre_transform_xyz_rpy must have exactly 6 elements (x,y,z,roll,pitch,yaw).");
     }
     if (goal->post_transform_xyz_rpy.size() != 6) {
       throw std::invalid_argument(
-        "post_transform_xyz_rpy must have exactly 6 elements (x,y,z,roll,pitch,yaw).");
+              "post_transform_xyz_rpy must have exactly 6 elements (x,y,z,roll,pitch,yaw).");
     }
 
     // Steps 1..8 from the original snippet
@@ -1109,7 +1102,7 @@ void ObjectManagerNode::handleGetObjectPoseExecute(
 
     // Step 3: Translation from pre_transform_xyz_rpy (x, y, z)
     tf2::Vector3 pre_trans(goal->pre_transform_xyz_rpy[0], goal->pre_transform_xyz_rpy[1],
-                           goal->pre_transform_xyz_rpy[2]);
+      goal->pre_transform_xyz_rpy[2]);
     tf2::Transform pre_trans_tf;
     pre_trans_tf.setIdentity();
     pre_trans_tf.setOrigin(pre_trans);
@@ -1132,7 +1125,7 @@ void ObjectManagerNode::handleGetObjectPoseExecute(
 
     // Step 7: Translation from post_transform_xyz_rpy (x, y, z)
     tf2::Vector3 post_trans(goal->post_transform_xyz_rpy[0], goal->post_transform_xyz_rpy[1],
-                            goal->post_transform_xyz_rpy[2]);
+      goal->post_transform_xyz_rpy[2]);
     tf2::Transform post_trans_tf;
     post_trans_tf.setIdentity();
     post_trans_tf.setOrigin(post_trans);
@@ -1140,8 +1133,8 @@ void ObjectManagerNode::handleGetObjectPoseExecute(
 
     // Step 5: Rotation from the object's original orientation
     tf2::Quaternion obj_quat(object_pose.orientation.x, object_pose.orientation.y,
-                             object_pose.orientation.z,
-                             object_pose.orientation.w);
+      object_pose.orientation.z,
+      object_pose.orientation.w);
     tf2::Transform obj_rot_tf;
     obj_rot_tf.setRotation(obj_quat);
     obj_rot_tf.setOrigin(
@@ -1153,7 +1146,7 @@ void ObjectManagerNode::handleGetObjectPoseExecute(
 
     // Step 6: Translation from the object's original position
     tf2::Vector3 obj_trans(object_pose.position.x, object_pose.position.y,
-                           object_pose.position.z);
+      object_pose.position.z);
     tf2::Transform obj_trans_tf;
     obj_trans_tf.setIdentity();
     obj_trans_tf.setOrigin(obj_trans);
@@ -1218,8 +1211,9 @@ bool ObjectManagerNode::objectExists(const std::string & id)
 
   // Wait for the future to complete without additional spinning
   if (future_response.wait_for(
-    std::chrono::seconds(5)) ==
-      std::future_status::ready) {
+      std::chrono::seconds(5)) ==
+    std::future_status::ready)
+  {
     auto response = future_response.get();
     if (response) {
       for (const auto & obj : response->scene.world.collision_objects) {
@@ -1231,14 +1225,12 @@ bool ObjectManagerNode::objectExists(const std::string & id)
           return true;
         }
       }
-    }
-    else {
+    } else {
       RCLCPP_ERROR(
         this->get_logger(),
         "Received null response from /get_planning_scene.");
     }
-  }
-  else {
+  } else {
     RCLCPP_ERROR(
       this->get_logger(),
       "Timeout while waiting for /get_planning_scene response.");
@@ -1266,8 +1258,7 @@ bool ObjectManagerNode::attachedObjectExists(const std::string & id, const std::
       "Checking if object '%s' is attached to link '%s'...",
       id.c_str(),
       link_name.c_str());
-  }
-  else {
+  } else {
     RCLCPP_INFO(
       this->get_logger(),
       "Checking if object '%s' is attached to any link...",
@@ -1277,8 +1268,9 @@ bool ObjectManagerNode::attachedObjectExists(const std::string & id, const std::
   auto future_response = get_planning_scene_client_->async_send_request(request);
 
   if (future_response.wait_for(
-    std::chrono::seconds(5)) ==
-      std::future_status::ready) {
+      std::chrono::seconds(5)) ==
+    std::future_status::ready)
+  {
     auto response = future_response.get();
     if (response) {
       for (const auto & attached_obj : response->scene.robot_state.attached_collision_objects) {
@@ -1293,14 +1285,12 @@ bool ObjectManagerNode::attachedObjectExists(const std::string & id, const std::
           }
         }
       }
-    }
-    else {
+    } else {
       RCLCPP_ERROR(
         this->get_logger(),
         "Received null response from /get_planning_scene.");
     }
-  }
-  else {
+  } else {
     RCLCPP_ERROR(
       this->get_logger(),
       "Timeout while waiting for /get_planning_scene response.");
@@ -1330,8 +1320,9 @@ std::optional<moveit_msgs::msg::CollisionObject> ObjectManagerNode::getObjectDat
 
   // Wait for the service response
   if (future_response.wait_for(
-    std::chrono::seconds(5)) ==
-      std::future_status::ready) {
+      std::chrono::seconds(5)) ==
+    std::future_status::ready)
+  {
     auto response = future_response.get();
     if (response) {
       for (const auto & collision_object : response->scene.world.collision_objects) {
@@ -1345,7 +1336,8 @@ std::optional<moveit_msgs::msg::CollisionObject> ObjectManagerNode::getObjectDat
         }
       }
       for (const auto & attached_collision_object :
-           response->scene.robot_state.attached_collision_objects) {
+        response->scene.robot_state.attached_collision_objects)
+      {
         if (attached_collision_object.object.id == object_id) {
           // Object found, return it
           RCLCPP_INFO(
@@ -1359,14 +1351,12 @@ std::optional<moveit_msgs::msg::CollisionObject> ObjectManagerNode::getObjectDat
         this->get_logger(),
         "Object '%s' not found in planning scene.",
         object_id.c_str());
-    }
-    else {
+    } else {
       RCLCPP_ERROR(
         this->get_logger(),
         "Null response received from /get_planning_scene.");
     }
-  }
-  else {
+  } else {
     RCLCPP_ERROR(
       this->get_logger(),
       "Timeout while waiting for /get_planning_scene response.");
@@ -1391,12 +1381,14 @@ std::optional<std::string> ObjectManagerNode::getAttachedObjectLinkById(
 
   // Wait for the service response
   if (future_response.wait_for(
-    std::chrono::seconds(5)) ==
-      std::future_status::ready) {
+      std::chrono::seconds(5)) ==
+    std::future_status::ready)
+  {
     auto response = future_response.get();
     if (response) {
       for (const auto & attached_collision_object :
-           response->scene.robot_state.attached_collision_objects) {
+        response->scene.robot_state.attached_collision_objects)
+      {
         if (attached_collision_object.object.id == object_id) {
           // Object found, return it
           RCLCPP_INFO(
@@ -1410,14 +1402,12 @@ std::optional<std::string> ObjectManagerNode::getAttachedObjectLinkById(
         this->get_logger(),
         "Link '%s' not found in planning scene.",
         object_id.c_str());
-    }
-    else {
+    } else {
       RCLCPP_ERROR(
         this->get_logger(),
         "Null response received from /get_planning_scene.");
     }
-  }
-  else {
+  } else {
     RCLCPP_ERROR(
       this->get_logger(),
       "Timeout while waiting for /get_planning_scene response.");
@@ -1469,13 +1459,13 @@ ObjectManagerNode::createCollisionObject(
 
       // Extract the shape_msgs::msg::Mesh from the ShapeMsg
       if (auto mesh_ptr = boost::get<shape_msgs::msg::Mesh>(
-        &shape_msg)) {
+          &shape_msg))
+      {
         // Successfully extracted the mesh
         mesh_msg = *mesh_ptr;
         collision_object.meshes.push_back(mesh_msg);
         collision_object.mesh_poses.push_back(pose);
-      }
-      else {
+      } else {
         RCLCPP_ERROR(
           this->get_logger(),
           "Failed to extract mesh from ShapeMsg for object '%s'.",
@@ -1490,8 +1480,7 @@ ObjectManagerNode::createCollisionObject(
 
     // Clean up dynamically allocated mesh to prevent memory leaks
     delete mesh;
-  }
-  else {
+  } else {
     shape_msgs::msg::SolidPrimitive primitive;
     if (shape == "box") {
       primitive.type = primitive.BOX;
@@ -1500,8 +1489,7 @@ ObjectManagerNode::createCollisionObject(
         primitive.dimensions[0] = dimensions[0];
         primitive.dimensions[1] = dimensions[1];
         primitive.dimensions[2] = dimensions[2];
-      }
-      else {
+      } else {
         RCLCPP_WARN(
           this->get_logger(),
           "Insufficient dimensions for box. Using default size.");
@@ -1509,36 +1497,31 @@ ObjectManagerNode::createCollisionObject(
         primitive.dimensions[1] = 0.1;
         primitive.dimensions[2] = 0.1;
       }
-    }
-    else if (shape == "cylinder") {
+    } else if (shape == "cylinder") {
       primitive.type = primitive.CYLINDER;
       primitive.dimensions.resize(2);
       if (dimensions.size() >= 2) {
         primitive.dimensions[0] = dimensions[0];                         // height
         primitive.dimensions[1] = dimensions[1];                         // radius
-      }
-      else {
+      } else {
         RCLCPP_WARN(
           this->get_logger(),
           "Insufficient dimensions for cylinder. Using default size.");
         primitive.dimensions[0] = 0.1;
         primitive.dimensions[1] = 0.05;
       }
-    }
-    else if (shape == "sphere") {
+    } else if (shape == "sphere") {
       primitive.type = primitive.SPHERE;
       primitive.dimensions.resize(1);
       if (dimensions.size() >= 1) {
         primitive.dimensions[0] = dimensions[0];                         // radius
-      }
-      else {
+      } else {
         RCLCPP_WARN(
           this->get_logger(),
           "Insufficient dimensions for sphere. Using default size.");
         primitive.dimensions[0] = 0.05;
       }
-    }
-    else {
+    } else {
       RCLCPP_WARN(
         this->get_logger(),
         "Unsupported shape type: %s. Defaulting to box.",

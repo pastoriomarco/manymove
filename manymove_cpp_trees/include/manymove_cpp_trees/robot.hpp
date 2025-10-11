@@ -112,10 +112,10 @@ inline RobotParams defineRobotParams(
     rp.gripper_action_server,
     gripper_action_server);
 
-  node_ptr->declare_parameter<std::vector<std::string> >(
+  node_ptr->declare_parameter<std::vector<std::string>>(
     "contact_links" + ID,
     contact_links);
-  node_ptr->get_parameter_or<std::vector<std::string> >(
+  node_ptr->get_parameter_or<std::vector<std::string>>(
     "contact_links" + ID,
     rp.contact_links,
     contact_links);

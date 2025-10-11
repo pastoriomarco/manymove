@@ -65,10 +65,10 @@ public:
   using RemoveCollisionObject = manymove_msgs::action::RemoveCollisionObject;
   using CheckObjectExists = manymove_msgs::action::CheckObjectExists;
 
-  CollisionSpawner() :
-    Node("collision_spawner"), rng_(std::random_device
+  CollisionSpawner()
+  : Node("collision_spawner"), rng_(std::random_device
   {
-  }                                   ())
+  }())
   {
     // Declare parameters
     this->declare_parameter<std::string>(
@@ -120,8 +120,9 @@ public:
       this->get_logger(),
       "Waiting for action servers...");
     if (!add_object_action_client_->wait_for_action_server(
-      std::chrono::seconds(
-        10))) {
+        std::chrono::seconds(
+          10)))
+    {
       RCLCPP_ERROR(
         this->get_logger(),
         "AddCollisionObject action server not available. Exiting.");
@@ -129,8 +130,9 @@ public:
       return;
     }
     if (!remove_object_action_client_->wait_for_action_server(
-      std::chrono::seconds(
-        10))) {
+        std::chrono::seconds(
+          10)))
+    {
       RCLCPP_ERROR(
         this->get_logger(),
         "RemoveCollisionObject action server not available. Exiting.");
@@ -138,13 +140,13 @@ public:
       return;
     }
     if (!check_object_exists_action_client_->wait_for_action_server(
-      std::chrono::seconds(
-        10))) {
+        std::chrono::seconds(
+          10)))
+    {
       RCLCPP_WARN(
         this->get_logger(),
         "CheckObjectExists action server not available. Proceeding without existence checks.");
-    }
-    else {
+    } else {
       RCLCPP_INFO(
         this->get_logger(),
         "CheckObjectExists action server is available.");
@@ -166,12 +168,12 @@ public:
     shutdown_timer_ = this->create_wall_timer(
       std::chrono::seconds(1),
       [this]()
-    {
-      RCLCPP_INFO(
-        this->get_logger(),
-        "Shutting down node.");
-      rclcpp::shutdown();
-    });
+      {
+        RCLCPP_INFO(
+          this->get_logger(),
+          "Shutting down node.");
+        rclcpp::shutdown();
+      });
   }
 
 private:
@@ -212,16 +214,14 @@ private:
 
           // Parse scaling values for mesh
           if (obj_node["scale"]) {
-            obj_spec.scale_mesh = obj_node["scale"].as<std::vector<double> >();
-          }
-          else {
+            obj_spec.scale_mesh = obj_node["scale"].as<std::vector<double>>();
+          } else {
             obj_spec.scale_mesh =
             {
               1.0, 1.0, 1.0
             };
           }
-        }
-        else {
+        } else {
           if (!obj_node["dimensions"]) {
             RCLCPP_WARN(
               this->get_logger(),
@@ -229,7 +229,7 @@ private:
               obj_spec.name.c_str());
             continue;
           }
-          obj_spec.dimensions = obj_node["dimensions"].as<std::vector<double> >();
+          obj_spec.dimensions = obj_node["dimensions"].as<std::vector<double>>();
         }
 
         if (obj_node["pose"]) {
@@ -247,16 +247,14 @@ private:
               yaw);
 
             obj_spec.has_pose = true;
-          }
-          else {
+          } else {
             RCLCPP_WARN(
               this->get_logger(),
               "Object '%s' has incomplete 'pose'. Will be placed randomly.",
               obj_spec.name.c_str());
             obj_spec.has_pose = false;
           }
-        }
-        else {
+        } else {
           obj_spec.has_pose = false;
         }
 
@@ -269,8 +267,7 @@ private:
         "YAML Exception: %s",
         e.what());
       return false;
-    }
-    catch (const std::exception & e) {
+    } catch (const std::exception & e) {
       RCLCPP_ERROR(
         this->get_logger(),
         "Exception while loading YAML file: %s",
@@ -315,10 +312,11 @@ private:
 
     // Wait for the goal to be accepted
     if (rclcpp::spin_until_future_complete(
-      this->get_node_base_interface(),
-      send_goal_future,
-      std::chrono::seconds(5)) !=
-        rclcpp::FutureReturnCode::SUCCESS) {
+        this->get_node_base_interface(),
+        send_goal_future,
+        std::chrono::seconds(5)) !=
+      rclcpp::FutureReturnCode::SUCCESS)
+    {
       RCLCPP_WARN(
         this->get_logger(),
         "Timeout while sending remove goal for object '%s'.",
@@ -339,10 +337,11 @@ private:
     auto get_result_future = remove_object_action_client_->async_get_result(goal_handle);
 
     if (rclcpp::spin_until_future_complete(
-      this->get_node_base_interface(),
-      get_result_future,
-      std::chrono::seconds(5)) !=
-        rclcpp::FutureReturnCode::SUCCESS) {
+        this->get_node_base_interface(),
+        get_result_future,
+        std::chrono::seconds(5)) !=
+      rclcpp::FutureReturnCode::SUCCESS)
+    {
       RCLCPP_WARN(
         this->get_logger(),
         "Timeout while waiting for remove result for object '%s'.",
@@ -352,30 +351,30 @@ private:
 
     auto result = get_result_future.get();
     switch (result.code) {
-    case rclcpp_action::ResultCode::SUCCEEDED:
-      RCLCPP_INFO(
-        this->get_logger(),
-        "Successfully removed object '%s'.",
-        object_id.c_str());
-      break;
-    case rclcpp_action::ResultCode::ABORTED:
-      RCLCPP_WARN(
-        this->get_logger(),
-        "Remove action was aborted for object '%s'.",
-        object_id.c_str());
-      break;
-    case rclcpp_action::ResultCode::CANCELED:
-      RCLCPP_WARN(
-        this->get_logger(),
-        "Remove action was canceled for object '%s'.",
-        object_id.c_str());
-      break;
-    default:
-      RCLCPP_WARN(
-        this->get_logger(),
-        "Unknown result code for remove action of object '%s'.",
-        object_id.c_str());
-      break;
+      case rclcpp_action::ResultCode::SUCCEEDED:
+        RCLCPP_INFO(
+          this->get_logger(),
+          "Successfully removed object '%s'.",
+          object_id.c_str());
+        break;
+      case rclcpp_action::ResultCode::ABORTED:
+        RCLCPP_WARN(
+          this->get_logger(),
+          "Remove action was aborted for object '%s'.",
+          object_id.c_str());
+        break;
+      case rclcpp_action::ResultCode::CANCELED:
+        RCLCPP_WARN(
+          this->get_logger(),
+          "Remove action was canceled for object '%s'.",
+          object_id.c_str());
+        break;
+      default:
+        RCLCPP_WARN(
+          this->get_logger(),
+          "Unknown result code for remove action of object '%s'.",
+          object_id.c_str());
+        break;
     }
   }
 
@@ -408,10 +407,11 @@ private:
 
     // Wait for the goal to be accepted
     if (rclcpp::spin_until_future_complete(
-      this->get_node_base_interface(),
-      send_goal_future,
-      std::chrono::seconds(5)) !=
-        rclcpp::FutureReturnCode::SUCCESS) {
+        this->get_node_base_interface(),
+        send_goal_future,
+        std::chrono::seconds(5)) !=
+      rclcpp::FutureReturnCode::SUCCESS)
+    {
       RCLCPP_WARN(
         this->get_logger(),
         "Timeout while sending add goal for object '%s'.",
@@ -432,10 +432,11 @@ private:
     auto get_result_future = add_object_action_client_->async_get_result(goal_handle);
 
     if (rclcpp::spin_until_future_complete(
-      this->get_node_base_interface(),
-      get_result_future,
-      std::chrono::seconds(5)) !=
-        rclcpp::FutureReturnCode::SUCCESS) {
+        this->get_node_base_interface(),
+        get_result_future,
+        std::chrono::seconds(5)) !=
+      rclcpp::FutureReturnCode::SUCCESS)
+    {
       RCLCPP_WARN(
         this->get_logger(),
         "Timeout while waiting for add result for object '%s'.",
@@ -445,30 +446,30 @@ private:
 
     auto result = get_result_future.get();
     switch (result.code) {
-    case rclcpp_action::ResultCode::SUCCEEDED:
-      RCLCPP_INFO(
-        this->get_logger(),
-        "Successfully added object '%s'.",
-        obj_spec.name.c_str());
-      break;
-    case rclcpp_action::ResultCode::ABORTED:
-      RCLCPP_WARN(
-        this->get_logger(),
-        "Add action was aborted for object '%s'.",
-        obj_spec.name.c_str());
-      break;
-    case rclcpp_action::ResultCode::CANCELED:
-      RCLCPP_WARN(
-        this->get_logger(),
-        "Add action was canceled for object '%s'.",
-        obj_spec.name.c_str());
-      break;
-    default:
-      RCLCPP_WARN(
-        this->get_logger(),
-        "Unknown result code for add action of object '%s'.",
-        obj_spec.name.c_str());
-      break;
+      case rclcpp_action::ResultCode::SUCCEEDED:
+        RCLCPP_INFO(
+          this->get_logger(),
+          "Successfully added object '%s'.",
+          obj_spec.name.c_str());
+        break;
+      case rclcpp_action::ResultCode::ABORTED:
+        RCLCPP_WARN(
+          this->get_logger(),
+          "Add action was aborted for object '%s'.",
+          obj_spec.name.c_str());
+        break;
+      case rclcpp_action::ResultCode::CANCELED:
+        RCLCPP_WARN(
+          this->get_logger(),
+          "Add action was canceled for object '%s'.",
+          obj_spec.name.c_str());
+        break;
+      default:
+        RCLCPP_WARN(
+          this->get_logger(),
+          "Unknown result code for add action of object '%s'.",
+          obj_spec.name.c_str());
+        break;
     }
   }
 
@@ -497,10 +498,11 @@ private:
 
     // Wait for the goal to be accepted
     if (rclcpp::spin_until_future_complete(
-      this->get_node_base_interface(),
-      send_goal_future,
-      std::chrono::seconds(3)) !=
-        rclcpp::FutureReturnCode::SUCCESS) {
+        this->get_node_base_interface(),
+        send_goal_future,
+        std::chrono::seconds(3)) !=
+      rclcpp::FutureReturnCode::SUCCESS)
+    {
       RCLCPP_WARN(
         this->get_logger(),
         "Timeout while sending CheckObjectExists goal for object '%s'. Assuming it does not exist.",
@@ -521,10 +523,11 @@ private:
     auto get_result_future = check_object_exists_action_client_->async_get_result(goal_handle);
 
     if (rclcpp::spin_until_future_complete(
-      this->get_node_base_interface(),
-      get_result_future,
-      std::chrono::seconds(3)) !=
-        rclcpp::FutureReturnCode::SUCCESS) {
+        this->get_node_base_interface(),
+        get_result_future,
+        std::chrono::seconds(3)) !=
+      rclcpp::FutureReturnCode::SUCCESS)
+    {
       RCLCPP_WARN(
         this->get_logger(),
         "Timeout while waiting for CheckObjectExists result for object '%s'. Assuming it does not exist.",

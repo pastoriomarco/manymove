@@ -42,9 +42,9 @@ public:
   {
     auto node =
       std::shared_ptr<MoveItCppActionServerNode>(
-        new MoveItCppActionServerNode(
-          moveit_cpp,
-          options));
+      new MoveItCppActionServerNode(
+        moveit_cpp,
+        options));
     node->initialize();
     return node;
   }
@@ -52,8 +52,8 @@ public:
 private:
   MoveItCppActionServerNode(
     const std::shared_ptr<moveit_cpp::MoveItCpp> & moveit_cpp,
-    const rclcpp::NodeOptions & options) :
-    Node("moveitcpp_action_server_node", options),
+    const rclcpp::NodeOptions & options)
+  : Node("moveitcpp_action_server_node", options),
     moveit_cpp_(moveit_cpp)
   {
     RCLCPP_INFO(
@@ -76,10 +76,11 @@ private:
       this->get_parameter("traj_controllers").as_string_array();
 
     if (robot_prefixes.size() != planning_groups.size() ||
-        robot_prefixes.size() != base_frames.size() ||
-        robot_prefixes.size() != tcp_frames.size() ||
-        robot_prefixes.size() !=
-        traj_controllers.size()) {
+      robot_prefixes.size() != base_frames.size() ||
+      robot_prefixes.size() != tcp_frames.size() ||
+      robot_prefixes.size() !=
+      traj_controllers.size())
+    {
       RCLCPP_ERROR(
         get_logger(),
         "Mismatch in sizes of parameters!");
@@ -119,7 +120,7 @@ private:
   }
 
   std::shared_ptr<moveit_cpp::MoveItCpp> moveit_cpp_;
-  std::vector<std::shared_ptr<ManipulatorActionServer> > action_servers_;
+  std::vector<std::shared_ptr<ManipulatorActionServer>> action_servers_;
 };
 
 int main(int argc, char ** argv)
@@ -136,7 +137,8 @@ int main(int argc, char ** argv)
     node_opts);
   auto moveit_cpp = std::make_shared<moveit_cpp::MoveItCpp>(moveitcpp_node);
   if (auto psm = manymove_planner_compat::getPlanningSceneMonitorRw(
-    moveit_cpp)) {
+      moveit_cpp))
+  {
     psm->providePlanningSceneService();
   }
 
@@ -146,7 +148,7 @@ int main(int argc, char ** argv)
   // Thread dedicated to the MoveItCpp node's execution.
   std::thread moveitcpp_thread([&moveitcpp_executor = moveitcpp_executor]()
     {
-                               moveitcpp_executor.spin();
+      moveitcpp_executor.spin();
     });
 
   // Node and executor for Planners/Action Servers

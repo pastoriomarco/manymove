@@ -89,8 +89,8 @@ inline QString convertToInternal(
 /* ------------------------------------------------------------------ */
 AppModule::AppModule(
   const std::vector<KeyConfig> & key_cfg,
-  QWidget * parent) :
-  QWidget(parent),
+  QWidget * parent)
+: QWidget(parent),
   keyConfigs_(key_cfg)
 {
   /* 1) build black-board key list once --------------------------- */
@@ -151,8 +151,7 @@ void AppModule::setupUI()
       t->setCheckable(true);
       if (cfg.widget_width > 0) {
         t->setFixedWidth(cfg.widget_width);
-      }
-      else {
+      } else {
         t->setSizePolicy(
           QSizePolicy::Expanding,
           QSizePolicy::Fixed);
@@ -168,25 +167,24 @@ void AppModule::setupUI()
         &QToolButton::toggled,
         this,
         [this, cfg, t](bool on)
-      {
-        t->setText(on ? "ROBOT CYCLE ON" : "ROBOT CYCLE OFF");
-        const QString v = on ? "true" : "false";
-        userOverrides_[cfg.key] = v;
-        editableValues_[cfg.key] = v;
-        updateComputedFields();
-        updateSendButtonState();
-        if (cfg.key == "cycle_on_key") {
-          emit keyUpdateRequested(
-            cfg.key,
-            cfg.value_type,
-            v);
-        }
-      });
+        {
+          t->setText(on ? "ROBOT CYCLE ON" : "ROBOT CYCLE OFF");
+          const QString v = on ? "true" : "false";
+          userOverrides_[cfg.key] = v;
+          editableValues_[cfg.key] = v;
+          updateComputedFields();
+          updateSendButtonState();
+          if (cfg.key == "cycle_on_key") {
+            emit keyUpdateRequested(
+              cfg.key,
+              cfg.value_type,
+              v);
+          }
+        });
 
       row->addWidget(t);
       keyWidgets_[cfg.key] = t;
-    }
-    else if (cfg.editable) {             /* LINE EDIT */
+    } else if (cfg.editable) {           /* LINE EDIT */
       QLineEdit * le = new QLineEdit(
         "N/A",
         rowWidget);
@@ -211,8 +209,7 @@ void AppModule::setupUI()
       le->installEventFilter(this);
       row->addWidget(le);
       keyWidgets_[cfg.key] = le;
-    }
-    else {             /* COMPUTED  */
+    } else {           /* COMPUTED  */
       QLabel * v = new QLabel(
         "N/A",
         rowWidget);
@@ -258,8 +255,7 @@ void AppModule::updateGeneralMessage(const QString & message, const QString & co
     generalMessage_->setStyleSheet(
       QString("color: %1; border: 2px solid %1; padding:2px;").arg(
         color));
-  }
-  else {
+  } else {
     generalMessage_->setStyleSheet("");
   }
 }
@@ -267,7 +263,7 @@ void AppModule::updateGeneralMessage(const QString & message, const QString & co
 /* ------------------------------------------------------------------ */
 void AppModule::onEditableChanged(const QString &)
 {
-  auto * le = qobject_cast<QLineEdit*>(
+  auto * le = qobject_cast<QLineEdit *>(
     sender());
   if (!le) {
     return;
@@ -293,8 +289,7 @@ void AppModule::onEditableChanged(const QString &)
   if (in_m == currentValues_[key]) {
     userOverrides_[key].clear();
     editableValues_[key].clear();
-  }
-  else {
+  } else {
     userOverrides_[key] = in_m;
     editableValues_[key] = in_m;
   }
@@ -306,30 +301,29 @@ void AppModule::onEditableChanged(const QString &)
     in_m);
   if (!txt.isEmpty() && txt != "N/A") {
     switch (st) {
-    case FieldStatus::Invalid:
-      pal.setColor(
-        QPalette::Text,
-        Qt::red);
-      break;
-    case FieldStatus::BelowLimit:
-      pal.setColor(
-        QPalette::Text,
-        Qt::cyan);
-      break;
-    case FieldStatus::AboveLimit:
-      pal.setColor(
-        QPalette::Text,
-        Qt::magenta);
-      break;
-    case FieldStatus::Valid:
-    default:
-      pal.setColor(
-        QPalette::Text,
-        Qt::white);
-      break;
+      case FieldStatus::Invalid:
+        pal.setColor(
+          QPalette::Text,
+          Qt::red);
+        break;
+      case FieldStatus::BelowLimit:
+        pal.setColor(
+          QPalette::Text,
+          Qt::cyan);
+        break;
+      case FieldStatus::AboveLimit:
+        pal.setColor(
+          QPalette::Text,
+          Qt::magenta);
+        break;
+      case FieldStatus::Valid:
+      default:
+        pal.setColor(
+          QPalette::Text,
+          Qt::white);
+        break;
     }
-  }
-  else {
+  } else {
     pal.setColor(
       QPalette::Text,
       Qt::white);
@@ -355,7 +349,7 @@ void AppModule::updateComputedFields()
     if (cfg.editable) {
       continue;
     }
-    QLabel * lbl = qobject_cast<QLabel*>(
+    QLabel * lbl = qobject_cast<QLabel *>(
       keyWidgets_.value(cfg.key));
     if (!lbl) {
       continue;
@@ -372,8 +366,7 @@ void AppModule::updateComputedFields()
       pal.setColor(
         QPalette::WindowText,
         Qt::white);
-    }
-    else {
+    } else {
       lbl->setText(
         toDisplay(
           cfg.key,
@@ -392,8 +385,9 @@ void AppModule::updateComputedFields()
 void AppModule::updateSendButtonState()
 {
   /* 1) ‘cycle_on_key’ must be off -------------------------------- */
-  if (auto * btn = qobject_cast<QAbstractButton*>(
-    keyWidgets_.value("cycle_on_key"))) {
+  if (auto * btn = qobject_cast<QAbstractButton *>(
+      keyWidgets_.value("cycle_on_key")))
+  {
     if (btn->isChecked()) {
       sendButton_->setEnabled(false);
       return;
@@ -411,11 +405,11 @@ void AppModule::updateSendButtonState()
       continue;
     }
     if (isFieldValid(
-      cfg.key,
-      txt)) {
+        cfg.key,
+        txt))
+    {
       good = true;
-    }
-    else {
+    } else {
       bad = true;
       break;
     }
@@ -427,7 +421,8 @@ void AppModule::updateSendButtonState()
 FieldStatus AppModule::validateField(const QString & key, const QString & txt) const
 {
   if (txt.isEmpty() || txt == "N/A" || txt == currentValues_.value(
-    key)) {
+      key))
+  {
     return FieldStatus::Invalid;
   }
 
@@ -468,14 +463,14 @@ void AppModule::onSendClicked()
     if (cfg.editable) {
       QString raw = userOverrides_.value(cfg.key);
       if (raw.isEmpty() || raw == currentValues_[cfg.key] || !isFieldValid(
-        cfg.key,
-        raw)) {
+          cfg.key,
+          raw))
+      {
         continue;
       }
       final = cfg.computeFunction ? cfg.computeFunction(editableValues_) : raw;
-    }
-    else {
-      auto * lbl = qobject_cast<QLabel*>(
+    } else {
+      auto * lbl = qobject_cast<QLabel *>(
         keyWidgets_.value(cfg.key));
       if (!lbl) {
         continue;
@@ -493,7 +488,7 @@ void AppModule::onSendClicked()
   for (const auto & cfg : keyConfigs_) {
     if (cfg.editable) {
       userOverrides_[cfg.key].clear();
-      if (auto * le = qobject_cast<QLineEdit*>(keyWidgets_[cfg.key])) {
+      if (auto * le = qobject_cast<QLineEdit *>(keyWidgets_[cfg.key])) {
         QString displayVal = toDisplay(
           cfg.key,
           currentValues_[cfg.key]);
@@ -542,10 +537,11 @@ void AppModule::updateField(const QString & key, const QString & newVal)
 
   currentValues_[key] = normalized.isEmpty() ? "N/A" : normalized;
 
-  if (auto * le = qobject_cast<QLineEdit*>(keyWidgets_[key])) {
+  if (auto * le = qobject_cast<QLineEdit *>(keyWidgets_[key])) {
     if (le->hasFocus() ||
-        (!userOverrides_[key].isEmpty() && userOverrides_[key] !=
-         currentValues_[key])) {
+      (!userOverrides_[key].isEmpty() && userOverrides_[key] !=
+      currentValues_[key]))
+    {
       return;
     }
     QString displayVal = toDisplay(
@@ -561,8 +557,7 @@ void AppModule::updateField(const QString & key, const QString & newVal)
       QPalette::Text,
       Qt::gray);
     le->setPalette(pal);
-  }
-  else if (auto * lbl = qobject_cast<QLabel*>(keyWidgets_[key])) {
+  } else if (auto * lbl = qobject_cast<QLabel *>(keyWidgets_[key])) {
     QString displayVal = toDisplay(
       key,
       currentValues_[key]);
@@ -576,7 +571,7 @@ void AppModule::updateField(const QString & key, const QString & newVal)
 /* ------------------------------------------------------------------ */
 bool AppModule::eventFilter(QObject * o, QEvent * e)
 {
-  if (auto * le = qobject_cast<QLineEdit*>(o)) {
+  if (auto * le = qobject_cast<QLineEdit *>(o)) {
     QString key;
     for (auto it = keyWidgets_.cbegin(); it != keyWidgets_.cend(); ++it) {
       if (it.value() == le) {
@@ -597,8 +592,7 @@ bool AppModule::eventFilter(QObject * o, QEvent * e)
         QPalette::Text,
         Qt::white);
       le->setPalette(p);
-    }
-    else if (e->type() == QEvent::FocusOut) {
+    } else if (e->type() == QEvent::FocusOut) {
       if (le->text().isEmpty()) {
         QString displayVal = toDisplay(
           key,

@@ -78,7 +78,8 @@ public:
 private:
   void goalResponseCallback(std::shared_ptr<GoalHandleGripperCommand> goal_handle);
   void resultCallback(const GoalHandleGripperCommand::WrappedResult & result);
-  void feedbackCallback(std::shared_ptr<GoalHandleGripperCommand>,
+  void feedbackCallback(
+    std::shared_ptr<GoalHandleGripperCommand>,
     const std::shared_ptr<const GripperCommand::Feedback> feedback);
 
   rclcpp::Node::SharedPtr node_;
@@ -109,10 +110,10 @@ public:
         BT::InputPort<std::string>(
           "action_server",
           "FollowJointTrajectory server name"),
-        BT::InputPort<std::vector<std::string> >(
+        BT::InputPort<std::vector<std::string>>(
           "joint_names",
           "List of gripper joint names"),
-        BT::InputPort<std::vector<double> >(
+        BT::InputPort<std::vector<double>>(
           "positions",
           "Target joint positions for each joint_name"),
         BT::InputPort<double>(
@@ -155,16 +156,16 @@ public:
           "topic",
           "/isaac_joint_commands_gripper",
           "Topic to publish"),
-        BT::InputPort<std::vector<std::string> >(
+        BT::InputPort<std::vector<std::string>>(
           "joint_names",
           "Joint names"),
-        BT::InputPort<std::vector<double> >(
+        BT::InputPort<std::vector<double>>(
           "joint_positions",
           "Positions (optional)"),
-        BT::InputPort<std::vector<double> >(
+        BT::InputPort<std::vector<double>>(
           "joint_velocities",
           "Velocities (optional)"),
-        BT::InputPort<std::vector<double> >(
+        BT::InputPort<std::vector<double>>(
           "joint_efforts",
           "Efforts (optional)"),
         BT::InputPort<bool>(

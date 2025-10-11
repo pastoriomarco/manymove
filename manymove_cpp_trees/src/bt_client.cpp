@@ -251,10 +251,10 @@ int main(int argc, char ** argv)
 
   std::string to_rest_xml =
     buildMoveXML(
-      rp.prefix,
-      rp.prefix + "toRest",
-      rest_position,
-      blackboard);
+    rp.prefix,
+    rp.prefix + "toRest",
+    rest_position,
+    blackboard);
 
   std::string scan_around_xml = buildMoveXML(
     rp.prefix,
@@ -456,61 +456,61 @@ int main(int argc, char ** argv)
   // relative to each type of object action)
   std::string check_ground_obj_xml =
     buildObjectActionXML(
-      "check_ground",
-      createCheckObjectExists("ground_id_key"));
+    "check_ground",
+    createCheckObjectExists("ground_id_key"));
   std::string check_wall_obj_xml =
     buildObjectActionXML(
-      "check_wall",
-      createCheckObjectExists("wall_id_key"));
+    "check_wall",
+    createCheckObjectExists("wall_id_key"));
   std::string check_cylinder_obj_xml = buildObjectActionXML(
     "check_cylinder",
     createCheckObjectExists(
       "cylinder_id_key"));
   std::string check_mesh_obj_xml =
     buildObjectActionXML(
-      "check_mesh",
-      createCheckObjectExists("mesh_id_key"));
+    "check_mesh",
+    createCheckObjectExists("mesh_id_key"));
 
   std::string add_ground_obj_xml =
     buildObjectActionXML(
-      "add_ground",
-      createAddObject(
-        "ground_id_key",
-        "ground_shape_key",
-        "ground_dimension_key",
-        "ground_pose_key",
-        "ground_scale_key",
-        ""));
+    "add_ground",
+    createAddObject(
+      "ground_id_key",
+      "ground_shape_key",
+      "ground_dimension_key",
+      "ground_pose_key",
+      "ground_scale_key",
+      ""));
   std::string add_wall_obj_xml =
     buildObjectActionXML(
-      "add_wall",
-      createAddObject(
-        "wall_id_key",
-        "wall_shape_key",
-        "wall_dimension_key",
-        "wall_pose_key",
-        "wall_scale_key",
-        ""));
+    "add_wall",
+    createAddObject(
+      "wall_id_key",
+      "wall_shape_key",
+      "wall_dimension_key",
+      "wall_pose_key",
+      "wall_scale_key",
+      ""));
   std::string add_cylinder_obj_xml =
     buildObjectActionXML(
-      "add_cylinder",
-      createAddObject(
-        "cylinder_id_key",
-        "cylinder_shape_key",
-        "cylinder_dimension_key",
-        "cylinder_pose_key",
-        "cylinder_scale_key",
-        ""));
+    "add_cylinder",
+    createAddObject(
+      "cylinder_id_key",
+      "cylinder_shape_key",
+      "cylinder_dimension_key",
+      "cylinder_pose_key",
+      "cylinder_scale_key",
+      ""));
   std::string add_mesh_obj_xml =
     buildObjectActionXML(
-      "add_mesh",
-      createAddObject(
-        "mesh_id_key",
-        "mesh_shape_key",
-        "",
-        "mesh_pose_key",
-        "mesh_scale_key",
-        "mesh_file_key"));
+    "add_mesh",
+    createAddObject(
+      "mesh_id_key",
+      "mesh_shape_key",
+      "",
+      "mesh_pose_key",
+      "mesh_scale_key",
+      "mesh_file_key"));
 
   // Compose the check and add sequence for objects
   std::string init_ground_obj_xml = fallbackWrapperXML(
@@ -556,11 +556,11 @@ int main(int argc, char ** argv)
 
   std::string attach_obj_xml =
     buildObjectActionXML(
-      "attach_obj_to_manipulate",
-      createAttachObject(
-        "object_to_manipulate_key",
-        "tcp_frame_name_key",
-        "touch_links_empty_key"));
+    "attach_obj_to_manipulate",
+    createAttachObject(
+      "object_to_manipulate_key",
+      "tcp_frame_name_key",
+      "touch_links_empty_key"));
   std::string detach_obj_xml = fallbackWrapperXML(
     "detach_obj_to_manipulate_always_success",
   {
@@ -632,22 +632,22 @@ int main(int argc, char ** argv)
   // Translate get_pose_action to xml tree leaf
   std::string get_pick_pose_xml =
     buildObjectActionXML(
-      "get_pick_pose",
-      createGetObjectPose(
-        "object_to_manipulate_key",
-        "pick_target_key",
-        "world_frame_key",
-        "pick_pre_transform_xyz_rpy_1_key",
-        "pick_post_transform_xyz_rpy_1_key"));
+    "get_pick_pose",
+    createGetObjectPose(
+      "object_to_manipulate_key",
+      "pick_target_key",
+      "world_frame_key",
+      "pick_pre_transform_xyz_rpy_1_key",
+      "pick_post_transform_xyz_rpy_1_key"));
   std::string get_approach_pose_xml =
     buildObjectActionXML(
-      "get_approach_pose",
-      createGetObjectPose(
-        "object_to_manipulate_key",
-        "approach_pick_target_key",
-        "world_frame_key",
-        "approach_pick_pre_transform_xyz_rpy_1_key",
-        "pick_post_transform_xyz_rpy_1_key"));
+    "get_approach_pose",
+    createGetObjectPose(
+      "object_to_manipulate_key",
+      "approach_pick_target_key",
+      "world_frame_key",
+      "approach_pick_pre_transform_xyz_rpy_1_key",
+      "pick_post_transform_xyz_rpy_1_key"));
 
   // ----------------------------------------------------------------------------
   // 5) Define Signals calls:
@@ -683,7 +683,7 @@ int main(int argc, char ** argv)
       "controller",
       0,
       0) :
-     "<Delay delay_msec=\"250\">\n  <AlwaysSuccess />\n</Delay>\n");
+    "<Delay delay_msec=\"250\">\n  <AlwaysSuccess />\n</Delay>\n");
   std::string check_robot_state_xml = buildCheckRobotStateXML(
     rp.prefix,
     "CheckRobot",
@@ -704,7 +704,7 @@ int main(int argc, char ** argv)
     check_robot_state_xml,
     reset_robot_state_xml
   }) :
-     "<Delay delay_msec=\"250\">\n<AlwaysSuccess />\n</Delay>\n");
+    "<Delay delay_msec=\"250\">\n<AlwaysSuccess />\n</Delay>\n");
 
   // ----------------------------------------------------------------------------
   // 6) Combine the objects and moves in a sequences that can run a number of times:
@@ -916,8 +916,7 @@ int main(int argc, char ** argv)
         node->get_logger(),
         "BT ended SUCCESS.");
       break;
-    }
-    else if (status == BT::NodeStatus::FAILURE) {
+    } else if (status == BT::NodeStatus::FAILURE) {
       RCLCPP_ERROR(
         node->get_logger(),
         "BT ended FAILURE.");

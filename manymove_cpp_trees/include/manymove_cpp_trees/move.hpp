@@ -309,8 +309,8 @@ struct Move
     const std::string & pose_key = "",
     const std::vector<double> & joint_values = {},
     const std::string & named_target = "",
-    const std::vector<double> & start_joint_values = {}) :
-    type(type),
+    const std::vector<double> & start_joint_values = {})
+  : type(type),
     pose_key(pose_key),
     joint_values(joint_values),
     named_target(named_target),
@@ -330,11 +330,9 @@ struct Move
       // Retrieve pose from blackboard using pose_key
       // This will be handled in the PlanningAction node
       // goal.pose_target = pose_target;
-    }
-    else if (type == "joint") {
+    } else if (type == "joint") {
       goal.joint_values = joint_values;
-    }
-    else if (type == "named") {
+    } else if (type == "named") {
       goal.named_target = named_target;
     }
 

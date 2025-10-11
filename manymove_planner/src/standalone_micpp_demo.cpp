@@ -84,9 +84,9 @@ int main(int argc, char ** argv)
   executor.add_node(node);
   std::thread(
     [&executor]()
-  {
-    executor.spin();
-  })
+    {
+      executor.spin();
+    })
   .detach();
 
   // BEGIN_TUTORIAL
@@ -129,7 +129,7 @@ int main(int argc, char ** argv)
   // and trajectories in RViz as well as debugging tools such as step-by-step introspection of a
   // script
   moveit_visual_tools::MoveItVisualTools visual_tools(node, "link_base", "moveit_cpp_tutorial",
-                                                      planning_scene_monitor);
+    planning_scene_monitor);
   visual_tools.deleteAllMarkers();
   visual_tools.loadRemoteControl();
 
@@ -392,8 +392,7 @@ int main(int argc, char ** argv)
       RCLCPP_WARN(
         LOGGER,
         "Planned trajectory has no waypoints.");
-    }
-    else {
+    } else {
       const moveit::core::RobotState & last_waypoint = plan_solution3.trajectory->getWayPoint(
         num_waypoints - 1);
       Eigen::Isometry3d ee_transform = last_waypoint.getGlobalLinkTransform("link_tcp");
@@ -626,7 +625,7 @@ int main(int argc, char ** argv)
     // options
     nullptr                                                                           // No IK cost
                                                                                       // function
-    );
+  );
 
   // Check if the path was successfully computed
   if (fraction > 0.99) {
@@ -657,8 +656,7 @@ int main(int argc, char ** argv)
       PLANNING_GROUP,
       trajectory_ptr,
       CONTROLLERS);
-  }
-  else {
+  } else {
     RCLCPP_WARN(
       LOGGER,
       "Could not compute full Cartesian path.");

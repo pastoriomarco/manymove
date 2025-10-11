@@ -61,8 +61,7 @@ inline void setHMIMessage(
   bool should_update = false;
   if (st.last_value != value || st.last_color != color) {
     should_update = true;
-  }
-  else if (now - st.last_time >= period) {
+  } else if (now - st.last_time >= period) {
     should_update = true;
   }
 

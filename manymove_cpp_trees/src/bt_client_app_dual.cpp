@@ -226,7 +226,7 @@ int main(int argc, char ** argv)
     0.01, 0.01, tube_length
   };
   std::string graspable_mesh_scale_key_name = "tube_scale_key";
-  defineVariableKey<std::vector<double> >(
+  defineVariableKey<std::vector<double>>(
     node,
     blackboard,
     keys,
@@ -398,7 +398,7 @@ int main(int argc, char ** argv)
   {
     0.0, 0.0, ((-tube_length) / 2) + grasp_offset, 3.14, 0.0, 0.0
   };
-  defineVariableKey<std::vector<double> >(
+  defineVariableKey<std::vector<double>>(
     node,
     blackboard,
     keys,
@@ -799,7 +799,7 @@ int main(int argc, char ** argv)
   {
     0.0, 0.0, ((-tube_length) / 2), 0.0, 0.0, -0.785
   };
-  defineVariableKey<std::vector<double> >(
+  defineVariableKey<std::vector<double>>(
     node,
     blackboard,
     keys,
@@ -857,7 +857,7 @@ int main(int argc, char ** argv)
   {
     0.0, 0.0, -tube_length, 0.0, 0.0, 0.0
   };
-  defineVariableKey<std::vector<double> >(
+  defineVariableKey<std::vector<double>>(
     node,
     blackboard,
     keys,
@@ -1236,7 +1236,7 @@ int main(int argc, char ** argv)
       "controller",
       0,
       1) :
-     "<Delay delay_msec=\"250\">\n<AlwaysSuccess />\n</Delay>\n");
+    "<Delay delay_msec=\"250\">\n<AlwaysSuccess />\n</Delay>\n");
   std::string wait_for_gripper_open_1_xml =
     (rp_1.is_real ? buildWaitForInput(
       rp_1.prefix,
@@ -1244,7 +1244,7 @@ int main(int argc, char ** argv)
       "controller",
       0,
       0) :
-     "<Delay delay_msec=\"250\">\n  <AlwaysSuccess />\n</Delay>\n");
+    "<Delay delay_msec=\"250\">\n  <AlwaysSuccess />\n</Delay>\n");
   std::string check_robot_state_1_xml = buildCheckRobotStateXML(
     rp_1.prefix,
     "CheckRobot",
@@ -1265,7 +1265,7 @@ int main(int argc, char ** argv)
     check_robot_state_1_xml,
     reset_robot_state_1_xml
   }) :
-     "<Delay delay_msec=\"100\">\n<AlwaysSuccess />\n</Delay>\n");
+    "<Delay delay_msec=\"100\">\n<AlwaysSuccess />\n</Delay>\n");
 
   // Robot 2
   std::string check_robot_state_2_xml = buildCheckRobotStateXML(
@@ -1288,7 +1288,7 @@ int main(int argc, char ** argv)
     check_robot_state_2_xml,
     reset_robot_state_2_xml
   }) :
-     "<Delay delay_msec=\"100\">\n<AlwaysSuccess />\n</Delay>\n");
+    "<Delay delay_msec=\"100\">\n<AlwaysSuccess />\n</Delay>\n");
 
   //
 
@@ -1309,7 +1309,7 @@ int main(int argc, char ** argv)
   // Robot 1
   std::string go_to_rest_pose_1_xml =
     sequenceWrapperXML(
-      "GoToRestPose",
+    "GoToRestPose",
   {
     rest_move_parallel_1_xml
   });
@@ -1321,7 +1321,7 @@ int main(int argc, char ** argv)
   });
   std::string go_to_pick_pose_1_xml =
     sequenceWrapperXML(
-      "GoToPickPose",
+    "GoToPickPose",
   {
     pick_move_parallel_1_xml
   });
@@ -1334,13 +1334,13 @@ int main(int argc, char ** argv)
   });
   std::string go_to_wait_pose_1_xml =
     sequenceWrapperXML(
-      "GoToWaitPose",
+    "GoToWaitPose",
   {
     wait_move_parallel_1_xml
   });
   std::string go_to_drop_pose_1_xml =
     sequenceWrapperXML(
-      "GoToDropPose",
+    "GoToDropPose",
   {
     drop_move_parallel_1_xml
   });
@@ -1360,7 +1360,7 @@ int main(int argc, char ** argv)
   // Robot 2
   std::string go_to_rest_pose_2_xml =
     sequenceWrapperXML(
-      "GoToRestPose",
+    "GoToRestPose",
   {
     rest_move_parallel_2_xml
   });
@@ -1382,13 +1382,13 @@ int main(int argc, char ** argv)
   });
   std::string go_to_load_pose_2_xml =
     sequenceWrapperXML(
-      "GoToLoadPose",
+    "GoToLoadPose",
   {
     load_move_parallel_2_xml
   });
   std::string go_to_exit_pose_2_xml =
     sequenceWrapperXML(
-      "GoToExitPose",
+    "GoToExitPose",
   {
     exit_move_parallel_2_xml
   });
@@ -1610,8 +1610,7 @@ int main(int argc, char ** argv)
         node->get_logger(),
         "BT ended SUCCESS.");
       break;
-    }
-    else if (status == BT::NodeStatus::FAILURE) {
+    } else if (status == BT::NodeStatus::FAILURE) {
       RCLCPP_ERROR(
         node->get_logger(),
         "BT ended FAILURE.");

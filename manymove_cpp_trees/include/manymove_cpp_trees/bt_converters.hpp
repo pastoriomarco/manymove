@@ -94,7 +94,8 @@ inline geometry_msgs::msg::Pose convertFromString(StringView str)
       ori_start);
 
     if (ox_pos == std::string::npos || oy_pos == std::string::npos ||
-        oz_pos == std::string::npos || ow_pos == std::string::npos) {
+      oz_pos == std::string::npos || ow_pos == std::string::npos)
+    {
       throw std::invalid_argument("Incomplete 'orientation' fields.");
     }
 
@@ -108,7 +109,7 @@ inline geometry_msgs::msg::Pose convertFromString(StringView str)
       s.substr(ow_pos + 2));
   } catch (const std::exception & e) {
     throw BT::RuntimeError(
-      std::string("Failed to parse Pose string: ") + e.what());
+            std::string("Failed to parse Pose string: ") + e.what());
   }
 
   return pose;
@@ -148,7 +149,7 @@ inline std::string convertToString(const std::vector<double> & vec)
   oss << "[";
   for (size_t i = 0; i < vec.size(); ++i) {
     oss << vec[i];
-    if (i != vec.size() - 1)            {
+    if (i != vec.size() - 1) {
       oss << ",";
     }
   }
@@ -165,7 +166,7 @@ inline std::vector<std::string> convertFromString(StringView str)
   std::string value;
 
   // Expecting format: [str1,str2,str3]
-  if (s.front() != '[' || s.back() != ']')                         {
+  if (s.front() != '[' || s.back() != ']') {
     throw BT::RuntimeError("Failed to parse vector<string>: missing opening/closing brackets.");
   }
 
@@ -176,9 +177,10 @@ inline std::vector<std::string> convertFromString(StringView str)
 
   std::istringstream ss(s);
   while (std::getline(
-    ss,
-    value,
-    ',')) {
+      ss,
+      value,
+      ','))
+  {
     vec.push_back(value);
   }
 
@@ -191,7 +193,7 @@ inline std::string convertToString(const std::vector<std::string> & vec)
   oss << "[";
   for (size_t i = 0; i < vec.size(); ++i) {
     oss << vec[i];
-    if (i < vec.size() - 1)           {
+    if (i < vec.size() - 1) {
       oss << ",";
     }
   }
@@ -200,13 +202,13 @@ inline std::string convertToString(const std::vector<std::string> & vec)
 }
 
 template<>
-inline std::string toStr<std::vector<std::string> >(std::vector<std::string> value)
+inline std::string toStr<std::vector<std::string>>(std::vector<std::string> value)
 {
   std::ostringstream oss;
   oss << "[";
   for (size_t i = 0; i < value.size(); ++i) {
     oss << value[i];
-    if (i < value.size() - 1)             {
+    if (i < value.size() - 1) {
       oss << ",";
     }
   }

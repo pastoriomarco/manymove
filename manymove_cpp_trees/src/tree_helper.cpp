@@ -64,26 +64,27 @@ ObjectSnippets createObjectSnippets(
   // Fail if the object was already defined
   std::string tmp;
   if (blackboard->get(
-    id_key,
-    tmp)) {
+      id_key,
+      tmp))
+  {
     throw BT::RuntimeError("Object '" + name + "' already exists");
   }
 
   // Input validation
   if (shape == "box" || shape == "cylinder" || shape == "sphere") {
-    if (dimensions.empty())               {
+    if (dimensions.empty()) {
       throw BT::RuntimeError(
-        "createObjectSnippets: missing dimensions for primitive '" + shape + "'");
+              "createObjectSnippets: missing dimensions for primitive '" + shape + "'");
     }
 
     bool size_ok = (shape == "box" && dimensions.size() == 3) ||
-                   (shape == "cylinder" && dimensions.size() == 2) ||
-                   (shape == "sphere" && dimensions.size() == 1);
+      (shape == "cylinder" && dimensions.size() == 2) ||
+      (shape == "sphere" && dimensions.size() == 1);
 
     if (!size_ok) {
       throw BT::RuntimeError(
-        "createObjectSnippets: wrong number of dimensions for '" + shape +
-        "'");
+              "createObjectSnippets: wrong number of dimensions for '" + shape +
+              "'");
     }
 
     for (double d : dimensions) {
@@ -91,17 +92,15 @@ ObjectSnippets createObjectSnippets(
         throw BT::RuntimeError("createObjectSnippets: dimension values must be positive");
       }
     }
-  }
-  else if (shape == "mesh") {
-    if (mesh_file.empty())              {
+  } else if (shape == "mesh") {
+    if (mesh_file.empty()) {
       throw BT::RuntimeError("createObjectSnippets: mesh_file must be provided for mesh shape");
     }
-  }
-  else {
+  } else {
     throw BT::RuntimeError("createObjectSnippets: unsupported shape '" + shape + "'");
   }
 
-  if (scale.size() != 3)         {
+  if (scale.size() != 3) {
     throw BT::RuntimeError("createObjectSnippets: scale vector must contain 3 elements");
   }
   for (double s : scale) {
@@ -125,13 +124,13 @@ ObjectSnippets createObjectSnippets(
       pose_key, "pose"
     });
 
-  if (!dimensions.empty())                {
+  if (!dimensions.empty()) {
     blackboard->set(
       dim_key,
       dimensions);
   }
 
-  if (!mesh_file.empty())               {
+  if (!mesh_file.empty()) {
     blackboard->set(
       mesh_key,
       mesh_file);
@@ -221,7 +220,7 @@ std::string buildMoveXML(
     move_ids.push_back(this_move_id);
 
     // Check that the move's robot prefix is compatible
-    if (!move.robot_prefix.empty() && (move.robot_prefix != robot_prefix))                       {
+    if (!move.robot_prefix.empty() && (move.robot_prefix != robot_prefix)) {
       RCLCPP_ERROR(
         rclcpp::get_logger(
           "bt_client_node"),
@@ -279,7 +278,7 @@ std::string buildMoveXML(
       blockStartID << "\" move_ids=\"";
     for (size_t i = 0; i < move_ids.size(); i++) {
       execution_seq << move_ids[i];
-      if (i < move_ids.size() - 1)                {
+      if (i < move_ids.size() - 1) {
         execution_seq << ",";
       }
     }
@@ -311,64 +310,64 @@ std::string buildObjectActionXML(const std::string & node_prefix, const ObjectAc
 
   // Handle different action types
   switch (action.type) {
-  case ObjectActionType::ADD:
-  {
-    // Shape attribute
-    xml << "shape=\"{" << action.shape_key_st << "}\" ";
-    // Primitive-specific attributes
-    xml << "dimensions=\"{" << action.dimensions_key_d_a << "}\" ";
-    // Mesh-specific attributes
-    xml << "mesh_file=\"{" << action.mesh_file_key_st << "}\" ";
-    xml << "scale_mesh=\"{" << action.scale_key_d_a << "}\" ";
-    // When a key is provided, use it as a reference.
-    xml << "pose=\"{" << action.pose_key << "}\" ";
+    case ObjectActionType::ADD:
+      {
+        // Shape attribute
+        xml << "shape=\"{" << action.shape_key_st << "}\" ";
+        // Primitive-specific attributes
+        xml << "dimensions=\"{" << action.dimensions_key_d_a << "}\" ";
+        // Mesh-specific attributes
+        xml << "mesh_file=\"{" << action.mesh_file_key_st << "}\" ";
+        xml << "scale_mesh=\"{" << action.scale_key_d_a << "}\" ";
+        // When a key is provided, use it as a reference.
+        xml << "pose=\"{" << action.pose_key << "}\" ";
 
-    break;
-  }
-  case ObjectActionType::REMOVE:
-  {
-    // No additional attributes needed
-    break;
-  }
-  case ObjectActionType::ATTACH:
-  {
-    // Link name and attach flag
-    xml << "link_name=\"{" << action.link_name_key_st << "}\" ";
-    xml << "attach=\"" << "true" << "\" ";
+        break;
+      }
+    case ObjectActionType::REMOVE:
+      {
+        // No additional attributes needed
+        break;
+      }
+    case ObjectActionType::ATTACH:
+      {
+        // Link name and attach flag
+        xml << "link_name=\"{" << action.link_name_key_st << "}\" ";
+        xml << "attach=\"" << "true" << "\" ";
 
-    if (!action.touch_links_key_st_a.empty())                                 {
-      xml << "touch_links=\"{" << action.touch_links_key_st_a << "}\" ";
-    }
-    break;
-  }
-  case ObjectActionType::DETACH:
-  {
-    // Link name and attach flag
-    xml << "link_name=\"{" << action.link_name_key_st << "}\" ";
-    xml << "attach=\"" << "false" << "\" ";
+        if (!action.touch_links_key_st_a.empty()) {
+          xml << "touch_links=\"{" << action.touch_links_key_st_a << "}\" ";
+        }
+        break;
+      }
+    case ObjectActionType::DETACH:
+      {
+        // Link name and attach flag
+        xml << "link_name=\"{" << action.link_name_key_st << "}\" ";
+        xml << "attach=\"" << "false" << "\" ";
 
-    // If touch_links is not empty, serialize it as a comma-separated list.
-    if (!action.touch_links_key_st_a.empty())                                 {
-      xml << "touch_links=\"{" << action.touch_links_key_st_a << "}\" ";
-    }
-    break;
-  }
-  case ObjectActionType::CHECK:
-  {
-    // No additional attributes needed
-    break;
-  }
-  case ObjectActionType::GET_POSE:
-  {
-    xml << "pre_transform_xyz_rpy=\"{" << action.pre_transform_xyz_rpy_key_d_a << "}\" ";
-    xml << "post_transform_xyz_rpy=\"{" << action.post_transform_xyz_rpy_key_d_a << "}\" ";
-    xml << "link_name=\"{" << action.link_name_key_st << "}\" ";
+        // If touch_links is not empty, serialize it as a comma-separated list.
+        if (!action.touch_links_key_st_a.empty()) {
+          xml << "touch_links=\"{" << action.touch_links_key_st_a << "}\" ";
+        }
+        break;
+      }
+    case ObjectActionType::CHECK:
+      {
+        // No additional attributes needed
+        break;
+      }
+    case ObjectActionType::GET_POSE:
+      {
+        xml << "pre_transform_xyz_rpy=\"{" << action.pre_transform_xyz_rpy_key_d_a << "}\" ";
+        xml << "post_transform_xyz_rpy=\"{" << action.post_transform_xyz_rpy_key_d_a << "}\" ";
+        xml << "link_name=\"{" << action.link_name_key_st << "}\" ";
 
-    xml << "pose_key=\"" << action.pose_key << "\" ";
-    break;
-  }
-  default:
-    throw std::invalid_argument("Unsupported ObjectActionType in buildObjectActionXML");
+        xml << "pose_key=\"" << action.pose_key << "\" ";
+        break;
+      }
+    default:
+      throw std::invalid_argument("Unsupported ObjectActionType in buildObjectActionXML");
   }
 
   // Close the XML node
@@ -414,9 +413,9 @@ std::string buildFoundationPoseSequenceXML(
   xml << " />";
 
   if (bounds_check) {
-    if (bounds.size() != 6)          {
+    if (bounds.size() != 6) {
       throw BT::RuntimeError(
-        "buildFoundationPoseSequenceXML: 'bounds' must have 6 elements [min_x,min_y,min_z,max_x,max_y,max_z]");
+              "buildFoundationPoseSequenceXML: 'bounds' must have 6 elements [min_x,min_y,min_z,max_x,max_y,max_z]");
     }
     xml << "\n" << buildCheckPoseBoundsXML(
       "FoundationPoseBounds",
@@ -666,19 +665,19 @@ std::string buildCheckRobotStateXML(
       << "robot_prefix=\"" << robot_prefix << "\" ";
 
   // Optional outputs
-  if (!ready_key.empty())               {
+  if (!ready_key.empty()) {
     xml << " ready=\"{" << ready_key << "}\"";
   }
-  if (!err_key.empty())             {
+  if (!err_key.empty()) {
     xml << " err=\"{" << err_key << "}\"";
   }
-  if (!mode_key.empty())              {
+  if (!mode_key.empty()) {
     xml << " mode=\"{" << mode_key << "}\"";
   }
-  if (!state_key.empty())               {
+  if (!state_key.empty()) {
     xml << " state=\"{" << state_key << "}\"";
   }
-  if (!message_key.empty())                 {
+  if (!message_key.empty()) {
     xml << " message=\"{" << message_key << "}\"";
   }
 
@@ -959,19 +958,19 @@ geometry_msgs::msg::Pose createPoseRPY(
 std::string objectActionTypeToString(ObjectActionType type)
 {
   switch (type) {
-  case ObjectActionType::ADD:
-    return "AddCollisionObjectAction";
-  case ObjectActionType::REMOVE:
-    return "RemoveCollisionObjectAction";
-  case ObjectActionType::ATTACH:
-  case ObjectActionType::DETACH:
-    return "AttachDetachObjectAction";
-  case ObjectActionType::CHECK:
-    return "CheckObjectExistsAction";
-  case ObjectActionType::GET_POSE:
-    return "GetObjectPoseAction";
-  default:
-    throw std::invalid_argument("Unsupported ObjectActionType");
+    case ObjectActionType::ADD:
+      return "AddCollisionObjectAction";
+    case ObjectActionType::REMOVE:
+      return "RemoveCollisionObjectAction";
+    case ObjectActionType::ATTACH:
+    case ObjectActionType::DETACH:
+      return "AttachDetachObjectAction";
+    case ObjectActionType::CHECK:
+      return "CheckObjectExistsAction";
+    case ObjectActionType::GET_POSE:
+      return "GetObjectPoseAction";
+    default:
+      throw std::invalid_argument("Unsupported ObjectActionType");
   }
 }
 

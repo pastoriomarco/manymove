@@ -36,8 +36,8 @@
 class DefaultAppModule : public AppModule
 {
 public:
-  explicit DefaultAppModule(QWidget * parent = nullptr) :
-    AppModule(buildKeys(), parent)
+  explicit DefaultAppModule(QWidget * parent = nullptr)
+  : AppModule(buildKeys(), parent)
   {
   }
 

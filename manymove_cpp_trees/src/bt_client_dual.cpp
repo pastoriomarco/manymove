@@ -499,61 +499,61 @@ int main(int argc, char ** argv)
   // relative to each type of object action)
   std::string check_ground_obj_xml =
     buildObjectActionXML(
-      "check_ground",
-      createCheckObjectExists("ground_id_key"));
+    "check_ground",
+    createCheckObjectExists("ground_id_key"));
   std::string check_wall_obj_xml =
     buildObjectActionXML(
-      "check_wall",
-      createCheckObjectExists("wall_id_key"));
+    "check_wall",
+    createCheckObjectExists("wall_id_key"));
   std::string check_cylinder_obj_xml = buildObjectActionXML(
     "check_cylinder",
     createCheckObjectExists(
       "cylinder_id_key"));
   std::string check_mesh_obj_xml =
     buildObjectActionXML(
-      "check_mesh",
-      createCheckObjectExists("mesh_id_key"));
+    "check_mesh",
+    createCheckObjectExists("mesh_id_key"));
 
   std::string add_ground_obj_xml =
     buildObjectActionXML(
-      "add_ground",
-      createAddObject(
-        "ground_id_key",
-        "ground_shape_key",
-        "ground_dimension_key",
-        "ground_pose_key",
-        "ground_scale_key",
-        ""));
+    "add_ground",
+    createAddObject(
+      "ground_id_key",
+      "ground_shape_key",
+      "ground_dimension_key",
+      "ground_pose_key",
+      "ground_scale_key",
+      ""));
   std::string add_wall_obj_xml =
     buildObjectActionXML(
-      "add_wall",
-      createAddObject(
-        "wall_id_key",
-        "wall_shape_key",
-        "wall_dimension_key",
-        "wall_pose_key",
-        "wall_scale_key",
-        ""));
+    "add_wall",
+    createAddObject(
+      "wall_id_key",
+      "wall_shape_key",
+      "wall_dimension_key",
+      "wall_pose_key",
+      "wall_scale_key",
+      ""));
   std::string add_cylinder_obj_xml =
     buildObjectActionXML(
-      "add_cylinder",
-      createAddObject(
-        "cylinder_id_key",
-        "cylinder_shape_key",
-        "cylinder_dimension_key",
-        "cylinder_pose_key",
-        "cylinder_scale_key",
-        ""));
+    "add_cylinder",
+    createAddObject(
+      "cylinder_id_key",
+      "cylinder_shape_key",
+      "cylinder_dimension_key",
+      "cylinder_pose_key",
+      "cylinder_scale_key",
+      ""));
   std::string add_mesh_obj_xml =
     buildObjectActionXML(
-      "add_mesh",
-      createAddObject(
-        "mesh_id_key",
-        "mesh_shape_key",
-        "",
-        "mesh_pose_key",
-        "mesh_scale_key",
-        "mesh_file_key"));
+    "add_mesh",
+    createAddObject(
+      "mesh_id_key",
+      "mesh_shape_key",
+      "",
+      "mesh_pose_key",
+      "mesh_scale_key",
+      "mesh_file_key"));
 
   // Compose the check and add sequence for objects
   std::string init_ground_obj_xml = fallbackWrapperXML(
@@ -689,13 +689,13 @@ int main(int argc, char ** argv)
   // Translate get_pose_action to xml tree leaf
   std::string get_pick_pose_1_xml =
     buildObjectActionXML(
-      "get_pick_pose_1",
-      createGetObjectPose(
-        "object_to_manipulate_1_key",
-        "pick_target_1_key",
-        "world_frame_key",
-        "pick_pre_transform_xyz_rpy_1_key",
-        "pick_post_transform_xyz_rpy_1_key"));
+    "get_pick_pose_1",
+    createGetObjectPose(
+      "object_to_manipulate_1_key",
+      "pick_target_1_key",
+      "world_frame_key",
+      "pick_pre_transform_xyz_rpy_1_key",
+      "pick_post_transform_xyz_rpy_1_key"));
   std::string get_approach_pose_1_xml = buildObjectActionXML(
     "get_approach_pose_1",
     createGetObjectPose(
@@ -733,13 +733,13 @@ int main(int argc, char ** argv)
   // Translate get_pose_action to xml tree leaf
   std::string get_pick_pose_2_xml =
     buildObjectActionXML(
-      "get_pick_pose_2",
-      createGetObjectPose(
-        "object_to_manipulate_2_key",
-        "pick_target_2_key",
-        "world_frame_key",
-        "pick_pre_transform_xyz_rpy_2_key",
-        "pick_post_transform_xyz_rpy_2_key"));
+    "get_pick_pose_2",
+    createGetObjectPose(
+      "object_to_manipulate_2_key",
+      "pick_target_2_key",
+      "world_frame_key",
+      "pick_pre_transform_xyz_rpy_2_key",
+      "pick_post_transform_xyz_rpy_2_key"));
   std::string get_approach_pose_2_xml = buildObjectActionXML(
     "get_approach_pose_2",
     createGetObjectPose(
@@ -777,7 +777,7 @@ int main(int argc, char ** argv)
       "controller",
       0,
       1) :
-     "<Delay delay_msec=\"250\">\n<AlwaysSuccess />\n</Delay>\n");
+    "<Delay delay_msec=\"250\">\n<AlwaysSuccess />\n</Delay>\n");
   std::string check_gripper_open_1_xml =
     (rp_1.is_real ? buildWaitForInput(
       rp_1.prefix,
@@ -785,7 +785,7 @@ int main(int argc, char ** argv)
       "controller",
       0,
       0) :
-     "<Delay delay_msec=\"250\">\n  <AlwaysSuccess />\n</Delay>\n");
+    "<Delay delay_msec=\"250\">\n  <AlwaysSuccess />\n</Delay>\n");
   std::string check_robot_state_1_xml = buildCheckRobotStateXML(
     rp_1.prefix,
     "CheckRobot",
@@ -806,7 +806,7 @@ int main(int argc, char ** argv)
     check_robot_state_1_xml,
     reset_robot_state_1_xml
   }) :
-     "<Delay delay_msec=\"250\">\n<AlwaysSuccess />\n</Delay>\n");
+    "<Delay delay_msec=\"250\">\n<AlwaysSuccess />\n</Delay>\n");
 
   // Robot 2
   std::string signal_gripper_close_2_xml =
@@ -830,7 +830,7 @@ int main(int argc, char ** argv)
       "controller",
       0,
       1) :
-     "<Delay delay_msec=\"250\">\n<AlwaysSuccess />\n</Delay>\n");
+    "<Delay delay_msec=\"250\">\n<AlwaysSuccess />\n</Delay>\n");
   std::string check_gripper_open_2_xml =
     (rp_2.is_real ? buildWaitForInput(
       rp_2.prefix,
@@ -838,7 +838,7 @@ int main(int argc, char ** argv)
       "controller",
       0,
       0) :
-     "<Delay delay_msec=\"250\">\n  <AlwaysSuccess />\n</Delay>\n");
+    "<Delay delay_msec=\"250\">\n  <AlwaysSuccess />\n</Delay>\n");
   std::string check_robot_state_2_xml = buildCheckRobotStateXML(
     rp_2.prefix,
     "CheckRobot",
@@ -859,7 +859,7 @@ int main(int argc, char ** argv)
     check_robot_state_2_xml,
     reset_robot_state_2_xml
   }) :
-     "<Delay delay_msec=\"250\">\n<AlwaysSuccess />\n</Delay>\n");
+    "<Delay delay_msec=\"250\">\n<AlwaysSuccess />\n</Delay>\n");
 
   // ----------------------------------------------------------------------------
   // 6) Combine the objects and moves in a sequences that can run a number of times:
@@ -1234,8 +1234,7 @@ int main(int argc, char ** argv)
         node->get_logger(),
         "BT ended SUCCESS.");
       break;
-    }
-    else if (status == BT::NodeStatus::FAILURE) {
+    } else if (status == BT::NodeStatus::FAILURE) {
       RCLCPP_ERROR(
         node->get_logger(),
         "BT ended FAILURE.");

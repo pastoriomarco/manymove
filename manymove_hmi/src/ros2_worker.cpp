@@ -38,8 +38,8 @@ using namespace std::chrono_literals;
 
 Ros2Worker::Ros2Worker(
   const std::string & node_name, HmiGui * gui,
-  const std::string & robot_prefix) :
-  Node(node_name), gui_(gui), robot_prefix_(robot_prefix)
+  const std::string & robot_prefix)
+: Node(node_name), gui_(gui), robot_prefix_(robot_prefix)
 {
   RCLCPP_INFO_STREAM(
     this->get_logger(),
@@ -60,7 +60,7 @@ Ros2Worker::Ros2Worker(
     this->create_client<manymove_msgs::srv::SetBlackboardValues>("update_blackboard");
 
   // Wait a little for the service.
-  if (!update_blackboard_client_->wait_for_service(2s))                                           {
+  if (!update_blackboard_client_->wait_for_service(2s)) {
     RCLCPP_WARN(
       this->get_logger(),
       "Service 'update_blackboard' not available yet. Will still attempt calls.");
@@ -105,7 +105,7 @@ void Ros2Worker::statusCallback(const std_msgs::msg::String::SharedPtr msg)
       collision_detected));
 
   /* ---------- HMI keys ----------------------------------------- */
-  AppModule * appModule = gui_->findChild<AppModule*>();
+  AppModule * appModule = gui_->findChild<AppModule *>();
   if (!appModule) {
     return;
   }
@@ -113,16 +113,16 @@ void Ros2Worker::statusCallback(const std_msgs::msg::String::SharedPtr msg)
   const auto & knownKeys = appModule->getKnownKeys();
 
   auto stripQuotes = [](std::string & s)
-                     {
-                       if (!s.empty() && s.front() == '"')                    {
-                         s.erase(
-                           0,
-                           1);
-                       }
-                       if (!s.empty() && s.back() == '"')                   {
-                         s.pop_back();
-                       }
-                     };
+    {
+      if (!s.empty() && s.front() == '"') {
+        s.erase(
+          0,
+          1);
+      }
+      if (!s.empty() && s.back() == '"') {
+        s.pop_back();
+      }
+    };
 
   for (const auto & bk : knownKeys) {
     /* keys in the JSON are *not* prefixed – keep original pattern */
@@ -260,30 +260,30 @@ void Ros2Worker::statusCallback(const std_msgs::msg::String::SharedPtr msg)
 
   /* ---------- per-robot message -------------------------------- */
   auto findString = [&](const std::string & key) -> std::string
-                    {
-                      std::string pattern = "\"" + key + "\":";
-                      size_t pos = data.find(pattern);
-                      if (pos == std::string::npos) {
-                        return std::string();
-                      }
-                      pos += pattern.size();
-                      while (pos < data.size() && std::isspace(data[pos])) {
-                        ++pos;
-                      }
-                      if (pos >= data.size() || data[pos] != '"')               {
-                        return std::string();
-                      }
-                      ++pos;
-                      size_t end = data.find(
-                        '"',
-                        pos);
-                      if (end == std::string::npos) {
-                        return std::string();
-                      }
-                      return data.substr(
-                        pos,
-                        end - pos);
-                    };
+    {
+      std::string pattern = "\"" + key + "\":";
+      size_t pos = data.find(pattern);
+      if (pos == std::string::npos) {
+        return std::string();
+      }
+      pos += pattern.size();
+      while (pos < data.size() && std::isspace(data[pos])) {
+        ++pos;
+      }
+      if (pos >= data.size() || data[pos] != '"') {
+        return std::string();
+      }
+      ++pos;
+      size_t end = data.find(
+        '"',
+        pos);
+      if (end == std::string::npos) {
+        return std::string();
+      }
+      return data.substr(
+        pos,
+        end - pos);
+    };
 
   const std::string msgKey = robot_prefix_ + "message";
   const std::string colorKey = robot_prefix_ + "message_color";
@@ -328,7 +328,7 @@ void Ros2Worker::callStartExecution()
 
   auto future = update_blackboard_client_->async_send_request(request);
 
-  if (!update_blackboard_client_->wait_for_service(1s))                                           {
+  if (!update_blackboard_client_->wait_for_service(1s)) {
     RCLCPP_WARN(
       this->get_logger(),
       "callStartExecution() => service not available yet.");
@@ -344,7 +344,7 @@ void Ros2Worker::callStopExecution()
   request->value_data.push_back("true");
 
   auto future = update_blackboard_client_->async_send_request(request);
-  if (!update_blackboard_client_->wait_for_service(1s))                                           {
+  if (!update_blackboard_client_->wait_for_service(1s)) {
     RCLCPP_WARN(
       this->get_logger(),
       "callStopExecution() => service not available yet.");
@@ -365,7 +365,7 @@ void Ros2Worker::callResetProgram()
   request->value_data.push_back("true");
 
   auto future = update_blackboard_client_->async_send_request(request);
-  if (!update_blackboard_client_->wait_for_service(1s))                                           {
+  if (!update_blackboard_client_->wait_for_service(1s)) {
     RCLCPP_WARN(
       this->get_logger(),
       "callResetProgram() => service not available yet.");

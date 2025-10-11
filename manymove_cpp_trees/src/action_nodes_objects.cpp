@@ -39,8 +39,8 @@ namespace manymove_cpp_trees
 
 AddCollisionObjectAction::AddCollisionObjectAction(
   const std::string & name,
-  const BT::NodeConfiguration & config) :
-  BT::StatefulActionNode(name, config),
+  const BT::NodeConfiguration & config)
+: BT::StatefulActionNode(name, config),
   goal_sent_(false),
   result_received_(false)
 {
@@ -49,23 +49,25 @@ AddCollisionObjectAction::AddCollisionObjectAction(
     throw BT::RuntimeError("AddCollisionObjectAction: no blackboard provided.");
   }
   if (!config.blackboard->get(
-    "node",
-    node_)) {
+      "node",
+      node_))
+  {
     throw BT::RuntimeError("AddCollisionObjectAction: 'node' not found in blackboard.");
   }
 
   // Initialize the action client
   action_client_ =
     rclcpp_action::create_client<AddCollisionObject>(
-      node_,
-      "add_collision_object");
+    node_,
+    "add_collision_object");
   RCLCPP_INFO(
     node_->get_logger(),
     "AddCollisionObjectAction: Waiting for 'add_collision_object' server...");
   if (!action_client_->wait_for_action_server(
-    std::chrono::seconds(10)))                                                         {
+      std::chrono::seconds(10)))
+  {
     throw BT::RuntimeError(
-      "AddCollisionObjectAction: 'add_collision_object' server not available after waiting.");
+            "AddCollisionObjectAction: 'add_collision_object' server not available after waiting.");
   }
   RCLCPP_INFO(
     node_->get_logger(),
@@ -84,8 +86,9 @@ BT::NodeStatus AddCollisionObjectAction::onStart()
 
   // Retrieve input ports
   if (!getInput<std::string>(
-    "object_id",
-    object_id_)) {
+      "object_id",
+      object_id_))
+  {
     RCLCPP_ERROR(
       node_->get_logger(),
       "AddCollisionObjectAction: Missing required input 'object_id'.");
@@ -94,8 +97,9 @@ BT::NodeStatus AddCollisionObjectAction::onStart()
 
   std::string shape;
   if (!getInput<std::string>(
-    "shape",
-    shape)) {
+      "shape",
+      shape))
+  {
     RCLCPP_ERROR(
       node_->get_logger(),
       "AddCollisionObjectAction: Missing required input 'shape'.");
@@ -104,9 +108,10 @@ BT::NodeStatus AddCollisionObjectAction::onStart()
 
   std::vector<double> dimensions;
   if (shape != "mesh") {
-    if (!getInput<std::vector<double> >(
-      "dimensions",
-      dimensions)) {
+    if (!getInput<std::vector<double>>(
+        "dimensions",
+        dimensions))
+    {
       RCLCPP_ERROR(
         node_->get_logger(),
         "AddCollisionObjectAction: Missing required input 'dimensions' for shape '%s'.",
@@ -117,8 +122,9 @@ BT::NodeStatus AddCollisionObjectAction::onStart()
 
   geometry_msgs::msg::Pose pose;
   if (!getInput<geometry_msgs::msg::Pose>(
-    "pose",
-    pose)) {
+      "pose",
+      pose))
+  {
     RCLCPP_ERROR(
       node_->get_logger(),
       "AddCollisionObjectAction: Missing required input 'pose'.");
@@ -128,8 +134,9 @@ BT::NodeStatus AddCollisionObjectAction::onStart()
   std::string mesh_file;
   if (shape == "mesh") {
     if (!getInput<std::string>(
-      "mesh_file",
-      mesh_file)) {
+        "mesh_file",
+        mesh_file))
+    {
       RCLCPP_ERROR(
         node_->get_logger(),
         "AddCollisionObjectAction: Missing required input 'mesh_file' for mesh shape.");
@@ -138,7 +145,7 @@ BT::NodeStatus AddCollisionObjectAction::onStart()
   }
 
   std::vector<double> scale;
-  getInput<std::vector<double> >(
+  getInput<std::vector<double>>(
     "scale_mesh",
     scale);
 
@@ -151,8 +158,7 @@ BT::NodeStatus AddCollisionObjectAction::onStart()
   if (shape == "mesh") {
     goal_msg.mesh_file = mesh_file;
     goal_msg.scale_mesh = scale;
-  }
-  else {
+  } else {
     goal_msg.dimensions = dimensions;
   }
 
@@ -164,14 +170,14 @@ BT::NodeStatus AddCollisionObjectAction::onStart()
   auto send_goal_options = rclcpp_action::Client<AddCollisionObject>::SendGoalOptions();
   send_goal_options.goal_response_callback =
     std::bind(
-      &AddCollisionObjectAction::goalResponseCallback,
-      this,
-      std::placeholders::_1);
+    &AddCollisionObjectAction::goalResponseCallback,
+    this,
+    std::placeholders::_1);
   send_goal_options.result_callback =
     std::bind(
-      &AddCollisionObjectAction::resultCallback,
-      this,
-      std::placeholders::_1);
+    &AddCollisionObjectAction::resultCallback,
+    this,
+    std::placeholders::_1);
 
   action_client_->async_send_goal(
     goal_msg,
@@ -190,8 +196,7 @@ BT::NodeStatus AddCollisionObjectAction::onRunning()
         "AddCollisionObjectAction: Successfully added object '%s'.",
         object_id_.c_str());
       return BT::NodeStatus::SUCCESS;
-    }
-    else {
+    } else {
       RCLCPP_ERROR(
         node_->get_logger(),
         "AddCollisionObjectAction: Failed to add object '%s'. Message: %s",
@@ -230,8 +235,7 @@ void AddCollisionObjectAction::goalResponseCallback(
       "AddCollisionObjectAction: Goal was rejected by the server.");
     // You can set action_result_ here if needed
     result_received_ = true;
-  }
-  else {
+  } else {
     RCLCPP_INFO(
       node_->get_logger(),
       "AddCollisionObjectAction: Goal accepted by the server, waiting for result.");
@@ -242,33 +246,33 @@ void AddCollisionObjectAction::resultCallback(
   const GoalHandleAddCollisionObject::WrappedResult & wrapped_result)
 {
   switch (wrapped_result.code) {
-  case rclcpp_action::ResultCode::SUCCEEDED:
-    RCLCPP_INFO(
-      node_->get_logger(),
-      "AddCollisionObjectAction: Goal succeeded.");
-    action_result_ = *(wrapped_result.result);
-    break;
-  case rclcpp_action::ResultCode::ABORTED:
-    RCLCPP_ERROR(
-      node_->get_logger(),
-      "AddCollisionObjectAction: Goal was aborted.");
-    action_result_.success = false;
-    action_result_.message = "Action aborted.";
-    break;
-  case rclcpp_action::ResultCode::CANCELED:
-    RCLCPP_WARN(
-      node_->get_logger(),
-      "AddCollisionObjectAction: Goal was canceled.");
-    action_result_.success = false;
-    action_result_.message = "Action canceled.";
-    break;
-  default:
-    RCLCPP_ERROR(
-      node_->get_logger(),
-      "AddCollisionObjectAction: Unknown result code.");
-    action_result_.success = false;
-    action_result_.message = "Unknown result code.";
-    break;
+    case rclcpp_action::ResultCode::SUCCEEDED:
+      RCLCPP_INFO(
+        node_->get_logger(),
+        "AddCollisionObjectAction: Goal succeeded.");
+      action_result_ = *(wrapped_result.result);
+      break;
+    case rclcpp_action::ResultCode::ABORTED:
+      RCLCPP_ERROR(
+        node_->get_logger(),
+        "AddCollisionObjectAction: Goal was aborted.");
+      action_result_.success = false;
+      action_result_.message = "Action aborted.";
+      break;
+    case rclcpp_action::ResultCode::CANCELED:
+      RCLCPP_WARN(
+        node_->get_logger(),
+        "AddCollisionObjectAction: Goal was canceled.");
+      action_result_.success = false;
+      action_result_.message = "Action canceled.";
+      break;
+    default:
+      RCLCPP_ERROR(
+        node_->get_logger(),
+        "AddCollisionObjectAction: Unknown result code.");
+      action_result_.success = false;
+      action_result_.message = "Unknown result code.";
+      break;
   }
 
   result_received_ = true;
@@ -278,8 +282,8 @@ void AddCollisionObjectAction::resultCallback(
 
 RemoveCollisionObjectAction::RemoveCollisionObjectAction(
   const std::string & name,
-  const BT::NodeConfiguration & config) :
-  BT::StatefulActionNode(name, config),
+  const BT::NodeConfiguration & config)
+: BT::StatefulActionNode(name, config),
   goal_sent_(false),
   result_received_(false)
 {
@@ -288,8 +292,9 @@ RemoveCollisionObjectAction::RemoveCollisionObjectAction(
     throw BT::RuntimeError("RemoveCollisionObjectAction: no blackboard provided.");
   }
   if (!config.blackboard->get(
-    "node",
-    node_)) {
+      "node",
+      node_))
+  {
     throw BT::RuntimeError("RemoveCollisionObjectAction: 'node' not found in blackboard.");
   }
 
@@ -301,9 +306,10 @@ RemoveCollisionObjectAction::RemoveCollisionObjectAction(
     node_->get_logger(),
     "RemoveCollisionObjectAction: Waiting for 'remove_collision_object' server...");
   if (!action_client_->wait_for_action_server(
-    std::chrono::seconds(10)))                                                         {
+      std::chrono::seconds(10)))
+  {
     throw BT::RuntimeError(
-      "RemoveCollisionObjectAction: 'remove_collision_object' server not available after waiting.");
+            "RemoveCollisionObjectAction: 'remove_collision_object' server not available after waiting.");
   }
   RCLCPP_INFO(
     node_->get_logger(),
@@ -322,8 +328,9 @@ BT::NodeStatus RemoveCollisionObjectAction::onStart()
 
   // Retrieve input port
   if (!getInput<std::string>(
-    "object_id",
-    object_id_)) {
+      "object_id",
+      object_id_))
+  {
     RCLCPP_ERROR(
       node_->get_logger(),
       "RemoveCollisionObjectAction: Missing required input 'object_id'.");
@@ -342,14 +349,14 @@ BT::NodeStatus RemoveCollisionObjectAction::onStart()
   auto send_goal_options = rclcpp_action::Client<RemoveCollisionObject>::SendGoalOptions();
   send_goal_options.goal_response_callback =
     std::bind(
-      &RemoveCollisionObjectAction::goalResponseCallback,
-      this,
-      std::placeholders::_1);
+    &RemoveCollisionObjectAction::goalResponseCallback,
+    this,
+    std::placeholders::_1);
   send_goal_options.result_callback =
     std::bind(
-      &RemoveCollisionObjectAction::resultCallback,
-      this,
-      std::placeholders::_1);
+    &RemoveCollisionObjectAction::resultCallback,
+    this,
+    std::placeholders::_1);
 
   action_client_->async_send_goal(
     goal_msg,
@@ -368,8 +375,7 @@ BT::NodeStatus RemoveCollisionObjectAction::onRunning()
         "RemoveCollisionObjectAction: Successfully removed object '%s'.",
         object_id_.c_str());
       return BT::NodeStatus::SUCCESS;
-    }
-    else {
+    } else {
       RCLCPP_ERROR(
         node_->get_logger(),
         "RemoveCollisionObjectAction: Failed to remove object '%s'. Message: %s",
@@ -408,8 +414,7 @@ void RemoveCollisionObjectAction::goalResponseCallback(
       "RemoveCollisionObjectAction: Goal was rejected by the server.");
     // You can set action_result_ here if needed
     result_received_ = true;
-  }
-  else {
+  } else {
     RCLCPP_INFO(
       node_->get_logger(),
       "RemoveCollisionObjectAction: Goal accepted by the server, waiting for result.");
@@ -420,33 +425,33 @@ void RemoveCollisionObjectAction::resultCallback(
   const GoalHandleRemoveCollisionObject::WrappedResult & wrapped_result)
 {
   switch (wrapped_result.code) {
-  case rclcpp_action::ResultCode::SUCCEEDED:
-    RCLCPP_INFO(
-      node_->get_logger(),
-      "RemoveCollisionObjectAction: Goal succeeded.");
-    action_result_ = *(wrapped_result.result);
-    break;
-  case rclcpp_action::ResultCode::ABORTED:
-    RCLCPP_ERROR(
-      node_->get_logger(),
-      "RemoveCollisionObjectAction: Goal was aborted.");
-    action_result_.success = false;
-    action_result_.message = "Action aborted.";
-    break;
-  case rclcpp_action::ResultCode::CANCELED:
-    RCLCPP_WARN(
-      node_->get_logger(),
-      "RemoveCollisionObjectAction: Goal was canceled.");
-    action_result_.success = false;
-    action_result_.message = "Action canceled.";
-    break;
-  default:
-    RCLCPP_ERROR(
-      node_->get_logger(),
-      "RemoveCollisionObjectAction: Unknown result code.");
-    action_result_.success = false;
-    action_result_.message = "Unknown result code.";
-    break;
+    case rclcpp_action::ResultCode::SUCCEEDED:
+      RCLCPP_INFO(
+        node_->get_logger(),
+        "RemoveCollisionObjectAction: Goal succeeded.");
+      action_result_ = *(wrapped_result.result);
+      break;
+    case rclcpp_action::ResultCode::ABORTED:
+      RCLCPP_ERROR(
+        node_->get_logger(),
+        "RemoveCollisionObjectAction: Goal was aborted.");
+      action_result_.success = false;
+      action_result_.message = "Action aborted.";
+      break;
+    case rclcpp_action::ResultCode::CANCELED:
+      RCLCPP_WARN(
+        node_->get_logger(),
+        "RemoveCollisionObjectAction: Goal was canceled.");
+      action_result_.success = false;
+      action_result_.message = "Action canceled.";
+      break;
+    default:
+      RCLCPP_ERROR(
+        node_->get_logger(),
+        "RemoveCollisionObjectAction: Unknown result code.");
+      action_result_.success = false;
+      action_result_.message = "Unknown result code.";
+      break;
   }
 
   result_received_ = true;
@@ -456,8 +461,8 @@ void RemoveCollisionObjectAction::resultCallback(
 
 AttachDetachObjectAction::AttachDetachObjectAction(
   const std::string & name,
-  const BT::NodeConfiguration & config) :
-  BT::StatefulActionNode(name, config),
+  const BT::NodeConfiguration & config)
+: BT::StatefulActionNode(name, config),
   goal_sent_(false),
   result_received_(false),
   attach_(true)         // Default to attach
@@ -467,23 +472,25 @@ AttachDetachObjectAction::AttachDetachObjectAction(
     throw BT::RuntimeError("AttachDetachObjectAction: no blackboard provided.");
   }
   if (!config.blackboard->get(
-    "node",
-    node_)) {
+      "node",
+      node_))
+  {
     throw BT::RuntimeError("AttachDetachObjectAction: 'node' not found in blackboard.");
   }
 
   // Initialize the action client
   action_client_ =
     rclcpp_action::create_client<AttachDetachObject>(
-      node_,
-      "attach_detach_object");
+    node_,
+    "attach_detach_object");
   RCLCPP_INFO(
     node_->get_logger(),
     "AttachDetachObjectAction: Waiting for 'attach_detach_object' server...");
   if (!action_client_->wait_for_action_server(
-    std::chrono::seconds(10)))                                                         {
+      std::chrono::seconds(10)))
+  {
     throw BT::RuntimeError(
-      "AttachDetachObjectAction: 'attach_detach_object' server not available after waiting.");
+            "AttachDetachObjectAction: 'attach_detach_object' server not available after waiting.");
   }
   RCLCPP_INFO(
     node_->get_logger(),
@@ -501,8 +508,9 @@ BT::NodeStatus AttachDetachObjectAction::onStart()
   action_result_ = AttachDetachObject::Result();
 
   if (!getInput<std::string>(
-    "object_id",
-    object_id_)) {
+      "object_id",
+      object_id_))
+  {
     RCLCPP_ERROR(
       node_->get_logger(),
       "AttachDetachObjectAction: Missing required input 'object_id'.");
@@ -510,8 +518,9 @@ BT::NodeStatus AttachDetachObjectAction::onStart()
   }
 
   if (!getInput<std::string>(
-    "link_name",
-    link_name_)) {
+      "link_name",
+      link_name_))
+  {
     RCLCPP_ERROR(
       node_->get_logger(),
       "AttachDetachObjectAction: Missing required input 'link_name'.");
@@ -519,8 +528,9 @@ BT::NodeStatus AttachDetachObjectAction::onStart()
   }
 
   if (!getInput<bool>(
-    "attach",
-    attach_)) {
+      "attach",
+      attach_))
+  {
     RCLCPP_WARN(
       node_->get_logger(),
       "AttachDetachObjectAction: Missing input 'attach'. Defaulting to true.");
@@ -530,8 +540,9 @@ BT::NodeStatus AttachDetachObjectAction::onStart()
   // Retrieve the optional "touch_links" input
   std::vector<std::string> touch_links;
   if (!getInput(
-    "touch_links",
-    touch_links)) {
+      "touch_links",
+      touch_links))
+  {
     RCLCPP_WARN(
       node_->get_logger(),
       "AttachDetachObjectAction: No 'touch_links' provided, defaulting to empty.");
@@ -558,14 +569,14 @@ BT::NodeStatus AttachDetachObjectAction::onStart()
   auto send_goal_options = rclcpp_action::Client<AttachDetachObject>::SendGoalOptions();
   send_goal_options.goal_response_callback =
     std::bind(
-      &AttachDetachObjectAction::goalResponseCallback,
-      this,
-      std::placeholders::_1);
+    &AttachDetachObjectAction::goalResponseCallback,
+    this,
+    std::placeholders::_1);
   send_goal_options.result_callback =
     std::bind(
-      &AttachDetachObjectAction::resultCallback,
-      this,
-      std::placeholders::_1);
+    &AttachDetachObjectAction::resultCallback,
+    this,
+    std::placeholders::_1);
 
   action_client_->async_send_goal(
     goal_msg,
@@ -587,8 +598,7 @@ BT::NodeStatus AttachDetachObjectAction::onRunning()
         object_id_.c_str(),
         link_name_.c_str());
       return BT::NodeStatus::SUCCESS;
-    }
-    else {
+    } else {
       std::string action = attach_ ? "attach" : "detach";
       RCLCPP_ERROR(
         node_->get_logger(),
@@ -630,8 +640,7 @@ void AttachDetachObjectAction::goalResponseCallback(
       "AttachDetachObjectAction: Goal was rejected by the server.");
     // You can set action_result_ here if needed
     result_received_ = true;
-  }
-  else {
+  } else {
     RCLCPP_INFO(
       node_->get_logger(),
       "AttachDetachObjectAction: Goal accepted by the server, waiting for result.");
@@ -642,34 +651,34 @@ void AttachDetachObjectAction::resultCallback(
   const GoalHandleAttachDetachObject::WrappedResult & wrapped_result)
 {
   switch (wrapped_result.code) {
-  case rclcpp_action::ResultCode::SUCCEEDED:
-    RCLCPP_INFO(
-      node_->get_logger(),
-      "AttachDetachObjectAction: Goal succeeded.");
-    action_result_ = *(wrapped_result.result);
-    break;
-  case rclcpp_action::ResultCode::ABORTED:
-    RCLCPP_ERROR(
-      node_->get_logger(),
-      "AttachDetachObjectAction: Goal was aborted.");
-    action_result_ = *(wrapped_result.result);
-    // action_result_.success = false;
-    // action_result_.message = "Action aborted.";
-    break;
-  case rclcpp_action::ResultCode::CANCELED:
-    RCLCPP_WARN(
-      node_->get_logger(),
-      "AttachDetachObjectAction: Goal was canceled.");
-    action_result_.success = false;
-    action_result_.message = "Action canceled.";
-    break;
-  default:
-    RCLCPP_ERROR(
-      node_->get_logger(),
-      "AttachDetachObjectAction: Unknown result code.");
-    action_result_.success = false;
-    action_result_.message = "Unknown result code.";
-    break;
+    case rclcpp_action::ResultCode::SUCCEEDED:
+      RCLCPP_INFO(
+        node_->get_logger(),
+        "AttachDetachObjectAction: Goal succeeded.");
+      action_result_ = *(wrapped_result.result);
+      break;
+    case rclcpp_action::ResultCode::ABORTED:
+      RCLCPP_ERROR(
+        node_->get_logger(),
+        "AttachDetachObjectAction: Goal was aborted.");
+      action_result_ = *(wrapped_result.result);
+      // action_result_.success = false;
+      // action_result_.message = "Action aborted.";
+      break;
+    case rclcpp_action::ResultCode::CANCELED:
+      RCLCPP_WARN(
+        node_->get_logger(),
+        "AttachDetachObjectAction: Goal was canceled.");
+      action_result_.success = false;
+      action_result_.message = "Action canceled.";
+      break;
+    default:
+      RCLCPP_ERROR(
+        node_->get_logger(),
+        "AttachDetachObjectAction: Unknown result code.");
+      action_result_.success = false;
+      action_result_.message = "Unknown result code.";
+      break;
   }
 
   result_received_ = true;
@@ -679,8 +688,8 @@ void AttachDetachObjectAction::resultCallback(
 
 CheckObjectExistsAction::CheckObjectExistsAction(
   const std::string & name,
-  const BT::NodeConfiguration & config) :
-  BT::StatefulActionNode(name, config),
+  const BT::NodeConfiguration & config)
+: BT::StatefulActionNode(name, config),
   goal_sent_(false),
   result_received_(false)
 {
@@ -689,8 +698,9 @@ CheckObjectExistsAction::CheckObjectExistsAction(
     throw BT::RuntimeError("CheckObjectExistsAction: no blackboard provided.");
   }
   if (!config.blackboard->get(
-    "node",
-    node_)) {
+      "node",
+      node_))
+  {
     throw BT::RuntimeError("CheckObjectExistsAction: 'node' not found in blackboard.");
   }
 
@@ -702,9 +712,10 @@ CheckObjectExistsAction::CheckObjectExistsAction(
     node_->get_logger(),
     "CheckObjectExistsAction: Waiting for 'check_object_exists' server...");
   if (!action_client_->wait_for_action_server(
-    std::chrono::seconds(10)))                                                         {
+      std::chrono::seconds(10)))
+  {
     throw BT::RuntimeError(
-      "CheckObjectExistsAction: 'check_object_exists' server not available after waiting.");
+            "CheckObjectExistsAction: 'check_object_exists' server not available after waiting.");
   }
   RCLCPP_INFO(
     node_->get_logger(),
@@ -723,8 +734,9 @@ BT::NodeStatus CheckObjectExistsAction::onStart()
 
   // Retrieve input port
   if (!getInput<std::string>(
-    "object_id",
-    object_id_)) {
+      "object_id",
+      object_id_))
+  {
     RCLCPP_ERROR(
       node_->get_logger(),
       "CheckObjectExistsAction: Missing required input 'object_id'.");
@@ -743,14 +755,14 @@ BT::NodeStatus CheckObjectExistsAction::onStart()
   auto send_goal_options = rclcpp_action::Client<CheckObjectExists>::SendGoalOptions();
   send_goal_options.goal_response_callback =
     std::bind(
-      &CheckObjectExistsAction::goalResponseCallback,
-      this,
-      std::placeholders::_1);
+    &CheckObjectExistsAction::goalResponseCallback,
+    this,
+    std::placeholders::_1);
   send_goal_options.result_callback =
     std::bind(
-      &CheckObjectExistsAction::resultCallback,
-      this,
-      std::placeholders::_1);
+    &CheckObjectExistsAction::resultCallback,
+    this,
+    std::placeholders::_1);
 
   action_client_->async_send_goal(
     goal_msg,
@@ -780,8 +792,7 @@ BT::NodeStatus CheckObjectExistsAction::onRunning()
         "CheckObjectExistsAction: Object '%s' exists.",
         object_id_.c_str());
       return BT::NodeStatus::SUCCESS;
-    }
-    else {
+    } else {
       RCLCPP_INFO(
         node_->get_logger(),
         "CheckObjectExistsAction: Object '%s' does not exist.",
@@ -818,8 +829,7 @@ void CheckObjectExistsAction::goalResponseCallback(
       node_->get_logger(),
       "CheckObjectExistsAction: Goal was rejected by the server.");
     result_received_ = true;
-  }
-  else {
+  } else {
     RCLCPP_INFO(
       node_->get_logger(),
       "CheckObjectExistsAction: Goal accepted by the server, waiting for result.");
@@ -830,36 +840,36 @@ void CheckObjectExistsAction::resultCallback(
   const GoalHandleCheckObjectExists::WrappedResult & wrapped_result)
 {
   switch (wrapped_result.code) {
-  case rclcpp_action::ResultCode::SUCCEEDED:
-    RCLCPP_INFO(
-      node_->get_logger(),
-      "CheckObjectExistsAction: Goal succeeded.");
-    action_result_ = *(wrapped_result.result);
-    break;
-  case rclcpp_action::ResultCode::ABORTED:
-    RCLCPP_ERROR(
-      node_->get_logger(),
-      "CheckObjectExistsAction: Goal was aborted.");
-    action_result_.exists = false;
-    action_result_.is_attached = false;
-    action_result_.link_name = "";
-    break;
-  case rclcpp_action::ResultCode::CANCELED:
-    RCLCPP_WARN(
-      node_->get_logger(),
-      "CheckObjectExistsAction: Goal was canceled.");
-    action_result_.exists = false;
-    action_result_.is_attached = false;
-    action_result_.link_name = "";
-    break;
-  default:
-    RCLCPP_ERROR(
-      node_->get_logger(),
-      "CheckObjectExistsAction: Unknown result code.");
-    action_result_.exists = false;
-    action_result_.is_attached = false;
-    action_result_.link_name = "";
-    break;
+    case rclcpp_action::ResultCode::SUCCEEDED:
+      RCLCPP_INFO(
+        node_->get_logger(),
+        "CheckObjectExistsAction: Goal succeeded.");
+      action_result_ = *(wrapped_result.result);
+      break;
+    case rclcpp_action::ResultCode::ABORTED:
+      RCLCPP_ERROR(
+        node_->get_logger(),
+        "CheckObjectExistsAction: Goal was aborted.");
+      action_result_.exists = false;
+      action_result_.is_attached = false;
+      action_result_.link_name = "";
+      break;
+    case rclcpp_action::ResultCode::CANCELED:
+      RCLCPP_WARN(
+        node_->get_logger(),
+        "CheckObjectExistsAction: Goal was canceled.");
+      action_result_.exists = false;
+      action_result_.is_attached = false;
+      action_result_.link_name = "";
+      break;
+    default:
+      RCLCPP_ERROR(
+        node_->get_logger(),
+        "CheckObjectExistsAction: Unknown result code.");
+      action_result_.exists = false;
+      action_result_.is_attached = false;
+      action_result_.link_name = "";
+      break;
   }
 
   result_received_ = true;
@@ -869,8 +879,8 @@ void CheckObjectExistsAction::resultCallback(
 
 GetObjectPoseAction::GetObjectPoseAction(
   const std::string & name,
-  const BT::NodeConfiguration & config) :
-  BT::StatefulActionNode(name, config),
+  const BT::NodeConfiguration & config)
+: BT::StatefulActionNode(name, config),
   goal_sent_(false),
   result_received_(false)
 {
@@ -879,8 +889,9 @@ GetObjectPoseAction::GetObjectPoseAction(
     throw BT::RuntimeError("GetObjectPoseAction: no blackboard provided.");
   }
   if (!config.blackboard->get(
-    "node",
-    node_)) {
+      "node",
+      node_))
+  {
     throw BT::RuntimeError("GetObjectPoseAction: 'node' not found in blackboard.");
   }
 
@@ -892,9 +903,10 @@ GetObjectPoseAction::GetObjectPoseAction(
     node_->get_logger(),
     "GetObjectPoseAction: Waiting for 'get_object_pose' server...");
   if (!action_client_->wait_for_action_server(
-    std::chrono::seconds(10)))                                                         {
+      std::chrono::seconds(10)))
+  {
     throw BT::RuntimeError(
-      "GetObjectPoseAction: 'get_object_pose' server not available after waiting.");
+            "GetObjectPoseAction: 'get_object_pose' server not available after waiting.");
   }
   RCLCPP_INFO(
     node_->get_logger(),
@@ -912,31 +924,33 @@ BT::NodeStatus GetObjectPoseAction::onStart()
   action_result_ = GetObjectPose::Result();
   std::string reference_link;
   if (!getInput<std::string>(
-    "link_name",
-    reference_link)) {
+      "link_name",
+      reference_link))
+  {
     // default: empty => means "world" or "no specific link"
     reference_link = "";
   }
 
   // Retrieve input ports
   if (!getInput<std::string>(
-    "object_id",
-    object_id_)) {
+      "object_id",
+      object_id_))
+  {
     RCLCPP_ERROR(
       node_->get_logger(),
       "GetObjectPoseAction: Missing required input 'object_id'.");
     return BT::NodeStatus::FAILURE;
   }
 
-  if (!getInput<std::vector<double> >(
-    "pre_transform_xyz_rpy",
-    pre_transform_xyz_rpy_)) {
+  if (!getInput<std::vector<double>>(
+      "pre_transform_xyz_rpy",
+      pre_transform_xyz_rpy_))
+  {
     RCLCPP_ERROR(
       node_->get_logger(),
       "GetObjectPoseAction: Missing required input 'pre_transform_xyz_rpy'.");
     return BT::NodeStatus::FAILURE;
-  }
-  else {
+  } else {
     RCLCPP_INFO(
       node_->get_logger(),
       "GetObjectPoseAction: 'pre_transform_xyz_rpy' = {%.3f, %.3f, %.3f, %.3f, %.3f, %.3f}",
@@ -948,15 +962,15 @@ BT::NodeStatus GetObjectPoseAction::onStart()
       pre_transform_xyz_rpy_[5]);
   }
 
-  if (!getInput<std::vector<double> >(
-    "post_transform_xyz_rpy",
-    post_transform_xyz_rpy_)) {
+  if (!getInput<std::vector<double>>(
+      "post_transform_xyz_rpy",
+      post_transform_xyz_rpy_))
+  {
     RCLCPP_ERROR(
       node_->get_logger(),
       "GetObjectPoseAction: Missing required input 'post_transform_xyz_rpy'.");
     return BT::NodeStatus::FAILURE;
-  }
-  else {
+  } else {
     RCLCPP_INFO(
       node_->get_logger(),
       "GetObjectPoseAction: 'post_transform_xyz_rpy' = {%.3f, %.3f, %.3f, %.3f, %.3f, %.3f}",
@@ -969,8 +983,9 @@ BT::NodeStatus GetObjectPoseAction::onStart()
   }
 
   if (!getInput<std::string>(
-    "pose_key",
-    pose_key_)) {
+      "pose_key",
+      pose_key_))
+  {
     RCLCPP_ERROR(
       node_->get_logger(),
       "GetObjectPoseAction: Missing required input 'pose_key'.");
@@ -978,14 +993,14 @@ BT::NodeStatus GetObjectPoseAction::onStart()
   }
 
   // Validate input sizes
-  if (pre_transform_xyz_rpy_.size() != 6)                          {
+  if (pre_transform_xyz_rpy_.size() != 6) {
     RCLCPP_ERROR(
       node_->get_logger(),
       "GetObjectPoseAction: 'pre_transform_xyz_rpy' must have exactly 6 elements.");
     return BT::NodeStatus::FAILURE;
   }
 
-  if (post_transform_xyz_rpy_.size() != 6)                           {
+  if (post_transform_xyz_rpy_.size() != 6) {
     RCLCPP_ERROR(
       node_->get_logger(),
       "GetObjectPoseAction: 'post_transform_xyz_rpy' must have exactly 6 elements.");
@@ -1007,14 +1022,14 @@ BT::NodeStatus GetObjectPoseAction::onStart()
   auto send_goal_options = rclcpp_action::Client<GetObjectPose>::SendGoalOptions();
   send_goal_options.goal_response_callback =
     std::bind(
-      &GetObjectPoseAction::goalResponseCallback,
-      this,
-      std::placeholders::_1);
+    &GetObjectPoseAction::goalResponseCallback,
+    this,
+    std::placeholders::_1);
   send_goal_options.result_callback =
     std::bind(
-      &GetObjectPoseAction::resultCallback,
-      this,
-      std::placeholders::_1);
+    &GetObjectPoseAction::resultCallback,
+    this,
+    std::placeholders::_1);
 
   action_client_->async_send_goal(
     goal_msg,
@@ -1034,7 +1049,7 @@ BT::NodeStatus GetObjectPoseAction::onRunning()
         action_result_.pose);
 
       // **Important**: Also set the pose in the blackboard under pose_key_
-      if (!pose_key_.empty())               {
+      if (!pose_key_.empty()) {
         // Attempt to set the pose on the blackboard
         auto blackboard = config().blackboard;
         blackboard->set(
@@ -1044,8 +1059,7 @@ BT::NodeStatus GetObjectPoseAction::onRunning()
           node_->get_logger(),
           "GetObjectPoseAction: Successfully set pose to blackboard key '%s'.",
           pose_key_.c_str());
-      }
-      else {
+      } else {
         RCLCPP_ERROR(
           node_->get_logger(),
           "GetObjectPoseAction: pose_key_ is empty. Cannot set pose on blackboard.");
@@ -1066,8 +1080,7 @@ BT::NodeStatus GetObjectPoseAction::onRunning()
         action_result_.pose.orientation.w);
 
       return BT::NodeStatus::SUCCESS;
-    }
-    else {
+    } else {
       RCLCPP_ERROR(
         node_->get_logger(),
         "GetObjectPoseAction: Failed to retrieve pose for object '%s'. Message: %s",
@@ -1105,8 +1118,7 @@ void GetObjectPoseAction::goalResponseCallback(
       node_->get_logger(),
       "GetObjectPoseAction: Goal was rejected by the server.");
     result_received_ = true;
-  }
-  else {
+  } else {
     RCLCPP_INFO(
       node_->get_logger(),
       "GetObjectPoseAction: Goal accepted by the server, waiting for result.");
@@ -1117,33 +1129,33 @@ void GetObjectPoseAction::resultCallback(
   const GoalHandleGetObjectPose::WrappedResult & wrapped_result)
 {
   switch (wrapped_result.code) {
-  case rclcpp_action::ResultCode::SUCCEEDED:
-    RCLCPP_INFO(
-      node_->get_logger(),
-      "GetObjectPoseAction: Goal succeeded.");
-    action_result_ = *(wrapped_result.result);
-    break;
-  case rclcpp_action::ResultCode::ABORTED:
-    RCLCPP_ERROR(
-      node_->get_logger(),
-      "GetObjectPoseAction: Goal was aborted.");
-    action_result_.success = false;
-    action_result_.message = "Action aborted.";
-    break;
-  case rclcpp_action::ResultCode::CANCELED:
-    RCLCPP_WARN(
-      node_->get_logger(),
-      "GetObjectPoseAction: Goal was canceled.");
-    action_result_.success = false;
-    action_result_.message = "Action canceled.";
-    break;
-  default:
-    RCLCPP_ERROR(
-      node_->get_logger(),
-      "GetObjectPoseAction: Unknown result code.");
-    action_result_.success = false;
-    action_result_.message = "Unknown result code.";
-    break;
+    case rclcpp_action::ResultCode::SUCCEEDED:
+      RCLCPP_INFO(
+        node_->get_logger(),
+        "GetObjectPoseAction: Goal succeeded.");
+      action_result_ = *(wrapped_result.result);
+      break;
+    case rclcpp_action::ResultCode::ABORTED:
+      RCLCPP_ERROR(
+        node_->get_logger(),
+        "GetObjectPoseAction: Goal was aborted.");
+      action_result_.success = false;
+      action_result_.message = "Action aborted.";
+      break;
+    case rclcpp_action::ResultCode::CANCELED:
+      RCLCPP_WARN(
+        node_->get_logger(),
+        "GetObjectPoseAction: Goal was canceled.");
+      action_result_.success = false;
+      action_result_.message = "Action canceled.";
+      break;
+    default:
+      RCLCPP_ERROR(
+        node_->get_logger(),
+        "GetObjectPoseAction: Unknown result code.");
+      action_result_.success = false;
+      action_result_.message = "Unknown result code.";
+      break;
   }
 
   result_received_ = true;
@@ -1151,8 +1163,8 @@ void GetObjectPoseAction::resultCallback(
 
 WaitForObjectAction::WaitForObjectAction(
   const std::string & name,
-  const BT::NodeConfiguration & config) :
-  BT::StatefulActionNode(name, config),
+  const BT::NodeConfiguration & config)
+: BT::StatefulActionNode(name, config),
   goal_sent_(false),
   result_received_(false),
   last_exists_(false),
@@ -1163,8 +1175,9 @@ WaitForObjectAction::WaitForObjectAction(
     throw BT::RuntimeError("WaitForObjectAction: no blackboard provided.");
   }
   if (!config.blackboard->get(
-    "node",
-    node_)) {
+      "node",
+      node_))
+  {
     throw BT::RuntimeError("WaitForObjectAction: 'node' not found in blackboard.");
   }
 
@@ -1177,9 +1190,10 @@ WaitForObjectAction::WaitForObjectAction(
     node_->get_logger(),
     "WaitForObjectAction: Waiting for 'check_object_exists' server...");
   if (!action_client_->wait_for_action_server(
-    std::chrono::seconds(10)))                                                         {
+      std::chrono::seconds(10)))
+  {
     throw BT::RuntimeError(
-      "WaitForObjectAction: 'check_object_exists' server not available after waiting.");
+            "WaitForObjectAction: 'check_object_exists' server not available after waiting.");
   }
   RCLCPP_INFO(
     node_->get_logger(),
@@ -1201,16 +1215,18 @@ BT::NodeStatus WaitForObjectAction::onStart()
 
   // Read input ports
   if (!getInput<std::string>(
-    "object_id",
-    object_id_)) {
+      "object_id",
+      object_id_))
+  {
     RCLCPP_ERROR(
       node_->get_logger(),
       "WaitForObjectAction: Missing required input [object_id].");
     return BT::NodeStatus::FAILURE;
   }
   if (!getInput<bool>(
-    "exists",
-    desired_exists_)) {
+      "exists",
+      desired_exists_))
+  {
     RCLCPP_WARN(
       node_->get_logger(),
       "WaitForObjectAction: Missing 'exists' => defaulting to 'true'");
@@ -1224,8 +1240,9 @@ BT::NodeStatus WaitForObjectAction::onStart()
     poll_rate_);
 
   if (!getInput<std::string>(
-    "prefix",
-    prefix_) || (prefix_ == "")) {
+      "prefix",
+      prefix_) || (prefix_ == ""))
+  {
     prefix_ = "hmi_";
   }
 
@@ -1364,14 +1381,14 @@ void WaitForObjectAction::sendCheckRequest()
   auto send_goal_options = rclcpp_action::Client<CheckObjectExists>::SendGoalOptions();
   send_goal_options.goal_response_callback =
     std::bind(
-      &WaitForObjectAction::goalResponseCallback,
-      this,
-      std::placeholders::_1);
+    &WaitForObjectAction::goalResponseCallback,
+    this,
+    std::placeholders::_1);
   send_goal_options.result_callback =
     std::bind(
-      &WaitForObjectAction::resultCallback,
-      this,
-      std::placeholders::_1);
+    &WaitForObjectAction::resultCallback,
+    this,
+    std::placeholders::_1);
 
   action_client_->async_send_goal(
     goal_msg,
@@ -1391,8 +1408,7 @@ void WaitForObjectAction::goalResponseCallback(
     // Mark as "object not found" so that we do another attempt
     result_received_ = true;
     last_exists_ = false;
-  }
-  else {
+  } else {
     RCLCPP_DEBUG(
       node_->get_logger(),
       "WaitForObjectAction: Goal accepted by the server, waiting for result...");
@@ -1403,41 +1419,41 @@ void WaitForObjectAction::resultCallback(
   const GoalHandleCheckObjectExists::WrappedResult & wrapped_result)
 {
   switch (wrapped_result.code) {
-  case rclcpp_action::ResultCode::SUCCEEDED:
-  {
-    RCLCPP_DEBUG(
-      node_->get_logger(),
-      "WaitForObjectAction: Goal succeeded.");
-    auto result = wrapped_result.result;
-    last_exists_ = result->exists;
-    last_is_attached_ = result->is_attached;
-    last_link_name_ = result->link_name;
-    break;
-  }
-  case rclcpp_action::ResultCode::ABORTED:
-  {
-    RCLCPP_ERROR(
-      node_->get_logger(),
-      "WaitForObjectAction: Goal was aborted by server.");
-    last_exists_ = false;
-    break;
-  }
-  case rclcpp_action::ResultCode::CANCELED:
-  {
-    RCLCPP_WARN(
-      node_->get_logger(),
-      "WaitForObjectAction: Goal canceled by server.");
-    last_exists_ = false;
-    break;
-  }
-  default:
-  {
-    RCLCPP_ERROR(
-      node_->get_logger(),
-      "WaitForObjectAction: Unknown result code => treat as 'not found'.");
-    last_exists_ = false;
-    break;
-  }
+    case rclcpp_action::ResultCode::SUCCEEDED:
+      {
+        RCLCPP_DEBUG(
+          node_->get_logger(),
+          "WaitForObjectAction: Goal succeeded.");
+        auto result = wrapped_result.result;
+        last_exists_ = result->exists;
+        last_is_attached_ = result->is_attached;
+        last_link_name_ = result->link_name;
+        break;
+      }
+    case rclcpp_action::ResultCode::ABORTED:
+      {
+        RCLCPP_ERROR(
+          node_->get_logger(),
+          "WaitForObjectAction: Goal was aborted by server.");
+        last_exists_ = false;
+        break;
+      }
+    case rclcpp_action::ResultCode::CANCELED:
+      {
+        RCLCPP_WARN(
+          node_->get_logger(),
+          "WaitForObjectAction: Goal canceled by server.");
+        last_exists_ = false;
+        break;
+      }
+    default:
+      {
+        RCLCPP_ERROR(
+          node_->get_logger(),
+          "WaitForObjectAction: Unknown result code => treat as 'not found'.");
+        last_exists_ = false;
+        break;
+      }
   }
 
   // We set result_received_ so onRunning() knows we can evaluate the outcome

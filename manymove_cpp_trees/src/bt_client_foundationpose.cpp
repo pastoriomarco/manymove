@@ -161,7 +161,7 @@ int main(int argc, char ** argv)
     "",                                                  /* link name to attach/detach */
   {
   }                                                     /* contact links to attach/detach */
-    );
+  );
 
   ObjectSnippets wall = createObjectSnippets(
     blackboard,
@@ -688,8 +688,7 @@ int main(int argc, char ** argv)
         node->get_logger(),
         "BT ended SUCCESS.");
       break;
-    }
-    else if (status == BT::NodeStatus::FAILURE) {
+    } else if (status == BT::NodeStatus::FAILURE) {
       RCLCPP_ERROR(
         node->get_logger(),
         "BT ended FAILURE.");

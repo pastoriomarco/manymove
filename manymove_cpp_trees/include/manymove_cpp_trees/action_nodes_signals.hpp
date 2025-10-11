@@ -68,7 +68,8 @@ public:
   using SetOutput = manymove_msgs::action::SetOutput;
   using GoalHandleSetOutput = rclcpp_action::ClientGoalHandle<SetOutput>;
 
-  SetOutputAction(const std::string & name,
+  SetOutputAction(
+    const std::string & name,
     const BT::NodeConfiguration & config);
 
   static BT::PortsList providedPorts()
@@ -126,7 +127,8 @@ public:
   using GetInput = manymove_msgs::action::GetInput;
   using GoalHandleGetInput = rclcpp_action::ClientGoalHandle<GetInput>;
 
-  GetInputAction(const std::string & name,
+  GetInputAction(
+    const std::string & name,
     const BT::NodeConfiguration & config);
 
   static BT::PortsList providedPorts()
@@ -181,7 +183,8 @@ public:
   using CheckRobotState = manymove_msgs::action::CheckRobotState;
   using GoalHandleCheckRobotState = rclcpp_action::ClientGoalHandle<CheckRobotState>;
 
-  CheckRobotStateAction(const std::string & name,
+  CheckRobotStateAction(
+    const std::string & name,
     const BT::NodeConfiguration & config);
 
   static BT::PortsList providedPorts()
@@ -243,7 +246,8 @@ public:
   using LoadTrajController = manymove_msgs::action::LoadTrajController;
   using GoalHandleLoadTrajController = rclcpp_action::ClientGoalHandle<LoadTrajController>;
 
-  ResetRobotStateAction(const std::string & name,
+  ResetRobotStateAction(
+    const std::string & name,
     const BT::NodeConfiguration & config);
 
   static BT::PortsList providedPorts()
@@ -305,7 +309,8 @@ private:
 class WaitForInputAction : public BT::StatefulActionNode
 {
 public:
-  WaitForInputAction(const std::string & name,
+  WaitForInputAction(
+    const std::string & name,
     const BT::NodeConfiguration & config);
 
 // ...
@@ -352,7 +357,7 @@ private:
 
 // Action callbacks
   void goalResponseCallback(
-    std::shared_ptr<rclcpp_action::ClientGoalHandle<manymove_msgs::action::GetInput> > goal_handle);
+    std::shared_ptr<rclcpp_action::ClientGoalHandle<manymove_msgs::action::GetInput>> goal_handle);
   void resultCallback(
     const rclcpp_action::ClientGoalHandle<manymove_msgs::action::GetInput>::WrappedResult & result);
 

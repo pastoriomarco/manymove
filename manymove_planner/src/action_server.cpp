@@ -57,8 +57,8 @@ void setSwitchActivateAsap(RequestT & request, bool value)
 ManipulatorActionServer::ManipulatorActionServer(
   const rclcpp::Node::SharedPtr & node,
   const std::shared_ptr<PlannerInterface> & planner,
-  const std::string & planner_prefix) :
-  node_(node), planner_(planner), planner_prefix_(planner_prefix)
+  const std::string & planner_prefix)
+: node_(node), planner_(planner), planner_prefix_(planner_prefix)
 {
   action_callback_group_ = node_->create_callback_group(rclcpp::CallbackGroupType::Reentrant);
   param_callback_group_ = node_->create_callback_group(rclcpp::CallbackGroupType::Reentrant);
@@ -80,15 +80,16 @@ ManipulatorActionServer::ManipulatorActionServer(
 
   configure_controller_client_ =
     node_->create_client<controller_manager_msgs::srv::ConfigureController>(
-      "/controller_manager/configure_controller",
-      rmw_qos_profile_services_default,
-      param_callback_group_);
+    "/controller_manager/configure_controller",
+    rmw_qos_profile_services_default,
+    param_callback_group_);
 
   // **Wait for Services to Be Available**
   bool all_services_available = true;
 
   if (!unload_controller_client_->wait_for_service(
-    std::chrono::seconds(5))) {
+      std::chrono::seconds(5)))
+  {
     RCLCPP_ERROR(
       node_->get_logger(),
       "Service '/controller_manager/unload_controller' not available.");
@@ -96,7 +97,8 @@ ManipulatorActionServer::ManipulatorActionServer(
   }
 
   if (!load_controller_client_->wait_for_service(
-    std::chrono::seconds(5))) {
+      std::chrono::seconds(5)))
+  {
     RCLCPP_ERROR(
       node_->get_logger(),
       "Service '/controller_manager/load_controller' not available.");
@@ -104,7 +106,8 @@ ManipulatorActionServer::ManipulatorActionServer(
   }
 
   if (!switch_controller_client_->wait_for_service(
-    std::chrono::seconds(5))) {
+      std::chrono::seconds(5)))
+  {
     RCLCPP_ERROR(
       node_->get_logger(),
       "Service '/controller_manager/switch_controller' not available.");
@@ -112,7 +115,8 @@ ManipulatorActionServer::ManipulatorActionServer(
   }
 
   if (!configure_controller_client_->wait_for_service(
-    std::chrono::seconds(5))) {
+      std::chrono::seconds(5)))
+  {
     RCLCPP_ERROR(
       node_->get_logger(),
       "Service '/controller_manager/configure_controller' not available.");
@@ -132,16 +136,16 @@ ManipulatorActionServer::ManipulatorActionServer(
     "/joint_states",
     rclcpp::SensorDataQoS(),
     [this](const
-           sensor_msgs::
-           msg::
-           JointState::
-           SharedPtr msg)
-  {
-    std::lock_guard<std::mutex> lock(joint_states_mutex_);
-    for (size_t i = 0; i < msg->name.size() && i < msg->position.size(); ++i) {
-      current_joint_positions_[msg->name[i]] = msg->position[i];
-    }
-  });
+    sensor_msgs::
+    msg::
+    JointState::
+    SharedPtr msg)
+    {
+      std::lock_guard<std::mutex> lock(joint_states_mutex_);
+      for (size_t i = 0; i < msg->name.size() && i < msg->position.size(); ++i) {
+        current_joint_positions_[msg->name[i]] = msg->position[i];
+      }
+    });
 
   move_manipulator_server_ = rclcpp_action::create_server<MoveManipulator>(
     node_,
@@ -302,8 +306,7 @@ rclcpp_action::CancelResponse ManipulatorActionServer::handle_move_cancel(
         move_manipulator_goal_.config,
         executing_traj_,
         elapsed);
-    }
-    else {
+    } else {
       // Cancel while PLANNING or IDLE => do nothing to the controller
       RCLCPP_INFO(
         node_->get_logger(),
@@ -362,8 +365,9 @@ void ManipulatorActionServer::execute_move(
     bool all_ok = true;
     // const auto &pts = goal->existing_trajectory.joint_trajectory.points;
     if (!planner_->isTrajectoryValid(
-      goal->existing_trajectory.joint_trajectory,
-      moveit_msgs::msg::Constraints())) {
+        goal->existing_trajectory.joint_trajectory,
+        moveit_msgs::msg::Constraints()))
+    {
       RCLCPP_WARN(
         node_->get_logger(),
         "[MoveManipulator] existing_trajectory fails.");
@@ -376,14 +380,12 @@ void ManipulatorActionServer::execute_move(
       RCLCPP_INFO(
         node_->get_logger(),
         "[MoveManipulator] existing_trajectory is valid => will try to execute it");
-    }
-    else {
+    } else {
       RCLCPP_INFO(
         node_->get_logger(),
         "[MoveManipulator] existing_trajectory is not valid => planning anew");
     }
-  }
-  else {
+  } else {
     RCLCPP_INFO(
       node_->get_logger(),
       "[MoveManipulator] existing_trajectory EMPTY");
@@ -533,29 +535,29 @@ void ManipulatorActionServer::execute_unload_traj_controller(
   deactivateControllerAsync(
     controller_name,
     [this, goal_handle, result, controller_name]()
-  {
-    // 2) Unload the controller
-    unloadControllerAsync(
-      controller_name,
-      [this, goal_handle, result, controller_name]()
     {
-      result->success = true;
-      result->message = "Controller unloaded successfully.";
-      goal_handle->succeed(result);
+      // 2) Unload the controller
+      unloadControllerAsync(
+        controller_name,
+        [this, goal_handle, result, controller_name]()
+        {
+          result->success = true;
+          result->message = "Controller unloaded successfully.";
+          goal_handle->succeed(result);
+        },
+        [goal_handle, result, controller_name](const std::string & err)
+        {
+          result->success = false;
+          result->message = "Unload error: " + err;
+          goal_handle->abort(result);
+        });
     },
-      [goal_handle, result, controller_name](const std::string & err)
+    [goal_handle, result, controller_name](const std::string & err)
     {
       result->success = false;
-      result->message = "Unload error: " + err;
+      result->message = "Deactivate error: " + err;
       goal_handle->abort(result);
     });
-  },
-    [goal_handle, result, controller_name](const std::string & err)
-  {
-    result->success = false;
-    result->message = "Deactivate error: " + err;
-    goal_handle->abort(result);
-  });
 }
 
 // -------------------------------------
@@ -612,41 +614,41 @@ void ManipulatorActionServer::execute_load_traj_controller(
   loadControllerAsync(
     controller_name,
     [this, goal_handle, result, controller_name]()
-  {
-    // 2) Configure the controller
-    configureControllerAsync(
-      controller_name,
-      [this, goal_handle, result, controller_name]()
     {
-      // 3) Activate the controller
-      activateControllerAsync(
+      // 2) Configure the controller
+      configureControllerAsync(
         controller_name,
         [this, goal_handle, result, controller_name]()
-      {
-        result->success = true;
-        result->message = "Controller loaded and activated successfully.";
-        goal_handle->succeed(result);
-      },
+        {
+          // 3) Activate the controller
+          activateControllerAsync(
+            controller_name,
+            [this, goal_handle, result, controller_name]()
+            {
+              result->success = true;
+              result->message = "Controller loaded and activated successfully.";
+              goal_handle->succeed(result);
+            },
+            [goal_handle, result, controller_name](const std::string & err)
+            {
+              result->success = false;
+              result->message = "Activate error: " + err;
+              goal_handle->abort(result);
+            });
+        },
         [goal_handle, result, controller_name](const std::string & err)
-      {
-        result->success = false;
-        result->message = "Activate error: " + err;
-        goal_handle->abort(result);
-      });
+        {
+          result->success = false;
+          result->message = "Configure error: " + err;
+          goal_handle->abort(result);
+        });
     },
-      [goal_handle, result, controller_name](const std::string & err)
+    [goal_handle, result, controller_name](const std::string & err)
     {
       result->success = false;
-      result->message = "Configure error: " + err;
+      result->message = "Load error: " + err;
       goal_handle->abort(result);
     });
-  },
-    [goal_handle, result, controller_name](const std::string & err)
-  {
-    result->success = false;
-    result->message = "Load error: " + err;
-    goal_handle->abort(result);
-  });
 }
 
 // -------------------------------------
@@ -656,7 +658,7 @@ void ManipulatorActionServer::execute_load_traj_controller(
 void ManipulatorActionServer::unloadControllerAsync(
   const std::string & controller_name,
   std::function<void()> on_success,
-  std::function<void(const std::string&)> on_error)
+  std::function<void(const std::string &)> on_error)
 {
   RCLCPP_INFO(
     node_->get_logger(),
@@ -680,37 +682,36 @@ void ManipulatorActionServer::unloadControllerAsync(
   unload_controller_client_->async_send_request(
     request,
     [this, controller_name, on_success,
-     on_error](rclcpp::Client<controller_manager_msgs::srv::UnloadController>
-               ::SharedFuture
-               future_response)
-  {
-    auto response = future_response.get();
-    if (!response) {
-      std::string msg = "[unloadControllerAsync] Null response for " + controller_name;
-      RCLCPP_ERROR(
-        node_->get_logger(),
-        "%s",
-        msg.c_str());
-      on_error(msg);
-      return;
-    }
+    on_error](rclcpp::Client<controller_manager_msgs::srv::UnloadController>
+    ::SharedFuture
+    future_response)
+    {
+      auto response = future_response.get();
+      if (!response) {
+        std::string msg = "[unloadControllerAsync] Null response for " + controller_name;
+        RCLCPP_ERROR(
+          node_->get_logger(),
+          "%s",
+          msg.c_str());
+        on_error(msg);
+        return;
+      }
 
-    if (response->ok) {
-      RCLCPP_INFO(
-        node_->get_logger(),
-        "[unloadControllerAsync] SUCCESS: Unloaded '%s'",
-        controller_name.c_str());
-      on_success();
-    }
-    else {
-      std::string msg = "[unloadControllerAsync] Failed to unload " + controller_name;
-      RCLCPP_ERROR(
-        node_->get_logger(),
-        "%s",
-        msg.c_str());
-      on_error(msg);
-    }
-  });
+      if (response->ok) {
+        RCLCPP_INFO(
+          node_->get_logger(),
+          "[unloadControllerAsync] SUCCESS: Unloaded '%s'",
+          controller_name.c_str());
+        on_success();
+      } else {
+        std::string msg = "[unloadControllerAsync] Failed to unload " + controller_name;
+        RCLCPP_ERROR(
+          node_->get_logger(),
+          "%s",
+          msg.c_str());
+        on_error(msg);
+      }
+    });
 
   RCLCPP_INFO(
     node_->get_logger(),
@@ -720,7 +721,7 @@ void ManipulatorActionServer::unloadControllerAsync(
 void ManipulatorActionServer::loadControllerAsync(
   const std::string & controller_name,
   std::function<void()> on_success,
-  std::function<void(const std::string&)> on_error)
+  std::function<void(const std::string &)> on_error)
 {
   RCLCPP_INFO(
     node_->get_logger(),
@@ -745,37 +746,36 @@ void ManipulatorActionServer::loadControllerAsync(
   load_controller_client_->async_send_request(
     request,
     [this, controller_name, on_success,
-     on_error](rclcpp::Client<controller_manager_msgs::srv::LoadController>
-               ::SharedFuture
-               future_response)
-  {
-    auto response = future_response.get();
-    if (!response) {
-      std::string msg = "[loadControllerAsync] Null response for " + controller_name;
-      RCLCPP_ERROR(
-        node_->get_logger(),
-        "%s",
-        msg.c_str());
-      on_error(msg);
-      return;
-    }
+    on_error](rclcpp::Client<controller_manager_msgs::srv::LoadController>
+    ::SharedFuture
+    future_response)
+    {
+      auto response = future_response.get();
+      if (!response) {
+        std::string msg = "[loadControllerAsync] Null response for " + controller_name;
+        RCLCPP_ERROR(
+          node_->get_logger(),
+          "%s",
+          msg.c_str());
+        on_error(msg);
+        return;
+      }
 
-    if (response->ok) {
-      RCLCPP_INFO(
-        node_->get_logger(),
-        "[loadControllerAsync] SUCCESS: Loaded '%s'",
-        controller_name.c_str());
-      on_success();
-    }
-    else {
-      std::string msg = "[loadControllerAsync] Failed to load " + controller_name;
-      RCLCPP_ERROR(
-        node_->get_logger(),
-        "%s",
-        msg.c_str());
-      on_error(msg);
-    }
-  });
+      if (response->ok) {
+        RCLCPP_INFO(
+          node_->get_logger(),
+          "[loadControllerAsync] SUCCESS: Loaded '%s'",
+          controller_name.c_str());
+        on_success();
+      } else {
+        std::string msg = "[loadControllerAsync] Failed to load " + controller_name;
+        RCLCPP_ERROR(
+          node_->get_logger(),
+          "%s",
+          msg.c_str());
+        on_error(msg);
+      }
+    });
 
   RCLCPP_INFO(
     node_->get_logger(),
@@ -785,7 +785,7 @@ void ManipulatorActionServer::loadControllerAsync(
 void ManipulatorActionServer::activateControllerAsync(
   const std::string & controller_name,
   std::function<void()> on_success,
-  std::function<void(const std::string&)> on_error)
+  std::function<void(const std::string &)> on_error)
 {
   RCLCPP_INFO(
     node_->get_logger(),
@@ -816,42 +816,41 @@ void ManipulatorActionServer::activateControllerAsync(
   switch_controller_client_->async_send_request(
     request,
     [this, controller_name, on_success,
-     on_error](rclcpp::Client<controller_manager_msgs::srv::SwitchController>
-               ::SharedFuture
-               future_response)
-  {
-    RCLCPP_INFO(
-      node_->get_logger(),
-      "[activateControllerAsync] Received response for '%s'.",
-      controller_name.c_str());
-
-    auto response = future_response.get();
-    if (!response) {
-      std::string msg = "[activateControllerAsync] Null response for " + controller_name;
-      RCLCPP_ERROR(
-        node_->get_logger(),
-        "%s",
-        msg.c_str());
-      on_error(msg);
-      return;
-    }
-
-    if (response->ok) {
+    on_error](rclcpp::Client<controller_manager_msgs::srv::SwitchController>
+    ::SharedFuture
+    future_response)
+    {
       RCLCPP_INFO(
         node_->get_logger(),
-        "[activateControllerAsync] SUCCESS: Activated '%s'",
+        "[activateControllerAsync] Received response for '%s'.",
         controller_name.c_str());
-      on_success();
-    }
-    else {
-      std::string msg = "[activateControllerAsync] Failed to activate " + controller_name;
-      RCLCPP_ERROR(
-        node_->get_logger(),
-        "%s",
-        msg.c_str());
-      on_error(msg);
-    }
-  });
+
+      auto response = future_response.get();
+      if (!response) {
+        std::string msg = "[activateControllerAsync] Null response for " + controller_name;
+        RCLCPP_ERROR(
+          node_->get_logger(),
+          "%s",
+          msg.c_str());
+        on_error(msg);
+        return;
+      }
+
+      if (response->ok) {
+        RCLCPP_INFO(
+          node_->get_logger(),
+          "[activateControllerAsync] SUCCESS: Activated '%s'",
+          controller_name.c_str());
+        on_success();
+      } else {
+        std::string msg = "[activateControllerAsync] Failed to activate " + controller_name;
+        RCLCPP_ERROR(
+          node_->get_logger(),
+          "%s",
+          msg.c_str());
+        on_error(msg);
+      }
+    });
 
   RCLCPP_INFO(
     node_->get_logger(),
@@ -861,7 +860,7 @@ void ManipulatorActionServer::activateControllerAsync(
 void ManipulatorActionServer::deactivateControllerAsync(
   const std::string & controller_name,
   std::function<void()> on_success,
-  std::function<void(const std::string&)> on_error)
+  std::function<void(const std::string &)> on_error)
 {
   RCLCPP_INFO(
     node_->get_logger(),
@@ -902,42 +901,41 @@ void ManipulatorActionServer::deactivateControllerAsync(
   switch_controller_client_->async_send_request(
     request,
     [this, controller_name, on_success,
-     on_error](rclcpp::Client<controller_manager_msgs::srv::SwitchController>
-               ::SharedFuture
-               future_response)
-  {
-    RCLCPP_INFO(
-      node_->get_logger(),
-      "[deactivateControllerAsync] Received response for '%s'.",
-      controller_name.c_str());
-
-    auto response = future_response.get();
-    if (!response) {
-      std::string msg = "[deactivateControllerAsync] Null response for " + controller_name;
-      RCLCPP_ERROR(
-        node_->get_logger(),
-        "%s",
-        msg.c_str());
-      on_error(msg);
-      return;
-    }
-
-    if (response->ok) {
+    on_error](rclcpp::Client<controller_manager_msgs::srv::SwitchController>
+    ::SharedFuture
+    future_response)
+    {
       RCLCPP_INFO(
         node_->get_logger(),
-        "[deactivateControllerAsync] SUCCESS: Deactivated '%s'",
+        "[deactivateControllerAsync] Received response for '%s'.",
         controller_name.c_str());
-      on_success();
-    }
-    else {
-      std::string msg = "[deactivateControllerAsync] Failed to deactivate " + controller_name;
-      RCLCPP_ERROR(
-        node_->get_logger(),
-        "%s",
-        msg.c_str());
-      on_error(msg);
-    }
-  });
+
+      auto response = future_response.get();
+      if (!response) {
+        std::string msg = "[deactivateControllerAsync] Null response for " + controller_name;
+        RCLCPP_ERROR(
+          node_->get_logger(),
+          "%s",
+          msg.c_str());
+        on_error(msg);
+        return;
+      }
+
+      if (response->ok) {
+        RCLCPP_INFO(
+          node_->get_logger(),
+          "[deactivateControllerAsync] SUCCESS: Deactivated '%s'",
+          controller_name.c_str());
+        on_success();
+      } else {
+        std::string msg = "[deactivateControllerAsync] Failed to deactivate " + controller_name;
+        RCLCPP_ERROR(
+          node_->get_logger(),
+          "%s",
+          msg.c_str());
+        on_error(msg);
+      }
+    });
 
   RCLCPP_INFO(
     node_->get_logger(),
@@ -947,7 +945,7 @@ void ManipulatorActionServer::deactivateControllerAsync(
 void ManipulatorActionServer::configureControllerAsync(
   const std::string & controller_name,
   std::function<void()> on_success,
-  std::function<void(const std::string&)> on_error)
+  std::function<void(const std::string &)> on_error)
 {
   RCLCPP_INFO(
     node_->get_logger(),
@@ -970,37 +968,36 @@ void ManipulatorActionServer::configureControllerAsync(
   configure_controller_client_->async_send_request(
     request,
     [this, controller_name, on_success,
-     on_error](
+    on_error](
       rclcpp::Client<controller_manager_msgs::srv::ConfigureController>
       ::SharedFuture future)
-  {
-    auto response = future.get();
-    if (!response) {
-      std::string msg = "[configureControllerAsync] Null response for " + controller_name;
-      RCLCPP_ERROR(
-        node_->get_logger(),
-        "%s",
-        msg.c_str());
-      on_error(msg);
-      return;
-    }
+    {
+      auto response = future.get();
+      if (!response) {
+        std::string msg = "[configureControllerAsync] Null response for " + controller_name;
+        RCLCPP_ERROR(
+          node_->get_logger(),
+          "%s",
+          msg.c_str());
+        on_error(msg);
+        return;
+      }
 
-    if (response->ok) {
-      RCLCPP_INFO(
-        node_->get_logger(),
-        "[configureControllerAsync] Successfully configured '%s'",
-        controller_name.c_str());
-      on_success();
-    }
-    else {
-      std::string msg = "[configureControllerAsync] Failed to configure " + controller_name;
-      RCLCPP_ERROR(
-        node_->get_logger(),
-        "%s",
-        msg.c_str());
-      on_error(msg);
-    }
-  });
+      if (response->ok) {
+        RCLCPP_INFO(
+          node_->get_logger(),
+          "[configureControllerAsync] Successfully configured '%s'",
+          controller_name.c_str());
+        on_success();
+      } else {
+        std::string msg = "[configureControllerAsync] Failed to configure " + controller_name;
+        RCLCPP_ERROR(
+          node_->get_logger(),
+          "%s",
+          msg.c_str());
+        on_error(msg);
+      }
+    });
 }
 
 bool ManipulatorActionServer::executeTrajectoryWithCollisionChecks(
@@ -1030,9 +1027,10 @@ bool ManipulatorActionServer::executeTrajectoryWithCollisionChecks(
   }
 
   if (!planner_->isTrajectoryStartValid(
-    traj,
-    goal_handle->get_goal()->plan_request,
-    current_joint_state)) {
+      traj,
+      goal_handle->get_goal()->plan_request,
+      current_joint_state))
+  {
     abort_reason = "Trajectory start mismatch with current state";
     return false;
   }
@@ -1040,22 +1038,24 @@ bool ManipulatorActionServer::executeTrajectoryWithCollisionChecks(
   // 2) Validate the trajectory's end configuration.
   // Note: use get_goal() to access the move request.
   if (!planner_->isTrajectoryEndValid(
-    traj,
-    goal_handle->get_goal()->plan_request)) {
+      traj,
+      goal_handle->get_goal()->plan_request))
+  {
     abort_reason = "Trajectory end mismatch with target";
     return false;
   }
 
   // 3) Check the full trajectory validity (collision checking)
   if (!planner_->isTrajectoryValid(
-    traj.joint_trajectory,
-    moveit_msgs::msg::Constraints())) {
+      traj.joint_trajectory,
+      moveit_msgs::msg::Constraints()))
+  {
     abort_reason = "Invalid state or collision detected.";
     return false;
   }
 
   // 4) Set up a promise/future so we know if the final execution is successful
-  auto result_promise = std::make_shared<std::promise<bool> >();
+  auto result_promise = std::make_shared<std::promise<bool>>();
   std::future<bool> result_future = result_promise->get_future();
   std::atomic<bool> collision_detected(false);
 
@@ -1082,17 +1082,17 @@ bool ManipulatorActionServer::executeTrajectoryWithCollisionChecks(
 
   double total_time_s =
     rclcpp::Duration(
-      traj.joint_trajectory.points.back().time_from_start).seconds();
+    traj.joint_trajectory.points.back().time_from_start).seconds();
 
   rclcpp_action::Client<control_msgs::action::FollowJointTrajectory>::SendGoalOptions opts;
 
   // Feedback callback: perform collision check on the *future* part of the path
   opts.feedback_callback =
     [this, &collision_detected, goal_handle, traj = traj.joint_trajectory, start_time,
-     total_time_s](auto /*unused_handle*/,
-                   const std::shared_ptr<const
-                                         control_msgs::action::FollowJointTrajectory::Feedback>
-                   & feedback)
+      total_time_s](auto /*unused_handle*/,
+      const std::shared_ptr<const
+      control_msgs::action::FollowJointTrajectory::Feedback>
+      & feedback)
     mutable
     {
       RCLCPP_DEBUG(
@@ -1101,7 +1101,8 @@ bool ManipulatorActionServer::executeTrajectoryWithCollisionChecks(
         rclcpp::Duration(feedback->actual.time_from_start).seconds());
 
       if (!feedback ||
-          feedback->actual.positions.empty()) {
+        feedback->actual.positions.empty())
+      {
         RCLCPP_ERROR(
           node_->get_logger(),
           "[executeTrajectoryWithCollisionChecks] Empty feedback => abort");
@@ -1119,9 +1120,10 @@ bool ManipulatorActionServer::executeTrajectoryWithCollisionChecks(
 
       // collision-check the *remaining* trajectory automatically by time
       if (!planner_->isTrajectoryValid(
-        traj,
-        moveit_msgs::msg::Constraints(),
-        elapsed_s)) {
+          traj,
+          moveit_msgs::msg::Constraints(),
+          elapsed_s))
+      {
         RCLCPP_WARN(
           node_->get_logger(),
           "[executeTrajectoryWithCollisionChecks] Collision predicted at t=%.3f of %.3f",
@@ -1133,28 +1135,29 @@ bool ManipulatorActionServer::executeTrajectoryWithCollisionChecks(
       // publish progress in [0..1]
       auto fb = std::make_shared<manymove_msgs::action::MoveManipulator::Feedback>();
       fb->progress = static_cast<float>(std::min(
-        elapsed_s / total_time_s,
-        1.0));
+          elapsed_s / total_time_s,
+          1.0));
       fb->in_collision = collision_detected.load();
       goal_handle->publish_feedback(fb);
     };
 
   // Result callback: set the promise value based on execution result
   opts.result_callback = [this, result_promise, &collision_detected](const auto & wrapped_result)
-                         {
-                           bool success = (!collision_detected.load()) &&
-                                          (wrapped_result.code ==
-                                           rclcpp_action::ResultCode::SUCCEEDED);
-                           result_promise->set_value(success);
-                         };
+    {
+      bool success = (!collision_detected.load()) &&
+        (wrapped_result.code ==
+        rclcpp_action::ResultCode::SUCCEEDED);
+      result_promise->set_value(success);
+    };
 
   // 7) Send the trajectory execution goal
   auto goal_handle_future = follow_joint_traj_client->async_send_goal(
     fjt_goal,
     opts);
   if (goal_handle_future.wait_for(
-    std::chrono::seconds(5)) !=
-      std::future_status::ready) {
+      std::chrono::seconds(5)) !=
+    std::future_status::ready)
+  {
     abort_reason = "Timeout sending FollowJointTrajectory goal";
     return false;
   }
@@ -1172,10 +1175,11 @@ bool ManipulatorActionServer::executeTrajectoryWithCollisionChecks(
     5.0);
 
   if (res_future.wait_for(
-    std::chrono::duration<double>(timeout_s)) !=
-      std::future_status::ready) {
+      std::chrono::duration<double>(timeout_s)) !=
+    std::future_status::ready)
+  {
     abort_reason = "Timeout (" + std::to_string(timeout_s) +
-                   " s) waiting for FollowJointTrajectory result";
+      " s) waiting for FollowJointTrajectory result";
     return false;
   }
 
@@ -1184,10 +1188,9 @@ bool ManipulatorActionServer::executeTrajectoryWithCollisionChecks(
   if (!final_status) {
     if (collision_detected.load()) {
       abort_reason = "Collision detected during trajectory execution";
-    }
-    else {
+    } else {
       abort_reason = "FollowJointTrajectory failed (" +
-                     std::to_string(wrapped_result.result->error_code) + ")";
+        std::to_string(wrapped_result.result->error_code) + ")";
       if (!wrapped_result.result->error_string.empty()) {
         abort_reason += ": " + wrapped_result.result->error_string;
       }

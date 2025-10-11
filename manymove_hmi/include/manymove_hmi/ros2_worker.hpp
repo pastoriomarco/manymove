@@ -52,7 +52,7 @@ public:
   void callStopExecution();
   void callResetProgram();
 
-  const std::string& getRobotPrefix() const
+  const std::string & getRobotPrefix() const
   {
     return robot_prefix_;
   }

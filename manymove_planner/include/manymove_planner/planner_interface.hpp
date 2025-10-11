@@ -126,7 +126,8 @@ public:
  * Increasing the deceleration_time leads to a smoother stop, but also increases
  * the movement required to decelerate.
  */
-  virtual bool sendControlledStop(const manymove_msgs::msg::MovementConfig & move_cfg,
+  virtual bool sendControlledStop(
+    const manymove_msgs::msg::MovementConfig & move_cfg,
     const moveit_msgs::msg::RobotTrajectory & running_traj = moveit_msgs::msg::RobotTrajectory(),
     double elapsed_s = 0.0) = 0;
 
@@ -151,19 +152,23 @@ public:
  * @param current_joint_state A vector of doubles representing the current joint positions.
  * @return true if each joint position in the first waypoint is within tolerance, false otherwise.
  */
-  virtual bool isTrajectoryStartValid(const moveit_msgs::msg::RobotTrajectory & traj,
+  virtual bool isTrajectoryStartValid(
+    const moveit_msgs::msg::RobotTrajectory & traj,
     const manymove_msgs::msg::MoveManipulatorGoal & move_request,
     const std::vector<double> & current_joint_state) const = 0;
 
-  virtual bool isTrajectoryEndValid(const moveit_msgs::msg::RobotTrajectory & traj,
+  virtual bool isTrajectoryEndValid(
+    const moveit_msgs::msg::RobotTrajectory & traj,
     const manymove_msgs::msg::MoveManipulatorGoal & move_request)
   const = 0;
 
-  virtual bool isTrajectoryValid(const trajectory_msgs::msg::JointTrajectory & joint_traj_msg,
+  virtual bool isTrajectoryValid(
+    const trajectory_msgs::msg::JointTrajectory & joint_traj_msg,
     const moveit_msgs::msg::Constraints & path_constraints,
     const double time_from_start = 0) const = 0;
 
-  virtual bool isTrajectoryValid(const robot_trajectory::RobotTrajectory & trajectory,
+  virtual bool isTrajectoryValid(
+    const robot_trajectory::RobotTrajectory & trajectory,
     const moveit_msgs::msg::Constraints & path_constraints,
     const double time_from_start = 0) const = 0;
 

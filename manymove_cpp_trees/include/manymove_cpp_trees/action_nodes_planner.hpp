@@ -98,7 +98,8 @@ protected:
 
 private:
   void goalResponseCallback(std::shared_ptr<GoalHandleMoveManipulator> goal_handle);
-  void feedbackCallback(std::shared_ptr<GoalHandleMoveManipulator>,
+  void feedbackCallback(
+    std::shared_ptr<GoalHandleMoveManipulator>,
     const std::shared_ptr<const MoveManipulator::Feedback> feedback);
   void resultCallback(const GoalHandleMoveManipulator::WrappedResult & result);
 
