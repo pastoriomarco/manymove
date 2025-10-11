@@ -68,12 +68,18 @@ def launch_setup(context, *args, **kwargs):
     geometry_mesh_filename = LaunchConfiguration(
         "geometry_mesh_filename", default="pneumatic_lite.stl"
     )
-    geometry_mesh_origin_xyz = LaunchConfiguration("geometry_mesh_origin_xyz", default='"0 0 0"')
-    geometry_mesh_origin_rpy = LaunchConfiguration("geometry_mesh_origin_rpy", default='"0 0 0"')
+    geometry_mesh_origin_xyz = LaunchConfiguration(
+        "geometry_mesh_origin_xyz", default='"0 0 0"'
+    )
+    geometry_mesh_origin_rpy = LaunchConfiguration(
+        "geometry_mesh_origin_rpy", default='"0 0 0"'
+    )
     geometry_mesh_tcp_xyz = LaunchConfiguration(
         "geometry_mesh_tcp_xyz", default='"0.03075 0 0.11885"'
     )
-    geometry_mesh_tcp_rpy = LaunchConfiguration("geometry_mesh_tcp_rpy", default='"0 0.52 0"')
+    geometry_mesh_tcp_rpy = LaunchConfiguration(
+        "geometry_mesh_tcp_rpy", default='"0 0.52 0"'
+    )
 
     # no_gui_ctrl = LaunchConfiguration('no_gui_ctrl', default=False)
     # ros_namespace = LaunchConfiguration('ros_namespace', default='').perform(context)
@@ -202,7 +208,9 @@ def generate_launch_description():
         [
             # DeclareLaunchArguments for base_frame, tcp_frame
             DeclareLaunchArgument(
-                "base_frame", default_value="link_base", description="Base frame of the robot"
+                "base_frame",
+                default_value="link_base",
+                description="Base frame of the robot",
             ),
             DeclareLaunchArgument(
                 "tcp_frame",

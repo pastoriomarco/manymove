@@ -67,8 +67,12 @@ def launch_setup(context, *args, **kwargs):
     dof_1 = LaunchConfiguration("dof_1", default=dof)
     dof_2 = LaunchConfiguration("dof_2", default=dof)
     LaunchConfiguration("robot_type", default="lite")
-    robot_type_1 = LaunchConfiguration("robot_type_1", default="lite")  # default=robot_type)
-    robot_type_2 = LaunchConfiguration("robot_type_2", default="uf850")  # default=robot_type)
+    robot_type_1 = LaunchConfiguration(
+        "robot_type_1", default="lite"
+    )  # default=robot_type)
+    robot_type_2 = LaunchConfiguration(
+        "robot_type_2", default="uf850"
+    )  # default=robot_type)
     prefix_1 = LaunchConfiguration("prefix_1", default="L_")
     prefix_2 = LaunchConfiguration("prefix_2", default="R_")
     hw_ns = LaunchConfiguration("hw_ns", default="ufactory")
@@ -83,18 +87,30 @@ def launch_setup(context, *args, **kwargs):
     robot_sn_2 = LaunchConfiguration("robot_sn_2", default=robot_sn)
     mesh_suffix = LaunchConfiguration("mesh_suffix", default="stl")
     kinematics_suffix = LaunchConfiguration("kinematics_suffix", default="")
-    kinematics_suffix_1 = LaunchConfiguration("kinematics_suffix_1", default=kinematics_suffix)
-    kinematics_suffix_2 = LaunchConfiguration("kinematics_suffix_2", default=kinematics_suffix)
+    kinematics_suffix_1 = LaunchConfiguration(
+        "kinematics_suffix_1", default=kinematics_suffix
+    )
+    kinematics_suffix_2 = LaunchConfiguration(
+        "kinematics_suffix_2", default=kinematics_suffix
+    )
 
     add_gripper = LaunchConfiguration("add_gripper", default=False)
     add_gripper_1 = LaunchConfiguration("add_gripper_1", default=add_gripper)
     add_gripper_2 = LaunchConfiguration("add_gripper_2", default=add_gripper)
     add_vacuum_gripper = LaunchConfiguration("add_vacuum_gripper", default=False)
-    add_vacuum_gripper_1 = LaunchConfiguration("add_vacuum_gripper_1", default=add_vacuum_gripper)
-    add_vacuum_gripper_2 = LaunchConfiguration("add_vacuum_gripper_2", default=add_vacuum_gripper)
+    add_vacuum_gripper_1 = LaunchConfiguration(
+        "add_vacuum_gripper_1", default=add_vacuum_gripper
+    )
+    add_vacuum_gripper_2 = LaunchConfiguration(
+        "add_vacuum_gripper_2", default=add_vacuum_gripper
+    )
     add_bio_gripper = LaunchConfiguration("add_bio_gripper", default=False)
-    add_bio_gripper_1 = LaunchConfiguration("add_bio_gripper_1", default=add_bio_gripper)
-    add_bio_gripper_2 = LaunchConfiguration("add_bio_gripper_2", default=add_bio_gripper)
+    add_bio_gripper_1 = LaunchConfiguration(
+        "add_bio_gripper_1", default=add_bio_gripper
+    )
+    add_bio_gripper_2 = LaunchConfiguration(
+        "add_bio_gripper_2", default=add_bio_gripper
+    )
     add_realsense_d435i = LaunchConfiguration("add_realsense_d435i", default=True)
     add_realsense_d435i_1 = LaunchConfiguration(
         "add_realsense_d435i_1", default=add_realsense_d435i
@@ -103,11 +119,19 @@ def launch_setup(context, *args, **kwargs):
         "add_realsense_d435i_2", default=add_realsense_d435i
     )
     add_d435i_links = LaunchConfiguration("add_d435i_links", default=True)
-    add_d435i_links_1 = LaunchConfiguration("add_d435i_links_1", default=add_d435i_links)
-    add_d435i_links_2 = LaunchConfiguration("add_d435i_links_2", default=add_d435i_links)
+    add_d435i_links_1 = LaunchConfiguration(
+        "add_d435i_links_1", default=add_d435i_links
+    )
+    add_d435i_links_2 = LaunchConfiguration(
+        "add_d435i_links_2", default=add_d435i_links
+    )
     add_other_geometry = LaunchConfiguration("add_other_geometry", default=True)
-    add_other_geometry_1 = LaunchConfiguration("add_other_geometry_1", default=add_other_geometry)
-    add_other_geometry_2 = LaunchConfiguration("add_other_geometry_2", default=add_other_geometry)
+    add_other_geometry_1 = LaunchConfiguration(
+        "add_other_geometry_1", default=add_other_geometry
+    )
+    add_other_geometry_2 = LaunchConfiguration(
+        "add_other_geometry_2", default=add_other_geometry
+    )
     geometry_type = LaunchConfiguration("geometry_type", default="mesh")
     geometry_type_1 = LaunchConfiguration("geometry_type_1", default=geometry_type)
     geometry_type_2 = LaunchConfiguration("geometry_type_2", default=geometry_type)
@@ -115,14 +139,26 @@ def launch_setup(context, *args, **kwargs):
     geometry_mass_1 = LaunchConfiguration("geometry_mass_1", default=geometry_mass)
     geometry_mass_2 = LaunchConfiguration("geometry_mass_2", default=geometry_mass)
     geometry_height = LaunchConfiguration("geometry_height", default=0.1)
-    geometry_height_1 = LaunchConfiguration("geometry_height_1", default=geometry_height)
-    geometry_height_2 = LaunchConfiguration("geometry_height_2", default=geometry_height)
+    geometry_height_1 = LaunchConfiguration(
+        "geometry_height_1", default=geometry_height
+    )
+    geometry_height_2 = LaunchConfiguration(
+        "geometry_height_2", default=geometry_height
+    )
     geometry_radius = LaunchConfiguration("geometry_radius", default=0.1)
-    geometry_radius_1 = LaunchConfiguration("geometry_radius_1", default=geometry_radius)
-    geometry_radius_2 = LaunchConfiguration("geometry_radius_2", default=geometry_radius)
+    geometry_radius_1 = LaunchConfiguration(
+        "geometry_radius_1", default=geometry_radius
+    )
+    geometry_radius_2 = LaunchConfiguration(
+        "geometry_radius_2", default=geometry_radius
+    )
     geometry_length = LaunchConfiguration("geometry_length", default=0.1)
-    geometry_length_1 = LaunchConfiguration("geometry_length_1", default=geometry_length)
-    geometry_length_2 = LaunchConfiguration("geometry_length_2", default=geometry_length)
+    geometry_length_1 = LaunchConfiguration(
+        "geometry_length_1", default=geometry_length
+    )
+    geometry_length_2 = LaunchConfiguration(
+        "geometry_length_2", default=geometry_length
+    )
     geometry_width = LaunchConfiguration("geometry_width", default=0.1)
     geometry_width_1 = LaunchConfiguration("geometry_width_1", default=geometry_width)
     geometry_width_2 = LaunchConfiguration("geometry_width_2", default=geometry_width)
@@ -135,14 +171,18 @@ def launch_setup(context, *args, **kwargs):
     geometry_mesh_filename_2 = LaunchConfiguration(
         "geometry_mesh_filename_2", default=geometry_mesh_filename
     )
-    geometry_mesh_origin_xyz = LaunchConfiguration("geometry_mesh_origin_xyz", default='"0 0 0"')
+    geometry_mesh_origin_xyz = LaunchConfiguration(
+        "geometry_mesh_origin_xyz", default='"0 0 0"'
+    )
     geometry_mesh_origin_xyz_1 = LaunchConfiguration(
         "geometry_mesh_origin_xyz_1", default=geometry_mesh_origin_xyz
     )
     geometry_mesh_origin_xyz_2 = LaunchConfiguration(
         "geometry_mesh_origin_xyz_2", default=geometry_mesh_origin_xyz
     )
-    geometry_mesh_origin_rpy = LaunchConfiguration("geometry_mesh_origin_rpy", default='"0 0 0"')
+    geometry_mesh_origin_rpy = LaunchConfiguration(
+        "geometry_mesh_origin_rpy", default='"0 0 0"'
+    )
     geometry_mesh_origin_rpy_1 = LaunchConfiguration(
         "geometry_mesh_origin_rpy_1", default=geometry_mesh_origin_rpy
     )
@@ -158,7 +198,9 @@ def launch_setup(context, *args, **kwargs):
     geometry_mesh_tcp_xyz_2 = LaunchConfiguration(
         "geometry_mesh_tcp_xyz_2", default=geometry_mesh_tcp_xyz
     )
-    geometry_mesh_tcp_rpy = LaunchConfiguration("geometry_mesh_tcp_rpy", default='"0 0.52 0"')
+    geometry_mesh_tcp_rpy = LaunchConfiguration(
+        "geometry_mesh_tcp_rpy", default='"0 0.52 0"'
+    )
     geometry_mesh_tcp_rpy_1 = LaunchConfiguration(
         "geometry_mesh_tcp_rpy_1", default=geometry_mesh_tcp_rpy
     )
@@ -188,11 +230,15 @@ def launch_setup(context, *args, **kwargs):
     controllers_name = "fake_controllers"
     xarm_type_1 = "{}{}".format(
         robot_type_1.perform(context),
-        dof_1.perform(context) if robot_type_1.perform(context) in ("xarm", "lite") else "",
+        dof_1.perform(context)
+        if robot_type_1.perform(context) in ("xarm", "lite")
+        else "",
     )
     xarm_type_2 = "{}{}".format(
         robot_type_2.perform(context),
-        dof_2.perform(context) if robot_type_2.perform(context) in ("xarm", "lite") else "",
+        dof_2.perform(context)
+        if robot_type_2.perform(context) in ("xarm", "lite")
+        else "",
     )
 
     ros2_control_params = generate_dual_ros2_control_params_temp_file(
@@ -291,9 +337,12 @@ def launch_setup(context, *args, **kwargs):
         .planning_scene_monitor(
             publish_robot_description=True, publish_robot_description_semantic=True
         )
-        .planning_pipelines(pipelines=["ompl", "chomp", "pilz_industrial_motion_planner"])
+        .planning_pipelines(
+            pipelines=["ompl", "chomp", "pilz_industrial_motion_planner"]
+        )
         .moveit_cpp(
-            file_path=get_package_share_directory("manymove_planner") + "/config/moveit_cpp.yaml"
+            file_path=get_package_share_directory("manymove_planner")
+            + "/config/moveit_cpp.yaml"
         )
     ).to_moveit_configs()
 
@@ -331,10 +380,19 @@ def launch_setup(context, *args, **kwargs):
             moveit_config.to_dict(),
             {
                 "node_prefixes": [prefix_1.perform(context), prefix_2.perform(context)],
-                "planner_prefixes": [prefix_1.perform(context), prefix_2.perform(context)],
+                "planner_prefixes": [
+                    prefix_1.perform(context),
+                    prefix_2.perform(context),
+                ],
                 "planning_groups": [xarm_type_1, xarm_type_2],
-                "base_frames": [base_frame_1.perform(context), base_frame_2.perform(context)],
-                "tcp_frames": [tcp_frame_1.perform(context), tcp_frame_2.perform(context)],
+                "base_frames": [
+                    base_frame_1.perform(context),
+                    base_frame_2.perform(context),
+                ],
+                "tcp_frames": [
+                    tcp_frame_1.perform(context),
+                    tcp_frame_2.perform(context),
+                ],
                 "traj_controllers": [
                     "{}_traj_controller".format(xarm_type_1),
                     "{}_traj_controller".format(xarm_type_2),
@@ -344,7 +402,9 @@ def launch_setup(context, *args, **kwargs):
     )
 
     # Launch RViz
-    rviz_config_file = get_package_share_directory("manymove_planner") + "/config/micpp_demo.rviz"
+    rviz_config_file = (
+        get_package_share_directory("manymove_planner") + "/config/micpp_demo.rviz"
+    )
 
     rviz_node = Node(
         package="rviz2",
@@ -404,12 +464,16 @@ def launch_setup(context, *args, **kwargs):
         and robot_type_1.perform(context) == "lite"
         and ros2_control_plugin.perform(context) != "isaac"
     ):
-        controllers.append("{}lite_gripper_controller".format(prefix_1.perform(context)))
+        controllers.append(
+            "{}lite_gripper_controller".format(prefix_1.perform(context))
+        )
     elif (
         add_bio_gripper_1.perform(context) in ("True", "true")
         and robot_type_1.perform(context) != "lite"
     ):
-        controllers.append("{}bio_gripper_traj_controller".format(prefix_1.perform(context)))
+        controllers.append(
+            "{}bio_gripper_traj_controller".format(prefix_1.perform(context))
+        )
     if (
         add_gripper_2.perform(context) in ("True", "true")
         and robot_type_2.perform(context) != "lite"
@@ -424,24 +488,34 @@ def launch_setup(context, *args, **kwargs):
         and robot_type_2.perform(context) == "lite"
         and ros2_control_plugin.perform(context) != "isaac"
     ):
-        controllers.append("{}lite_gripper_controller".format(prefix_2.perform(context)))
+        controllers.append(
+            "{}lite_gripper_controller".format(prefix_2.perform(context))
+        )
     elif (
         add_bio_gripper_2.perform(context) in ("True", "true")
         and robot_type_2.perform(context) != "lite"
     ):
-        controllers.append("{}bio_gripper_traj_controller".format(prefix_2.perform(context)))
+        controllers.append(
+            "{}bio_gripper_traj_controller".format(prefix_2.perform(context))
+        )
 
     # ================================================================
     # from: xarm_controller/launch/_dual_ros2_control.launch.py
     # ================================================================
 
     mod = load_python_launch_file_as_module(
-        os.path.join(get_package_share_directory("xarm_api"), "launch", "lib", "robot_api_lib.py")
+        os.path.join(
+            get_package_share_directory("xarm_api"), "launch", "lib", "robot_api_lib.py"
+        )
     )
     generate_robot_api_params = getattr(mod, "generate_robot_api_params")
     robot_params = generate_robot_api_params(
-        os.path.join(get_package_share_directory("xarm_api"), "config", "xarm_params.yaml"),
-        os.path.join(get_package_share_directory("xarm_api"), "config", "xarm_user_params.yaml"),
+        os.path.join(
+            get_package_share_directory("xarm_api"), "config", "xarm_params.yaml"
+        ),
+        os.path.join(
+            get_package_share_directory("xarm_api"), "config", "xarm_user_params.yaml"
+        ),
         LaunchConfiguration("ros_namespace", default="").perform(context),
         node_name="ufactory_driver",
     )
@@ -514,7 +588,10 @@ def launch_setup(context, *args, **kwargs):
         output="screen",
         parameters=[
             {
-                "robot_prefixes": [prefix_1.perform(context), prefix_2.perform(context)],
+                "robot_prefixes": [
+                    prefix_1.perform(context),
+                    prefix_2.perform(context),
+                ],
                 "robot_names": [xarm_type_1, xarm_type_2],
             }
         ],
@@ -542,7 +619,9 @@ def generate_launch_description():
     return LaunchDescription(
         [
             DeclareLaunchArgument(
-                "base_frame_1", default_value="link_base", description="Base frame of the robot 1"
+                "base_frame_1",
+                default_value="link_base",
+                description="Base frame of the robot 1",
             ),
             DeclareLaunchArgument(
                 "tcp_frame_1",
@@ -550,7 +629,9 @@ def generate_launch_description():
                 description="TCP (end effector) frame of the robot 1",
             ),
             DeclareLaunchArgument(
-                "base_frame_2", default_value="link_base", description="Base frame of the robot 2"
+                "base_frame_2",
+                default_value="link_base",
+                description="Base frame of the robot 2",
             ),
             DeclareLaunchArgument(
                 "tcp_frame_2",

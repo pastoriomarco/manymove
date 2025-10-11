@@ -79,9 +79,13 @@ def create_tree_from_sequences(
 
     # For each sub-sequence, create another Sequence
     for seq_idx, moves in enumerate(list_of_move_sequences):
-        sub_seq_node = py_trees.composites.Sequence(name=f"SubSequence_{seq_idx}", memory=True)
+        sub_seq_node = py_trees.composites.Sequence(
+            name=f"SubSequence_{seq_idx}", memory=True
+        )
         for i, move in enumerate(moves):
-            move_node = MoveManipulatorBehavior(name=f"Move_{seq_idx}_{i}", node=node, move=move)
+            move_node = MoveManipulatorBehavior(
+                name=f"Move_{seq_idx}_{i}", node=node, move=move
+            )
             sub_seq_node.add_child(move_node)
         # Add this sub-sequence to the root
         root.add_child(sub_seq_node)

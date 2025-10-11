@@ -78,7 +78,9 @@ def generate_launch_description():
                         "robot_model": LaunchConfiguration("robot_model"),
                         "robot_prefix": LaunchConfiguration("robot_prefix"),
                         "tcp_frame": LaunchConfiguration("tcp_frame"),
-                        "gripper_action_server": LaunchConfiguration("gripper_action_server"),
+                        "gripper_action_server": LaunchConfiguration(
+                            "gripper_action_server"
+                        ),
                         "contact_links": LaunchConfiguration("contact_links"),
                         "is_robot_real": LaunchConfiguration("is_robot_real"),
                     }

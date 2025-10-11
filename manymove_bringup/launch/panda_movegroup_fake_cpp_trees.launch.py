@@ -61,12 +61,16 @@ def launch_setup(context, *args, **kwargs):
         .robot_description(
             file_path="config/panda.urdf.xacro",
             mappings={
-                "ros2_control_hardware_type": LaunchConfiguration("ros2_control_hardware_type")
+                "ros2_control_hardware_type": LaunchConfiguration(
+                    "ros2_control_hardware_type"
+                )
             },
         )
         .robot_description_semantic(file_path="config/panda.srdf")
         .trajectory_execution(file_path="config/gripper_moveit_controllers.yaml")
-        .planning_pipelines(pipelines=["ompl", "chomp", "pilz_industrial_motion_planner"])
+        .planning_pipelines(
+            pipelines=["ompl", "chomp", "pilz_industrial_motion_planner"]
+        )
         .to_moveit_configs()
     )
 
@@ -99,7 +103,9 @@ def launch_setup(context, *args, **kwargs):
     )
 
     # RViz
-    rviz_config_file = get_package_share_directory("moveit2_tutorials") + "/launch/move_group.rviz"
+    rviz_config_file = (
+        get_package_share_directory("moveit2_tutorials") + "/launch/move_group.rviz"
+    )
     rviz_node = Node(
         package="rviz2",
         executable="rviz2",
@@ -234,10 +240,14 @@ def generate_launch_description():
         [
             # DeclareLaunchArguments for planning_group, base_frame, tcp_frame
             DeclareLaunchArgument(
-                "planning_group", default_value="panda_arm", description="MoveIt planning group"
+                "planning_group",
+                default_value="panda_arm",
+                description="MoveIt planning group",
             ),
             DeclareLaunchArgument(
-                "base_frame", default_value="panda_link0", description="Base frame of the robot"
+                "base_frame",
+                default_value="panda_link0",
+                description="Base frame of the robot",
             ),
             DeclareLaunchArgument(
                 "tcp_frame",

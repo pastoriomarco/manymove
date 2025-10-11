@@ -76,12 +76,18 @@ def launch_setup(context, *args, **kwargs):
     geometry_mesh_filename = LaunchConfiguration(
         "geometry_mesh_filename", default="pneumatic_lite.stl"
     )
-    geometry_mesh_origin_xyz = LaunchConfiguration("geometry_mesh_origin_xyz", default='"0 0 0"')
-    geometry_mesh_origin_rpy = LaunchConfiguration("geometry_mesh_origin_rpy", default='"0 0 0"')
+    geometry_mesh_origin_xyz = LaunchConfiguration(
+        "geometry_mesh_origin_xyz", default='"0 0 0"'
+    )
+    geometry_mesh_origin_rpy = LaunchConfiguration(
+        "geometry_mesh_origin_rpy", default='"0 0 0"'
+    )
     geometry_mesh_tcp_xyz = LaunchConfiguration(
         "geometry_mesh_tcp_xyz", default='"0.03075 0 0.11885"'
     )
-    geometry_mesh_tcp_rpy = LaunchConfiguration("geometry_mesh_tcp_rpy", default='"0 0.52 0"')
+    geometry_mesh_tcp_rpy = LaunchConfiguration(
+        "geometry_mesh_tcp_rpy", default='"0 0.52 0"'
+    )
 
     # no_gui_ctrl = LaunchConfiguration('no_gui_ctrl', default=False)
     ros_namespace = LaunchConfiguration("ros_namespace", default="").perform(context)
@@ -110,12 +116,18 @@ def launch_setup(context, *args, **kwargs):
 
     # from xarm_controller _ros2_control.launch.py
     mod = load_python_launch_file_as_module(
-        os.path.join(get_package_share_directory("xarm_api"), "launch", "lib", "robot_api_lib.py")
+        os.path.join(
+            get_package_share_directory("xarm_api"), "launch", "lib", "robot_api_lib.py"
+        )
     )
     generate_robot_api_params = getattr(mod, "generate_robot_api_params")
     robot_params = generate_robot_api_params(
-        os.path.join(get_package_share_directory("xarm_api"), "config", "xarm_params.yaml"),
-        os.path.join(get_package_share_directory("xarm_api"), "config", "xarm_user_params.yaml"),
+        os.path.join(
+            get_package_share_directory("xarm_api"), "config", "xarm_params.yaml"
+        ),
+        os.path.join(
+            get_package_share_directory("xarm_api"), "config", "xarm_user_params.yaml"
+        ),
         LaunchConfiguration("ros_namespace", default="").perform(context),
         node_name="ufactory_driver",
     )
@@ -193,7 +205,9 @@ def launch_setup(context, *args, **kwargs):
     )
 
     # Launch RViz
-    rviz_config_file = get_package_share_directory("manymove_planner") + "/config/micpp_demo.rviz"
+    rviz_config_file = (
+        get_package_share_directory("manymove_planner") + "/config/micpp_demo.rviz"
+    )
 
     rviz_node = Node(
         package="rviz2",
@@ -212,7 +226,9 @@ def launch_setup(context, *args, **kwargs):
 
     xyz = attach_xyz.perform(context)[1:-1].split(" ")
     rpy = attach_rpy.perform(context)[1:-1].split(" ")
-    arguments = xyz + rpy + [attach_to.perform(context), f"{prefix.perform(context)}link_base"]
+    arguments = (
+        xyz + rpy + [attach_to.perform(context), f"{prefix.perform(context)}link_base"]
+    )
 
     static_tf = Node(
         package="tf2_ros",
@@ -244,7 +260,10 @@ def launch_setup(context, *args, **kwargs):
     )
 
     controllers = [f"{prefix.perform(context)}{xarm_type}_traj_controller"]
-    if add_gripper.perform(context) in ("True", "true") and robot_type.perform(context) != "lite":
+    if (
+        add_gripper.perform(context) in ("True", "true")
+        and robot_type.perform(context) != "lite"
+    ):
         controllers.append(
             f"{prefix.perform(context)}{robot_type.perform(context)}_gripper_traj_controller"
         )
@@ -258,7 +277,11 @@ def launch_setup(context, *args, **kwargs):
         package="controller_manager",
         executable="spawner",
         output="screen",
-        arguments=["joint_state_broadcaster", "--controller-manager", "/controller_manager"],
+        arguments=[
+            "joint_state_broadcaster",
+            "--controller-manager",
+            "/controller_manager",
+        ],
     )
 
     controller_nodes = []
@@ -341,7 +364,9 @@ def generate_launch_description():
     return LaunchDescription(
         [
             DeclareLaunchArgument(
-                "base_frame", default_value="link_base", description="Base frame of the robot"
+                "base_frame",
+                default_value="link_base",
+                description="Base frame of the robot",
             ),
             DeclareLaunchArgument(
                 "tcp_frame",

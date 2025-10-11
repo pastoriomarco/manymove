@@ -64,7 +64,8 @@ def generate_launch_description():
         )
         .planning_pipelines(pipelines=["ompl"])
         .moveit_cpp(
-            file_path=get_package_share_directory("manymove_planner") + "/config/moveit_cpp.yaml"
+            file_path=get_package_share_directory("manymove_planner")
+            + "/config/moveit_cpp.yaml"
         )
         .to_moveit_configs()
     )
@@ -78,7 +79,9 @@ def generate_launch_description():
     )
 
     # RViz
-    rviz_config_file = get_package_share_directory("manymove_planner") + "/config/micpp_demo.rviz"
+    rviz_config_file = (
+        get_package_share_directory("manymove_planner") + "/config/micpp_demo.rviz"
+    )
 
     rviz_node = Node(
         package="rviz2",

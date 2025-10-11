@@ -26,4 +26,6 @@ def test_flake8():
     # Point to repo-level setup.cfg to keep one source of truth
     config = Path(__file__).resolve().parents[2] / "setup.cfg"
     rc, errors = main_with_errors(argv=["--config", str(config)])
-    assert rc == 0, "Found %d code style errors / warnings:\n" % len(errors) + "\n".join(errors)
+    assert rc == 0, "Found %d code style errors / warnings:\n" % len(
+        errors
+    ) + "\n".join(errors)

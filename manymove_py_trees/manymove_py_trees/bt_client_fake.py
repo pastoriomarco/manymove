@@ -52,34 +52,55 @@ def build_and_run_bt(node: Node):
 
     rest_position = [
         create_move(
-            "joint", tcp_frame, joint_values=joint_rest, config=movement_configs["max_move"]
+            "joint",
+            tcp_frame,
+            joint_values=joint_rest,
+            config=movement_configs["max_move"],
         ),
     ]
 
     scan_surroundings = [
         create_move(
-            "joint", tcp_frame, joint_values=joint_look_sx, config=movement_configs["max_move"]
+            "joint",
+            tcp_frame,
+            joint_values=joint_look_sx,
+            config=movement_configs["max_move"],
         ),
         create_move(
-            "joint", tcp_frame, joint_values=joint_look_dx, config=movement_configs["max_move"]
+            "joint",
+            tcp_frame,
+            joint_values=joint_look_dx,
+            config=movement_configs["max_move"],
         ),
     ]
 
     pick_sequence = [
         create_move(
-            "pose", tcp_frame, target=approach_target, config=movement_configs["mid_move"]
+            "pose",
+            tcp_frame,
+            target=approach_target,
+            config=movement_configs["mid_move"],
         ),
         create_move(
-            "cartesian", tcp_frame, target=pick_target, config=movement_configs["slow_move"]
+            "cartesian",
+            tcp_frame,
+            target=pick_target,
+            config=movement_configs["slow_move"],
         ),
         create_move(
-            "cartesian", tcp_frame, target=approach_target, config=movement_configs["max_move"]
+            "cartesian",
+            tcp_frame,
+            target=approach_target,
+            config=movement_configs["max_move"],
         ),
     ]
 
     home_position = [
         create_move(
-            "named", tcp_frame, named_target=named_home, config=movement_configs["max_move"]
+            "named",
+            tcp_frame,
+            named_target=named_home,
+            config=movement_configs["max_move"],
         ),
     ]
 
@@ -87,13 +108,17 @@ def build_and_run_bt(node: Node):
     list_of_sequences = [rest_position, scan_surroundings, pick_sequence, home_position]
 
     # 3) Create a BT from these sequences
-    chained_branch = create_tree_from_sequences(node, list_of_sequences, root_name="LogicSequence")
+    chained_branch = create_tree_from_sequences(
+        node, list_of_sequences, root_name="LogicSequence"
+    )
 
     main_seq = py_trees.composites.Sequence("Main_Sequence", memory=True)
     main_seq.add_child(chained_branch.root)
 
     repeated_root = py_trees.decorators.Repeat(
-        child=main_seq, num_success=-1, name="RepeatForever"  # negative => infinite repeats
+        child=main_seq,
+        num_success=-1,
+        name="RepeatForever",  # negative => infinite repeats
     )
 
     bt_tree = py_trees_ros.trees.BehaviourTree(repeated_root)

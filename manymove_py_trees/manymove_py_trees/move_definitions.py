@@ -50,12 +50,16 @@ class Move:
 
         elif self.movement_type == "joint":
             if not isinstance(self.joint_values, list):
-                raise TypeError("For 'joint' moves, a list of joint values must be provided.")
+                raise TypeError(
+                    "For 'joint' moves, a list of joint values must be provided."
+                )
             mmg.joint_values = self.joint_values
 
         elif self.movement_type == "named":
             if not isinstance(self.named_target, str):
-                raise TypeError("For 'named' moves, a named_target (string) must be provided.")
+                raise TypeError(
+                    "For 'named' moves, a named_target (string) must be provided."
+                )
             mmg.named_target = self.named_target
 
         return mmg
@@ -223,7 +227,9 @@ def send_move_manipulator_goal(node: Node, move: Move) -> bool:
 
     # Build the final goal
     goal_msg = build_move_manipulator_goal(move)
-    node.get_logger().info(f"Sending MoveManipulator goal [type={move.movement_type}] ...")
+    node.get_logger().info(
+        f"Sending MoveManipulator goal [type={move.movement_type}] ..."
+    )
 
     # Send the goal
     send_goal_future = action_client.send_goal_async(goal_msg)
@@ -240,7 +246,9 @@ def send_move_manipulator_goal(node: Node, move: Move) -> bool:
     result = get_result_future.result()
 
     if not result or not result.result:
-        node.get_logger().error("MoveManipulator action returned an invalid result object.")
+        node.get_logger().error(
+            "MoveManipulator action returned an invalid result object."
+        )
         return False
 
     if result.result.success:
