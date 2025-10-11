@@ -77,7 +77,7 @@ inline auto mgiPlanTrajectory(const PlanT& plan) -> decltype((plan.trajectory_))
 template<typename MGI>
 struct has_mgi_cartesian_with_jump
 {
-private:
+  private:
   template<typename T>
   static auto test(int) -> decltype(
     std::declval<T&>().computeCartesianPath(std::declval<const std::vector<geometry_msgs::msg::Pose>&>(),
@@ -89,7 +89,7 @@ private:
   template<typename>
   static std::false_type test(...);
 
-public:
+  public:
   static constexpr bool value = decltype(test<MGI>(0))::value;
 };
 
@@ -97,7 +97,7 @@ public:
 template<typename MGI>
 struct has_mgi_cartesian_no_jump
 {
-private:
+  private:
   template<typename T>
   static auto test(int) -> decltype(
     std::declval<T&>().computeCartesianPath(std::declval<const std::vector<geometry_msgs::msg::Pose>&>(),
@@ -108,7 +108,7 @@ private:
   template<typename>
   static std::false_type test(...);
 
-public:
+  public:
   static constexpr bool value = decltype(test<MGI>(0))::value;
 };
 

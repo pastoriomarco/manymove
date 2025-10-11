@@ -76,13 +76,6 @@ jobs:
           else
             cp ${ROS_WS}/src/manymove/uncrustify_0.72.cfg ${ROS_WS}/src/manymove/uncrustify.cfg
           fi
-      
-      - name: Dump default uncrustify config
-        run: |
-          uncrustify --version
-          echo "::group::default config"
-          uncrustify --show-config     # no -c: show's the binary's compiled-in defaults
-          echo "::endgroup::"
 
       - name: Build workspace
         shell: bash
