@@ -89,7 +89,8 @@ class HMIServiceNode(Node):
                     arr = [float(x) for x in arr]
                     self.blackboard.set(key, arr)
                 elif value_type == "pose":
-                    # Expect a JSON object like {"x":0.1,"y":0.2,"z":0.3,"roll":1.57,"pitch":0.0,"yaw":0.0}
+                    # Expect a JSON object like
+                    # {"x":0.1,"y":0.2,"z":0.3,"roll":1.57,"pitch":0.0,"yaw":0.0}
                     d = json.loads(data_str)
                     if not isinstance(d, dict):
                         raise ValueError("Expected a dict for pose")

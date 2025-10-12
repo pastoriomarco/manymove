@@ -56,7 +56,10 @@ def generate_launch_description():
             DeclareLaunchArgument(
                 "is_robot_real",
                 default_value="false",
-                description="Set to true if connected with a real robot exposing the necessary services needed by manymove_signals",
+                description=(
+                    "Set to true if connected with a real robot exposing the "
+                    "necessary services needed by manymove_signals"
+                ),
             ),
             Node(
                 package="manymove_cpp_trees",

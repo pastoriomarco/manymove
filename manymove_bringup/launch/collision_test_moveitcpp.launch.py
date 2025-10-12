@@ -273,9 +273,17 @@ def launch_setup(context, *args, **kwargs):
 
     # Grouped DualMoveItConfigsBuilder to apply the following to enable moveitcpp pipelines:
 
-    # .planning_scene_monitor(publish_robot_description=True, publish_robot_description_semantic=True)
+    # .planning_scene_monitor(
+    #     publish_robot_description=True,
+    #     publish_robot_description_semantic=True,
+    # )
     # .planning_pipelines(pipelines=["ompl"])
-    # .moveit_cpp(file_path=get_package_share_directory("manymove_planner") + "/config/moveit_cpp.yaml")
+    # .moveit_cpp(
+    #     file_path=(
+    #         get_package_share_directory("manymove_planner")
+    #         + "/config/moveit_cpp.yaml"
+    #     )
+    # )
 
     # ================================================================
 
@@ -385,7 +393,8 @@ def launch_setup(context, *args, **kwargs):
     moveitcpp_action_servers_node = Node(
         package="manymove_planner",
         executable="moveitcpp_action_server_node",
-        # Don't use the "name" parameter, the name will be automatically set with {node_prefix_*}action_server_node to
+        # Don't use the "name" parameter; the name will be automatically
+        # set with {node_prefix_*}action_server_node to
         # avoid duplicate nodes
         output="screen",
         parameters=[
@@ -733,7 +742,11 @@ def generate_launch_description():
     """Create the launch description entry point."""
     return LaunchDescription(
         [
-            # DeclareLaunchArgument('planner_type', default_value='moveitcpp', description='Type of planner to use:
+            # DeclareLaunchArgument(
+            #     'planner_type',
+            #     default_value='moveitcpp',
+            #     description='Type of planner to use:',
+            # )
             # moveitcpp or movegroup'), #hardcoded
             DeclareLaunchArgument(
                 "velocity_scaling_factor",

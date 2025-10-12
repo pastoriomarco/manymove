@@ -273,9 +273,17 @@ def launch_setup(context, *args, **kwargs):
 
     # Grouped DualMoveItConfigsBuilder to apply the following to enable moveitcpp pipelines:
 
-    # .planning_scene_monitor(publish_robot_description=True, publish_robot_description_semantic=True)
+    # .planning_scene_monitor(
+    #     publish_robot_description=True,
+    #     publish_robot_description_semantic=True,
+    # )
     # .planning_pipelines(pipelines=["ompl"])
-    # .moveit_cpp(file_path=get_package_share_directory("manymove_planner") + "/config/moveit_cpp.yaml")
+    # .moveit_cpp(
+    #     file_path=(
+    #         get_package_share_directory("manymove_planner")
+    #         + "/config/moveit_cpp.yaml"
+    #     )
+    # )
 
     # ================================================================
 
@@ -507,7 +515,10 @@ def launch_setup(context, *args, **kwargs):
         arguments=[
             "joint_state_broadcaster",
             "--controller-manager",
-            f"{LaunchConfiguration('ros_namespace', default='').perform(context)}/controller_manager",
+            (
+                f"{LaunchConfiguration('ros_namespace', default='').perform(context)}"
+                "/controller_manager"
+            ),
         ],
     )
 
@@ -648,7 +659,8 @@ def launch_setup(context, *args, **kwargs):
             )
         )
 
-    # When the last spawner exits, launch the MoveItCpp action servers (only after all controllers are loaded)
+    # When the last spawner exits, launch the MoveItCpp action servers
+    # (only after all controllers are loaded)
     handlers.append(
         RegisterEventHandler(
             OnProcessExit(

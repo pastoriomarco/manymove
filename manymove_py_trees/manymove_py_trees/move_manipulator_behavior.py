@@ -81,7 +81,10 @@ class MoveManipulatorBehavior(py_trees.behaviour.Behaviour):
         )
 
         self._node.get_logger().info(
-            f"[{self.name}] waiting up to {self._wait_for_server_seconds}s for action server '{server_name}'"
+            (
+                f"[{self.name}] waiting up to {self._wait_for_server_seconds}s "
+                f"for action server '{server_name}'"
+            )
         )
         if not self._action_client.wait_for_server(
             timeout_sec=self._wait_for_server_seconds
@@ -316,6 +319,9 @@ class MoveManipulatorBehavior(py_trees.behaviour.Behaviour):
         fb = fb_msg.feedback
         if fb.in_collision:
             self._node.get_logger().warn(
-                f"[{self.name}] feedback => in_collision => setting '{self.prefix}collision_detected' = True"
+                (
+                    f"[{self.name}] feedback => in_collision => setting "
+                    f"'{self.prefix}collision_detected' = True"
+                )
             )
             self.bb.set(self.prefix + "collision_detected", True)

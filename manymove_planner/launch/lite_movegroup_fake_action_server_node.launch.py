@@ -94,10 +94,19 @@ def launch_setup(context, *args, **kwargs):
 
     # ros2_control_plugin = 'uf_robot_hardware/UFRobotFakeSystemHardware'
     # controllers_name = 'fake_controllers'
-    # xarm_type = '{}{}'.format(robot_type.perform(context), dof.perform(context) if robot_type.perform(context) in ('xarm', 'lite') else '')
+    # xarm_type = '{}{}'.format(
+    #     robot_type.perform(context),
+    #     dof.perform(context)
+    #     if robot_type.perform(context) in ('xarm', 'lite')
+    #     else '',
+    # )
 
     # ros2_control_params = generate_ros2_control_params_temp_file(
-    #     os.path.join(get_package_share_directory('xarm_controller'), 'config', '{}_controllers.yaml'.format(xarm_type)),
+    #     os.path.join(
+    #         get_package_share_directory('xarm_controller'),
+    #         'config',
+    #         '{}_controllers.yaml'.format(xarm_type),
+    #     ),
     #     prefix=prefix.perform(context),
     #     add_gripper=add_gripper.perform(context) in ('True', 'true'),
     #     add_bio_gripper=add_bio_gripper.perform(context) in ('True', 'true'),
@@ -148,7 +157,8 @@ def launch_setup(context, *args, **kwargs):
     action_server_node = Node(
         package="manymove_planner",
         executable="action_server_node",
-        # Don't use the "name" parameter, the name will be automatically set with {node_prefix}action_server_node to avoid duplicate nodes
+        # Don't use the "name" parameter; the name will be automatically
+        # set with {node_prefix}action_server_node to avoid duplicate nodes
         output="screen",
         parameters=[
             moveit_configs.to_dict(),
@@ -223,5 +233,11 @@ def generate_launch_description():
     )
 
 
-# Defaults to this CLI command (remove the kinematics_suffix:=LS1 if not generated from a real robot with prefix LS1):
-# ros2 launch xarm_moveit_config lite6_moveit_fake.launch.py add_realsense_d435i:=true add_d435i_links:=true add_other_geometry:=true geometry_type:=mesh geometry_mass:=0.3 geometry_mesh_filename:=pneumatic_lite.stl geometry_mesh_tcp_xyz:="0.03075 0 0.11885" geometry_mesh_tcp_rpy:="0 0.52 0" kinematics_suffix:=LS1
+# Defaults to this CLI command (remove the kinematics_suffix:=LS1 if not generated
+# from a real robot with prefix LS1):
+# ros2 launch xarm_moveit_config lite6_moveit_fake.launch.py \
+#   add_realsense_d435i:=true add_d435i_links:=true \
+#   add_other_geometry:=true geometry_type:=mesh geometry_mass:=0.3 \
+#   geometry_mesh_filename:=pneumatic_lite.stl \
+#   geometry_mesh_tcp_xyz:="0.03075 0 0.11885" \
+#   geometry_mesh_tcp_rpy:="0 0.52 0" kinematics_suffix:=LS1

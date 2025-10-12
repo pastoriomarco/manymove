@@ -181,7 +181,6 @@ def launch_setup(context, *args, **kwargs):
         .planning_pipelines(
             pipelines=["ompl", "chomp", "pilz_industrial_motion_planner"]
         )
-        # .moveit_cpp(file_path=get_package_share_directory("manymove_planner") + "/config/moveit_cpp.yaml")
     ).to_moveit_configs()
 
     # ================================================================
@@ -222,8 +221,8 @@ def launch_setup(context, *args, **kwargs):
     action_server_node = Node(
         package="manymove_planner",
         executable="action_server_node",
-        # Don't use the "name" parameter, the name will be automatically set with {node_prefix}action_server_node to
-        # avoid duplicate nodes
+        # Don't use the "name" parameter; the name will be automatically
+        # set with {node_prefix}action_server_node to avoid duplicate nodes
         output="screen",
         parameters=[
             moveit_configs.to_dict(),
@@ -442,7 +441,8 @@ def launch_setup(context, *args, **kwargs):
             )
         )
 
-    # When the last spawner exits, launch the MoveItCpp action servers (only after all controllers are loaded)
+    # When the last spawner exits, launch the MoveItCpp action servers
+    # (only after all controllers are loaded)
     handlers.append(
         RegisterEventHandler(
             OnProcessExit(
@@ -498,8 +498,11 @@ def generate_launch_description():
                 default_value="link_tcp",
                 description="TCP (end effector) frame of the robot",
             ),
-            # DeclareLaunchArgument('gripper_action_server', default_value='/lite_gripper_controller/gripper_cmd',
-            # description='Name of the action server to control the gripper'),
+            # DeclareLaunchArgument(
+            #     'gripper_action_server',
+            #     default_value='/lite_gripper_controller/gripper_cmd',
+            #     description='Name of the action server to control the gripper',
+            # )
             DeclareLaunchArgument(
                 "gripper_action_server",
                 default_value="/isaac_joint_commands_gripper",
@@ -507,7 +510,13 @@ def generate_launch_description():
             ),
             DeclareLaunchArgument(
                 "contact_links",
-                default_value='["lite_gripper_right_finger", "lite_gripper_left_finger", "lite_gripper_base_link"]',
+                default_value=(
+                    "["
+                    '"lite_gripper_right_finger", '
+                    '"lite_gripper_left_finger", '
+                    '"lite_gripper_base_link"'
+                    "]"
+                ),
                 description="List of links to exclude from collision checking",
             ),
             DeclareLaunchArgument(
@@ -521,7 +530,11 @@ def generate_launch_description():
     )
 
 
-# Defaults to this CLI command (remove the kinematics_suffix:=LS1 if not generated from a real robot with prefix LS1):
-# ros2 launch xarm_moveit_config lite6_moveit_fake.launch.py add_realsense_d435i:=true add_d435i_links:=true
-# add_other_geometry:=true geometry_type:=mesh geometry_mass:=0.3 geometry_mesh_filename:=pneumatic_lite.stl
-# geometry_mesh_tcp_xyz:="0.03075 0 0.11885" geometry_mesh_tcp_rpy:="0 0.52 0" kinematics_suffix:=LS1
+# Defaults to this CLI command (remove the kinematics_suffix:=LS1 if not generated
+# from a real robot with prefix LS1):
+# ros2 launch xarm_moveit_config lite6_moveit_fake.launch.py \
+#   add_realsense_d435i:=true add_d435i_links:=true \
+#   add_other_geometry:=true geometry_type:=mesh geometry_mass:=0.3 \
+#   geometry_mesh_filename:=pneumatic_lite.stl \
+#   geometry_mesh_tcp_xyz:="0.03075 0 0.11885" \
+#   geometry_mesh_tcp_rpy:="0 0.52 0" kinematics_suffix:=LS1

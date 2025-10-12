@@ -188,7 +188,8 @@ def launch_setup(context, *args, **kwargs):
     action_server_node = Node(
         package="manymove_planner",
         executable="action_server_node",
-        # Don't use the "name" parameter, the name will be automatically set with {node_prefix}action_server_node to avoid duplicate nodes
+        # Don't use the "name" parameter; the name will be automatically
+        # set with {node_prefix}action_server_node to avoid duplicate nodes
         output="screen",
         parameters=[
             moveit_config_dict,

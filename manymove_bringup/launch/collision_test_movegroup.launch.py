@@ -274,9 +274,17 @@ def launch_setup(context, *args, **kwargs):
 
     # Grouped DualMoveItConfigsBuilder to apply the following to enable moveitcpp pipelines:
 
-    # .planning_scene_monitor(publish_robot_description=True, publish_robot_description_semantic=True)
+    # .planning_scene_monitor(
+    #     publish_robot_description=True,
+    #     publish_robot_description_semantic=True,
+    # )
     # .planning_pipelines(pipelines=["ompl"])
-    # .moveit_cpp(file_path=get_package_share_directory("manymove_planner") + "/config/moveit_cpp.yaml")
+    # .moveit_cpp(
+    #     file_path=(
+    #         get_package_share_directory("manymove_planner")
+    #         + "/config/moveit_cpp.yaml"
+    #     )
+    # )
 
     # ================================================================
 
@@ -352,7 +360,6 @@ def launch_setup(context, *args, **kwargs):
         .planning_pipelines(
             pipelines=["ompl", "chomp", "pilz_industrial_motion_planner"]
         )
-        # .moveit_cpp(file_path=get_package_share_directory("manymove_planner") + "/config/moveit_cpp.yaml")
     ).to_moveit_configs()
 
     # robot state publisher node
@@ -394,7 +401,8 @@ def launch_setup(context, *args, **kwargs):
     action_server_node_1 = Node(
         package="manymove_planner",
         executable="action_server_node",
-        # Don't use the "name" parameter, the name will be automatically set with {node_prefix_*}action_server_node to
+        # Don't use the "name" parameter; the name will be automatically
+        # set with {node_prefix_*}action_server_node to
         # avoid duplicate nodes
         output="screen",
         parameters=[
@@ -414,7 +422,8 @@ def launch_setup(context, *args, **kwargs):
     action_server_node_2 = Node(
         package="manymove_planner",
         executable="action_server_node",
-        # Don't use the "name" parameter, the name will be automatically set with {node_prefix}action_server_node to
+        # Don't use the "name" parameter; the name will be automatically
+        # set with {node_prefix}action_server_node to
         # avoid duplicate nodes
         output="screen",
         parameters=[

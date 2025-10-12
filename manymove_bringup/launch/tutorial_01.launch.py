@@ -189,7 +189,8 @@ def launch_setup(context, *args, **kwargs):
     action_server_node = Node(
         package="manymove_planner",
         executable="action_server_node",
-        # Don't use the "name" parameter, the name will be automatically set with {node_prefix}action_server_node to
+        # Don't use the "name" parameter; the name will be automatically
+        # set with {node_prefix}action_server_node to
         # avoid duplicate nodes
         output="screen",
         parameters=[
@@ -396,7 +397,8 @@ def launch_setup(context, *args, **kwargs):
             )
         )
 
-    # When the last spawner exits, launch the MoveItCpp action servers (only after all controllers are loaded)
+    # When the last spawner exits, launch the MoveItCpp action servers
+    # (only after all controllers are loaded)
     handlers.append(
         RegisterEventHandler(
             OnProcessExit(
