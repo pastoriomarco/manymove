@@ -48,10 +48,10 @@ def launch_setup(context, *args, **kwargs):
     ros2_control_hardware_type = DeclareLaunchArgument(
         "ros2_control_hardware_type",
         default_value="mock_components",
-            description=(
-                "ROS2 control hardware interface type to use for the launch file "
-                "-- possible values: [mock_components, isaac]"
-            ),
+        description=(
+            "ROS2 control hardware interface type to use for the launch file "
+            "-- possible values: [mock_components, isaac]"
+        ),
     )
 
     moveit_configs = (
