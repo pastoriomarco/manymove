@@ -108,9 +108,7 @@ def build_and_run_bt(node: Node):
     list_of_sequences = [rest_position, scan_surroundings, pick_sequence, home_position]
 
     # 3) Create a BT from these sequences
-    chained_branch = create_tree_from_sequences(
-        node, list_of_sequences, root_name="LogicSequence"
-    )
+    chained_branch = create_tree_from_sequences(node, list_of_sequences, root_name="LogicSequence")
 
     main_seq = py_trees.composites.Sequence("Main_Sequence", memory=True)
     main_seq.add_child(chained_branch.root)

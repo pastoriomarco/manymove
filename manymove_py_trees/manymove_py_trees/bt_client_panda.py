@@ -92,9 +92,7 @@ def build_and_run_bt(node: Node):
 
     # Build a list of sequences and the Behavior Tree (BT)
     list_of_sequences = [rest_position, pick_sequence, home_position]
-    chained_branch = create_tree_from_sequences(
-        node, list_of_sequences, root_name="LogicSequence"
-    )
+    chained_branch = create_tree_from_sequences(node, list_of_sequences, root_name="LogicSequence")
     main_seq = py_trees.composites.Sequence("Main_Sequence", memory=True)
     main_seq.add_child(chained_branch.root)
     repeated_root = py_trees.decorators.Repeat(

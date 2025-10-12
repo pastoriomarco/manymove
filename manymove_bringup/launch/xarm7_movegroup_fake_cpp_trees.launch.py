@@ -72,18 +72,12 @@ def launch_setup(context, *args, **kwargs):
     geometry_mesh_filename = LaunchConfiguration(
         "geometry_mesh_filename", default="pneumatic_lite.stl"
     )
-    geometry_mesh_origin_xyz = LaunchConfiguration(
-        "geometry_mesh_origin_xyz", default='"0 0 0"'
-    )
-    geometry_mesh_origin_rpy = LaunchConfiguration(
-        "geometry_mesh_origin_rpy", default='"0 0 0"'
-    )
+    geometry_mesh_origin_xyz = LaunchConfiguration("geometry_mesh_origin_xyz", default='"0 0 0"')
+    geometry_mesh_origin_rpy = LaunchConfiguration("geometry_mesh_origin_rpy", default='"0 0 0"')
     geometry_mesh_tcp_xyz = LaunchConfiguration(
         "geometry_mesh_tcp_xyz", default='"0.03075 0 0.11885"'
     )
-    geometry_mesh_tcp_rpy = LaunchConfiguration(
-        "geometry_mesh_tcp_rpy", default='"0 0.52 0"'
-    )
+    geometry_mesh_tcp_rpy = LaunchConfiguration("geometry_mesh_tcp_rpy", default='"0 0.52 0"')
 
     # no_gui_ctrl = LaunchConfiguration('no_gui_ctrl', default=False)
     ros_namespace = LaunchConfiguration("ros_namespace", default="").perform(context)
@@ -114,18 +108,12 @@ def launch_setup(context, *args, **kwargs):
 
     # from xarm_controller _ros2_control.launch.py
     mod = load_python_launch_file_as_module(
-        os.path.join(
-            get_package_share_directory("xarm_api"), "launch", "lib", "robot_api_lib.py"
-        )
+        os.path.join(get_package_share_directory("xarm_api"), "launch", "lib", "robot_api_lib.py")
     )
     generate_robot_api_params = getattr(mod, "generate_robot_api_params")
     robot_params = generate_robot_api_params(
-        os.path.join(
-            get_package_share_directory("xarm_api"), "config", "xarm_params.yaml"
-        ),
-        os.path.join(
-            get_package_share_directory("xarm_api"), "config", "xarm_user_params.yaml"
-        ),
+        os.path.join(get_package_share_directory("xarm_api"), "config", "xarm_params.yaml"),
+        os.path.join(get_package_share_directory("xarm_api"), "config", "xarm_user_params.yaml"),
         LaunchConfiguration("ros_namespace", default="").perform(context),
         node_name="ufactory_driver",
     )
@@ -173,9 +161,7 @@ def launch_setup(context, *args, **kwargs):
         .planning_scene_monitor(
             publish_robot_description=True, publish_robot_description_semantic=True
         )
-        .planning_pipelines(
-            pipelines=["ompl", "chomp", "pilz_industrial_motion_planner"]
-        )
+        .planning_pipelines(pipelines=["ompl", "chomp", "pilz_industrial_motion_planner"])
     ).to_moveit_configs()
 
     # ================================================================
@@ -234,9 +220,7 @@ def launch_setup(context, *args, **kwargs):
     )
 
     # Launch RViz
-    rviz_config_file = (
-        get_package_share_directory("manymove_planner") + "/config/micpp_demo.rviz"
-    )
+    rviz_config_file = get_package_share_directory("manymove_planner") + "/config/micpp_demo.rviz"
 
     rviz_node = Node(
         package="rviz2",
@@ -256,9 +240,7 @@ def launch_setup(context, *args, **kwargs):
     xyz = attach_xyz.perform(context)[1:-1].split(" ")
     rpy = attach_rpy.perform(context)[1:-1].split(" ")
     tf_args = (
-        xyz
-        + rpy
-        + [attach_to.perform(context), "{}link_base".format(prefix.perform(context))]
+        xyz + rpy + [attach_to.perform(context), "{}link_base".format(prefix.perform(context))]
     )
 
     # Static TF
@@ -283,10 +265,7 @@ def launch_setup(context, *args, **kwargs):
     )
 
     controllers = ["{}{}_traj_controller".format(prefix.perform(context), xarm_type)]
-    if (
-        add_gripper.perform(context) in ("True", "true")
-        and robot_type.perform(context) != "lite"
-    ):
+    if add_gripper.perform(context) in ("True", "true") and robot_type.perform(context) != "lite":
         controllers.append(
             "{}{}_gripper_traj_controller".format(
                 prefix.perform(context), robot_type.perform(context)
@@ -296,9 +275,7 @@ def launch_setup(context, *args, **kwargs):
         add_bio_gripper.perform(context) in ("True", "true")
         and robot_type.perform(context) != "lite"
     ):
-        controllers.append(
-            "{}bio_gripper_traj_controller".format(prefix.perform(context))
-        )
+        controllers.append("{}bio_gripper_traj_controller".format(prefix.perform(context)))
 
     joint_state_broadcaster = Node(
         package="controller_manager",

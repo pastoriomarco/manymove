@@ -57,9 +57,7 @@ class HMIServiceNode(Node):
         n = len(request.key)
         if len(request.value_type) != n or len(request.value_data) != n:
             response.success = False
-            response.message = (
-                "Mismatched array lengths among key, value_type, and value_data."
-            )
+            response.message = "Mismatched array lengths among key, value_type, and value_data."
             self.get_logger().error(response.message)
             return response
 
@@ -121,9 +119,7 @@ class HMIServiceNode(Node):
             # For a specific robot prefix, expect keys like "L_stop_execution", etc.
             stop_execution = self.blackboard.get(f"{self.robot_prefix}stop_execution")
             reset = self.blackboard.get(f"{self.robot_prefix}reset")
-            collision_detected = self.blackboard.get(
-                f"{self.robot_prefix}collision_detected"
-            )
+            collision_detected = self.blackboard.get(f"{self.robot_prefix}collision_detected")
             msg_dict = {
                 f"{self.robot_prefix}stop_execution": stop_execution,
                 f"{self.robot_prefix}reset": reset,
@@ -140,9 +136,7 @@ def main(args=None):
     # Create the node with an empty prefix (global) or a specific one ("L_", "R_")
     node = HMIServiceNode("hmi_service_node", robot_prefix="")
     time.sleep(2.0)
-    node.get_logger().info(
-        "Waited 2 seconds, hopefully the Blackboard keys are now set."
-    )
+    node.get_logger().info("Waited 2 seconds, hopefully the Blackboard keys are now set.")
 
     rclpy.spin(node)
     node.destroy_node()

@@ -37,9 +37,7 @@ from launch_ros.actions import Node
 
 def generate_launch_description():
     """Create the launch description entry point."""
-    config_dir = os.path.join(
-        get_package_share_directory("manymove_object_manager"), "config"
-    )
+    config_dir = os.path.join(get_package_share_directory("manymove_object_manager"), "config")
     objects_yaml = os.path.join(config_dir, "objects.yaml")
 
     return LaunchDescription(

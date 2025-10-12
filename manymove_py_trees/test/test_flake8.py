@@ -27,10 +27,6 @@ def test_flake8():
     # Point to repo-level setup.cfg to keep one source of truth
     config = Path(__file__).resolve().parents[2] / "setup.cfg"
     # ament_flake8.main_with_errors may return either (rc, errors) or just rc
-    res: Union[Tuple[int, List[str]], int] = main_with_errors(
-        argv=["--config", str(config)]
-    )
-    rc, errors = (res if isinstance(res, tuple) else (res, []))
-    assert rc == 0, (
-        f"Found {len(errors)} code style errors / warnings:\n" + "\n".join(errors)
-    )
+    res: Union[Tuple[int, List[str]], int] = main_with_errors(argv=["--config", str(config)])
+    rc, errors = res if isinstance(res, tuple) else (res, [])
+    assert rc == 0, f"Found {len(errors)} code style errors / warnings:\n" + "\n".join(errors)

@@ -68,9 +68,7 @@ class MoveManipulatorBehavior(py_trees.behaviour.Behaviour):
         """
         self._node = self.bb.get("node")
         if not self._node:
-            raise RuntimeError(
-                f"[{self.name}] No rclpy Node found in blackboard under key 'node'"
-            )
+            raise RuntimeError(f"[{self.name}] No rclpy Node found in blackboard under key 'node'")
 
         server_name = self.prefix + "move_manipulator"
         self._action_client = ActionClient(
@@ -86,9 +84,7 @@ class MoveManipulatorBehavior(py_trees.behaviour.Behaviour):
                 f"for action server '{server_name}'"
             )
         )
-        if not self._action_client.wait_for_server(
-            timeout_sec=self._wait_for_server_seconds
-        ):
+        if not self._action_client.wait_for_server(timeout_sec=self._wait_for_server_seconds):
             raise RuntimeError(f"[{self.name}] server '{server_name}' not available")
 
     def initialise(self):
@@ -103,9 +99,7 @@ class MoveManipulatorBehavior(py_trees.behaviour.Behaviour):
         self._cancel_in_progress = False
 
         if self._bb_get_bool("reset"):
-            self._node.get_logger().warn(
-                f"[{self.name}] reset => immediate FAIL in initialise()"
-            )
+            self._node.get_logger().warn(f"[{self.name}] reset => immediate FAIL in initialise()")
             self.stop(py_trees.common.Status.FAILURE)
             return
 
@@ -128,11 +122,7 @@ class MoveManipulatorBehavior(py_trees.behaviour.Behaviour):
         # 2) Check 'stop_execution' => pause
         if self._bb_get_bool("stop_execution"):
             self._paused = True
-            if (
-                self._goal_sent
-                and not self._result_received
-                and not self._cancel_in_progress
-            ):
+            if self._goal_sent and not self._result_received and not self._cancel_in_progress:
                 self._node.get_logger().error(
                     f"[{self.name}] stop_execution => CANCEL => goal canceled"
                 )
@@ -149,11 +139,7 @@ class MoveManipulatorBehavior(py_trees.behaviour.Behaviour):
         if self._bb_get_bool("collision_detected"):
             self.bb.set(self.prefix + "collision_detected", False)
             self.bb.set(self.prefix + "stop_execution", True)
-            if (
-                self._goal_sent
-                and not self._result_received
-                and not self._cancel_in_progress
-            ):
+            if self._goal_sent and not self._result_received and not self._cancel_in_progress:
                 self._node.get_logger().error(
                     f"[{self.name}] collision => CANCEL => will retry next tick"
                 )
@@ -192,9 +178,7 @@ class MoveManipulatorBehavior(py_trees.behaviour.Behaviour):
                     if self._action_result.final_trajectory is not None:
                         self._store_trajectory(self._action_result.final_trajectory)
 
-                self._node.get_logger().info(
-                    f"[{self.name}] => SUCCESS => returning SUCCESS"
-                )
+                self._node.get_logger().info(f"[{self.name}] => SUCCESS => returning SUCCESS")
                 self.stop(py_trees.common.Status.SUCCESS)
                 return py_trees.common.Status.SUCCESS
             else:
@@ -224,9 +208,7 @@ class MoveManipulatorBehavior(py_trees.behaviour.Behaviour):
 
     def _build_goal(self) -> MoveManipulator.Goal:
         if not self._move_obj:
-            self._node.get_logger().error(
-                f"[{self.name}] no Move object found in constructor"
-            )
+            self._node.get_logger().error(f"[{self.name}] no Move object found in constructor")
             return None
 
         mmg = self._move_obj.to_move_manipulator_goal()
@@ -275,9 +257,7 @@ class MoveManipulatorBehavior(py_trees.behaviour.Behaviour):
         """Handle responses from the MoveManipulator action server."""
         goal_handle = future.result()
         if not goal_handle or not goal_handle.accepted:
-            self._node.get_logger().error(
-                f"[{self.name}] goal REJECTED => will fail in update()"
-            )
+            self._node.get_logger().error(f"[{self.name}] goal REJECTED => will fail in update()")
 
             self.bb.set(self.prefix + "stop_execution", True)
 
@@ -287,9 +267,7 @@ class MoveManipulatorBehavior(py_trees.behaviour.Behaviour):
             self._action_result = fake_res
             self._result_received = True
         else:
-            self._node.get_logger().info(
-                f"[{self.name}] goal ACCEPTED => waiting for result"
-            )
+            self._node.get_logger().info(f"[{self.name}] goal ACCEPTED => waiting for result")
             self._goal_handle = goal_handle
             get_result_future = goal_handle.get_result_async()
             get_result_future.add_done_callback(self.result_callback)

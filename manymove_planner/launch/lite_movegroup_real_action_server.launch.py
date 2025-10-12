@@ -83,18 +83,12 @@ def launch_setup(context, *args, **kwargs):
     geometry_mesh_filename = LaunchConfiguration(
         "geometry_mesh_filename", default="pneumatic_lite.stl"
     )
-    geometry_mesh_origin_xyz = LaunchConfiguration(
-        "geometry_mesh_origin_xyz", default='"0 0 0"'
-    )
-    geometry_mesh_origin_rpy = LaunchConfiguration(
-        "geometry_mesh_origin_rpy", default='"0 0 0"'
-    )
+    geometry_mesh_origin_xyz = LaunchConfiguration("geometry_mesh_origin_xyz", default='"0 0 0"')
+    geometry_mesh_origin_rpy = LaunchConfiguration("geometry_mesh_origin_rpy", default='"0 0 0"')
     geometry_mesh_tcp_xyz = LaunchConfiguration(
         "geometry_mesh_tcp_xyz", default='"0.03075 0 0.11885"'
     )
-    geometry_mesh_tcp_rpy = LaunchConfiguration(
-        "geometry_mesh_tcp_rpy", default='"0 0.52 0"'
-    )
+    geometry_mesh_tcp_rpy = LaunchConfiguration("geometry_mesh_tcp_rpy", default='"0 0.52 0"')
 
     # no_gui_ctrl = LaunchConfiguration('no_gui_ctrl', default=False)
     ros_namespace = LaunchConfiguration("ros_namespace", default="").perform(context)
@@ -193,9 +187,7 @@ def launch_setup(context, *args, **kwargs):
         .planning_scene_monitor(
             publish_robot_description=True, publish_robot_description_semantic=True
         )
-        .planning_pipelines(
-            pipelines=["ompl", "chomp", "pilz_industrial_motion_planner"]
-        )
+        .planning_pipelines(pipelines=["ompl", "chomp", "pilz_industrial_motion_planner"])
     ).to_moveit_configs()
 
     # ================================================================
@@ -252,9 +244,7 @@ def launch_setup(context, *args, **kwargs):
     )
 
     # Launch RViz
-    rviz_config_file = (
-        get_package_share_directory("manymove_planner") + "/config/micpp_demo.rviz"
-    )
+    rviz_config_file = get_package_share_directory("manymove_planner") + "/config/micpp_demo.rviz"
 
     rviz_node = Node(
         package="rviz2",
@@ -274,9 +264,7 @@ def launch_setup(context, *args, **kwargs):
     xyz = attach_xyz.perform(context)[1:-1].split(" ")
     rpy = attach_rpy.perform(context)[1:-1].split(" ")
     tf_args = (
-        xyz
-        + rpy
-        + [attach_to.perform(context), "{}link_base".format(prefix.perform(context))]
+        xyz + rpy + [attach_to.perform(context), "{}link_base".format(prefix.perform(context))]
     )
 
     # Static TF
@@ -302,9 +290,7 @@ def launch_setup(context, *args, **kwargs):
         parameters=[
             {
                 "source_list": [
-                    "{}{}/joint_states".format(
-                        prefix.perform(context), hw_ns.perform(context)
-                    )
+                    "{}{}/joint_states".format(prefix.perform(context), hw_ns.perform(context))
                 ]
             }
         ],
