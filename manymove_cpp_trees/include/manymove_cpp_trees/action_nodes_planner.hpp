@@ -26,11 +26,15 @@
 // ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 // POSSIBILITY OF SUCH DAMAGE.
 
-#ifndef MANYMOVE_CPP_TREES_ACTION_NODES_PLANNER_HPP
-#define MANYMOVE_CPP_TREES_ACTION_NODES_PLANNER_HPP
+#ifndef MANYMOVE_CPP_TREES__ACTION_NODES_PLANNER_HPP_
+#define MANYMOVE_CPP_TREES__ACTION_NODES_PLANNER_HPP_
 
 #include <behaviortree_cpp_v3/action_node.h>
 #include <behaviortree_cpp_v3/condition_node.h>
+
+#include <memory>
+#include <string>
+#include <vector>
 
 #include <geometry_msgs/msg/pose.hpp>
 #include <manymove_msgs/action/add_collision_object.hpp>
@@ -42,8 +46,6 @@
 #include <moveit_msgs/msg/robot_trajectory.hpp>
 #include <rclcpp/rclcpp.hpp>
 #include <rclcpp_action/rclcpp_action.hpp>
-#include <string>
-#include <vector>
 
 #include "manymove_cpp_trees/move.hpp"
 #include "manymove_msgs/action/check_robot_state.hpp"
@@ -141,4 +143,4 @@ private:
 
 }  // namespace manymove_cpp_trees
 
-#endif
+#endif  // MANYMOVE_CPP_TREES__ACTION_NODES_PLANNER_HPP_

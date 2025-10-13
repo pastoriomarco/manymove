@@ -26,8 +26,8 @@
 // ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 // POSSIBILITY OF SUCH DAMAGE.
 
-#ifndef MANYMOVE_CPP_TREES_MOVE_HPP
-#define MANYMOVE_CPP_TREES_MOVE_HPP
+#ifndef MANYMOVE_CPP_TREES__MOVE_HPP_
+#define MANYMOVE_CPP_TREES__MOVE_HPP_
 
 #include <string>
 #include <unordered_map>
@@ -314,4 +314,4 @@ struct Move
 
 }  // namespace manymove_cpp_trees
 
-#endif  // MANYMOVE_CPP_TREES_MOVE_HPP
+#endif  // MANYMOVE_CPP_TREES__MOVE_HPP_

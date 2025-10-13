@@ -26,17 +26,19 @@
 // ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 // POSSIBILITY OF SUCH DAMAGE.
 
-#ifndef MANYMOVE_CPP_TREES_HMI_SERVICE_NODE_HPP
-#define MANYMOVE_CPP_TREES_HMI_SERVICE_NODE_HPP
+#ifndef MANYMOVE_CPP_TREES__HMI_SERVICE_NODE_HPP_
+#define MANYMOVE_CPP_TREES__HMI_SERVICE_NODE_HPP_
 
 #include <behaviortree_cpp_v3/blackboard.h>
+
+#include <memory>
+#include <string>
+#include <vector>
 
 #include <geometry_msgs/msg/pose.hpp>
 #include <manymove_msgs/srv/set_blackboard_values.hpp>
 #include <rclcpp/rclcpp.hpp>
 #include <std_msgs/msg/string.hpp>
-#include <string>
-#include <vector>
 
 #include "manymove_cpp_trees/blackboard_utils.hpp"
 #include "manymove_cpp_trees/tree_helper.hpp"
@@ -93,4 +95,4 @@ private:
 
 }  // namespace manymove_cpp_trees
 
-#endif  // MANYMOVE_CPP_TREES_HMI_SERVICE_NODE_HPP
+#endif  // MANYMOVE_CPP_TREES__HMI_SERVICE_NODE_HPP_

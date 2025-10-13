@@ -26,32 +26,7 @@
 // ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 // POSSIBILITY OF SUCH DAMAGE.
 
-#include <behaviortree_cpp_v3/behavior_tree.h>
-#include <behaviortree_cpp_v3/bt_factory.h>
-#include <behaviortree_cpp_v3/decorators/force_failure_node.h>
-#include <behaviortree_cpp_v3/loggers/bt_zmq_publisher.h>
-
-#include <rclcpp/rclcpp.hpp>
-#include <string>
-#include <vector>
-
-#include "manymove_cpp_trees/action_nodes_logic.hpp"
-#include "manymove_cpp_trees/action_nodes_objects.hpp"
-#include "manymove_cpp_trees/action_nodes_planner.hpp"
-#include "manymove_cpp_trees/action_nodes_signals.hpp"
-#include "manymove_cpp_trees/bt_converters.hpp"
-#include "manymove_cpp_trees/hmi_service_node.hpp"
-#include "manymove_cpp_trees/move.hpp"
-#include "manymove_cpp_trees/object.hpp"
-#include "manymove_cpp_trees/robot.hpp"
-#include "manymove_cpp_trees/tree_helper.hpp"
-#include "manymove_msgs/action/check_robot_state.hpp"
-#include "manymove_msgs/action/get_input.hpp"
-#include "manymove_msgs/action/reset_robot_state.hpp"
-#include "manymove_msgs/action/set_output.hpp"
-
-using geometry_msgs::msg::Pose;
-using namespace manymove_cpp_trees;
+#include "manymove_cpp_trees/main_imports_helper.hpp"
 
 int main(int argc, char ** argv)
 {
@@ -233,36 +208,12 @@ int main(int argc, char ** argv)
   blackboard->set("mesh_id_key", "graspable_mesh");
   blackboard->set("mesh_shape_key", "mesh");
   blackboard->set("mesh_file_key", "package://manymove_object_manager/meshes/unit_tube.stl");
-  blackboard->set("mesh_scale_key", std::vector<double>{0.01, 0.01, 0.1});  //< The
-                                                                            // tube is
-                                                                            // vertical
-                                                                            // with
-                                                                            // dimension
-                                                                            // 1m x 1m
-                                                                            // x 1m.
-                                                                            // We
-                                                                            // scale
-                                                                            // it to
-                                                                            // 10x10x100
-                                                                            // mm
+  //< The tube is vertical with dimension 1m x 1m x 1m. We scale it to 10x10x100 mm
+  blackboard->set("mesh_scale_key", std::vector<double>{0.01, 0.01, 0.1});
+  //< We place it on the floor and lay it on its side, X+ facing down
   blackboard->set(
     "mesh_pose_key", createPoseRPY(
-      0.1, -0.2, 0.2005, 0.785, 1.57,
-      0.0));                   //< We
-                               // place
-                               // it
-                               // on
-                               // the
-                               // floor
-                               // and
-                               // lay
-                               // it
-                               // on
-                               // its
-                               // side,
-                               // X+
-                               // facing
-                               // down
+      0.1, -0.2, 0.2005, 0.785, 1.57, 0.0));
 
   // Create object actions xml snippets (the object are created directly in the create*() functions
   // relative to each type of object action)
@@ -500,164 +451,36 @@ int main(int argc, char ** argv)
   // children
   std::string repeat_forever_wrapper_1_xml = repeatSequenceWrapperXML(
     "RepeatForever",
-    {check_reset_robot_1_xml,        //<
-                                     // We
-                                     // check
-                                     // if
-                                     // the
-                                     // robot
-                                     // is
-                                     // active,
-                                     // if
-                                     // not
-                                     // we
-                                     // try
-                                     // to
-                                     // reset
-                                     // it
-      spawn_graspable_objects_1_xml, //<
-                                     // We
-                                     // add
-                                     // all
-                                     // the
-                                     // objects
-                                     // to
-                                     // the
-                                     // scene
-      get_grasp_object_poses_1_xml,  //<
-                                     // We
-                                     // get
-                                     // the
-                                     // updated
-                                     // poses
-                                     // relative
-                                     // to
-                                     // the
-                                     // objects
-      go_to_pick_pose_1_xml,         //<
-                                     // Prep
-                                     // sequence
-                                     // and
-                                     // pick
-                                     // sequence
-      close_gripper_1_xml,           //<
-                                     // We
-                                     // attach
-                                     // the
-                                     // object
-      drop_sequence_1_xml,           //<
-                                     // Drop
-                                     // sequence
-      open_gripper_1_xml,            //<
-                                     // We
-                                     // detach
-                                     // the
-                                     // object
-      home_sequence_1_xml,           //<
-                                     // Homing
-                                     // sequence
-      remove_obj_1_xml},             //< We
-                                     // delete
-                                     // the
-                                     // object
-                                     // for
-                                     // it
-                                     // to
-                                     // be
-                                     // added
-                                     // on
-                                     // the
-                                     // next
-                                     // cycle
-                                     // in
-                                     // the
-                                     // original
-                                     // position
-    -1);                             //< num_cycles=-1
-                                     // for
-                                     // infinite
+  {
+    check_reset_robot_1_xml,
+    spawn_graspable_objects_1_xml,
+    get_grasp_object_poses_1_xml,
+    go_to_pick_pose_1_xml,
+    close_gripper_1_xml,
+    drop_sequence_1_xml,
+    open_gripper_1_xml,
+    home_sequence_1_xml,
+    remove_obj_1_xml
+  },
+    -1);  // num_cycles=-1 for infinite
 
   // ROBOT 2
   // Repeat node must have only one children, so it also wrap a Sequence child that wraps the other
   // children
   std::string repeat_forever_wrapper_2_xml = repeatSequenceWrapperXML(
     "RepeatForever",
-    {check_reset_robot_2_xml,        //<
-                                     // We
-                                     // check
-                                     // if
-                                     // the
-                                     // robot
-                                     // is
-                                     // active,
-                                     // if
-                                     // not
-                                     // we
-                                     // try
-                                     // to
-                                     // reset
-                                     // it
-      spawn_graspable_objects_2_xml, //<
-                                     // We
-                                     // add
-                                     // all
-                                     // the
-                                     // objects
-                                     // to
-                                     // the
-                                     // scene
-      get_grasp_object_poses_2_xml,  //<
-                                     // We
-                                     // get
-                                     // the
-                                     // updated
-                                     // poses
-                                     // relative
-                                     // to
-                                     // the
-                                     // objects
-      go_to_pick_pose_2_xml,         //<
-                                     // Prep
-                                     // sequence
-                                     // and
-                                     // pick
-                                     // sequence
-      close_gripper_2_xml,           //<
-                                     // We
-                                     // attach
-                                     // the
-                                     // object
-      drop_sequence_2_xml,           //<
-                                     // Drop
-                                     // sequence
-      open_gripper_2_xml,            //<
-                                     // We
-                                     // detach
-                                     // the
-                                     // object
-      home_sequence_2_xml,           //<
-                                     // Homing
-                                     // sequence
-      remove_obj_2_xml},             //< We
-                                     // delete
-                                     // the
-                                     // object
-                                     // for
-                                     // it
-                                     // to
-                                     // be
-                                     // added
-                                     // on
-                                     // the
-                                     // next
-                                     // cycle
-                                     // in
-                                     // the
-                                     // original
-                                     // position
-    -1);                             //< num_cycles=-1
-                                     // for
-                                     // infinite
+  {
+    check_reset_robot_2_xml,
+    spawn_graspable_objects_2_xml,
+    get_grasp_object_poses_2_xml,
+    go_to_pick_pose_2_xml,
+    close_gripper_2_xml,
+    drop_sequence_2_xml,
+    open_gripper_2_xml,
+    home_sequence_2_xml,
+    remove_obj_2_xml
+  },
+    -1);  //< num_cycles=-1 for infinite
 
   // Runningh both robot sequences in parallel:
   std::string parallel_repeat_forever_sequences_xml = parallelWrapperXML(

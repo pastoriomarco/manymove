@@ -717,10 +717,9 @@ std::pair<bool, moveit_msgs::msg::RobotTrajectory> MoveItCppPlanner::applyTimePa
       trajectory_processing::TimeOptimalTrajectoryGeneration time_param;
       time_param_success = time_param.computeTimeStamps(
         *robot_traj_ptr, velocity_scaling_factor, acceleration_scaling_factor);
-    }
-    /// TODO: Is ruckig still developed? Is it worth keeping since it doesn't work on cartesian
-    // paths? To test.
-    else if (config.smoothing_type == "ruckig") {
+    } else if (config.smoothing_type == "ruckig") {
+      /// TODO: Is ruckig still developed? Is it worth keeping since it doesn't work on cartesian
+      // paths? To test.
       // Ruckig-based smoothing
       time_param_success = trajectory_processing::RuckigSmoothing::applySmoothing(
         *robot_traj_ptr, velocity_scaling_factor, acceleration_scaling_factor);
@@ -1022,9 +1021,8 @@ bool MoveItCppPlanner::isTrajectoryEndValid(
       return false;
     }
     return true;
-  }
-  // For joint or named target movements, compare the joint positions.
-  else if (move_request.movement_type == "joint" || move_request.movement_type == "named") {
+  } else if (move_request.movement_type == "joint" || move_request.movement_type == "named") {
+    // For joint or named target movements, compare the joint positions.
     const auto & last_point = traj.joint_trajectory.points.back();
     std::vector<double> target_joint_values;
     if (move_request.movement_type == "named") {

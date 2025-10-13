@@ -34,18 +34,21 @@
 #include <chrono>
 #include <cmath>
 #include <functional>
-#include <geometry_msgs/msg/accel.hpp>
-#include <geometry_msgs/msg/twist.hpp>
 #include <mutex>
 #include <optional>
-#include <std_msgs/msg/header.hpp>
 #include <utility>
+
+#if !__has_include(<tf2/LinearMath/Quaternion.hpp>)
+#include <tf2/LinearMath/Quaternion.h>
+#endif
+
+#include <geometry_msgs/msg/accel.hpp>
+#include <geometry_msgs/msg/twist.hpp>
+#include <std_msgs/msg/header.hpp>
 
 #include "manymove_cpp_trees/bt_converters.hpp"
 #if __has_include(<tf2/LinearMath/Quaternion.hpp>)
 #include <tf2/LinearMath/Quaternion.hpp>
-#else
-#include <tf2/LinearMath/Quaternion.h>
 #endif
 #include <tf2/LinearMath/Vector3.h>
 #include <tf2/time.h>
@@ -659,17 +662,14 @@ BT::NodeStatus FoundationPoseAlignmentNode::onRunning()
       q_delta.setRPY(v[3], v[4], v[5]);
 
       tf2::Vector3 t_delta(v[0], v[1], v[2]);
-      tf2::Vector3 t_world = R_base * t_delta; // local -> world
-                                               // translation
+      tf2::Vector3 t_world = R_base * t_delta;
 
       geometry_msgs::msg::Pose out = base;
       out.position.x += t_world.x();
       out.position.y += t_world.y();
       out.position.z += t_world.z();
 
-      tf2::Quaternion q_out = q_base * q_delta; // local
-                                                // rotation
-                                                // composition
+      tf2::Quaternion q_out = q_base * q_delta;
       if (q_out.length2() > 0.0) {
         q_out.normalize();
       }

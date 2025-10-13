@@ -33,13 +33,15 @@
 
 #pragma once
 
-#include <geometry_msgs/msg/pose.hpp>
+#include <cstdint>
 #include <memory>
-#include <moveit_msgs/msg/robot_trajectory.hpp>
 #include <string>
 #include <type_traits>
 #include <utility>
 #include <vector>
+
+#include <geometry_msgs/msg/pose.hpp>
+#include <moveit_msgs/msg/robot_trajectory.hpp>
 
 #include "manymove_planner/compat/moveit_includes_compat.hpp"
 
@@ -141,7 +143,7 @@ auto getPlanningSceneMonitorRwImpl(MoveItCppT & micpp, int)
 }
 
 template<typename MoveItCppT>
-auto getPlanningSceneMonitorRwImpl(MoveItCppT & micpp, long)
+auto getPlanningSceneMonitorRwImpl(MoveItCppT & micpp, std::int64_t)
 -> decltype(micpp.getPlanningSceneMonitor())
 {
   return micpp.getPlanningSceneMonitor();
@@ -155,7 +157,7 @@ auto executePlanningComponentImpl(PlanningComponentT & pc, bool blocking, int)
 }
 
 template<typename PlanningComponentT>
-auto executePlanningComponentImpl(PlanningComponentT & pc, bool /*blocking*/, long)
+auto executePlanningComponentImpl(PlanningComponentT & pc, bool /*blocking*/, std::int64_t)
 -> decltype(pc.execute(), bool ())
 {
   return pc.execute();
@@ -222,7 +224,8 @@ auto getPlanningPipelineNamesImpl(MoveItCppT & micpp, const std::string & planni
 }
 
 template<typename MoveItCppT>
-auto getPlanningPipelineNamesImpl(MoveItCppT & micpp, const std::string & /*planning_group*/, long)
+auto getPlanningPipelineNamesImpl(
+  MoveItCppT & micpp, const std::string & /*planning_group*/, std::int64_t)
 -> std::vector<std::string>
 {
   std::vector<std::string> names;

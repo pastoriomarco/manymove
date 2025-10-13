@@ -392,9 +392,9 @@ BT::NodeStatus CheckRobotStateAction::onRunning()
 
   // We have the final result. Set output ports
   setOutput("ready", action_result_.ready);
-  setOutput("err", (int)action_result_.err);
-  setOutput("mode", (int)action_result_.mode);
-  setOutput("state", (int)action_result_.state);
+  setOutput("err", static_cast<int>(action_result_.err));
+  setOutput("mode", static_cast<int>(action_result_.mode));
+  setOutput("state", static_cast<int>(action_result_.state));
   setOutput("message", action_result_.message);
 
   if (action_result_.ready) {

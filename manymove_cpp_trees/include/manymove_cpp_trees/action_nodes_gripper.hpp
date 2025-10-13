@@ -26,10 +26,14 @@
 // ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 // POSSIBILITY OF SUCH DAMAGE.
 
-#ifndef MANYMOVE_CPP_TREES_ACTION_NODES_GRIPPER_HPP
-#define MANYMOVE_CPP_TREES_ACTION_NODES_GRIPPER_HPP
+#ifndef MANYMOVE_CPP_TREES__ACTION_NODES_GRIPPER_HPP_
+#define MANYMOVE_CPP_TREES__ACTION_NODES_GRIPPER_HPP_
 
 #include <behaviortree_cpp_v3/action_node.h>
+
+#include <memory>
+#include <vector>
+#include <string>
 
 #include <control_msgs/action/follow_joint_trajectory.hpp>
 #include <rclcpp/rclcpp.hpp>
@@ -148,4 +152,4 @@ private:
 
 }  // namespace manymove_cpp_trees
 
-#endif  // MANYMOVE_CPP_TREES_ACTION_NODES_GRIPPER_HPP
+#endif  // MANYMOVE_CPP_TREES__ACTION_NODES_GRIPPER_HPP_

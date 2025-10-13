@@ -32,18 +32,28 @@
 #include <cmath>
 #include <future>
 #include <map>
+#include <memory>
+#include <mutex>
+#include <string>
+#include <utility>
+#include <vector>
+
+#if !__has_include(<tf2/LinearMath/Quaternion.hpp>)
+#include <tf2/LinearMath/Quaternion.h>
+#endif
+
 #include <rclcpp/rclcpp.hpp>
 
 #include "planner_interface.hpp"
-#if __has_include(<tf2/LinearMath/Quaternion.hpp>)
-#include <tf2/LinearMath/Quaternion.hpp>
-#else
-#include <tf2/LinearMath/Quaternion.h>
-#endif
 #include <geometry_msgs/msg/pose_stamped.hpp>
 #include <moveit_msgs/msg/collision_object.hpp>
 #include <moveit_msgs/msg/robot_trajectory.hpp>
+#include <sensor_msgs/msg/joint_state.hpp>
 #include <tf2_eigen/tf2_eigen.hpp>
+
+#if __has_include(<tf2/LinearMath/Quaternion.hpp>)
+#include <tf2/LinearMath/Quaternion.hpp>
+#endif
 
 #include "manymove_planner/compat/moveit_includes_compat.hpp"
 // Included via compat: robot_state/cartesian_interpolator, robot_trajectory,

@@ -32,9 +32,11 @@
 #pragma once
 
 #include <Eigen/Geometry>
-#include <geometry_msgs/msg/pose.hpp>
+
 #include <type_traits>
 #include <vector>
+
+#include <geometry_msgs/msg/pose.hpp>
 
 #include "manymove_msgs/msg/movement_config.hpp"
 #include "manymove_planner/compat/moveit_includes_compat.hpp"

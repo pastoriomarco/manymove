@@ -384,10 +384,9 @@ std::pair<bool, moveit_msgs::msg::RobotTrajectory> MoveGroupPlanner::plan(
     move_group_interface_->setPlannerId(cfg.planner_id);  // cfg.planning_pipeline + "/"
                                                           // +
                                                           // cfg.planner_id);
-  }
-  // If the user uses only movegroup version and needs compatibility, he can set the full string in
-  // planner_id only:
-  else if (!cfg.planner_id.empty()) {
+  } else if (!cfg.planner_id.empty()) {
+    // If the user uses only movegroup version and needs compatibility,
+    // he can set the full string in planner_id only:
     // If user only passes "ompl/PRM" in planner_id, just set that:
     move_group_interface_->setPlannerId(cfg.planner_id);
   }
@@ -798,9 +797,8 @@ bool MoveGroupPlanner::isTrajectoryEndValid(
       return false;
     }
     return true;
-  }
-  // For joint or named target movements, compare the joint positions.
-  else if (move_request.movement_type == "joint" || move_request.movement_type == "named") {
+  } else if (move_request.movement_type == "joint" || move_request.movement_type == "named") {
+    // For joint or named target movements, compare the joint positions.
     const auto & last_point = traj.joint_trajectory.points.back();
     std::vector<double> target_joint_values;
     if (move_request.movement_type == "named") {

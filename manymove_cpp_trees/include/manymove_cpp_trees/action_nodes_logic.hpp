@@ -26,8 +26,8 @@
 // ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 // POSSIBILITY OF SUCH DAMAGE.
 
-#ifndef MANYMOVE_CPP_TREES_ACTION_NODES_LOGIC_HPP
-#define MANYMOVE_CPP_TREES_ACTION_NODES_LOGIC_HPP
+#ifndef MANYMOVE_CPP_TREES__ACTION_NODES_LOGIC_HPP_
+#define MANYMOVE_CPP_TREES__ACTION_NODES_LOGIC_HPP_
 
 #include <behaviortree_cpp_v3/action_node.h>
 #include <behaviortree_cpp_v3/condition_node.h>
@@ -37,8 +37,12 @@
 
 #include <chrono>
 #include <cmath>
+#include <memory>
+#include <string>
+#include <vector>
 #include <rclcpp/rclcpp.hpp>
 #include <tf2_geometry_msgs/tf2_geometry_msgs.hpp>
+
 
 namespace manymove_cpp_trees
 {
@@ -314,4 +318,4 @@ public:
 
 }  // namespace manymove_cpp_trees
 
-#endif  // MANYMOVE_CPP_TREES_ACTION_NODES_LOGIC_HPP
+#endif  // MANYMOVE_CPP_TREES__ACTION_NODES_LOGIC_HPP_

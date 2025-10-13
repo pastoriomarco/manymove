@@ -28,8 +28,9 @@
 
 #include "manymove_cpp_trees/tree_helper.hpp"
 
-#include <rclcpp/rclcpp.hpp>
 #include <sstream>
+
+#include <rclcpp/rclcpp.hpp>
 
 // A static global counter to ensure unique move IDs across the entire tree
 static int g_global_move_id = 0;
@@ -432,8 +433,8 @@ std::string buildWaitForInput(
 {
   // Construct an XML snippet for <WaitForInputAction... />
   std::string node_name = robot_prefix + node_prefix + "_WaitForInput";
-  double timeout_sec = (timeout_ms <= 0) ? 0.0 : (double)timeout_ms / 1000.0;
-  double poll_sec = (poll_rate_ms <= 0) ? 0.25 : (double)poll_rate_ms / 1000.0;
+  double timeout_sec = (timeout_ms <= 0) ? 0.0 : static_cast<double>(timeout_ms / 1000.0);
+  double poll_sec = (poll_rate_ms <= 0) ? 0.25 : static_cast<double>(poll_rate_ms / 1000.0);
 
   std::ostringstream xml;
   xml << "<WaitForInputAction"
@@ -495,8 +496,8 @@ std::string buildWaitForKeyBool(
 {
   // Construct a unique name for the node
   std::string node_name = robot_prefix + node_prefix + "_WaitForKey";
-  double timeout_sec = (timeout_ms <= 0) ? 0.0 : (double)timeout_ms / 1000.0;
-  double poll_sec = (poll_rate_ms <= 0) ? 0.25 : (double)poll_rate_ms / 1000.0;
+  double timeout_sec = (timeout_ms <= 0) ? 0.0 : static_cast<double>(timeout_ms / 1000.0);
+  double poll_sec = (poll_rate_ms <= 0) ? 0.25 : static_cast<double>(poll_rate_ms / 1000.0);
 
   std::ostringstream xml;
   xml << "<WaitForKeyBool"

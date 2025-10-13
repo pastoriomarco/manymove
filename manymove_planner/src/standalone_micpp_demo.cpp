@@ -26,12 +26,13 @@
 // ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 // POSSIBILITY OF SUCH DAMAGE.
 
+
+#include <geometry_msgs/msg/point_stamped.h>
+
 #include <memory>
-#include <rclcpp/rclcpp.hpp>
 #include <vector>
 
-// MoveitCpp
-#include <geometry_msgs/msg/point_stamped.h>
+#include <rclcpp/rclcpp.hpp>
 
 #include "manymove_planner/compat/moveit_compat.hpp"
 #include "manymove_planner/compat/moveit_includes_compat.hpp"
@@ -354,8 +355,8 @@ int main(int argc, char ** argv)
   // see `panda_arm.xacro
   // <https://github.com/ros-planning/moveit_resources/blob/ros2/panda_moveit_config/config/panda_arm.xacro#L13>`_
 
-  /* // Set the start state of the plan from a named robot state */
-  /* planning_components->setStartState("ready"); // Not implemented yet */
+  // Set the start state of the plan from a named robot state
+  // planning_components->setStartState("ready"); // Not implemented yet
   // Set the goal state of the plan from a named robot state
 
   planning_components->setStartStateToCurrentState();

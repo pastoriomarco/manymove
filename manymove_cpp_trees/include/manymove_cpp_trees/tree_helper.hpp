@@ -26,16 +26,17 @@
 // ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 // POSSIBILITY OF SUCH DAMAGE.
 
-#ifndef MANYMOVE_CPP_TREES_TREE_HELPER_HPP
-#define MANYMOVE_CPP_TREES_TREE_HELPER_HPP
+#ifndef MANYMOVE_CPP_TREES__TREE_HELPER_HPP_
+#define MANYMOVE_CPP_TREES__TREE_HELPER_HPP_
 
 #include <behaviortree_cpp_v3/blackboard.h>
 #include <behaviortree_cpp_v3/bt_factory.h>
 
-#include <geometry_msgs/msg/pose.hpp>
 #include <string>
 #include <unordered_map>
 #include <vector>
+
+#include <geometry_msgs/msg/pose.hpp>
 
 #include "manymove_cpp_trees/action_nodes_gripper.hpp"
 #include "manymove_cpp_trees/action_nodes_isaac.hpp"
@@ -576,4 +577,4 @@ void setHmiMessage(
 
 }  // namespace manymove_cpp_trees
 
-#endif  // MANYMOVE_CPP_TREES_TREE_HELPER_HPP
+#endif  // MANYMOVE_CPP_TREES__TREE_HELPER_HPP_

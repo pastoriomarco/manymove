@@ -28,17 +28,18 @@
 
 #pragma once
 
+#include <memory>
+#include <string>
+#include <utility>
+#include <vector>
+
 #include <control_msgs/action/follow_joint_trajectory.hpp>
 #include <geometry_msgs/msg/pose.hpp>
 #include <manymove_msgs/action/plan_manipulator.hpp>
 #include <manymove_msgs/msg/movement_config.hpp>
-#include <memory>
 #include <moveit_msgs/msg/constraints.hpp>
 #include <moveit_msgs/msg/robot_trajectory.hpp>
 #include <rclcpp_action/rclcpp_action.hpp>
-#include <string>
-#include <utility>
-#include <vector>
 
 #include "manymove_planner/compat/moveit_includes_compat.hpp"
 

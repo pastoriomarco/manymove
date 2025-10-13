@@ -27,8 +27,14 @@
 // POSSIBILITY OF SUCH DAMAGE.
 
 // action_server.hpp
-#ifndef MANYMOVE_PLANNER_ACTION_SERVER_HPP
-#define MANYMOVE_PLANNER_ACTION_SERVER_HPP
+#ifndef MANYMOVE_PLANNER__ACTION_SERVER_HPP_
+#define MANYMOVE_PLANNER__ACTION_SERVER_HPP_
+
+#include <functional>
+#include <memory>
+#include <mutex>
+#include <string>
+#include <unordered_map>
 
 #include <controller_manager_msgs/srv/configure_controller.hpp>
 #include <controller_manager_msgs/srv/load_controller.hpp>
@@ -143,4 +149,4 @@ private:
     const moveit_msgs::msg::RobotTrajectory & traj, std::string & abort_reason);
 };
 
-#endif  // MANYMOVE_PLANNER_ACTION_SERVER_HPP
+#endif  // MANYMOVE_PLANNER__ACTION_SERVER_HPP_

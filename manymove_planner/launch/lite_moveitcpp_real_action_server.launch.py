@@ -200,6 +200,8 @@ def launch_setup(context, *args, **kwargs):
         .to_moveit_configs()
     )
 
+    moveit_config_dict = moveit_config.to_dict()
+
     # robot description launch
     # xarm_description/launch/_robot_description.launch.py
     robot_description_launch = IncludeLaunchDescription(
@@ -283,13 +285,11 @@ def launch_setup(context, *args, **kwargs):
         arguments=['-d', rviz_config_file],
         parameters=[
             {
-                'robot_description': moveit_config.to_dict()['robot_description'],
-                'robot_description_semantic': moveit_config.to_dict()['robot_description_semantic'],
-                'robot_description_kinematics': moveit_config.to_dict()[
-                    'robot_description_kinematics'
-                ],
-                'robot_description_planning': moveit_config.to_dict()['robot_description_planning'],
-                'planning_pipelines': moveit_config.to_dict()['planning_pipelines'],
+                'robot_description': moveit_config_dict['robot_description'],
+                'robot_description_semantic': moveit_config_dict['robot_description_semantic'],
+                'robot_description_kinematics': moveit_config_dict['robot_description_kinematics'],
+                'robot_description_planning': moveit_config_dict['robot_description_planning'],
+                'planning_pipelines': moveit_config_dict['planning_pipelines'],
                 'use_sim_time': use_sim_time,
             }
         ],

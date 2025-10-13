@@ -26,32 +26,7 @@
 // ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 // POSSIBILITY OF SUCH DAMAGE.
 
-#include <behaviortree_cpp_v3/behavior_tree.h>
-#include <behaviortree_cpp_v3/bt_factory.h>
-#include <behaviortree_cpp_v3/decorators/force_failure_node.h>
-#include <behaviortree_cpp_v3/loggers/bt_zmq_publisher.h>
-
-#include <rclcpp/rclcpp.hpp>
-#include <string>
-#include <vector>
-
-#include "manymove_cpp_trees/action_nodes_logic.hpp"
-#include "manymove_cpp_trees/action_nodes_objects.hpp"
-#include "manymove_cpp_trees/action_nodes_planner.hpp"
-#include "manymove_cpp_trees/action_nodes_signals.hpp"
-#include "manymove_cpp_trees/bt_converters.hpp"
-#include "manymove_cpp_trees/hmi_service_node.hpp"
-#include "manymove_cpp_trees/move.hpp"
-#include "manymove_cpp_trees/object.hpp"
-#include "manymove_cpp_trees/robot.hpp"
-#include "manymove_cpp_trees/tree_helper.hpp"
-#include "manymove_msgs/action/check_robot_state.hpp"
-#include "manymove_msgs/action/get_input.hpp"
-#include "manymove_msgs/action/reset_robot_state.hpp"
-#include "manymove_msgs/action/set_output.hpp"
-
-using geometry_msgs::msg::Pose;
-using namespace manymove_cpp_trees;
+#include "manymove_cpp_trees/main_imports_helper.hpp"
 
 int main(int argc, char ** argv)
 {
@@ -641,28 +616,24 @@ int main(int argc, char ** argv)
     {{rp_1.prefix, tcp_frame_name_1, "pose", move_configs["max_move"],
       approach_pick_target_1_key_name},
       {rp_1.prefix, tcp_frame_name_1, "cartesian", move_configs["cartesian_slow_move"],
-        pick_target_1_key_name}},
-    blackboard);
+        pick_target_1_key_name}}, blackboard);
 
   std::string drop_move_parallel_1_xml = buildMoveXML(
     rp_1.prefix, rp_1.prefix + "drop",
     {{rp_1.prefix, tcp_frame_name_1, "cartesian", move_configs["cartesian_max_move"],
-      drop_target_1_key_name}},
-    blackboard);
+      drop_target_1_key_name}}, blackboard);
 
   std::string wait_move_parallel_1_xml = buildMoveXML(
     rp_1.prefix, rp_1.prefix + "wait",
     {{rp_1.prefix, tcp_frame_name_1, "cartesian", move_configs["cartesian_mid_move"],
       approach_pick_target_1_key_name},
       {rp_1.prefix, tcp_frame_name_1, "pose", move_configs["max_move"],
-        approach_drop_target_1_key_name}},
-    blackboard);
+        approach_drop_target_1_key_name}}, blackboard);
 
   std::string ready_move_parallel_1_xml = buildMoveXML(
     rp_1.prefix, rp_1.prefix + "ready",
     {{rp_1.prefix, tcp_frame_name_1, "pose", move_configs["max_move"],
-      approach_drop_target_1_key_name}},
-    blackboard);
+      approach_drop_target_1_key_name}}, blackboard);
 
   std::string home_move_parallel_1_xml = buildMoveXML(
     rp_1.prefix, rp_1.prefix + "home",
@@ -685,22 +656,19 @@ int main(int argc, char ** argv)
     {{rp_2.prefix, tcp_frame_name_2, "pose", move_configs["max_move"],
       approach_insert_target_2_key_name},
       {rp_2.prefix, tcp_frame_name_2, "cartesian", move_configs["cartesian_slow_move"],
-        insert_target_2_key_name}},
-    blackboard);
+        insert_target_2_key_name}}, blackboard);
 
   std::string load_move_parallel_2_xml = buildMoveXML(
     rp_2.prefix, rp_2.prefix + "drop",
     {{rp_2.prefix, tcp_frame_name_2, "cartesian", move_configs["cartesian_mid_move"],
       approach_load_target_2_key_name},
       {rp_2.prefix, tcp_frame_name_2, "cartesian", move_configs["cartesian_slow_move"],
-        load_target_2_key_name}},
-    blackboard);
+        load_target_2_key_name}}, blackboard);
 
   std::string exit_move_parallel_2_xml = buildMoveXML(
     rp_2.prefix, rp_2.prefix + "exit",
     {{rp_2.prefix, tcp_frame_name_2, "cartesian", move_configs["cartesian_max_move"],
-      approach_insert_target_2_key_name}},
-    blackboard);
+      approach_insert_target_2_key_name}}, blackboard);
 
   std::string ready_move_parallel_2_xml = buildMoveXML(
     rp_2.prefix, rp_2.prefix + "toReady",
@@ -840,33 +808,24 @@ int main(int argc, char ** argv)
   std::string repeat_forever_wrapper_1_xml = repeatSequenceWrapperXML(
     "RepeatForever",
   {
-    go_to_ready_pose_1_xml,                          //< Go to ready position
-    set_robot_1_out_of_working_position,             //< Signal robot 1 out of working position
-    wait_for_cycle_on,                               //< Wait for robot cycle to be on
-    spawn_graspable_object_1_xml,                    //< Add the graspable object to the scene
-    reset_movable_objects_xml,                       //< Reset and reload the movable objects
-                                                     // in the scene
-    get_grasp_object_poses_1_xml,                    //< Get the updated poses relative to the
-                                                     // graspable object
-    go_to_pick_pose_1_xml,                           //< Pick move sequence
-    close_gripper_1_xml,                             //< Attach the object
-    go_to_wait_pose_1_xml,                           //< Go to wait pose
-    wait_for_robot_2_out_of_working_position_xml,    //< Wait for other robot out of
-                                                     // working
-                                                     // position
-    wait_for_renamed_obj_removed_xml,                //< Wait for other robot to unload the
-                                                     // graspable object
-    go_to_drop_pose_1_xml,                           //< Drop move sequence
-    set_robot_1_in_working_position_xml,             //< Signal robot 1 in working position
-    wait_for_robot_2_in_working_position_xml,        //< Wait for other robot to be in working
-                                                     // position
-    open_gripper_1_xml,                              //< Detach the object
-    rename_obj_1_xml,                                //< Rename the object for the other robot
-                                                     // to use
+    go_to_ready_pose_1_xml,
+    set_robot_1_out_of_working_position,
+    wait_for_cycle_on,
+    spawn_graspable_object_1_xml,
+    reset_movable_objects_xml,
+    get_grasp_object_poses_1_xml,
+    go_to_pick_pose_1_xml,
+    close_gripper_1_xml,
+    go_to_wait_pose_1_xml,
+    wait_for_robot_2_out_of_working_position_xml,
+    wait_for_renamed_obj_removed_xml,
+    go_to_drop_pose_1_xml,
+    set_robot_1_in_working_position_xml,
+    wait_for_robot_2_in_working_position_xml,
+    open_gripper_1_xml,
+    rename_obj_1_xml,
   },
-    -1);  //< num_cycles=-1
-          // for
-          // infinite
+    -1);  //< num_cycles=-1 for infinite
 
   // ROBOT 2
   // Repeat node must have only one children, so it also wrap a Sequence child that wraps the other
@@ -874,32 +833,22 @@ int main(int argc, char ** argv)
   std::string repeat_forever_wrapper_2_xml = repeatSequenceWrapperXML(
     "RepeatForever",
   {
-    go_to_ready_pose_2_xml,                          //< Go to ready position
-    set_robot_2_out_of_working_position_xml,         //< Signal robot 2 out of working position
-    wait_for_robot_1_in_working_position_xml,        //< Wait for other robot in working
-                                                     // position
-    get_grasp_object_poses_2_xml,                    //< Get the updated poses relative to the
-                                                     // renamed graspable object
-    get_load_poses_from_endplate_xml,                //< Get the updated pose from the
-                                                     // machine's end plate
-    go_to_insert_pose_2_xml,                         //< Go to insert pose
-    set_robot_2_in_working_position,                 //< Signal robot 2 in working position
-    wait_for_robot_1_out_of_working_position_xml,    //< Wait for other robot out of
-                                                     // working
-                                                     // position
-    wait_for_renamed_drop_obj_xml,                   //< Wait for other robot to release the
-                                                     // graspable object and rename it
-    attach_obj_2_xml,                                //< Attach the renamed graspable object
-    go_to_load_pose_2_xml,                           //< Load sequence
-    go_to_exit_pose_2_xml,                           //< Exit sequence
-    detach_obj_2_xml,                                //< Detach the object
-    remove_obj_2_xml,                                //< Delete the object for it to be added
-                                                     // on the next cycle in the original
-                                                     // position
+    go_to_ready_pose_2_xml,
+    set_robot_2_out_of_working_position_xml,
+    wait_for_robot_1_in_working_position_xml,
+    get_grasp_object_poses_2_xml,
+    get_load_poses_from_endplate_xml,
+    go_to_insert_pose_2_xml,
+    set_robot_2_in_working_position,
+    wait_for_robot_1_out_of_working_position_xml,
+    wait_for_renamed_drop_obj_xml,
+    attach_obj_2_xml,
+    go_to_load_pose_2_xml,
+    go_to_exit_pose_2_xml,
+    detach_obj_2_xml,
+    remove_obj_2_xml,
   },
-    -1);  //< num_cycles=-1
-          // for
-          // infinite
+    -1);  //< num_cycles=-1 for infinite
 
   // Runningh both robot sequences in parallel:
   std::string parallel_repeat_forever_sequences_xml = parallelWrapperXML(

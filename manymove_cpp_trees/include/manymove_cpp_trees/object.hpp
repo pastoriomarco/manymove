@@ -26,12 +26,13 @@
 // ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 // POSSIBILITY OF SUCH DAMAGE.
 
-#ifndef MANYMOVE_CPP_TREES_OBJECT_HPP
-#define MANYMOVE_CPP_TREES_OBJECT_HPP
+#ifndef MANYMOVE_CPP_TREES__OBJECT_HPP_
+#define MANYMOVE_CPP_TREES__OBJECT_HPP_
 
-#include <geometry_msgs/msg/pose.hpp>
 #include <string>
 #include <vector>
+
+#include <geometry_msgs/msg/pose.hpp>
 
 namespace manymove_cpp_trees
 {
@@ -193,4 +194,4 @@ inline ObjectAction createGetObjectPose(
 
 }  // namespace manymove_cpp_trees
 
-#endif  // MANYMOVE_CPP_TREES_OBJECT_HPP
+#endif  // MANYMOVE_CPP_TREES__OBJECT_HPP_

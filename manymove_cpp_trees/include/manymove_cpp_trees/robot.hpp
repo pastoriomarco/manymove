@@ -26,14 +26,15 @@
 // ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 // POSSIBILITY OF SUCH DAMAGE.
 
-#ifndef MANYMOVE_CPP_TREES_ROBOT_HPP
-#define MANYMOVE_CPP_TREES_ROBOT_HPP
+#ifndef MANYMOVE_CPP_TREES__ROBOT_HPP_
+#define MANYMOVE_CPP_TREES__ROBOT_HPP_
 
 #include <behaviortree_cpp_v3/blackboard.h>
 
-#include <rclcpp/rclcpp.hpp>
 #include <string>
 #include <vector>
+
+#include <rclcpp/rclcpp.hpp>
 
 #include "manymove_cpp_trees/blackboard_utils.hpp"
 
@@ -116,4 +117,4 @@ inline RobotParams defineRobotParams(
 
 }  // namespace manymove_cpp_trees
 
-#endif  // MANYMOVE_CPP_TREES_ROBOT_HPP
+#endif  // MANYMOVE_CPP_TREES__ROBOT_HPP_

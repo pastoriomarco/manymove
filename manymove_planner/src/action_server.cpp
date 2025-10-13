@@ -38,7 +38,7 @@ auto setSwitchActivateAsapImpl(RequestT & request, bool value, int)
 }
 
 template<typename RequestT>
-auto setSwitchActivateAsapImpl(RequestT & request, bool value, long)
+auto setSwitchActivateAsapImpl(RequestT & request, bool value, int64_t)
 -> decltype(request.start_asap = value, void ())
 {
   request.start_asap = value;

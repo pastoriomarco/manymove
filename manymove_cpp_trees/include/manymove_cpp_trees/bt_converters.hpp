@@ -26,14 +26,17 @@
 // ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 // POSSIBILITY OF SUCH DAMAGE.
 
-#ifndef MANYMOVE_CPP_TREES_BT_CONVERTERS_HPP
-#define MANYMOVE_CPP_TREES_BT_CONVERTERS_HPP
+#ifndef MANYMOVE_CPP_TREES__BT_CONVERTERS_HPP_
+#define MANYMOVE_CPP_TREES__BT_CONVERTERS_HPP_
 
 #include <behaviortree_cpp_v3/behavior_tree.h>
 
-#include <geometry_msgs/msg/pose.hpp>
+#include <string>
 #include <sstream>
 #include <stdexcept>
+#include <vector>
+
+#include <geometry_msgs/msg/pose.hpp>
 
 namespace BT
 {
@@ -190,4 +193,4 @@ inline std::string toStr<std::vector<std::string>>(std::vector<std::string> valu
 
 }  // namespace BT
 
-#endif  // MANYMOVE_CPP_TREES_BT_CONVERTERS_HPP
+#endif  // MANYMOVE_CPP_TREES__BT_CONVERTERS_HPP_

@@ -26,33 +26,7 @@
 // ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 // POSSIBILITY OF SUCH DAMAGE.
 
-#include <behaviortree_cpp_v3/behavior_tree.h>
-#include <behaviortree_cpp_v3/bt_factory.h>
-#include <behaviortree_cpp_v3/decorators/force_failure_node.h>
-#include <behaviortree_cpp_v3/loggers/bt_zmq_publisher.h>
-
-#include <rclcpp/rclcpp.hpp>
-#include <string>
-#include <vector>
-
-#include "manymove_cpp_trees/action_nodes_logic.hpp"
-#include "manymove_cpp_trees/action_nodes_objects.hpp"
-#include "manymove_cpp_trees/action_nodes_planner.hpp"
-#include "manymove_cpp_trees/action_nodes_signals.hpp"
-#include "manymove_cpp_trees/bt_converters.hpp"
-#include "manymove_cpp_trees/hmi_service_node.hpp"
-#include "manymove_cpp_trees/move.hpp"
-#include "manymove_cpp_trees/object.hpp"
-#include "manymove_cpp_trees/robot.hpp"
-#include "manymove_cpp_trees/tree_helper.hpp"
-#include "manymove_msgs/action/check_robot_state.hpp"
-#include "manymove_msgs/action/get_input.hpp"
-#include "manymove_msgs/action/reset_robot_state.hpp"
-#include "manymove_msgs/action/set_output.hpp"
-
-using geometry_msgs::msg::Pose;
-using namespace manymove_cpp_trees;
-
+#include "manymove_cpp_trees/main_imports_helper.hpp"
 int main(int argc, char ** argv)
 {
   // ----------------------------------------------------------------------------
@@ -90,36 +64,14 @@ int main(int argc, char ** argv)
   // This is the new unified helper function to create all the snippets to handle any kind of
   // objects
   ObjectSnippets ground = createObjectSnippets(
-    blackboard, keys, "ground",                     /* object name */
-    "box",                                          /* shape */
-    createPoseRPY(0.0, 0.0, -0.051, 0.0, 0.0, 0.0), /*
-                                                                                                      *
-                                                                                                      *
-                                                                                                      *
-                                                                                                      *
-                                                                                                      * pose
-                                                                                                      *
-                                                                                                      *
-                                                                                                      *
-                                                                                                      *
-                                                                                                      * of
-                                                                                                      *
-                                                                                                      *
-                                                                                                      *
-                                                                                                      *
-                                                                                                      * the
-                                                                                                      *
-                                                                                                      *
-                                                                                                      *
-                                                                                                      *
-                                                                                                      * object
-                                                                                                      *
-                                                                                                      **/
-    {1.0, 1.0, 0.1},                                /* primitive dimensions */
-    "",                                             /* mesh file path */
-    {1.0, 1.0, 1.0},                                /* scale */
-    "",                                             /* link name to attach/detach */
-    {}                                              /* contact links to attach/detach */
+    blackboard, keys, "ground",  // object name
+    "box",  // shape
+    createPoseRPY(0.0, 0.0, -0.051, 0.0, 0.0, 0.0),  // pose of the object*/
+    {1.0, 1.0, 0.1},  // primitive dimensions
+    "",  // mesh file path
+    {1.0, 1.0, 1.0},  // scale
+    "",  // link name to attach/detach
+    {}  // contact links to attach/detach
   );
 
   ObjectSnippets wall = createObjectSnippets(
@@ -264,44 +216,12 @@ int main(int argc, char ** argv)
   // children
   std::string repeat_forever_wrapper_xml = repeatSequenceWrapperXML(
     "RobotCycle",
-    {spawn_graspable_objects_xml,  //<
-                                   // Add
-                                   // the
-                                   // graspable
-                                   // object
-                                   // to
-                                   // the
-                                   // scene
-                                   // and
-                                   // update
-                                   // the
-                                   // relative
-                                   // poses
-      pick_sequence_xml,           //< Pick
-                                   // sequence
-      drop_sequence_xml,           //< Drop
-                                   // sequence
-      home_sequence_xml,           //< Homing
-                                   // sequence
-      graspable.remove_xml},       //<
-                                   // Delete
-                                   // the
-                                   // object
-                                   // for
-                                   // it
-                                   // to
-                                   // be
-                                   // added
-                                   // on
-                                   // the
-                                   // next
-                                   // cycle
-                                   // in
-                                   // the
-                                   // original
-                                   // position
-    -1);                           //< num_cycles=-1 for
-                                   // infinite
+    {spawn_graspable_objects_xml,
+      pick_sequence_xml,
+      drop_sequence_xml,
+      home_sequence_xml,
+      graspable.remove_xml},
+    -1);  //< num_cycles=-1 for infinite
 
   std::string retry_forever_wrapper_xml =
     retrySequenceWrapperXML("ResetHandler", {startup_sequence_xml, repeat_forever_wrapper_xml}, -1);
