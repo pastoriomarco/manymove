@@ -165,10 +165,6 @@ ament_export_include_directories(include)
 if(BUILD_TESTING)
   find_package(ament_lint_auto REQUIRED)
   find_package(ament_cmake_uncrustify REQUIRED)
-  set(ament_cmake_cpplint_FOUND TRUE)
-  # Disable Python flake8 checks for this package (handled elsewhere)
-  set(ament_cmake_flake8_FOUND TRUE)
-  # Skip checks that are not yet enforced in this package
   ament_lint_auto_find_test_dependencies()
 endif()
 

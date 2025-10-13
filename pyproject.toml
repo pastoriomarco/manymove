@@ -32,15 +32,3 @@ force_single_line = true
 known_first_party = ["manymove"]  # adjust if your package name differs
 multi_line_output = 3
 include_trailing_comma = true
-
-# -------------------------------------------------------------------
-# Black optional configuration (kept for compatibility)
-# -------------------------------------------------------------------
-[tool.black]
-line-length = 100
-target-version = ["py310"]
-skip-string-normalization = true  # preserve single quotes if Black is used
-
-# -------------------------------------------------------------------
-# Ruff + isort + black alignment complete
-# -------------------------------------------------------------------
