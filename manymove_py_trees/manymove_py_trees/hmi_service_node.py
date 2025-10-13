@@ -33,13 +33,13 @@
 import json
 import time
 
-import py_trees
 import rclpy
-from geometry_msgs.msg import Pose
 from rclpy.node import Node
-from std_msgs.msg import String
 
+import py_trees
+from geometry_msgs.msg import Pose
 from manymove_msgs.srv import SetBlackboardValues
+from std_msgs.msg import String
 
 
 def create_pose_from_dict(d):

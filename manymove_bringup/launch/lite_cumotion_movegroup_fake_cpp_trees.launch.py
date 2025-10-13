@@ -30,7 +30,6 @@
 
 import os
 
-import yaml
 from ament_index_python import get_package_share_directory
 from launch import LaunchDescription
 from launch.actions import DeclareLaunchArgument
@@ -41,6 +40,8 @@ from launch.event_handlers import OnProcessStart
 from launch.launch_description_sources import load_python_launch_file_as_module
 from launch.substitutions import LaunchConfiguration  # , PathJoinSubstitution
 from launch_ros.actions import Node
+
+import yaml
 from uf_ros_lib.moveit_configs_builder import MoveItConfigsBuilder
 from uf_ros_lib.uf_robot_utils import generate_ros2_control_params_temp_file
 

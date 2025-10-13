@@ -30,13 +30,13 @@
 
 """Behavior-tree leaf that manages MoveManipulator action goals via py_trees."""
 
+from rclpy.action import ActionClient
+
 import py_trees
+from manymove_msgs.action import MoveManipulator
 from manymove_msgs.action._move_manipulator import MoveManipulator_Result
 from moveit_msgs.msg import RobotTrajectory
 from py_trees.common import Access
-from rclpy.action import ActionClient
-
-from manymove_msgs.action import MoveManipulator
 
 
 class MoveManipulatorBehavior(py_trees.behaviour.Behaviour):

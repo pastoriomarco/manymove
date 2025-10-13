@@ -36,12 +36,12 @@ from typing import List
 from typing import Optional
 
 import rclpy
-from geometry_msgs.msg import Point
-from geometry_msgs.msg import Pose
-from geometry_msgs.msg import Quaternion
 from rclpy.action import ActionClient
 from rclpy.node import Node
 
+from geometry_msgs.msg import Point
+from geometry_msgs.msg import Pose
+from geometry_msgs.msg import Quaternion
 from manymove_msgs.action import MoveManipulator
 from manymove_msgs.msg import MoveManipulatorGoal
 from manymove_msgs.msg import MovementConfig

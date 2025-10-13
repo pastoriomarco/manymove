@@ -32,21 +32,21 @@
 
 import time
 
-import py_trees
-import py_trees_ros
 import rclpy
-from geometry_msgs.msg import Point
-from geometry_msgs.msg import Pose
-from geometry_msgs.msg import Quaternion
-from moveit_msgs.msg import RobotTrajectory
-from py_trees.blackboard import Blackboard
 from rclpy.executors import MultiThreadedExecutor
 from rclpy.node import Node
 
+import py_trees
+import py_trees_ros
+from geometry_msgs.msg import Point
+from geometry_msgs.msg import Pose
+from geometry_msgs.msg import Quaternion
 from manymove_py_trees.hmi_service_node import HMIServiceNode
 from manymove_py_trees.move_definitions import create_move
 from manymove_py_trees.move_definitions import define_movement_configs
 from manymove_py_trees.tree_helper import create_tree_from_sequences
+from moveit_msgs.msg import RobotTrajectory
+from py_trees.blackboard import Blackboard
 
 
 def build_and_run_bt(node: Node):

@@ -34,7 +34,6 @@ from typing import List
 
 import py_trees
 import py_trees_ros
-
 from manymove_py_trees.move_definitions import Move
 from manymove_py_trees.move_manipulator_behavior import MoveManipulatorBehavior
 
