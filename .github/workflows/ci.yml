@@ -27,6 +27,15 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      - name: Run Ruff lint check
+        run: |
+          apt-get update && apt-get install -y python3-pip
+          pip install ruff
+          echo "Running Ruff lint check..."
+          ruff check ${GITHUB_WORKSPACE} --config ${GITHUB_WORKSPACE}/pyproject.toml
+          echo "Running Ruff formatting check..."
+          ruff format --check ${GITHUB_WORKSPACE} --config ${GITHUB_WORKSPACE}/pyproject.toml
+
       - name: Install build tooling
         run: |
           set -e
