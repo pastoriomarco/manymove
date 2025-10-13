@@ -28,8 +28,39 @@
 
 #include "manymove_planner/action_server.hpp"
 
+#include <rclcpp/qos.hpp>
+
 namespace
 {
+template<typename ServiceT>
+auto create_service_client(
+  const rclcpp::Node::SharedPtr & node, const std::string & service_name,
+  const rclcpp::CallbackGroup::SharedPtr & callback_group, int)
+-> decltype(node->create_client<ServiceT>(service_name, rclcpp::ServicesQoS(), callback_group))
+{
+  auto qos = rclcpp::ServicesQoS();
+  return node->create_client<ServiceT>(service_name, qos, callback_group);
+}
+
+template<typename ServiceT>
+auto create_service_client(
+  const rclcpp::Node::SharedPtr & node, const std::string & service_name,
+  const rclcpp::CallbackGroup::SharedPtr & callback_group, std::int64_t)
+-> decltype(node->create_client<ServiceT>(
+  service_name, rmw_qos_profile_services_default, callback_group))
+{
+  return node->create_client<ServiceT>(
+    service_name, rmw_qos_profile_services_default, callback_group);
+}
+
+template<typename ServiceT>
+auto create_service_client(
+  const rclcpp::Node::SharedPtr & node, const std::string & service_name,
+  const rclcpp::CallbackGroup::SharedPtr & callback_group)
+{
+  return create_service_client<ServiceT>(node, service_name, callback_group, 0);
+}
+
 template<typename RequestT>
 auto setSwitchActivateAsapImpl(RequestT & request, bool value, int)
 -> decltype(request.activate_asap = value, void ())
@@ -59,21 +90,18 @@ ManipulatorActionServer::ManipulatorActionServer(
   action_callback_group_ = node_->create_callback_group(rclcpp::CallbackGroupType::Reentrant);
   param_callback_group_ = node_->create_callback_group(rclcpp::CallbackGroupType::Reentrant);
 
-  unload_controller_client_ = node_->create_client<controller_manager_msgs::srv::UnloadController>(
-    "/controller_manager/unload_controller", rmw_qos_profile_services_default,
-    param_callback_group_);
+  unload_controller_client_ = create_service_client<controller_manager_msgs::srv::UnloadController>(
+    node_, "/controller_manager/unload_controller", param_callback_group_);
 
-  load_controller_client_ = node_->create_client<controller_manager_msgs::srv::LoadController>(
-    "/controller_manager/load_controller", rmw_qos_profile_services_default, param_callback_group_);
+  load_controller_client_ = create_service_client<controller_manager_msgs::srv::LoadController>(
+    node_, "/controller_manager/load_controller", param_callback_group_);
 
-  switch_controller_client_ = node_->create_client<controller_manager_msgs::srv::SwitchController>(
-    "/controller_manager/switch_controller", rmw_qos_profile_services_default,
-    param_callback_group_);
+  switch_controller_client_ = create_service_client<controller_manager_msgs::srv::SwitchController>(
+    node_, "/controller_manager/switch_controller", param_callback_group_);
 
   configure_controller_client_ =
-    node_->create_client<controller_manager_msgs::srv::ConfigureController>(
-    "/controller_manager/configure_controller", rmw_qos_profile_services_default,
-    param_callback_group_);
+    create_service_client<controller_manager_msgs::srv::ConfigureController>(
+    node_, "/controller_manager/configure_controller", param_callback_group_);
 
   // **Wait for Services to Be Available**
   bool all_services_available = true;
