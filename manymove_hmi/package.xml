@@ -15,6 +15,9 @@
   <depend>std_srvs</depend>
   <depend>manymove_msgs</depend>
 
+  <build_depend>qtbase5-dev</build_depend>
+  <build_export_depend>qtbase5-dev</build_export_depend>
+
   <test_depend>ament_lint_auto</test_depend>
   <test_depend>ament_lint_common</test_depend>
   <test_depend>ament_cmake_uncrustify</test_depend>
