@@ -27,40 +27,53 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      # - name: Run Ruff lint check
-      #   run: |
-      #     apt-get update && apt-get install -y python3-pip
-      #     pip install ruff
-      #     echo "Running Ruff lint check..."
-      #     ruff check ${GITHUB_WORKSPACE} --config ${GITHUB_WORKSPACE}/pyproject.toml
-      #     echo "Running Ruff formatting check..."
-      #     ruff format --check ${GITHUB_WORKSPACE} --config ${GITHUB_WORKSPACE}/pyproject.toml
+      # Cache colcon build artifacts
+      - name: Cache colcon workspace
+        uses: actions/cache@v4
+        with:
+          path: |
+            /tmp/ros_ws/build
+            /tmp/ros_ws/install
+            /tmp/ros_ws/log
+          key: colcon-${{ matrix.ros_distro }}-${{ hashFiles('**/package.xml', '**/CMakeLists.txt') }}
+          restore-keys: |
+            colcon-${{ matrix.ros_distro }}-
+
+      # Cache APT packages
+      - name: Cache APT packages
+        uses: actions/cache@v4
+        with:
+          path: /var/cache/apt/archives
+          key: apt-${{ matrix.ros_distro }}-${{ hashFiles('.github/workflows/**') }}
+          restore-keys: |
+            apt-${{ matrix.ros_distro }}-
 
       - name: Install build tooling
         run: |
           set -e
           apt-get update
-          apt-get install -y ros-$ROS_DISTRO-topic-based-ros2-control
-          apt-get install -y python3-colcon-common-extensions python3-rosdep git \
-          ros-$ROS_DISTRO-moveit \
-          ros-$ROS_DISTRO-joint-state-publisher \
-          ros-$ROS_DISTRO-control-toolbox \
-          ros-$ROS_DISTRO-controller-manager \
-          ros-$ROS_DISTRO-image-view \
-          ros-$ROS_DISTRO-tf-transformations \
-          ros-$ROS_DISTRO-find-object-2d \
-          ros-$ROS_DISTRO-controller-manager-msgs \
-          ros-$ROS_DISTRO-joint-state-broadcaster \
-          ros-$ROS_DISTRO-joint-trajectory-controller \
-          ros-$ROS_DISTRO-diff-drive-controller \
-          ros-$ROS_DISTRO-joy \
-          ros-$ROS_DISTRO-moveit-servo \
-          ros-$ROS_DISTRO-behaviortree-cpp-v3 \
-          ros-$ROS_DISTRO-moveit-visual-tools \
-          ros-$ROS_DISTRO-vision-msgs \
-          ros-$ROS_DISTRO-py-trees \
-          ros-$ROS_DISTRO-py-trees-ros \
-          ros-$ROS_DISTRO-simulation-interfaces
+          apt-get install -y \
+            ros-$ROS_DISTRO-topic-based-ros2-control \
+            python3-colcon-common-extensions python3-rosdep git \
+            ros-$ROS_DISTRO-moveit \
+            ros-$ROS_DISTRO-joint-state-publisher \
+            ros-$ROS_DISTRO-control-toolbox \
+            ros-$ROS_DISTRO-controller-manager \
+            ros-$ROS_DISTRO-image-view \
+            ros-$ROS_DISTRO-tf-transformations \
+            ros-$ROS_DISTRO-find-object-2d \
+            ros-$ROS_DISTRO-controller-manager-msgs \
+            ros-$ROS_DISTRO-joint-state-broadcaster \
+            ros-$ROS_DISTRO-joint-trajectory-controller \
+            ros-$ROS_DISTRO-diff-drive-controller \
+            ros-$ROS_DISTRO-joy \
+            ros-$ROS_DISTRO-moveit-servo \
+            ros-$ROS_DISTRO-behaviortree-cpp-v3 \
+            ros-$ROS_DISTRO-moveit-visual-tools \
+            ros-$ROS_DISTRO-vision-msgs \
+            ros-$ROS_DISTRO-py-trees \
+            ros-$ROS_DISTRO-py-trees-ros \
+            ros-$ROS_DISTRO-simulation-interfaces
 
       - name: Setup rosdep
         run: |
