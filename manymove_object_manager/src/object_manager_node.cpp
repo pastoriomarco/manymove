@@ -39,10 +39,12 @@
 #include <tf2/LinearMath/Transform.h>
 
 #include <chrono>
+#include <cstdint>
 #include <thread>
 #include <geometry_msgs/msg/pose.hpp>
 #include <rclcpp/callback_group.hpp>
 #include <rclcpp/executors/multi_threaded_executor.hpp>
+#include <rclcpp/qos.hpp>
 #include <rclcpp_action/rclcpp_action.hpp>
 
 #if __has_include(<tf2/LinearMath/Quaternion.hpp>)
@@ -51,6 +53,38 @@
 
 namespace manymove_object_manager
 {
+
+  namespace
+{
+template<typename ServiceT>
+auto create_service_client(
+  rclcpp::Node * node, const std::string & service_name,
+  const rclcpp::CallbackGroup::SharedPtr & callback_group, int)
+  -> decltype(node->create_client<ServiceT>(service_name, rclcpp::ServicesQoS(), callback_group))
+{
+  auto qos = rclcpp::ServicesQoS();
+  return node->create_client<ServiceT>(service_name, qos, callback_group);
+}
+
+template<typename ServiceT>
+auto create_service_client(
+  rclcpp::Node * node, const std::string & service_name,
+  const rclcpp::CallbackGroup::SharedPtr & callback_group, std::int64_t)
+  -> decltype(node->create_client<ServiceT>(
+    service_name, rmw_qos_profile_services_default, callback_group))
+{
+  return node->create_client<ServiceT>(
+    service_name, rmw_qos_profile_services_default, callback_group);
+}
+
+template<typename ServiceT>
+auto create_service_client(
+  rclcpp::Node * node, const std::string & service_name,
+  const rclcpp::CallbackGroup::SharedPtr & callback_group)
+{
+  return create_service_client<ServiceT>(node, service_name, callback_group, 0);
+}
+}  // namespace
 
 ObjectManagerNode::ObjectManagerNode()
 : Node("object_manager_node")
@@ -70,8 +104,8 @@ ObjectManagerNode::ObjectManagerNode()
 
   // Create a Reentrant callback group for the service client
   service_callback_group_ = this->create_callback_group(rclcpp::CallbackGroupType::Reentrant);
-  get_planning_scene_client_ = this->create_client<moveit_msgs::srv::GetPlanningScene>(
-    "/get_planning_scene", rmw_qos_profile_services_default, service_callback_group_);
+ get_planning_scene_client_ = create_service_client<moveit_msgs::srv::GetPlanningScene>(
+    this, "/get_planning_scene", service_callback_group_);
 
   RCLCPP_INFO(this->get_logger(), "Waiting for /get_planning_scene service...");
   if (!get_planning_scene_client_->wait_for_service(std::chrono::seconds(10))) {

@@ -120,10 +120,10 @@ inline double computeCartesianPathCompat(
 {
   (void)jump_threshold;  // unused in newer API
 
-  if constexpr (has_mgi_cartesian_with_jump<MGI>::value) {
-    return mgi.computeCartesianPath(waypoints, eef_step, jump_threshold, mgiPlanTrajectory(plan));
-  } else if constexpr (has_mgi_cartesian_no_jump<MGI>::value) {
+  if constexpr (has_mgi_cartesian_no_jump<MGI>::value) {
     return mgi.computeCartesianPath(waypoints, eef_step, mgiPlanTrajectory(plan));
+      } else if constexpr (has_mgi_cartesian_with_jump<MGI>::value) {
+    return mgi.computeCartesianPath(waypoints, eef_step, jump_threshold, mgiPlanTrajectory(plan));
   } else {
     static_assert(
       has_mgi_cartesian_with_jump<MGI>::value || has_mgi_cartesian_no_jump<MGI>::value,
