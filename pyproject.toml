@@ -34,7 +34,13 @@ include_trailing_comma = true
 
 # Make ROS 2 packages appear before yaml
 known_first_party = ["manymove"]
-known_third_party = ["ament_index_python", "rclpy", "launch", "launch_ros"]
+known_third_party = [
+    "ament_index_python",
+    "rclpy",
+    "launch",
+    "launch_ros",
+    "uf_ros_lib"
+]
 
 # Ensure sorting sections are explicit (so yaml ends up after ament_index_python)
 sections = ["FUTURE", "STDLIB", "THIRDPARTY", "FIRSTPARTY", "LOCALFOLDER"]
@@ -45,4 +51,10 @@ default_section = "FIRSTPARTY"
 # -------------------------------------------------------------------
 [tool.ruff.isort]
 known-first-party = ["manymove"]
-known-third-party = ["ament_index_python", "rclpy", "launch", "launch_ros"]
+known-third-party = [
+    "ament_index_python",
+    "rclpy",
+    "launch",
+    "launch_ros",
+    "uf_ros_lib"
+]

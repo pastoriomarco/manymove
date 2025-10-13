@@ -45,7 +45,6 @@ from launch.event_handlers import OnProcessStart
 from launch.launch_description_sources import load_python_launch_file_as_module
 from launch.substitutions import LaunchConfiguration  # , PathJoinSubstitution
 from launch_ros.actions import Node
-
 from uf_ros_lib.moveit_configs_builder import DualMoveItConfigsBuilder
 from uf_ros_lib.uf_robot_utils import generate_dual_ros2_control_params_temp_file
 
