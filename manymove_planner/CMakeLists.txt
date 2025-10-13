@@ -13,7 +13,6 @@ find_package(moveit_core REQUIRED)
 find_package(moveit_ros_planning_interface REQUIRED)
 find_package(tf2_geometry_msgs REQUIRED)
 find_package(geometry_msgs REQUIRED)
-find_package(moveit_visual_tools REQUIRED)
 find_package(pluginlib REQUIRED)
 find_package(rclcpp_action REQUIRED)
 find_package(action_msgs REQUIRED)
@@ -99,19 +98,6 @@ ament_target_dependencies(moveitcpp_action_server_node
   manymove_msgs
 )
 
-add_executable(standalone_micpp_demo
-  src/standalone_micpp_demo.cpp
-)
-ament_target_dependencies(standalone_micpp_demo
-  rclcpp
-  moveit_core
-  moveit_ros_planning_interface
-  tf2_geometry_msgs
-  geometry_msgs
-  moveit_visual_tools
-  manymove_msgs
-)
-
 ##########################
 # Installation
 ##########################
@@ -129,7 +115,6 @@ install(TARGETS
 install(TARGETS
   action_server_node
   moveitcpp_action_server_node
-  standalone_micpp_demo
   RUNTIME DESTINATION lib/${PROJECT_NAME}
 )
 
