@@ -9,7 +9,6 @@ build-backend = "setuptools.build_meta"
 [tool.ruff]
 # General settings
 line-length = 100
-target-version = "py310"
 
 # Linting rules
 lint.select = ["E", "F", "Q"]
