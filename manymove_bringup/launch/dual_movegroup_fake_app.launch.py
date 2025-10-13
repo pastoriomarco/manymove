@@ -31,7 +31,6 @@
 # ================================================================
 """Launch description for the dual movegroup fake app scenario."""
 
-
 import os
 
 # import yaml

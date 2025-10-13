@@ -31,7 +31,6 @@
 # ================================================================
 """Launch description for the collision test moveitcpp scenario."""
 
-
 import os
 
 # import yaml

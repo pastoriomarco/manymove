@@ -32,7 +32,6 @@
 # ================================================================
 """Launch description for the collision test movegroup scenario."""
 
-
 import os
 
 # import yaml

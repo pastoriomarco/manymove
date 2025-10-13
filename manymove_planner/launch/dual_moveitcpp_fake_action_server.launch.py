@@ -31,7 +31,6 @@
 # ================================================================
 """Launch description for the dual moveitcpp fake action server scenario."""
 
-
 import os
 
 # import yaml

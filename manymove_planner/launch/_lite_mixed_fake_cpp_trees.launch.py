@@ -33,7 +33,6 @@
 # to provide planning scene service or not.
 """Launch description for the lite mixed fake cpp trees scenario."""
 
-
 import os
 
 import yaml

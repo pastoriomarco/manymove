@@ -36,7 +36,7 @@ class Move:
         if self.movement_type not in allowed_types:
             raise ValueError(
                 f"Unsupported movement_type '{self.movement_type}'. "
-                f"Must be one of {allowed_types}."
+                f'Must be one of {allowed_types}.'
             )
 
     def to_move_manipulator_goal(self) -> MoveManipulatorGoal:
@@ -49,9 +49,7 @@ class Move:
 
         if self.movement_type in ['pose', 'cartesian']:
             if not isinstance(self.pose_target, Pose):
-                raise TypeError(
-                    f"For '{self.movement_type}' moves, a valid Pose must be provided."
-                )
+                raise TypeError(f"For '{self.movement_type}' moves, a valid Pose must be provided.")
             mmg.pose_target = self.pose_target
 
         elif self.movement_type == 'joint':

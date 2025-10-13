@@ -66,9 +66,7 @@ class HMIServiceNode(Node):
             key = request.key[i]
             value_type = request.value_type[i]
             data_str = request.value_data[i]
-            self.get_logger().info(
-                f"Updating BB key='{key}' type='{value_type}' data='{data_str}'"
-            )
+            self.get_logger().info(f"Updating BB key='{key}' type='{value_type}' data='{data_str}'")
             try:
                 if value_type == 'bool':
                     # Expect data_str to be a JSON string "true" or "false"

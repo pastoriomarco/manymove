@@ -31,7 +31,6 @@
 # ========================================================================
 """Launch description for the lite moveitcpp real action server scenario."""
 
-
 import os
 
 import yaml
@@ -285,15 +284,11 @@ def launch_setup(context, *args, **kwargs):
         parameters=[
             {
                 'robot_description': moveit_config.to_dict()['robot_description'],
-                'robot_description_semantic': moveit_config.to_dict()[
-                    'robot_description_semantic'
-                ],
+                'robot_description_semantic': moveit_config.to_dict()['robot_description_semantic'],
                 'robot_description_kinematics': moveit_config.to_dict()[
                     'robot_description_kinematics'
                 ],
-                'robot_description_planning': moveit_config.to_dict()[
-                    'robot_description_planning'
-                ],
+                'robot_description_planning': moveit_config.to_dict()['robot_description_planning'],
                 'planning_pipelines': moveit_config.to_dict()['planning_pipelines'],
                 'use_sim_time': use_sim_time,
             }

@@ -31,7 +31,6 @@
 # ================================================================
 """Launch description for the dual moveitcpp fake cpp trees scenario."""
 
-
 import os
 
 # import yaml
