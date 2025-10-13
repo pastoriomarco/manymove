@@ -26,13 +26,16 @@
 // ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 // POSSIBILITY OF SUCH DAMAGE.
 
-#include "manymove_hmi/ros2_worker.hpp"
-
 #include <QMetaObject>
+
 #include <algorithm>
 #include <cctype>
+#include <chrono>
+#include <functional>
 #include <sstream>
 #include <stdexcept>
+
+#include "manymove_hmi/ros2_worker.hpp"
 
 using namespace std::chrono_literals;
 
@@ -131,9 +134,7 @@ void Ros2Worker::statusCallback(const std_msgs::msg::String::SharedPtr msg)
       } catch (...) {
         valueStr.clear();
       }
-    }
-    /* ---------------- integer INT ---------------------------- */
-    else if (bk.type == "int") {
+    } else if (bk.type == "int") {
       size_t valEnd = data.find_first_of(",}", valStart);
       if (valEnd == std::string::npos) {
         valEnd = data.size();
@@ -147,9 +148,7 @@ void Ros2Worker::statusCallback(const std_msgs::msg::String::SharedPtr msg)
       } catch (...) {
         valueStr.clear();
       }
-    }
-    /* ---------------- double array --------------------------- */
-    else if (bk.type == "double_array") {
+    } else if (bk.type == "double_array") {
       if (data[valStart] == '"') {
         ++valStart;
       }                             // skip leading quote
@@ -160,9 +159,7 @@ void Ros2Worker::statusCallback(const std_msgs::msg::String::SharedPtr msg)
         }
       }
       stripQuotes(valueStr);
-    }
-    /* ---------------- pose (JSON object) --------------------- */
-    else if (bk.type == "pose") {
+    } else if (bk.type == "pose") {
       if (data[valStart] == '"') {
         ++valStart;  // optional quote
       }
@@ -181,9 +178,7 @@ void Ros2Worker::statusCallback(const std_msgs::msg::String::SharedPtr msg)
         valueStr = data.substr(valStart, idx - valStart);
       }
       stripQuotes(valueStr);
-    }
-    /* ---------------- bool / string / default --------------- */
-    else {
+    } else {
       size_t valEnd = data.find_first_of(",}", valStart);
       if (valEnd == std::string::npos) {
         valEnd = data.size();

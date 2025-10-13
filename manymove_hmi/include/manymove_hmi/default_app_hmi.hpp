@@ -26,8 +26,10 @@
 // ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 // POSSIBILITY OF SUCH DAMAGE.
 
-#ifndef DEFAULT_APP_HMI_HPP
-#define DEFAULT_APP_HMI_HPP
+#ifndef MANYMOVE_HMI__DEFAULT_APP_HMI_HPP_
+#define MANYMOVE_HMI__DEFAULT_APP_HMI_HPP_
+
+#include <vector>
 
 #include "manymove_hmi/app_module.hpp"
 
@@ -43,4 +45,4 @@ private:
   static std::vector<KeyConfig> buildKeys();
 };
 
-#endif /* DEFAULT_APP_HMI_HPP */
+#endif  // MANYMOVE_HMI__DEFAULT_APP_HMI_HPP_

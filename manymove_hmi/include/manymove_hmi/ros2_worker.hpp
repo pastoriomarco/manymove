@@ -26,16 +26,17 @@
 // ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 // POSSIBILITY OF SUCH DAMAGE.
 
-#ifndef ROS2_WORKER_HPP
-#define ROS2_WORKER_HPP
+#ifndef MANYMOVE_HMI__ROS2_WORKER_HPP_
+#define MANYMOVE_HMI__ROS2_WORKER_HPP_
 
 #include <chrono>
-#include <manymove_msgs/srv/set_blackboard_values.hpp>
 #include <memory>
-#include <rclcpp/rclcpp.hpp>
-#include <std_msgs/msg/string.hpp>
 #include <string>
 #include <vector>
+
+#include <manymove_msgs/srv/set_blackboard_values.hpp>
+#include <rclcpp/rclcpp.hpp>
+#include <std_msgs/msg/string.hpp>
 
 #include "manymove_hmi/app_module.hpp"
 #include "manymove_hmi/hmi_gui.hpp"
@@ -65,4 +66,4 @@ private:
   std::string robot_prefix_;
 };
 
-#endif  // ROS2_WORKER_HPP
+#endif  // MANYMOVE_HMI__ROS2_WORKER_HPP_

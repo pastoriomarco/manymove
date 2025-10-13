@@ -26,26 +26,29 @@
 // ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 // POSSIBILITY OF SUCH DAMAGE.
 
+#include <chrono>
+#include <functional>
+#include <memory>
+#include <optional>
+#include <random>
+#include <string>
+#include <vector>
+
+#if !__has_include(<tf2/LinearMath/Quaternion.hpp>)
+#include <tf2/LinearMath/Quaternion.h>
+#endif
+
 #include <yaml-cpp/yaml.h>
 
 #include <geometry_msgs/msg/pose.hpp>
+#include <manymove_msgs/action/add_collision_object.hpp>
+#include <manymove_msgs/action/check_object_exists.hpp>
+#include <manymove_msgs/action/remove_collision_object.hpp>
 #include <rclcpp/rclcpp.hpp>
 #include <rclcpp_action/rclcpp_action.hpp>
 #if __has_include(<tf2/LinearMath/Quaternion.hpp>)
 #include <tf2/LinearMath/Quaternion.hpp>
-#else
-#include <tf2/LinearMath/Quaternion.h>
 #endif
-
-#include <chrono>
-#include <functional>
-#include <manymove_msgs/action/add_collision_object.hpp>
-#include <manymove_msgs/action/check_object_exists.hpp>
-#include <manymove_msgs/action/remove_collision_object.hpp>
-#include <memory>
-#include <random>
-#include <string>
-#include <vector>
 
 class CollisionSpawner : public rclcpp::Node
 {

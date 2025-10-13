@@ -26,11 +26,17 @@
 // ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 // POSSIBILITY OF SUCH DAMAGE.
 
-#ifndef OBJECT_MANAGER__OBJECT_MANAGER_HPP_
-#define OBJECT_MANAGER__OBJECT_MANAGER_HPP_
+#ifndef MANYMOVE_OBJECT_MANAGER__OBJECT_MANAGER_HPP_
+#define MANYMOVE_OBJECT_MANAGER__OBJECT_MANAGER_HPP_
 
 #include <tf2_ros/buffer.h>
 #include <tf2_ros/transform_listener.h>
+
+#include <memory>
+#include <optional>
+#include <sstream>
+#include <string>
+#include <vector>
 
 #include <geometry_msgs/msg/pose.hpp>
 #include <geometry_msgs/msg/quaternion.hpp>
@@ -40,17 +46,12 @@
 #include <manymove_msgs/action/check_object_exists.hpp>
 #include <manymove_msgs/action/get_object_pose.hpp>
 #include <manymove_msgs/action/remove_collision_object.hpp>
-#include <memory>
 #include <moveit_msgs/msg/collision_object.hpp>
 #include <moveit_msgs/srv/get_planning_scene.hpp>
-#include <optional>
 #include <rclcpp/rclcpp.hpp>
 #include <rclcpp_action/rclcpp_action.hpp>
 #include <shape_msgs/msg/solid_primitive.hpp>
-#include <sstream>
-#include <string>
 #include <tf2_geometry_msgs/tf2_geometry_msgs.hpp>
-#include <vector>
 
 namespace manymove_object_manager
 {
@@ -317,4 +318,4 @@ private:
 };
 }  // namespace manymove_object_manager
 
-#endif  // OBJECT_MANAGER__OBJECT_MANAGER_HPP_
+#endif  // MANYMOVE_OBJECT_MANAGER__OBJECT_MANAGER_HPP_

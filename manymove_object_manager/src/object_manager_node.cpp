@@ -26,26 +26,28 @@
 // ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 // POSSIBILITY OF SUCH DAMAGE.
 
+#include "manymove_object_manager/object_manager.hpp"
+
+#include <geometric_shapes/mesh_operations.h>
+#include <geometric_shapes/shape_operations.h>
+#include <geometric_shapes/shapes.h>
+
+#include <tf2/LinearMath/Matrix3x3.h>
+#if !__has_include(<tf2/LinearMath/Quaternion.hpp>)
+#include <tf2/LinearMath/Quaternion.h>
+#endif
+#include <tf2/LinearMath/Transform.h>
+
+#include <chrono>
+#include <thread>
+#include <geometry_msgs/msg/pose.hpp>
 #include <rclcpp/callback_group.hpp>
 #include <rclcpp/executors/multi_threaded_executor.hpp>
 #include <rclcpp_action/rclcpp_action.hpp>
 
-#include "manymove_object_manager/object_manager.hpp"
-
 #if __has_include(<tf2/LinearMath/Quaternion.hpp>)
 #include <tf2/LinearMath/Quaternion.hpp>
-#else
-#include <tf2/LinearMath/Quaternion.h>
 #endif
-#include <geometric_shapes/mesh_operations.h>
-#include <geometric_shapes/shape_operations.h>
-#include <geometric_shapes/shapes.h>
-#include <tf2/LinearMath/Matrix3x3.h>
-#include <tf2/LinearMath/Transform.h>
-
-#include <chrono>
-#include <geometry_msgs/msg/pose.hpp>
-#include <thread>
 
 namespace manymove_object_manager
 {

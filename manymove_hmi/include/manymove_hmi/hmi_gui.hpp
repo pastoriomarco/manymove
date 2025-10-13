@@ -26,8 +26,8 @@
 // ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 // POSSIBILITY OF SUCH DAMAGE.
 
-#ifndef HMI_GUI_HPP
-#define HMI_GUI_HPP
+#ifndef MANYMOVE_HMI__HMI_GUI_HPP_
+#define MANYMOVE_HMI__HMI_GUI_HPP_
 
 #include <QLabel>
 #include <QMainWindow>
@@ -91,4 +91,4 @@ private:
   QString lastStatusJson_;
 };
 
-#endif  // HMI_GUI_HPP
+#endif  // MANYMOVE_HMI__HMI_GUI_HPP_

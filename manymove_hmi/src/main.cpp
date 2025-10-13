@@ -27,23 +27,29 @@
 // POSSIBILITY OF SUCH DAMAGE.
 
 #include <QApplication>
+#include <QCoreApplication>
 #include <QDebug>
 #include <QPalette>
 #include <QStyleFactory>
+
 #include <csignal>
+
+#include <chrono>
 #include <memory>
-#include <rclcpp/rclcpp.hpp>
 #include <string>
 #include <thread>
 #include <vector>
+
+#include <rclcpp/rclcpp.hpp>
 
 #include "manymove_hmi/hmi_gui.hpp"
 #include "manymove_hmi/ros2_worker.hpp"
 
 using namespace std::chrono_literals;
 
-void handleSigInt(int)
+void handleSigInt(int signal_number)
 {
+  static_cast<void>(signal_number);
   qDebug() << "SIGINT received, quitting application.";
   QCoreApplication::quit();
 }
@@ -51,6 +57,7 @@ void handleSigInt(int)
 int main(int argc, char * argv[])
 {
   std::signal(SIGINT, handleSigInt);
+
   rclcpp::init(argc, argv);
 
   rclcpp::sleep_for(2000000000ns);
@@ -91,14 +98,14 @@ int main(int argc, char * argv[])
 
   // Declare and get the parameter 'robot_prefixes' (default: {""})
   loader_node_hmi->declare_parameter<std::vector<std::string>>(
-    "robot_prefixes", std::vector<std::string>({""}));
+    "robot_prefixes", std::vector<std::string>{""});
 
   std::vector<std::string> robot_prefixes;
   loader_node_hmi->get_parameter("robot_prefixes", robot_prefixes);
 
   // Declare and get the parameter 'robot_prefixes' (default: {""})
   loader_node_hmi->declare_parameter<std::vector<std::string>>(
-    "robot_names", std::vector<std::string>({""}));
+    "robot_names", std::vector<std::string>{""});
 
   std::vector<std::string> robot_names;
   loader_node_hmi->get_parameter("robot_names", robot_names);

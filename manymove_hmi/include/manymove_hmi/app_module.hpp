@@ -26,8 +26,8 @@
 // ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 // POSSIBILITY OF SUCH DAMAGE.
 
-#ifndef APP_MODULE_HPP
-#define APP_MODULE_HPP
+#ifndef MANYMOVE_HMI__APP_MODULE_HPP_
+#define MANYMOVE_HMI__APP_MODULE_HPP_
 
 #include <QMap>
 #include <QString>
@@ -35,6 +35,7 @@
 #include <cmath>
 #include <functional>
 #include <limits>
+#include <utility>
 #include <vector>
 
 class QLineEdit;
@@ -148,4 +149,4 @@ protected:
   QLabel * generalMessage_{nullptr};
 };
 
-#endif /* APP_MODULE_HPP */
+#endif  // MANYMOVE_HMI__APP_MODULE_HPP_
