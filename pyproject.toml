@@ -1,3 +1,47 @@
+[build-system]
+requires = ["setuptools>=42", "wheel"]
+build-backend = "setuptools.build_meta"
+
+# -------------------------------------------------------------------
+# Python formatting and linting according to ROS 2 code-style guide
+# -------------------------------------------------------------------
+
+[tool.ruff]
+# General settings
+line-length = 100
+target-version = "py310"
+
+# Linting rules
+lint.select = ["E", "F", "Q"]
+lint.ignore = [
+    "E203",  # Whitespace before ':' (conflicts with Black-style slicing)
+]
+lint.fixable = ["ALL"]
+
+# Quote and formatting style
+format.quote-style = "single"
+lint.flake8-quotes.inline-quotes = "single"
+lint.flake8-quotes.docstring-quotes = "double"
+
+# -------------------------------------------------------------------
+# isort-compatible import sorting
+# -------------------------------------------------------------------
+[tool.isort]
+profile = "black"
+line_length = 100
+force_single_line = true
+known_first_party = ["manymove"]  # adjust if your package name differs
+multi_line_output = 3
+include_trailing_comma = true
+
+# -------------------------------------------------------------------
+# Black optional configuration (kept for compatibility)
+# -------------------------------------------------------------------
 [tool.black]
-line-length = 99
+line-length = 100
 target-version = ["py310"]
+skip-string-normalization = true  # preserve single quotes if Black is used
+
+# -------------------------------------------------------------------
+# Ruff + isort + black alignment complete
+# -------------------------------------------------------------------

@@ -20,7 +20,7 @@ objects:
       position: {x: 0.0, y: 0.2, z: 0.005}
       orientation: {roll: 0.0, pitch: 1.57, yaw: 0.0}
 
-# example for mesh object  
+# example for mesh object
   - name: "mesh_object"
     type: "mesh"
     # this example mesh represents a tube of diameter 1m and length 1m, with a wall 0.1m thick
@@ -31,7 +31,7 @@ objects:
       position: {x: 0.0, y: -0.2, z: 0.005}
       orientation: {roll: 0.0, pitch: 1.57, yaw: 0.0}
 
-# # example for mesh object  
+# # example for mesh object
 #   - name: "mesh_object"
 #     type: "mesh"
 #     mesh_file: "package://manymove_object_manager/meshes/pneumatic_lite.stl"
@@ -40,13 +40,13 @@ objects:
 #       position: {x: 0.15, y: -0.05, z: 0.0}
 #       orientation: {roll: 0.0, pitch: 0.0, yaw: 0.0}
 
-# # example for random position object  
+# # example for random position object
 #   - name: "graspable_random_cylinder"
 #     type: "cylinder"
 #     dimensions: [0.1, 0.005]
 #     # No pose provided; will be placed randomly
 
-# # example for sphere object:  
+# # example for sphere object:
 #   - name: "custom_sphere"
 #     type: "sphere"
 #     dimensions: [0.05]

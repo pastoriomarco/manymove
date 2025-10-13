@@ -22,5 +22,5 @@ from ament_pep257.main import main
 @pytest.mark.pep257
 def test_pep257():
     """Run ament_pep257 using the shared project configuration."""
-    rc = main(argv=[".", "test"])
-    assert rc == 0, "Found code style errors / warnings"
+    rc = main(argv=['.', 'test'])
+    assert rc == 0, 'Found code style errors / warnings'

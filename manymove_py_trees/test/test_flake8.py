@@ -14,10 +14,13 @@
 
 """Check the package's compliance with the flake8 ruleset."""
 
-import pytest
 from pathlib import Path
+from typing import List
+from typing import Tuple
+from typing import Union
+
+import pytest
 from ament_flake8.main import main_with_errors
-from typing import List, Tuple, Union
 
 
 @pytest.mark.flake8
@@ -25,8 +28,8 @@ from typing import List, Tuple, Union
 def test_flake8():
     """Execute flake8 against the repository-level configuration."""
     # Point to repo-level setup.cfg to keep one source of truth
-    config = Path(__file__).resolve().parents[2] / "setup.cfg"
+    config = Path(__file__).resolve().parents[2] / 'setup.cfg'
     # ament_flake8.main_with_errors may return either (rc, errors) or just rc
-    res: Union[Tuple[int, List[str]], int] = main_with_errors(argv=["--config", str(config)])
+    res: Union[Tuple[int, List[str]], int] = main_with_errors(argv=['--config', str(config)])
     rc, errors = res if isinstance(res, tuple) else (res, [])
-    assert rc == 0, f"Found {len(errors)} code style errors / warnings:\n" + "\n".join(errors)
+    assert rc == 0, f'Found {len(errors)} code style errors / warnings:\n' + '\n'.join(errors)

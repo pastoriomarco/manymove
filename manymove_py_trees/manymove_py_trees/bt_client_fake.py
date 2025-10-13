@@ -7,30 +7,33 @@ import time
 import py_trees
 import py_trees_ros
 import rclpy
-from geometry_msgs.msg import Point, Pose, Quaternion
+from geometry_msgs.msg import Point
+from geometry_msgs.msg import Pose
+from geometry_msgs.msg import Quaternion
 from moveit_msgs.msg import RobotTrajectory
 from py_trees.blackboard import Blackboard
 from rclpy.executors import MultiThreadedExecutor
 from rclpy.node import Node
 
 from manymove_py_trees.hmi_service_node import HMIServiceNode
-from manymove_py_trees.move_definitions import create_move, define_movement_configs
+from manymove_py_trees.move_definitions import create_move
+from manymove_py_trees.move_definitions import define_movement_configs
 from manymove_py_trees.tree_helper import create_tree_from_sequences
 
 
 def build_and_run_bt(node: Node):
     """Build the demonstration behaviour tree and tick it until completion."""
-    node.get_logger().info("BT Client Node started")
-    node.declare_parameter("tcp_frame", "link_tcp")
-    tcp_frame = node.get_parameter("tcp_frame").value
+    node.get_logger().info('BT Client Node started')
+    node.declare_parameter('tcp_frame', 'link_tcp')
+    tcp_frame = node.get_parameter('tcp_frame').value
 
     bb = Blackboard()
     # Set defaults for keys used by MoveManipulatorBehavior:
-    bb.set("reset", False)
-    bb.set("stop_execution", False)
-    bb.set("collision_detected", False)
-    bb.set("invalidate_traj_on_exec", False)
-    bb.set("existing_trajectory", RobotTrajectory())
+    bb.set('reset', False)
+    bb.set('stop_execution', False)
+    bb.set('collision_detected', False)
+    bb.set('invalidate_traj_on_exec', False)
+    bb.set('existing_trajectory', RobotTrajectory())
 
     # 1) Define move configurations
     movement_configs = define_movement_configs()
@@ -39,7 +42,7 @@ def build_and_run_bt(node: Node):
     joint_rest = [0.0, -0.785, 0.785, 0.0, 1.57, 0.0]
     joint_look_sx = [-0.175, -0.419, 1.378, 0.349, 1.535, -0.977]
     joint_look_dx = [0.733, -0.297, 1.378, -0.576, 1.692, 1.291]
-    named_home = "home"
+    named_home = 'home'
 
     pick_target = Pose(
         position=Point(x=0.2, y=-0.1, z=0.15),
@@ -52,55 +55,55 @@ def build_and_run_bt(node: Node):
 
     rest_position = [
         create_move(
-            "joint",
+            'joint',
             tcp_frame,
             joint_values=joint_rest,
-            config=movement_configs["max_move"],
+            config=movement_configs['max_move'],
         ),
     ]
 
     scan_surroundings = [
         create_move(
-            "joint",
+            'joint',
             tcp_frame,
             joint_values=joint_look_sx,
-            config=movement_configs["max_move"],
+            config=movement_configs['max_move'],
         ),
         create_move(
-            "joint",
+            'joint',
             tcp_frame,
             joint_values=joint_look_dx,
-            config=movement_configs["max_move"],
+            config=movement_configs['max_move'],
         ),
     ]
 
     pick_sequence = [
         create_move(
-            "pose",
+            'pose',
             tcp_frame,
             target=approach_target,
-            config=movement_configs["mid_move"],
+            config=movement_configs['mid_move'],
         ),
         create_move(
-            "cartesian",
+            'cartesian',
             tcp_frame,
             target=pick_target,
-            config=movement_configs["slow_move"],
+            config=movement_configs['slow_move'],
         ),
         create_move(
-            "cartesian",
+            'cartesian',
             tcp_frame,
             target=approach_target,
-            config=movement_configs["max_move"],
+            config=movement_configs['max_move'],
         ),
     ]
 
     home_position = [
         create_move(
-            "named",
+            'named',
             tcp_frame,
             named_target=named_home,
-            config=movement_configs["max_move"],
+            config=movement_configs['max_move'],
         ),
     ]
 
@@ -108,15 +111,15 @@ def build_and_run_bt(node: Node):
     list_of_sequences = [rest_position, scan_surroundings, pick_sequence, home_position]
 
     # 3) Create a BT from these sequences
-    chained_branch = create_tree_from_sequences(node, list_of_sequences, root_name="LogicSequence")
+    chained_branch = create_tree_from_sequences(node, list_of_sequences, root_name='LogicSequence')
 
-    main_seq = py_trees.composites.Sequence("Main_Sequence", memory=True)
+    main_seq = py_trees.composites.Sequence('Main_Sequence', memory=True)
     main_seq.add_child(chained_branch.root)
 
     repeated_root = py_trees.decorators.Repeat(
         child=main_seq,
         num_success=-1,
-        name="RepeatForever",  # negative => infinite repeats
+        name='RepeatForever',  # negative => infinite repeats
     )
 
     bt_tree = py_trees_ros.trees.BehaviourTree(repeated_root)
@@ -125,7 +128,7 @@ def build_and_run_bt(node: Node):
     try:
         bt_tree.setup(node=node, timeout=10.0)
     except Exception as e:
-        node.get_logger().error(f"Failed to setup BT: {e}")
+        node.get_logger().error(f'Failed to setup BT: {e}')
         return  # early return => won't do the main loop
 
     # 5) Manual tick loop
@@ -134,17 +137,17 @@ def build_and_run_bt(node: Node):
             bt_tree.tick()
             status = bt_tree.root.status
             if status == py_trees.common.Status.SUCCESS:
-                node.get_logger().info("Tree completed successfully.")
+                node.get_logger().info('Tree completed successfully.')
                 break
             elif status == py_trees.common.Status.FAILURE:
-                node.get_logger().error("Tree failed.")
+                node.get_logger().error('Tree failed.')
                 break
 
             # This ensures we process any pending ROS events (service calls, etc.)
             rclpy.spin_once(node, timeout_sec=0.005)
             time.sleep(0.001)
     except KeyboardInterrupt:
-        node.get_logger().info("Keyboard Interrupt, exiting...")
+        node.get_logger().info('Keyboard Interrupt, exiting...')
 
     # 6) Shutdown
     bt_tree.shutdown()
@@ -160,11 +163,11 @@ def main():
     executor = MultiThreadedExecutor(num_threads=2)
 
     # Create a Node for the BT logic
-    bt_node = rclpy.create_node("bt_client_node")
+    bt_node = rclpy.create_node('bt_client_node')
 
     # Create the HMI service node in the same process
-    hmi_node = HMIServiceNode(node_name="hmi_service_node", robot_prefix="")
-    hmi_node.get_logger().info("HMI service node created in the same process")
+    hmi_node = HMIServiceNode(node_name='hmi_service_node', robot_prefix='')
+    hmi_node.get_logger().info('HMI service node created in the same process')
 
     # Add both nodes to the executor
     executor.add_node(bt_node)
@@ -190,5 +193,5 @@ def main():
     executor_thread.join()
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     main()

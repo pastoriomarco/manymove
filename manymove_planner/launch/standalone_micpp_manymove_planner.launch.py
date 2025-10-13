@@ -42,50 +42,50 @@ def generate_launch_description():
     # Load the robot configuration
     moveit_config = (
         MoveItConfigsBuilder(
-            controllers_name="fake_controllers",
-            ros2_control_plugin="uf_robot_hardware/UFRobotFakeSystemHardware",
+            controllers_name='fake_controllers',
+            ros2_control_plugin='uf_robot_hardware/UFRobotFakeSystemHardware',
             context=LaunchContext(),
-            robot_type="lite",
+            robot_type='lite',
             dof=6,
             add_realsense_d435i=True,
             add_d435i_links=True,
             add_other_geometry=True,
-            geometry_type="mesh",
+            geometry_type='mesh',
             geometry_mass=0.3,
-            geometry_mesh_filename="pneumatic_lite.stl",
-            geometry_mesh_tcp_xyz="0.03075 0 0.11885",
-            geometry_mesh_tcp_rpy="0 0.52 0",
+            geometry_mesh_filename='pneumatic_lite.stl',
+            geometry_mesh_tcp_xyz='0.03075 0 0.11885',
+            geometry_mesh_tcp_rpy='0 0.52 0',
             # kinematics_suffix='LS1'
         )
         .robot_description()
-        .trajectory_execution(file_path="config/lite6/fake_controllers.yaml")
+        .trajectory_execution(file_path='config/lite6/fake_controllers.yaml')
         .planning_scene_monitor(
             publish_robot_description=True, publish_robot_description_semantic=True
         )
-        .planning_pipelines(pipelines=["ompl"])
+        .planning_pipelines(pipelines=['ompl'])
         .moveit_cpp(
-            file_path=get_package_share_directory("manymove_planner") + "/config/moveit_cpp.yaml"
+            file_path=get_package_share_directory('manymove_planner') + '/config/moveit_cpp.yaml'
         )
         .to_moveit_configs()
     )
 
     run_moveit_cpp_node = Node(
-        package="manymove_planner",
-        executable="standalone_micpp_demo",
-        output="screen",
+        package='manymove_planner',
+        executable='standalone_micpp_demo',
+        output='screen',
         parameters=[moveit_config.to_dict()],
-        arguments=["--log-level", "debug"],
+        arguments=['--log-level', 'debug'],
     )
 
     # RViz
-    rviz_config_file = get_package_share_directory("manymove_planner") + "/config/micpp_demo.rviz"
+    rviz_config_file = get_package_share_directory('manymove_planner') + '/config/micpp_demo.rviz'
 
     rviz_node = Node(
-        package="rviz2",
-        executable="rviz2",
-        name="rviz2",
-        output="log",
-        arguments=["-d", rviz_config_file],
+        package='rviz2',
+        executable='rviz2',
+        name='rviz2',
+        output='log',
+        arguments=['-d', rviz_config_file],
         parameters=[
             moveit_config.robot_description,
             moveit_config.robot_description_semantic,
@@ -97,53 +97,53 @@ def generate_launch_description():
 
     # Static TF
     static_tf = Node(
-        package="tf2_ros",
-        executable="static_transform_publisher",
-        name="static_transform_publisher",
-        output="log",
-        arguments=["--frame-id", "world", "--child-frame-id", "base_link"],
+        package='tf2_ros',
+        executable='static_transform_publisher',
+        name='static_transform_publisher',
+        output='log',
+        arguments=['--frame-id', 'world', '--child-frame-id', 'base_link'],
     )
 
     # Publish TF
     robot_state_publisher = Node(
-        package="robot_state_publisher",
-        executable="robot_state_publisher",
-        name="robot_state_publisher",
-        output="both",
+        package='robot_state_publisher',
+        executable='robot_state_publisher',
+        name='robot_state_publisher',
+        output='both',
         parameters=[moveit_config.robot_description],
     )
 
     # ros2_control using FakeSystem as hardware
     ros2_controllers_path = os.path.join(
-        get_package_share_directory("xarm_controller"),
-        "config",
-        "lite6_controllers.yaml",
+        get_package_share_directory('xarm_controller'),
+        'config',
+        'lite6_controllers.yaml',
     )
 
     ros2_control_node = Node(
-        package="controller_manager",
-        executable="ros2_control_node",
+        package='controller_manager',
+        executable='ros2_control_node',
         parameters=[ros2_controllers_path],
         remappings=[
-            ("/controller_manager/robot_description", "/robot_description"),
+            ('/controller_manager/robot_description', '/robot_description'),
         ],
-        output="both",
+        output='both',
     )
 
     joint_state_broadcaster_spawner = Node(
-        package="controller_manager",
-        executable="spawner",
+        package='controller_manager',
+        executable='spawner',
         arguments=[
-            "joint_state_broadcaster",
-            "--controller-manager",
-            "/controller_manager",
+            'joint_state_broadcaster',
+            '--controller-manager',
+            '/controller_manager',
         ],
     )
 
     arm_controller_spawner = Node(
-        package="controller_manager",
-        executable="spawner",
-        arguments=["lite6_traj_controller", "-c", "/controller_manager"],
+        package='controller_manager',
+        executable='spawner',
+        arguments=['lite6_traj_controller', '-c', '/controller_manager'],
     )
 
     return LaunchDescription(

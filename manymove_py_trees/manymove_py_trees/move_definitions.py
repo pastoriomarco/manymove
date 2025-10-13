@@ -3,14 +3,20 @@
 """Helpers for composing MoveManipulator requests and convenience moves."""
 
 from dataclasses import dataclass
-from typing import Dict, List, Optional
+from typing import Dict
+from typing import List
+from typing import Optional
 
 import rclpy
-from geometry_msgs.msg import Point, Pose, Quaternion
+from geometry_msgs.msg import Point
+from geometry_msgs.msg import Pose
+from geometry_msgs.msg import Quaternion
 from rclpy.action import ActionClient
 from rclpy.node import Node
+
 from manymove_msgs.action import MoveManipulator
-from manymove_msgs.msg import MoveManipulatorGoal, MovementConfig
+from manymove_msgs.msg import MoveManipulatorGoal
+from manymove_msgs.msg import MovementConfig
 
 
 @dataclass
@@ -26,7 +32,7 @@ class Move:
 
     def __post_init__(self):
         """Validate that the requested move type is supported."""
-        allowed_types = ["pose", "joint", "named", "cartesian"]
+        allowed_types = ['pose', 'joint', 'named', 'cartesian']
         if self.movement_type not in allowed_types:
             raise ValueError(
                 f"Unsupported movement_type '{self.movement_type}'. "
@@ -41,19 +47,19 @@ class Move:
 
         mmg.config.tcp_frame = self.tcp_frame
 
-        if self.movement_type in ["pose", "cartesian"]:
+        if self.movement_type in ['pose', 'cartesian']:
             if not isinstance(self.pose_target, Pose):
                 raise TypeError(
                     f"For '{self.movement_type}' moves, a valid Pose must be provided."
                 )
             mmg.pose_target = self.pose_target
 
-        elif self.movement_type == "joint":
+        elif self.movement_type == 'joint':
             if not isinstance(self.joint_values, list):
                 raise TypeError("For 'joint' moves, a list of joint values must be provided.")
             mmg.joint_values = self.joint_values
 
-        elif self.movement_type == "named":
+        elif self.movement_type == 'named':
             if not isinstance(self.named_target, str):
                 raise TypeError("For 'named' moves, a named_target (string) must be provided.")
             mmg.named_target = self.named_target
@@ -79,7 +85,7 @@ def define_movement_configs() -> Dict[str, MovementConfig]:
     max_move_config.cartesian_precision_max_resolution = 0.005
     max_move_config.plan_number_target = 8
     max_move_config.plan_number_limit = 32
-    max_move_config.smoothing_type = "time_optimal"
+    max_move_config.smoothing_type = 'time_optimal'
 
     mid_move_config = MovementConfig()
     mid_move_config.velocity_scaling_factor = 0.5
@@ -96,7 +102,7 @@ def define_movement_configs() -> Dict[str, MovementConfig]:
     mid_move_config.cartesian_precision_max_resolution = 0.005
     mid_move_config.plan_number_target = 8
     mid_move_config.plan_number_limit = 32
-    mid_move_config.smoothing_type = "time_optimal"
+    mid_move_config.smoothing_type = 'time_optimal'
 
     slow_move_config = MovementConfig()
     slow_move_config.velocity_scaling_factor = 0.25
@@ -113,12 +119,12 @@ def define_movement_configs() -> Dict[str, MovementConfig]:
     slow_move_config.cartesian_precision_max_resolution = 0.005
     slow_move_config.plan_number_target = 8
     slow_move_config.plan_number_limit = 32
-    slow_move_config.smoothing_type = "time_optimal"
+    slow_move_config.smoothing_type = 'time_optimal'
 
     return {
-        "max_move": max_move_config,
-        "mid_move": mid_move_config,
-        "slow_move": slow_move_config,
+        'max_move': max_move_config,
+        'mid_move': mid_move_config,
+        'slow_move': slow_move_config,
     }
 
 
@@ -214,7 +220,7 @@ def send_move_manipulator_goal(node: Node, move: Move) -> bool:
         ``True`` when the goal succeeds, ``False`` otherwise.
 
     """
-    action_client = ActionClient(node, MoveManipulator, "move_manipulator")
+    action_client = ActionClient(node, MoveManipulator, 'move_manipulator')
 
     node.get_logger().info("Waiting for 'move_manipulator' action server...")
     if not action_client.wait_for_server(timeout_sec=5.0):
@@ -223,7 +229,7 @@ def send_move_manipulator_goal(node: Node, move: Move) -> bool:
 
     # Build the final goal
     goal_msg = build_move_manipulator_goal(move)
-    node.get_logger().info(f"Sending MoveManipulator goal [type={move.movement_type}] ...")
+    node.get_logger().info(f'Sending MoveManipulator goal [type={move.movement_type}] ...')
 
     # Send the goal
     send_goal_future = action_client.send_goal_async(goal_msg)
@@ -231,21 +237,21 @@ def send_move_manipulator_goal(node: Node, move: Move) -> bool:
 
     goal_handle = send_goal_future.result()
     if not goal_handle or not goal_handle.accepted:
-        node.get_logger().error("MoveManipulator goal was rejected!")
+        node.get_logger().error('MoveManipulator goal was rejected!')
         return False
 
-    node.get_logger().info("MoveManipulator goal accepted; waiting for result...")
+    node.get_logger().info('MoveManipulator goal accepted; waiting for result...')
     get_result_future = goal_handle.get_result_async()
     rclpy.spin_until_future_complete(node, get_result_future)
     result = get_result_future.result()
 
     if not result or not result.result:
-        node.get_logger().error("MoveManipulator action returned an invalid result object.")
+        node.get_logger().error('MoveManipulator action returned an invalid result object.')
         return False
 
     if result.result.success:
-        node.get_logger().info(f"MoveManipulator Succeeded: {result.result.message}")
+        node.get_logger().info(f'MoveManipulator Succeeded: {result.result.message}')
         return True
     else:
-        node.get_logger().error(f"MoveManipulator Failed: {result.result.message}")
+        node.get_logger().error(f'MoveManipulator Failed: {result.result.message}')
         return False

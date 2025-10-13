@@ -2,7 +2,7 @@
 
 This package is part of the [**`manymove`**](../README.md) project for **ROS 2** Humble. It provides a **unified, topic-based** approach for managing collision objects within MoveIt 2. **Use at your own risk**; the repository is experimental and does **not** include safety features.
 
-This package allows to add, remove, and check the existence of an object, and also to attach and detach object to a certain link and to obtain the pose of an object relative to a link. 
+This package allows to add, remove, and check the existence of an object, and also to attach and detach object to a certain link and to obtain the pose of an object relative to a link.
 
 Unlike other approaches that rely on the `/apply_planning_scene` service, **Object Manager** uses the default MoveIt 2 topics to publish collision objects, and it exposes **action servers** to handle sequential operations (such as verifying whether objects are truly added or removed in the scene).
 
@@ -39,13 +39,13 @@ This approach is meant to ease the use with the manymove packages: it is compati
 
 This node hosts the **action servers**:
 
-1. **AddCollisionObject Action**  
+1. **AddCollisionObject Action**
    Publishes the object to the default topic. Then, repeatedly checks if the object is in the planning scene. If confirmed, returns success.
 
-2. **RemoveCollisionObject Action**  
+2. **RemoveCollisionObject Action**
    Publishes a remove operation for a given object ID. Then, repeatedly checks if the object is truly gone from the scene. If confirmed, returns success.
 
-3. **CheckObjectExists Action**  
+3. **CheckObjectExists Action**
    Submits a request to `/get_planning_scene` to verify the presence of a specific object ID.
 
 Under the hood, `object_manager_node`:
@@ -77,7 +77,7 @@ Please refer to the main [**ManyMove README**](../README.md) for overall setup i
 
 ### Launching the Nodes
 
-1. **Object Manager Node Only**  
+1. **Object Manager Node Only**
    This will start the node that hosts all the action servers.
    ```bash
    ros2 launch object_manager object_manager.launch.py
@@ -85,7 +85,7 @@ Please refer to the main [**ManyMove README**](../README.md) for overall setup i
    - This launch file:
      - Starts `object_manager_node` with a default `frame_id` parameter set to `world`.
 
-2. **Collision Spawner**  
+2. **Collision Spawner**
    This will start the spawner node, which will read your YAML configuration and attempt to add collision objects.
    ```bash
    ros2 launch object_manager collision_spawner.launch.py
@@ -99,19 +99,19 @@ Please refer to the main [**ManyMove README**](../README.md) for overall setup i
 
 ## Design Choices (Beginner-Friendly)
 
-1. **Why Topics Instead of `/apply_planning_scene`?**  
+1. **Why Topics Instead of `/apply_planning_scene`?**
    - Some MoveIt configurations or tutorials rely on `/apply_planning_scene`. However, certain versions or use cases (e.g., `MoveGroup` vs. `MoveItCpp`) might not expose the same services. By **directly publishing to the default collision object topic** (`/collision_object`), we ensure compatibility across multiple MoveIt usage patterns.
 
-2. **Why Actions Instead of Services?**  
+2. **Why Actions Instead of Services?**
    - We need to **check** whether an object truly exists or has been removed from the planning scene, which can take time to reflect. Actions let us:
      - Provide **feedback** (e.g., “Attempt 1: object not found yet.”).
      - **Cancel** the request if needed.
      - **Retry** in the background until success or failure is confirmed.
 
-3. **Why a Collision Spawner?**  
-   - In many applications, we have a set of known environment objects or test objects that we want to spawn automatically. The `collision_spawner` node reads from a YAML file, removing old objects first, and adding new ones. This keeps your scene definition in a **single config file**. 
+3. **Why a Collision Spawner?**
+   - In many applications, we have a set of known environment objects or test objects that we want to spawn automatically. The `collision_spawner` node reads from a YAML file, removing old objects first, and adding new ones. This keeps your scene definition in a **single config file**.
 
-5. **Random or Fixed Pose**  
+5. **Random or Fixed Pose**
    - If a pose is omitted in the YAML, we generate random positions within certain boundaries (e.g., `x` in [0.15, 0.3], `y` in [-0.25, 0.25], etc.). This is convenient for testing or simulation scenarios where you want objects to appear in slightly different locations each time.
 
 ---

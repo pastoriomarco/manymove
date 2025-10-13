@@ -12,8 +12,8 @@ This software is released under the BSD-3-Clause license (see `LICENSE` for deta
 
 ## Description
 
-The `manymove` project is meant for roboticists to ease the transition to ROS 2 coming from the classic frameworks of major manufacturers.  
-It provides a simplified, generalized framework for building robotic manipulator control logic using ROS 2 and MoveIt 2.  
+The `manymove` project is meant for roboticists to ease the transition to ROS 2 coming from the classic frameworks of major manufacturers.
+It provides a simplified, generalized framework for building robotic manipulator control logic using ROS 2 and MoveIt 2.
 This series of packages was created around Ufactory Lite6 and UF850 cobots, but it is structured so you can extend it to other robots. MoveIt demos for Franka Emika Panda are also included.
 
 ---
@@ -132,47 +132,47 @@ When you go through the code, you'll notice I explain what each section does and
 ---
 
 ## Project Structure
-  
+
 ![ManyMove structure](media/manymove_structure.png)
 
 This repository is composed of several sub-packages, each handling different responsibilities in the overall robotic application:
 
-1. **`manymove_msgs`**  
-   - Holds all the **custom action definitions** (e.g. `MoveManipulator`, `AttachDetachObject`, `GetInput`, etc.) and custom messages required for robot manipulation, collision object management, and I/O signaling.  
+1. **`manymove_msgs`**
+   - Holds all the **custom action definitions** (e.g. `MoveManipulator`, `AttachDetachObject`, `GetInput`, etc.) and custom messages required for robot manipulation, collision object management, and I/O signaling.
    - These definitions are shared across other packages to keep interfaces consistent.
 
-2. **`manymove_planner`**  
-   - Implements the **motion-planning logic** using MoveIt 2 and ROS 2 action servers.  
-   - Offers the **Action Server** `move_manipulator` so other modules can request motion plans and execute trajectories.  
+2. **`manymove_planner`**
+   - Implements the **motion-planning logic** using MoveIt 2 and ROS 2 action servers.
+   - Offers the **Action Server** `move_manipulator` so other modules can request motion plans and execute trajectories.
    - Contains configuration files for MoveIt 2 (e.g., `moveit_cpp.yaml`) and example launch files for single or dual robot setups.
 
-3. **`manymove_object_manager`**  
-   - Manages **collision objects** in the planning scene.  
-   - Provides actions like `AddCollisionObject`, `RemoveCollisionObject`, `AttachDetachObject`, etc., which can be called by higher-level logic to handle objects in the environment.  
+3. **`manymove_object_manager`**
+   - Manages **collision objects** in the planning scene.
+   - Provides actions like `AddCollisionObject`, `RemoveCollisionObject`, `AttachDetachObject`, etc., which can be called by higher-level logic to handle objects in the environment.
    - Includes mesh files and YAML configuration for objects.
 
-4. **`manymove_cpp_trees`**  
-   - A C++ **BehaviorTree.CPP** framework that integrates with the actions exposed by the planner, object manager, and signals packages.  
-   - Offers custom BT nodes (e.g., planning, object manipulation, signal I/O, conditions, etc.) so you can compose robotic behaviors in a modular, visual manner.  
+4. **`manymove_cpp_trees`**
+   - A C++ **BehaviorTree.CPP** framework that integrates with the actions exposed by the planner, object manager, and signals packages.
+   - Offers custom BT nodes (e.g., planning, object manipulation, signal I/O, conditions, etc.) so you can compose robotic behaviors in a modular, visual manner.
    - Contains a **BT client** nodes (e.g. `bt_client.cpp`) that demonstrates how to build, run, and manage complex behavior trees at runtime.
 
-5. **`manymove_py_trees`**  
-   - A Python-based alternative using **py_trees** to build or test similar control flows.  
-   - Useful if you prefer Python or need quick scripting for behavior logic.  
+5. **`manymove_py_trees`**
+   - A Python-based alternative using **py_trees** to build or test similar control flows.
+   - Useful if you prefer Python or need quick scripting for behavior logic.
    - Mirrors some capabilities found in the C++ trees package.
 
-6. **`manymove_hmi`**  
-   - Implements a **basic Human–Machine Interface (HMI)**.  
-   - Provides a GUI (`hmi_gui`) and related tools (`ros2_worker`) so that operators can issue commands, monitor status, or set parameters.  
+6. **`manymove_hmi`**
+   - Implements a **basic Human–Machine Interface (HMI)**.
+   - Provides a GUI (`hmi_gui`) and related tools (`ros2_worker`) so that operators can issue commands, monitor status, or set parameters.
    - Can be integrated with the behavior trees (or any other logic) to pause, stop, or resume execution.
 
-7. **`manymove_bringup`**   
+7. **`manymove_bringup`**
    - Contains the launchers for the complete multi-package examples listed below (and more).
 
 Specific packages for real robot signals:
 
-4. **`manymove_signals_xarm`**  
-   - Handles **digital I/O signals** and checks the robot’s state via dedicated actions (e.g., `CheckRobotState`, `SetOutput`, `GetInput`).  
+4. **`manymove_signals_xarm`**
+   - Handles **digital I/O signals** and checks the robot’s state via dedicated actions (e.g., `CheckRobotState`, `SetOutput`, `GetInput`).
    - Useful for toggling end-effector tools or reading sensor inputs in a flexible, standardized way.
 
 ---
@@ -189,7 +189,7 @@ Starting from an empty scene, you'll delop a pick and place application with Man
 
 ### Launching the Examples
 
-- **Lite6, uf850 and xarm7 manipulators** 
+- **Lite6, uf850 and xarm7 manipulators**
   with MoveItCPP and BehaviorTree.CPP:
   ```bash
   ros2 launch manymove_bringup lite_moveitcpp_fake_cpp_trees.launch.py
@@ -202,7 +202,7 @@ Starting from an empty scene, you'll delop a pick and place application with Man
   ```bash
   ros2 launch manymove_bringup xarm7_moveitcpp_fake_cpp_trees.launch.py
   ```
-  
+
   with MoveGroupInterface and BehaviorTree.CPP:
   ```bash
   ros2 launch manymove_bringup lite_movegroup_fake_cpp_trees.launch.py
@@ -213,12 +213,12 @@ Starting from an empty scene, you'll delop a pick and place application with Man
   ```bash
   ros2 launch manymove_bringup xarm7_movegroup_fake_cpp_trees.launch.py
   ```
-  
+
   with MoveGroupInterface and py_trees (minimal):
   ```bash
   ros2 launch manymove_bringup lite_movegroup_fake_py_trees.launch.py
   ```
-- **Dual robot (Lite 6 + UF850)**  
+- **Dual robot (Lite 6 + UF850)**
   ```bash
   ros2 launch manymove_bringup dual_moveitcpp_fake_cpp_trees.launch.py
   ```
@@ -239,7 +239,7 @@ Starting from an empty scene, you'll delop a pick and place application with Man
      ros2 launch manymove_bringup panda_movegroup_fake_py_trees.launch.py
      ```
   Alternative with standard panda demo launch and manymove started from a separate launcher:
-  
+
   In **terminal 1** (with `moveit2_tutorials` installed and sourced):
      ```bash
      ros2 launch moveit2_tutorials demo.launch.py
@@ -262,7 +262,7 @@ For launchers that use **NVIDIA cuMotion** planning library, refer to [THIS READ
 
 ## Credits
 
-- **BehaviorTree.CPP v3.8** installed through ROS dependencies (`ros-humble-behaviortree-cpp-v3`)  
+- **BehaviorTree.CPP v3.8** installed through ROS dependencies (`ros-humble-behaviortree-cpp-v3`)
   and its visualizer [Groot](https://github.com/BehaviorTree/Groot).
     - Groot is to be installed manually following the instructions in the [github page](https://github.com/BehaviorTree/Groot?tab=readme-ov-file#dependencies-installation-and-usage)
 - **py_trees_ros** from [splintered-reality/py_trees_ros](https://github.com/splintered-reality/py_trees_ros), installed through ROS dependencies, including its visualizer **ros-humble-py-trees-ros-viewer**.

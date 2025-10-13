@@ -10,35 +10,35 @@ This **manymove_cpp_trees** package is part of the [**`manymove`**](../README.md
 
 ### Key Functionalities
 
-- **BehaviorTree.CPP Integration**  
+- **BehaviorTree.CPP Integration**
   Provides a set of **custom BT nodes** (planner, object manipulation, signals, etc.) that can be used to build modular robotic behaviors.
 
-- **MoveIt 2 & Action Server Bridges**  
+- **MoveIt 2 & Action Server Bridges**
   Easily plan and execute motions, manage collision objects, attach/detach objects, and send/receive I/O signals by leveraging the action servers in `manymove_planner` and `manymove_object_manager`.
 
-- **Reconfigurable at Runtime**  
+- **Reconfigurable at Runtime**
   Much of the tree logic (target poses, velocities, attach operations, etc.) is dynamically drawn from the Blackboard, allowing for flexible updates without recompiling.
 
-- **HMI Service Node**  
+- **HMI Service Node**
   A dedicated node that exposes services for controlling behavior execution (start, stop, reset) and publishes Blackboard status.
 
 ---
 
 ## Architecture
 
-1. **Behavior Tree Nodes**  
-   - **`action_nodes_planner.hpp`**: Nodes for planning/executing manipulator motions.  
-   - **`action_nodes_objects.hpp`**: Nodes for adding/removing collision objects and checking or attaching them.  
-   - **`action_nodes_signals.hpp`**: Nodes for sending/reading digital I/O signals and checking robot state.  
+1. **Behavior Tree Nodes**
+   - **`action_nodes_planner.hpp`**: Nodes for planning/executing manipulator motions.
+   - **`action_nodes_objects.hpp`**: Nodes for adding/removing collision objects and checking or attaching them.
+   - **`action_nodes_signals.hpp`**: Nodes for sending/reading digital I/O signals and checking robot state.
    - **`action_nodes_logic.hpp`**: Custom decorator/condition nodes for controlling execution flow (e.g., pausing, aborting, blackboard key checks).
 
-2. **bt_client_node**  
-   - A reference implementation (in [`bt_client.cpp`](./src/bt_client.cpp)) that programmatically constructs a complex Behavior Tree.  
-   - Demonstrates combining the above custom BT nodes (e.g., for scanning the environment, picking/dropping objects, checking signals, etc.).  
+2. **bt_client_node**
+   - A reference implementation (in [`bt_client.cpp`](./src/bt_client.cpp)) that programmatically constructs a complex Behavior Tree.
+   - Demonstrates combining the above custom BT nodes (e.g., for scanning the environment, picking/dropping objects, checking signals, etc.).
    - Uses a **MultiThreadedExecutor** to spin the tree logic in parallel with the HMI service node.
 
-3. **HMI Service Node**  
-   - [`HMIServiceNode`](./include/manymove_cpp_trees/hmi_service_node.hpp) provides services to start/stop/reset execution.  
+3. **HMI Service Node**
+   - [`HMIServiceNode`](./include/manymove_cpp_trees/hmi_service_node.hpp) provides services to start/stop/reset execution.
    - Publishes execution status (e.g., `stop_execution`, `reset`, etc.) at a fixed interval.
 
 ---
@@ -72,13 +72,13 @@ Parameters (can be set via the command line or a launch file):
 
 ### Example Features
 
-- **Motion Planning & Execution**  
+- **Motion Planning & Execution**
   `MoveManipulatorAction` node for MoveIt 2-based motion.
 
-- **Collision Object Management**  
+- **Collision Object Management**
   `AddCollisionObjectAction`, `RemoveCollisionObjectAction`, `AttachDetachObjectAction`, etc.
 
-- **I/O Signals & Robot State**  
+- **I/O Signals & Robot State**
   `SetOutputAction`, `GetInputAction`, `CheckRobotStateAction`, and so on.
 
 ---
@@ -92,4 +92,3 @@ Parameters (can be set via the command line or a launch file):
 ### Contributing
 
 Feedback and pull requests are welcome. If you discover any issues or have suggestions, please open an issue or PR in the main manymove repository.
-

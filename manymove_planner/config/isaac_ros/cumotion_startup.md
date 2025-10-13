@@ -93,5 +93,3 @@ ros2 launch manymove_bringup lite_cumotion_movegroup_fake_cpp_trees.launch.py
 ```
 
 Let me know if you find some issues running this!
-
-

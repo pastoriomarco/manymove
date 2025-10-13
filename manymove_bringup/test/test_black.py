@@ -13,6 +13,6 @@ except ImportError:
 def test_black():
     """Check that Black would make no changes."""
     if main is None:
-        pytest.skip("ament_black not available")
-    rc = main(argv=["."])
-    assert rc == 0, "Black formatting issues detected"
+        pytest.skip('ament_black not available')
+    rc = main(argv=['.'])
+    assert rc == 0, 'Black formatting issues detected'

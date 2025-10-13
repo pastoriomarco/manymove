@@ -2,7 +2,7 @@ format: "xrdf"
 
 format_version: 1.0
 
-default_joint_positions: 
+default_joint_positions:
   joint1: -1e-04
   joint2: 0.0
   joint3: 1.57
@@ -12,61 +12,61 @@ default_joint_positions:
   left_finger_joint: 0.0
   right_finger_joint: 0.0
 
-cspace: 
+cspace:
   joint_names: []
   acceleration_limits: []
   jerk_limits: []
 
-collision: 
+collision:
   geometry: "auto_generated_collision_sphere_group"
 
-self_collision: 
+self_collision:
   geometry: "auto_generated_collision_sphere_group"
-  ignore: 
-    world: 
+  ignore:
+    world:
       - "link_base"
-    link_base: 
+    link_base:
       - "link1"
-    link1: 
+    link1:
       - "link2"
-    link2: 
+    link2:
       - "link3"
-    link3: 
+    link3:
       - "link4"
-    link4: 
+    link4:
       - "link5"
-    link5: 
+    link5:
       - "link6"
-    link6: 
+    link6:
       - "link_eef"
-    link_eef: 
+    link_eef:
       - "lite_gripper_base_link"
-    lite_gripper_base_link: 
+    lite_gripper_base_link:
       - "link_tcp"
       - "lite_gripper_left_finger"
       - "lite_gripper_right_finger"
-    link_tcp: 
+    link_tcp:
       - "lite_gripper_left_finger"
       - "lite_gripper_right_finger"
-    lite_gripper_left_finger: 
+    lite_gripper_left_finger:
       - "lite_gripper_right_finger"
 
-geometry: 
-  auto_generated_collision_sphere_group: 
-    spheres: 
-      link_base: 
+geometry:
+  auto_generated_collision_sphere_group:
+    spheres:
+      link_base:
         - center: [-0.006, 0.003, 0.044]
           radius: 0.0838
         - center: [-0.001, -0.0, 0.125]
           radius: 0.0782
         - center: [-0.036, -0.022, 0.037]
           radius: 0.0772
-      link1: 
+      link1:
         - center: [-0.001, -0.006, -0.002]
           radius: 0.0762
         - center: [0.001, -0.009, -0.035]
           radius: 0.0712
-      link2: 
+      link2:
         - center: [0.189, -0.0, 0.095]
           radius: 0.0683
         - center: [0.016, -0.001, 0.104]
@@ -75,12 +75,12 @@ geometry:
           radius: 0.0535
         - center: [0.07, -0.0, 0.113]
           radius: 0.0535
-      link3: 
+      link3:
         - center: [-0.002, -0.002, -0.008]
           radius: 0.0666
         - center: [0.082, 0.0, 0.001]
           radius: 0.065
-      link4: 
+      link4:
         - center: [0.0, -0.062, -0.06]
           radius: 0.069
         - center: [0.002, 0.006, -0.165]
@@ -91,10 +91,10 @@ geometry:
           radius: 0.0546
         - center: [-0.002, -0.042, -0.099]
           radius: 0.0546
-      link5: 
+      link5:
         - center: [0.001, 0.006, 0.001]
           radius: 0.0654
-      link6: 
+      link6:
         - center: [-0.0, -0.0, 0.064]
           radius: 0.0409
         - center: [0.002, -0.001, 0.036]

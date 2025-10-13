@@ -2,7 +2,7 @@ format: "xrdf"
 
 format_version: 1.0
 
-default_joint_positions: 
+default_joint_positions:
   joint1: 0.0
   joint2: 0.0
   joint3: 0.0
@@ -10,8 +10,8 @@ default_joint_positions:
   joint5: 0.0
   joint6: 0.0
 
-cspace: 
-  joint_names: 
+cspace:
+  joint_names:
     - "joint1"
     - "joint2"
     - "joint3"
@@ -23,7 +23,7 @@ cspace:
 
 tool_frames: ["link_tcp"]
 
-collision: 
+collision:
   geometry: "auto_generated_collision_sphere_group"
   buffer_distance:
     link1: 0.004
@@ -33,52 +33,52 @@ collision:
     link5: 0.004
     link6: 0.004
 
-self_collision: 
+self_collision:
   geometry: "auto_generated_collision_sphere_group"
   buffer_distance:
     link1: 0.005
     link2: 0.005
-  ignore: 
-    world: 
+  ignore:
+    world:
       - "link_base"
-    link_base: 
+    link_base:
       - "link1"
       - "link2"
-    link1: 
+    link1:
       - "link2"
       - "link3"
       - "link4"
-    link2: 
+    link2:
       - "link3"
       - "link4"
-    link3: 
+    link3:
       - "link4"
       - "link6"
-    link4: 
+    link4:
       - "link5"
       - "link6"
       - "link_eef"
       - "uflite_gripper_link"
       - "link_tcp"
-    link5: 
+    link5:
       - "link6"
       - "link_eef"
       - "uflite_gripper_link"
       - "link_tcp"
-    link6: 
+    link6:
       - "link_eef"
       - "uflite_gripper_link"
       - "link_tcp"
-    link_eef: 
+    link_eef:
       - "uflite_gripper_link"
       - "link_tcp"
-    uflite_gripper_link: 
+    uflite_gripper_link:
       - "link_tcp"
 
-geometry: 
-  auto_generated_collision_sphere_group: 
-    spheres: 
-      link1: 
+geometry:
+  auto_generated_collision_sphere_group:
+    spheres:
+      link1:
         - center: [0.0, 0.0, 0.0]
           radius: 0.042
         - center: [0.0, 0.0, -0.05]
@@ -89,7 +89,7 @@ geometry:
           radius: 0.042
         - center: [0.0, 0.025, 0.0]
           radius: 0.042
-      link2: 
+      link2:
         - center: [0.0, 0.0, 0.09]
           radius: 0.045
         - center: [0.025, 0.0, 0.1]
@@ -110,7 +110,7 @@ geometry:
           radius: 0.045
         - center: [0.2, 0.0, 0.07]
           radius: 0.045
-      link3: 
+      link3:
         - center: [0.0, 0.0, 0.0]
           radius: 0.045
         - center: [0.0, 0.0, -0.025]
@@ -121,7 +121,7 @@ geometry:
           radius: 0.04
         - center: [0.087, -0.018, 0.0]
           radius: 0.04
-      link4: 
+      link4:
         - center: [0.0, 0.0, -0.17]
           radius: 0.045
         - center: [0.0, 0.0, -0.09]
@@ -136,14 +136,14 @@ geometry:
           radius: 0.04
         - center: [0.0, -0.055, -0.048]
           radius: 0.0375
-      link5: 
+      link5:
         - center: [0.0, 0.0, 0.0]
           radius: 0.04
         - center: [0.0, 0.0, 0.025]
           radius: 0.04
         - center: [0.0, 0.025, 0.0]
           radius: 0.04
-      link6: 
+      link6:
         - center: [0.014, -0.024, -0.011]
           radius: 0.015
         - center: [-0.011, -0.024, -0.011]
@@ -160,7 +160,7 @@ geometry:
           radius: 0.016
         - center: [0.0, 0.03, -0.008]
           radius: 0.016
-      uflite_gripper_link: 
+      uflite_gripper_link:
         - center: [0.0, -0.004, 0.027]
           radius: 0.0304
         - center: [-0.0, 0.01, 0.026]

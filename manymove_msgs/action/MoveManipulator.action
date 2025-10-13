@@ -11,5 +11,5 @@ moveit_msgs/RobotTrajectory final_trajectory
 
 ---
 # Feedback
-float32 progress 
+float32 progress
 bool in_collision

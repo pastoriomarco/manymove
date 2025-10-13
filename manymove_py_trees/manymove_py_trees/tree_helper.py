@@ -12,7 +12,7 @@ from manymove_py_trees.move_manipulator_behavior import MoveManipulatorBehavior
 
 
 def create_tree_from_moves(
-    node, moves: List[Move], root_name: str = "MoveSequence"
+    node, moves: List[Move], root_name: str = 'MoveSequence'
 ) -> py_trees_ros.trees.BehaviourTree:
     """
     Build a behaviour tree that executes each move sequentially.
@@ -45,7 +45,7 @@ def create_tree_from_moves(
 
     # For each Move, add a child node that calls MoveManipulator
     for i, move in enumerate(moves):
-        move_node = MoveManipulatorBehavior(name=f"Move_{i}", node=node, move=move)
+        move_node = MoveManipulatorBehavior(name=f'Move_{i}', node=node, move=move)
         root.add_child(move_node)
 
     # Wrap in a ROS BehaviorTree
@@ -54,7 +54,7 @@ def create_tree_from_moves(
 
 
 def create_tree_from_sequences(
-    node, list_of_move_sequences: List[List[Move]], root_name: str = "RootOfSequences"
+    node, list_of_move_sequences: List[List[Move]], root_name: str = 'RootOfSequences'
 ) -> py_trees_ros.trees.BehaviourTree:
     """
     Create a behaviour tree that runs each sub-sequence of moves in series.
@@ -79,9 +79,9 @@ def create_tree_from_sequences(
 
     # For each sub-sequence, create another Sequence
     for seq_idx, moves in enumerate(list_of_move_sequences):
-        sub_seq_node = py_trees.composites.Sequence(name=f"SubSequence_{seq_idx}", memory=True)
+        sub_seq_node = py_trees.composites.Sequence(name=f'SubSequence_{seq_idx}', memory=True)
         for i, move in enumerate(moves):
-            move_node = MoveManipulatorBehavior(name=f"Move_{seq_idx}_{i}", node=node, move=move)
+            move_node = MoveManipulatorBehavior(name=f'Move_{seq_idx}_{i}', node=node, move=move)
             sub_seq_node.add_child(move_node)
         # Add this sub-sequence to the root
         root.add_child(sub_seq_node)
