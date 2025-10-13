@@ -28,19 +28,19 @@
 
 #pragma once
 
-#include <vector>
+#include <control_msgs/action/follow_joint_trajectory.hpp>
+#include <geometry_msgs/msg/pose.hpp>
+#include <manymove_msgs/action/plan_manipulator.hpp>
+#include <manymove_msgs/msg/movement_config.hpp>
+#include <memory>
+#include <moveit_msgs/msg/constraints.hpp>
+#include <moveit_msgs/msg/robot_trajectory.hpp>
+#include <rclcpp_action/rclcpp_action.hpp>
 #include <string>
 #include <utility>
-#include <memory>
+#include <vector>
 
-#include <geometry_msgs/msg/pose.hpp>
-#include <moveit_msgs/msg/robot_trajectory.hpp>
-#include <manymove_msgs/msg/movement_config.hpp>
-#include <manymove_msgs/action/plan_manipulator.hpp>
-#include <rclcpp_action/rclcpp_action.hpp>
 #include "manymove_planner/compat/moveit_includes_compat.hpp"
-#include <control_msgs/action/follow_joint_trajectory.hpp>
-#include <moveit_msgs/msg/constraints.hpp>
 
 /**
  * @class PlannerInterface
@@ -55,12 +55,12 @@
 class PlannerInterface
 {
 public:
-/**
+  /**
  * @brief Virtual destructor for PlannerInterface.
  */
   virtual ~PlannerInterface() = default;
 
-/**
+  /**
  * @brief Plan a trajectory to achieve a specified goal.
  * @param goal The target goal for the manipulator.
  * @return A pair containing a success flag (true if planning succeeded) and the planned robot
@@ -69,7 +69,7 @@ public:
   virtual std::pair<bool, moveit_msgs::msg::RobotTrajectory> plan(
     const manymove_msgs::action::PlanManipulator::Goal & goal) = 0;
 
-/**
+  /**
  * @brief Apply time parameterization to a trajectory.
  * @param input_traj The raw robot trajectory message (without time stamps) produced by the
  * planner.
@@ -105,10 +105,9 @@ public:
  */
   virtual std::pair<bool, moveit_msgs::msg::RobotTrajectory> applyTimeParameterization(
     const moveit_msgs::msg::RobotTrajectory & input_traj,
-    const manymove_msgs::msg::MovementConfig & config)
-  = 0;
+    const manymove_msgs::msg::MovementConfig & config) = 0;
 
-/**
+  /**
  * @brief Send a controlled stop command to the robot.
  * @param decel_time_s The duration (in seconds) over which the robot’s velocities should be
  * ramped down to zero.
@@ -131,21 +130,21 @@ public:
     const moveit_msgs::msg::RobotTrajectory & running_traj = moveit_msgs::msg::RobotTrajectory(),
     double elapsed_s = 0.0) = 0;
 
-/**
+  /**
  * @brief Retrieve the action client for FollowJointTrajectory.
  * @return A shared pointer to the action client used to send joint trajectory execution goals.
  */
   virtual rclcpp_action::Client<control_msgs::action::FollowJointTrajectory>::SharedPtr
   getFollowJointTrajClient() const = 0;
 
-/**
+  /**
  * @brief Check whether a given set of joint positions is valid (i.e. collision free).
  * @param joint_positions A vector of joint positions.
  * @return True if the joint state is valid (no collisions), false otherwise.
  */
   virtual bool isJointStateValid(const std::vector<double> & joint_positions) const = 0;
 
-/**
+  /**
  * @brief Checks if the start of the trajectory (the first waypoint)
  *        is within a specified tolerance of the given current joint state.
  * @param traj The planned trajectory.
@@ -159,8 +158,7 @@ public:
 
   virtual bool isTrajectoryEndValid(
     const moveit_msgs::msg::RobotTrajectory & traj,
-    const manymove_msgs::msg::MoveManipulatorGoal & move_request)
-  const = 0;
+    const manymove_msgs::msg::MoveManipulatorGoal & move_request) const = 0;
 
   virtual bool isTrajectoryValid(
     const trajectory_msgs::msg::JointTrajectory & joint_traj_msg,
@@ -173,7 +171,7 @@ public:
     const double time_from_start = 0) const = 0;
 
 protected:
-/**
+  /**
  * @brief Protected constructor to prevent direct instantiation of the interface.
  */
   PlannerInterface() = default;

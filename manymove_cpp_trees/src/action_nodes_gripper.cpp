@@ -27,8 +27,10 @@
 // POSSIBILITY OF SUCH DAMAGE.
 
 #include "manymove_cpp_trees/action_nodes_gripper.hpp"
-#include "behaviortree_cpp_v3/behavior_tree.h"
+
 #include <chrono>
+
+#include "behaviortree_cpp_v3/behavior_tree.h"
 
 using namespace std::chrono_literals;
 
@@ -39,18 +41,14 @@ namespace manymove_cpp_trees
 // GripperCommandAction
 // -------------------------------------------------
 GripperCommandAction::GripperCommandAction(
-  const std::string & name,
-  const BT::NodeConfiguration & config)
+  const std::string & name, const BT::NodeConfiguration & config)
 : BT::StatefulActionNode(name, config), goal_sent_(false), result_received_(false)
 {
   // Obtain the ROS node from the blackboard
   if (!config.blackboard) {
     throw BT::RuntimeError("GripperCommandAction: no blackboard provided.");
   }
-  if (!config.blackboard->get(
-      "node",
-      node_))
-  {
+  if (!config.blackboard->get("node", node_)) {
     RCLCPP_ERROR(
       rclcpp::get_logger("GripperCommandAction"),
       "Shared node not found in blackboard, cannot initialize GripperCommandAction.");
@@ -59,43 +57,27 @@ GripperCommandAction::GripperCommandAction(
 
   // Retrieve the action server name from the input port
   std::string action_server_name;
-  if (!getInput<std::string>(
-      "action_server",
-      action_server_name))
-  {
-    RCLCPP_ERROR(
-      node_->get_logger(),
-      "Missing input [action_server]");
+  if (!getInput<std::string>("action_server", action_server_name)) {
+    RCLCPP_ERROR(node_->get_logger(), "Missing input [action_server]");
     throw BT::RuntimeError("GripperCommandAction: Missing input [action_server]");
   }
 
-  action_client_ = rclcpp_action::create_client<GripperCommand>(
-    node_,
-    action_server_name);
+  action_client_ = rclcpp_action::create_client<GripperCommand>(node_, action_server_name);
 }
 
 BT::NodeStatus GripperCommandAction::onStart()
 {
   if (!action_client_->wait_for_action_server(5s)) {
-    RCLCPP_ERROR(
-      node_->get_logger(),
-      "GripperCommandAction: action server not available!");
+    RCLCPP_ERROR(node_->get_logger(), "GripperCommandAction: action server not available!");
     return BT::NodeStatus::FAILURE;
   }
 
   double position, max_effort;
-  if (!getInput(
-      "position",
-      position))
-  {
-    RCLCPP_ERROR(
-      node_->get_logger(),
-      "Missing input [position]");
+  if (!getInput("position", position)) {
+    RCLCPP_ERROR(node_->get_logger(), "Missing input [position]");
     return BT::NodeStatus::FAILURE;
   }
-  getInput(
-    "max_effort",
-    max_effort);
+  getInput("max_effort", max_effort);
 
   // Build the goal
   auto goal_msg = GripperCommand::Goal();
@@ -107,25 +89,13 @@ BT::NodeStatus GripperCommandAction::onStart()
 
   auto send_goal_options = rclcpp_action::Client<GripperCommand>::SendGoalOptions();
   send_goal_options.goal_response_callback =
-    std::bind(
-    &GripperCommandAction::goalResponseCallback,
-    this,
-    std::placeholders::_1);
+    std::bind(&GripperCommandAction::goalResponseCallback, this, std::placeholders::_1);
   send_goal_options.result_callback =
-    std::bind(
-    &GripperCommandAction::resultCallback,
-    this,
-    std::placeholders::_1);
-  send_goal_options.feedback_callback =
-    std::bind(
-    &GripperCommandAction::feedbackCallback,
-    this,
-    std::placeholders::_1,
-    std::placeholders::_2);
+    std::bind(&GripperCommandAction::resultCallback, this, std::placeholders::_1);
+  send_goal_options.feedback_callback = std::bind(
+    &GripperCommandAction::feedbackCallback, this, std::placeholders::_1, std::placeholders::_2);
 
-  action_client_->async_send_goal(
-    goal_msg,
-    send_goal_options);
+  action_client_->async_send_goal(goal_msg, send_goal_options);
   return BT::NodeStatus::RUNNING;
 }
 
@@ -146,9 +116,7 @@ BT::NodeStatus GripperCommandAction::onRunning()
 
   // store the final position
   double pos = action_result_.position;
-  setOutput(
-    "current_position",
-    pos);
+  setOutput("current_position", pos);
 
   // Return SUCCESS if truly reached the goal, else FAILURE
   return success ? BT::NodeStatus::SUCCESS : BT::NodeStatus::FAILURE;
@@ -165,14 +133,10 @@ void GripperCommandAction::goalResponseCallback(
   std::shared_ptr<GoalHandleGripperCommand> goal_handle)
 {
   if (!goal_handle) {
-    RCLCPP_ERROR(
-      node_->get_logger(),
-      "GripperCommandAction: goal was rejected!");
+    RCLCPP_ERROR(node_->get_logger(), "GripperCommandAction: goal was rejected!");
     result_received_ = true;
   } else {
-    RCLCPP_INFO(
-      node_->get_logger(),
-      "GripperCommandAction: goal accepted, waiting for result...");
+    RCLCPP_INFO(node_->get_logger(), "GripperCommandAction: goal accepted, waiting for result...");
   }
 }
 
@@ -182,10 +146,8 @@ void GripperCommandAction::resultCallback(
   action_result_ = *wrapped_result.result;
   result_received_ = true;
   RCLCPP_INFO(
-    node_->get_logger(),
-    "GripperCommandAction: result received. reached_goal=%s, stalled=%s",
-    action_result_.reached_goal ? "true" : "false",
-    action_result_.stalled ? "true" : "false");
+    node_->get_logger(), "GripperCommandAction: result received. reached_goal=%s, stalled=%s",
+    action_result_.reached_goal ? "true" : "false", action_result_.stalled ? "true" : "false");
 }
 
 void GripperCommandAction::feedbackCallback(
@@ -193,9 +155,7 @@ void GripperCommandAction::feedbackCallback(
   const std::shared_ptr<const GripperCommand::Feedback> feedback)
 {
   // store the current feedback position
-  setOutput(
-    "current_position",
-    feedback->position);
+  setOutput("current_position", feedback->position);
   // e.g. we could log or track feedback->effort, feedback->stalled, etc.
 }
 
@@ -203,77 +163,48 @@ void GripperCommandAction::feedbackCallback(
 // GripperTrajAction
 // -------------------------------------------------
 
-GripperTrajAction::GripperTrajAction(
-  const std::string & name,
-  const BT::NodeConfiguration & config)
-: BT::StatefulActionNode(name, config),
-  goal_sent_(false),
-  result_received_(false),
-  success_(false)
+GripperTrajAction::GripperTrajAction(const std::string & name, const BT::NodeConfiguration & config)
+: BT::StatefulActionNode(name, config), goal_sent_(false), result_received_(false), success_(false)
 {
   // Grab the node handle from blackboard
   if (!config.blackboard) {
     throw BT::RuntimeError("GripperTrajAction: no blackboard provided.");
   }
-  if (!config.blackboard->get(
-      "node",
-      node_))
-  {
-    RCLCPP_ERROR(
-      rclcpp::get_logger("GripperTrajAction"),
-      "Shared node not found in blackboard.");
+  if (!config.blackboard->get("node", node_)) {
+    RCLCPP_ERROR(rclcpp::get_logger("GripperTrajAction"), "Shared node not found in blackboard.");
     throw BT::RuntimeError("GripperTrajAction: 'node' not found in blackboard.");
   }
 
   // Read action_server from the input port
   std::string action_server_name;
-  if (!getInput<std::string>(
-      "action_server",
-      action_server_name))
-  {
+  if (!getInput<std::string>("action_server", action_server_name)) {
     throw BT::RuntimeError("GripperTrajAction: missing [action_server] input port.");
   }
 
-  action_client_ = rclcpp_action::create_client<FollowJointTrajectory>(
-    node_,
-    action_server_name);
+  action_client_ = rclcpp_action::create_client<FollowJointTrajectory>(node_, action_server_name);
 }
 
 BT::NodeStatus GripperTrajAction::onStart()
 {
   // Wait a few seconds for the action server
   if (!action_client_->wait_for_action_server(5s)) {
-    RCLCPP_ERROR(
-      node_->get_logger(),
-      "GripperTrajAction: server not available!");
+    RCLCPP_ERROR(node_->get_logger(), "GripperTrajAction: server not available!");
     return BT::NodeStatus::FAILURE;
   }
 
   // Required inputs: joint_names, positions
   std::vector<std::string> joint_names;
-  if (!getInput(
-      "joint_names",
-      joint_names) || joint_names.empty())
-  {
-    RCLCPP_ERROR(
-      node_->get_logger(),
-      "Missing or empty [joint_names]");
+  if (!getInput("joint_names", joint_names) || joint_names.empty()) {
+    RCLCPP_ERROR(node_->get_logger(), "Missing or empty [joint_names]");
     return BT::NodeStatus::FAILURE;
   }
   std::vector<double> positions;
-  if (!getInput(
-      "positions",
-      positions) || positions.empty())
-  {
-    RCLCPP_ERROR(
-      node_->get_logger(),
-      "Missing or empty [positions]");
+  if (!getInput("positions", positions) || positions.empty()) {
+    RCLCPP_ERROR(node_->get_logger(), "Missing or empty [positions]");
     return BT::NodeStatus::FAILURE;
   }
   double time_from_start = 1.0;
-  getInput<double>(
-    "time_from_start",
-    time_from_start);
+  getInput<double>("time_from_start", time_from_start);
 
   // Build single-point trajectory
   control_msgs::action::FollowJointTrajectory::Goal goal;
@@ -291,19 +222,11 @@ BT::NodeStatus GripperTrajAction::onStart()
 
   auto send_opts = rclcpp_action::Client<FollowJointTrajectory>::SendGoalOptions();
   send_opts.goal_response_callback =
-    std::bind(
-    &GripperTrajAction::goalResponseCallback,
-    this,
-    std::placeholders::_1);
+    std::bind(&GripperTrajAction::goalResponseCallback, this, std::placeholders::_1);
   send_opts.result_callback =
-    std::bind(
-    &GripperTrajAction::resultCallback,
-    this,
-    std::placeholders::_1);
+    std::bind(&GripperTrajAction::resultCallback, this, std::placeholders::_1);
 
-  action_client_->async_send_goal(
-    goal,
-    send_opts);
+  action_client_->async_send_goal(goal, send_opts);
   return BT::NodeStatus::RUNNING;
 }
 
@@ -334,15 +257,11 @@ void GripperTrajAction::goalResponseCallback(
   std::shared_ptr<GoalHandleFollowJointTrajectory> goal_handle)
 {
   if (!goal_handle) {
-    RCLCPP_ERROR(
-      node_->get_logger(),
-      "GripperTrajAction: goal rejected.");
+    RCLCPP_ERROR(node_->get_logger(), "GripperTrajAction: goal rejected.");
     result_received_ = true;
     success_ = false;
   } else {
-    RCLCPP_INFO(
-      node_->get_logger(),
-      "GripperTrajAction: goal accepted.");
+    RCLCPP_INFO(node_->get_logger(), "GripperTrajAction: goal accepted.");
   }
 }
 
@@ -352,8 +271,7 @@ void GripperTrajAction::resultCallback(
   result_received_ = true;
   success_ = (result.code == rclcpp_action::ResultCode::SUCCEEDED);
   RCLCPP_INFO(
-    node_->get_logger(),
-    "GripperTrajAction: action finished. success=%s",
+    node_->get_logger(), "GripperTrajAction: action finished. success=%s",
     success_ ? "TRUE" : "FALSE");
 }
 
@@ -362,14 +280,10 @@ void GripperTrajAction::resultCallback(
 // -------------------------------------------------
 
 PublishJointStateAction::PublishJointStateAction(
-  const std::string & name,
-  const BT::NodeConfiguration & config)
+  const std::string & name, const BT::NodeConfiguration & config)
 : BT::SyncActionNode(name, config)
 {
-  if (!config.blackboard || !config.blackboard->get(
-      "node",
-      node_))
-  {
+  if (!config.blackboard || !config.blackboard->get("node", node_)) {
     throw BT::RuntimeError("PublishJointStateAction: 'node' not found in blackboard.");
   }
 }
@@ -377,75 +291,51 @@ PublishJointStateAction::PublishJointStateAction(
 BT::NodeStatus PublishJointStateAction::tick()
 {
   std::string topic;
-  if (!getInput(
-      "topic",
-      topic) || topic.empty())
-  {
+  if (!getInput("topic", topic) || topic.empty()) {
     throw BT::RuntimeError("PublishJointStateAction: missing 'topic'");
   }
 
   std::vector<std::string> names;
-  if (!getInput(
-      "joint_names",
-      names) || names.empty())
-  {
+  if (!getInput("joint_names", names) || names.empty()) {
     throw BT::RuntimeError(
             "PublishJointStateAction: 'joint_names' must contain at least one joint");
   }
 
   std::vector<double> pos, vel, eff;
-  (void)getInput(
-    "joint_positions",
-    pos);
-  (void)getInput(
-    "joint_velocities",
-    vel);
-  (void)getInput(
-    "joint_efforts",
-    eff);
+  (void)getInput("joint_positions", pos);
+  (void)getInput("joint_velocities", vel);
+  (void)getInput("joint_efforts", eff);
 
   // recreate publisher if topic changed
   if (!pub_ || topic != current_topic_) {
-    pub_ = node_->create_publisher<sensor_msgs::msg::JointState>(
-      topic,
-      10);
+    pub_ = node_->create_publisher<sensor_msgs::msg::JointState>(topic, 10);
     current_topic_ = topic;
   }
 
   const auto N = names.size();
-  auto broadcast_or_check = [&](std::vector<double> & v, const char * label)
-    {
+  auto broadcast_or_check = [&](std::vector<double> & v, const char * label) {
       if (v.empty()) {
         return;
       }
       if (v.size() == 1 && N > 1) {
         v.assign(
           N,
-          v[0]);                                                     // broadcast single value
+          v[0]);       // broadcast single value
       }
       if (v.size() != N) {
         throw BT::RuntimeError(
-                std::string("PublishJointStateAction: '") +
-                label +
+                std::string("PublishJointStateAction: '") + label +
                 "' length must be 1 or equal to 'names' length");
       }
     };
 
-  broadcast_or_check(
-    pos,
-    "positions");
-  broadcast_or_check(
-    vel,
-    "velocities");
-  broadcast_or_check(
-    eff,
-    "efforts");
+  broadcast_or_check(pos, "positions");
+  broadcast_or_check(vel, "velocities");
+  broadcast_or_check(eff, "efforts");
 
   sensor_msgs::msg::JointState msg;
   bool stamp_now = true;
-  (void)getInput(
-    "stamp_now",
-    stamp_now);
+  (void)getInput("stamp_now", stamp_now);
   if (stamp_now) {
     msg.header.stamp = node_->now();
   }
@@ -458,16 +348,11 @@ BT::NodeStatus PublishJointStateAction::tick()
   pub_->publish(msg);
 
   RCLCPP_INFO(
-    node_->get_logger(),
-    "[%s] Published JointState to '%s' (names=%zu, pos=%zu, vel=%zu, eff=%zu)",
-    name().c_str(),
-    topic.c_str(),
-    msg.name.size(),
-    msg.position.size(),
-    msg.velocity.size(),
+    node_->get_logger(), "[%s] Published JointState to '%s' (names=%zu, pos=%zu, vel=%zu, eff=%zu)",
+    name().c_str(), topic.c_str(), msg.name.size(), msg.position.size(), msg.velocity.size(),
     msg.effort.size());
 
   return BT::NodeStatus::SUCCESS;
 }
 
-} // namespace manymove_cpp_trees
+}  // namespace manymove_cpp_trees

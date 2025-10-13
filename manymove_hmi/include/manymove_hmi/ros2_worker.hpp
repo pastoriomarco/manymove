@@ -29,15 +29,16 @@
 #ifndef ROS2_WORKER_HPP
 #define ROS2_WORKER_HPP
 
+#include <chrono>
+#include <manymove_msgs/srv/set_blackboard_values.hpp>
+#include <memory>
 #include <rclcpp/rclcpp.hpp>
 #include <std_msgs/msg/string.hpp>
-#include <chrono>
-#include <memory>
 #include <string>
 #include <vector>
-#include <manymove_msgs/srv/set_blackboard_values.hpp>
-#include "manymove_hmi/hmi_gui.hpp"
+
 #include "manymove_hmi/app_module.hpp"
+#include "manymove_hmi/hmi_gui.hpp"
 
 // Forward declarations
 class HmiGui;
@@ -52,10 +53,7 @@ public:
   void callStopExecution();
   void callResetProgram();
 
-  const std::string & getRobotPrefix() const
-  {
-    return robot_prefix_;
-  }
+  const std::string & getRobotPrefix() const {return robot_prefix_;}
 
 private:
   void statusCallback(const std_msgs::msg::String::SharedPtr msg);
@@ -67,4 +65,4 @@ private:
   std::string robot_prefix_;
 };
 
-#endif // ROS2_WORKER_HPP
+#endif  // ROS2_WORKER_HPP

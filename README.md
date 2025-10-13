@@ -1,6 +1,6 @@
 # ManyMove project — ROS 2 Humble & Jazzy
 
-![ManyMove example](https://github.com/pastoriomarco/manymove/blob/dfc9c7f00e11d70d5e27fd2e0c13bfcf5de6de54/media/manymove_example.gif)
+![ManyMove structure](media/manymove_example.gif)
 
 ## DISCLAIMER
 

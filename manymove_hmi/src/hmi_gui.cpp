@@ -27,22 +27,22 @@
 // POSSIBILITY OF SUCH DAMAGE.
 
 #include "manymove_hmi/hmi_gui.hpp"
-#include <QVBoxLayout>
-#include <QHBoxLayout>
+
+#include <QColor>
 #include <QDebug>
+#include <QHBoxLayout>
 #include <QMetaType>
 #include <QPalette>
-#include <QColor>
+#include <QVBoxLayout>
 #include <sstream>
 
 HmiGui::HmiGui(
-  const std::vector<std::string> & robotPrefixes,
-  std::vector<std::string> & robotNames, QWidget * parent)
+  const std::vector<std::string> & robotPrefixes, std::vector<std::string> & robotNames,
+  QWidget * parent)
 : QMainWindow(parent), tcpServer_(nullptr), clientSocket_(nullptr)
 {
   // Keep the window always on top
-  setWindowFlags(
-    windowFlags() | Qt::WindowStaysOnTopHint);
+  setWindowFlags(windowFlags() | Qt::WindowStaysOnTopHint);
 
   // Create the central widget + main vertical layout
   centralWidget_ = new QWidget(this);
@@ -50,44 +50,32 @@ HmiGui::HmiGui(
   QVBoxLayout * mainLayout = new QVBoxLayout(centralWidget_);
 
   // For each robot prefix, create one row of controls
-  for (size_t i
-  {
-    0
-  }; i < robotPrefixes.size(); i++)
-  {
+  for (size_t i{0}; i < robotPrefixes.size(); i++) {
     std::string prefix = robotPrefixes[i];
     std::string name = robotNames[i];
 
     QVBoxLayout * robotLayout = new QVBoxLayout();
 
     // A label to display the prefix name
-    QLabel * prefixLabel = new QLabel(
-      QString::fromStdString("ROBOT: " + prefix + name),
-      this);
+    QLabel * prefixLabel = new QLabel(QString::fromStdString("ROBOT: " + prefix + name), this);
     robotLayout->addWidget(prefixLabel);
 
     QHBoxLayout * rowLayout = new QHBoxLayout();
 
     // START button
-    QPushButton * startButton = new QPushButton(
-      "START",
-      this);
+    QPushButton * startButton = new QPushButton("START", this);
     startButton->setObjectName("startButton");
     startButton->setEnabled(true);
     rowLayout->addWidget(startButton);
 
     // STOP button
-    QPushButton * stopButton = new QPushButton(
-      "STOP",
-      this);
+    QPushButton * stopButton = new QPushButton("STOP", this);
     stopButton->setObjectName("stopButton");
     stopButton->setEnabled(false);
     rowLayout->addWidget(stopButton);
 
     // RESET button
-    QPushButton * resetButton = new QPushButton(
-      "RESET",
-      this);
+    QPushButton * resetButton = new QPushButton("RESET", this);
     resetButton->setObjectName("resetButton");
     resetButton->setEnabled(true);
     rowLayout->addWidget(resetButton);
@@ -117,42 +105,23 @@ HmiGui::HmiGui(
 
     // Wire each button's click to a signal with the robot prefix
     connect(
-      startButton,
-      &QPushButton::clicked,
-      this,
-      [this, prefix]()
-      {
+      startButton, &QPushButton::clicked, this, [this, prefix]() {
         emit startExecutionRequested(prefix);
       });
     connect(
-      stopButton,
-      &QPushButton::clicked,
-      this,
-      [this, prefix]()
-      {
+      stopButton, &QPushButton::clicked, this, [this, prefix]() {
         emit stopExecutionRequested(prefix);
       });
     connect(
-      resetButton,
-      &QPushButton::clicked,
-      this,
-      [this, prefix]()
-      {
+      resetButton, &QPushButton::clicked, this, [this, prefix]() {
         emit resetProgramRequested(prefix);
       });
   }
 
   // Set up a TCP server listening on port 5000
   tcpServer_ = new QTcpServer(this);
-  connect(
-    tcpServer_,
-    &QTcpServer::newConnection,
-    this,
-    &HmiGui::onNewConnection);
-  if (!tcpServer_->listen(
-      QHostAddress::Any,
-      5000))
-  {
+  connect(tcpServer_, &QTcpServer::newConnection, this, &HmiGui::onNewConnection);
+  if (!tcpServer_->listen(QHostAddress::Any, 5000)) {
     qWarning() << "TCP Server could not start!";
   } else {
     qDebug() << "TCP Server listening on port 5000";
@@ -167,10 +136,7 @@ HmiGui::~HmiGui()
 }
 
 void HmiGui::updateStatus(
-  const QString & robotPrefix,
-  bool stop_execution,
-  bool reset,
-  bool collision_detected)
+  const QString & robotPrefix, bool stop_execution, bool reset, bool collision_detected)
 {
   // Find the row for this robotPrefix
   for (auto & ri : robotInterfaces_) {
@@ -189,39 +155,30 @@ void HmiGui::updateStatus(
       // Build a JSON string for status (if you want to send it via TCP)
       std::ostringstream ss;
       ss << "{\"" << ri.prefix << "stop_execution\": " << (stop_execution ? "true" : "false")
-         << ", \"" << ri.prefix << "reset\": " << (reset ? "true" : "false")
-         << ", \"" << ri.prefix << "collision_detected\": " <<
-        (collision_detected ? "true" : "false")
-         << "}";
+         << ", \"" << ri.prefix << "reset\": " << (reset ? "true" : "false") << ", \"" << ri.prefix
+         << "collision_detected\": " << (collision_detected ? "true" : "false") << "}";
 
-      lastStatusJson_ = QString::fromStdString(
-        ss.str());
+      lastStatusJson_ = QString::fromStdString(ss.str());
       break;
     }
   }
 
   // If a TCP client is connected, send the updated status
-  if (clientSocket_ && clientSocket_->state() ==
-    QAbstractSocket::ConnectedState)
-  {
-    clientSocket_->write(
-      lastStatusJson_.toUtf8());
+  if (clientSocket_ && clientSocket_->state() == QAbstractSocket::ConnectedState) {
+    clientSocket_->write(lastStatusJson_.toUtf8());
     clientSocket_->flush();
   }
 }
 
 void HmiGui::updateRobotMessage(
-  const QString & robotPrefix,
-  const QString & message,
-  const QString & color)
+  const QString & robotPrefix, const QString & message, const QString & color)
 {
   for (auto & ri : robotInterfaces_) {
     if (ri.prefix == robotPrefix.toStdString()) {
       ri.messageLabel->setText(message);
       if (!color.isEmpty()) {
         ri.messageLabel->setStyleSheet(
-          QString("color: %1; border: 2px solid %1; padding:2px;").arg(
-            color));
+          QString("color: %1; border: 2px solid %1; padding:2px;").arg(color));
       } else {
         ri.messageLabel->setStyleSheet("");
       }
@@ -233,15 +190,10 @@ void HmiGui::updateRobotMessage(
 void HmiGui::onNewConnection()
 {
   clientSocket_ = tcpServer_->nextPendingConnection();
-  connect(
-    clientSocket_,
-    &QTcpSocket::disconnected,
-    this,
-    &HmiGui::onSocketDisconnected);
+  connect(clientSocket_, &QTcpSocket::disconnected, this, &HmiGui::onSocketDisconnected);
   qDebug() << "New TCP client connected.";
   if (!lastStatusJson_.isEmpty()) {
-    clientSocket_->write(
-      lastStatusJson_.toUtf8());
+    clientSocket_->write(lastStatusJson_.toUtf8());
     clientSocket_->flush();
   }
 }

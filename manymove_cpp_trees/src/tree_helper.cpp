@@ -27,8 +27,9 @@
 // POSSIBILITY OF SUCH DAMAGE.
 
 #include "manymove_cpp_trees/tree_helper.hpp"
-#include <sstream>
+
 #include <rclcpp/rclcpp.hpp>
+#include <sstream>
 
 // A static global counter to ensure unique move IDs across the entire tree
 static int g_global_move_id = 0;
@@ -41,15 +42,10 @@ namespace manymove_cpp_trees
 // --------------------------------------------------------------------------
 
 ObjectSnippets createObjectSnippets(
-  BT::Blackboard::Ptr blackboard,
-  std::vector<manymove_cpp_trees::BlackboardEntry> & keys,
-  const std::string & name,
-  const std::string & shape,
-  const geometry_msgs::msg::Pose & pose,
-  const std::vector<double> & dimensions,
-  const std::string & mesh_file,
-  const std::vector<double> & scale,
-  const std::string & link_name_key,
+  BT::Blackboard::Ptr blackboard, std::vector<manymove_cpp_trees::BlackboardEntry> & keys,
+  const std::string & name, const std::string & shape, const geometry_msgs::msg::Pose & pose,
+  const std::vector<double> & dimensions, const std::string & mesh_file,
+  const std::vector<double> & scale, const std::string & link_name_key,
   const std::string & touch_links_key)
 {
   ObjectSnippets snip;
@@ -63,10 +59,7 @@ ObjectSnippets createObjectSnippets(
 
   // Fail if the object was already defined
   std::string tmp;
-  if (blackboard->get(
-      id_key,
-      tmp))
-  {
+  if (blackboard->get(id_key, tmp)) {
     throw BT::RuntimeError("Object '" + name + "' already exists");
   }
 
@@ -83,8 +76,7 @@ ObjectSnippets createObjectSnippets(
 
     if (!size_ok) {
       throw BT::RuntimeError(
-              "createObjectSnippets: wrong number of dimensions for '" + shape +
-              "'");
+              "createObjectSnippets: wrong number of dimensions for '" + shape + "'");
     }
 
     for (double d : dimensions) {
@@ -109,83 +101,39 @@ ObjectSnippets createObjectSnippets(
     }
   }
 
-  blackboard->set(
-    id_key,
-    name);
-  blackboard->set(
-    shape_key,
-    shape);
+  blackboard->set(id_key, name);
+  blackboard->set(shape_key, shape);
 
-  blackboard->set(
-    pose_key,
-    pose);
-  keys.push_back(
-    {
-      pose_key, "pose"
-    });
+  blackboard->set(pose_key, pose);
+  keys.push_back({pose_key, "pose"});
 
   if (!dimensions.empty()) {
-    blackboard->set(
-      dim_key,
-      dimensions);
+    blackboard->set(dim_key, dimensions);
   }
 
   if (!mesh_file.empty()) {
-    blackboard->set(
-      mesh_key,
-      mesh_file);
+    blackboard->set(mesh_key, mesh_file);
   }
 
-  blackboard->set(
-    scale_key,
-    scale);
-  keys.push_back(
-    {
-      scale_key, "double_array"
-    });
+  blackboard->set(scale_key, scale);
+  keys.push_back({scale_key, "double_array"});
 
-  snip.check_xml = buildObjectActionXML(
-    "check_" + name,
-    createCheckObjectExists(id_key));
+  snip.check_xml = buildObjectActionXML("check_" + name, createCheckObjectExists(id_key));
   snip.add_xml = buildObjectActionXML(
-    "add_" + name,
-    createAddObject(
-      id_key,
-      shape_key,
-      dimensions.empty() ? "" : dim_key,
-      pose_key,
-      scale_key,
+    "add_" + name, createAddObject(
+      id_key, shape_key, dimensions.empty() ? "" : dim_key, pose_key, scale_key,
       mesh_file.empty() ? "" : mesh_key));
-  snip.init_xml = fallbackWrapperXML(
-    "init_" + name + "_obj",
-    {
-      snip.check_xml, snip.add_xml
-    });
+  snip.init_xml = fallbackWrapperXML("init_" + name + "_obj", {snip.check_xml, snip.add_xml});
   snip.remove_xml = fallbackWrapperXML(
     "remove_" + name + "_obj_always_success",
-    {
-      buildObjectActionXML(
-        "remove_" + name,
-        createRemoveObject(id_key)),
-      "<AlwaysSuccess />"
-    });
+    {buildObjectActionXML("remove_" + name, createRemoveObject(id_key)), "<AlwaysSuccess />"});
 
   snip.attach_xml = buildObjectActionXML(
-    "attach_" + name,
-    createAttachObject(
-      id_key,
-      link_name_key,
-      touch_links_key));
+    "attach_" + name, createAttachObject(id_key, link_name_key, touch_links_key));
   snip.detach_xml = fallbackWrapperXML(
     "detach_" + name + "_always_success",
-    {
-      buildObjectActionXML(
-        "detach_" + name,
-        createDetachObject(
-          id_key,
-          link_name_key)),
-      "<AlwaysSuccess />"
-    });
+    {buildObjectActionXML("detach_" + name, createDetachObject(id_key, link_name_key)),
+      "<AlwaysSuccess />"});
 
   return snip;
 }
@@ -195,12 +143,8 @@ ObjectSnippets createObjectSnippets(
 // ----------------------------------------------------------------------------
 
 std::string buildMoveXML(
-  const std::string & robot_prefix,
-  const std::string & node_prefix,
-  const std::vector<Move> & moves,
-  BT::Blackboard::Ptr blackboard,
-  bool reset_trajs,
-  int max_tries)
+  const std::string & robot_prefix, const std::string & node_prefix,
+  const std::vector<Move> & moves, BT::Blackboard::Ptr blackboard, bool reset_trajs, int max_tries)
 {
   std::ostringstream xml;
 
@@ -209,40 +153,31 @@ std::string buildMoveXML(
 
   // Collect the move IDs for later reset
   std::vector<int> move_ids;
-  move_ids.reserve(
-    moves.size());
+  move_ids.reserve(moves.size());
 
   // Build a Sequence node that will run each move in order
   std::ostringstream execution_seq;
 
   for (const auto & move : moves) {
-    int this_move_id = g_global_move_id;             // unique ID for this move
+    int this_move_id = g_global_move_id;  // unique ID for this move
     move_ids.push_back(this_move_id);
 
     // Check that the move's robot prefix is compatible
     if (!move.robot_prefix.empty() && (move.robot_prefix != robot_prefix)) {
       RCLCPP_ERROR(
-        rclcpp::get_logger(
-          "bt_client_node"),
+        rclcpp::get_logger("bt_client_node"),
         "buildMoveXML: Move has prefix=%s, but user gave robot_prefix=%s: INVALID MOVE.",
-        move.robot_prefix.c_str(),
-        robot_prefix.c_str());
+        move.robot_prefix.c_str(), robot_prefix.c_str());
       return "<INVALID TREE: MISMATCHING ROBOT PREFIX>";
     }
 
     // Populate the blackboard with the Move struct under key "move_<id>"
     std::string key = "move_" + std::to_string(this_move_id);
+    blackboard->set(key, std::make_shared<Move>(move));
     blackboard->set(
-      key,
-      std::make_shared<Move>(move));
-    blackboard->set(
-      "trajectory_" + std::to_string(this_move_id),
-      moveit_msgs::msg::RobotTrajectory());
+      "trajectory_" + std::to_string(this_move_id), moveit_msgs::msg::RobotTrajectory());
 
-    RCLCPP_INFO(
-      rclcpp::get_logger("bt_client_node"),
-      "BB set: %s",
-      key.c_str());
+    RCLCPP_INFO(rclcpp::get_logger("bt_client_node"), "BB set: %s", key.c_str());
 
     // Build a RetryPauseAbort node that wraps a single MoveManipulatorAction.
     // This node is expected to either execute an existing trajectory or trigger a re–plan.
@@ -274,8 +209,8 @@ std::string buildMoveXML(
 
   // Append a ResetTrajectories node if reset_trajs is true.
   if (reset_trajs) {
-    execution_seq << "    <ResetTrajectories name=\"ResetTrajectories_" << node_prefix << "_" <<
-      blockStartID << "\" move_ids=\"";
+    execution_seq << "    <ResetTrajectories name=\"ResetTrajectories_" << node_prefix << "_"
+                  << blockStartID << "\" move_ids=\"";
     for (size_t i = 0; i < move_ids.size(); i++) {
       execution_seq << move_ids[i];
       if (i < move_ids.size() - 1) {
@@ -286,13 +221,10 @@ std::string buildMoveXML(
   }
 
   std::ostringstream final_sequence_name;
-  final_sequence_name << "ExecutionSequence_" << node_prefix << "_" << blockStartID << "-" <<
-    blockEndID;
-  std::string final_sequence_xml = sequenceWrapperXML(
-    final_sequence_name.str(),
-    {
-      execution_seq.str()
-    });
+  final_sequence_name << "ExecutionSequence_" << node_prefix << "_" << blockStartID << "-"
+                      << blockEndID;
+  std::string final_sequence_xml =
+    sequenceWrapperXML(final_sequence_name.str(), {execution_seq.str()});
 
   return final_sequence_xml;
 }
@@ -310,8 +242,7 @@ std::string buildObjectActionXML(const std::string & node_prefix, const ObjectAc
 
   // Handle different action types
   switch (action.type) {
-    case ObjectActionType::ADD:
-      {
+    case ObjectActionType::ADD: {
         // Shape attribute
         xml << "shape=\"{" << action.shape_key_st << "}\" ";
         // Primitive-specific attributes
@@ -324,27 +255,28 @@ std::string buildObjectActionXML(const std::string & node_prefix, const ObjectAc
 
         break;
       }
-    case ObjectActionType::REMOVE:
-      {
+    case ObjectActionType::REMOVE: {
         // No additional attributes needed
         break;
       }
-    case ObjectActionType::ATTACH:
-      {
+    case ObjectActionType::ATTACH: {
         // Link name and attach flag
         xml << "link_name=\"{" << action.link_name_key_st << "}\" ";
-        xml << "attach=\"" << "true" << "\" ";
+        xml << "attach=\""
+            << "true"
+            << "\" ";
 
         if (!action.touch_links_key_st_a.empty()) {
           xml << "touch_links=\"{" << action.touch_links_key_st_a << "}\" ";
         }
         break;
       }
-    case ObjectActionType::DETACH:
-      {
+    case ObjectActionType::DETACH: {
         // Link name and attach flag
         xml << "link_name=\"{" << action.link_name_key_st << "}\" ";
-        xml << "attach=\"" << "false" << "\" ";
+        xml << "attach=\""
+            << "false"
+            << "\" ";
 
         // If touch_links is not empty, serialize it as a comma-separated list.
         if (!action.touch_links_key_st_a.empty()) {
@@ -352,13 +284,11 @@ std::string buildObjectActionXML(const std::string & node_prefix, const ObjectAc
         }
         break;
       }
-    case ObjectActionType::CHECK:
-      {
+    case ObjectActionType::CHECK: {
         // No additional attributes needed
         break;
       }
-    case ObjectActionType::GET_POSE:
-      {
+    case ObjectActionType::GET_POSE: {
         xml << "pre_transform_xyz_rpy=\"{" << action.pre_transform_xyz_rpy_key_d_a << "}\" ";
         xml << "post_transform_xyz_rpy=\"{" << action.post_transform_xyz_rpy_key_d_a << "}\" ";
         xml << "link_name=\"{" << action.link_name_key_st << "}\" ";
@@ -377,22 +307,12 @@ std::string buildObjectActionXML(const std::string & node_prefix, const ObjectAc
 }
 
 std::string buildFoundationPoseSequenceXML(
-  const std::string & sequence_name,
-  const std::string & input_topic,
-  const std::vector<double> & pick_transform,
-  const std::vector<double> & approach_transform,
-  double minimum_score,
-  double timeout,
-  const std::string & pick_pose_key,
-  const std::string & approach_pose_key,
-  const std::string & header_key,
-  const std::string & object_pose_key,
-  bool z_threshold_activation,
-  double z_threshold,
-  bool normalize_pose,
-  bool force_z_vertical,
-  bool bounds_check,
-  const std::vector<double> & bounds)
+  const std::string & sequence_name, const std::string & input_topic,
+  const std::vector<double> & pick_transform, const std::vector<double> & approach_transform,
+  double minimum_score, double timeout, const std::string & pick_pose_key,
+  const std::string & approach_pose_key, const std::string & header_key,
+  const std::string & object_pose_key, bool z_threshold_activation, double z_threshold,
+  bool normalize_pose, bool force_z_vertical, bool bounds_check, const std::vector<double> & bounds)
 {
   std::ostringstream xml;
   xml << "<Sequence name=\"" << sequence_name << "\">";
@@ -415,13 +335,10 @@ std::string buildFoundationPoseSequenceXML(
   if (bounds_check) {
     if (bounds.size() != 6) {
       throw BT::RuntimeError(
-              "buildFoundationPoseSequenceXML: 'bounds' must have 6 elements [min_x,min_y,min_z,max_x,max_y,max_z]");
+              "buildFoundationPoseSequenceXML: 'bounds' must have 6 elements "
+              "[min_x,min_y,min_z,max_x,max_y,max_z]");
     }
-    xml << "\n" << buildCheckPoseBoundsXML(
-      "FoundationPoseBounds",
-      pick_pose_key,
-      bounds,
-      true);
+    xml << "\n" << buildCheckPoseBoundsXML("FoundationPoseBounds", pick_pose_key, bounds, true);
   }
 
   xml << "</Sequence>";
@@ -429,11 +346,8 @@ std::string buildFoundationPoseSequenceXML(
 }
 
 std::string buildSetOutputXML(
-  const std::string & robot_prefix,
-  const std::string & node_prefix,
-  const std::string & io_type,
-  int ionum,
-  int value)
+  const std::string & robot_prefix, const std::string & node_prefix, const std::string & io_type,
+  int ionum, int value)
 {
   // Construct a node name
   std::string node_name = node_prefix + "_SetOutput";
@@ -447,16 +361,15 @@ std::string buildSetOutputXML(
       << "value=\"" << ((value == 0) ? "0" : "1") << "\"";
 
   // If the user wants the success output on blackboard
-  xml << " success=\"{" << robot_prefix << io_type << "_" << ionum << "_success" << "}\"";
+  xml << " success=\"{" << robot_prefix << io_type << "_" << ionum << "_success"
+      << "}\"";
 
   xml << "/>";
   return xml.str();
 }
 
 std::string buildGetInputXML(
-  const std::string & robot_prefix,
-  const std::string & node_prefix,
-  const std::string & io_type,
+  const std::string & robot_prefix, const std::string & node_prefix, const std::string & io_type,
   int ionum)
 {
   // Construct a node name
@@ -477,11 +390,8 @@ std::string buildGetInputXML(
 }
 
 std::string buildCheckInputXML(
-  const std::string & robot_prefix,
-  const std::string & node_prefix,
-  const std::string & io_type,
-  int ionum,
-  int value)
+  const std::string & robot_prefix, const std::string & node_prefix, const std::string & io_type,
+  int ionum, int value)
 {
   // Construct a node name
   std::string node_name = robot_prefix + node_prefix + "_CheckInput";
@@ -491,20 +401,12 @@ std::string buildCheckInputXML(
   bool value_to_check = (value != 0);
 
   // Build GetInputAction
-  std::string check_input_xml = buildGetInputXML(
-    robot_prefix,
-    node_name,
-    io_type,
-    ionum);
+  std::string check_input_xml = buildGetInputXML(robot_prefix, node_name, io_type, ionum);
 
   std::string key_to_check = robot_prefix + io_type + "_" + std::to_string(ionum);
 
-  std::string check_key_bool_xml = buildCheckKeyBool(
-    robot_prefix,
-    node_name,
-    key_to_check,
-    value,
-    !value_to_check);
+  std::string check_key_bool_xml =
+    buildCheckKeyBool(robot_prefix, node_name, key_to_check, value, !value_to_check);
 
   // // Build the CheckKeyBoolValue node
   // std::ostringstream inner_xml;
@@ -521,21 +423,12 @@ std::string buildCheckInputXML(
 
   // return sequence_xml.str();
 
-  return sequenceWrapperXML(
-    node_name + "_Sequence",
-    {
-      check_input_xml, check_key_bool_xml
-    });
+  return sequenceWrapperXML(node_name + "_Sequence", {check_input_xml, check_key_bool_xml});
 }
 
 std::string buildWaitForInput(
-  const std::string & robot_prefix,
-  const std::string & node_prefix,
-  const std::string & io_type,
-  int ionum,
-  int desired_value,
-  int timeout_ms,
-  int poll_rate_ms)
+  const std::string & robot_prefix, const std::string & node_prefix, const std::string & io_type,
+  int ionum, int desired_value, int timeout_ms, int poll_rate_ms)
 {
   // Construct an XML snippet for <WaitForInputAction... />
   std::string node_name = robot_prefix + node_prefix + "_WaitForInput";
@@ -556,11 +449,8 @@ std::string buildWaitForInput(
 }
 
 std::string buildWaitForObject(
-  const std::string & robot_prefix,
-  const std::string & node_prefix,
-  const std::string & object_id_key,
-  const bool exists,
-  const int timeout_ms,
+  const std::string & robot_prefix, const std::string & node_prefix,
+  const std::string & object_id_key, const bool exists, const int timeout_ms,
   const int poll_rate_ms)
 {
   // Construct a unique name for the node
@@ -571,10 +461,10 @@ std::string buildWaitForObject(
       << " name=\"" << node_name << "\""
       << " object_id=\"{" << object_id_key << "}\""
       << " exists=\"" << (exists ? "true" : "false") << "\""
-      << " timeout=\"" <<
-    ((timeout_ms > 0) ? (static_cast<double>(timeout_ms) / 1000.0) : 0.0) << "\""
-      << " poll_rate=\"" <<
-    ((poll_rate_ms > 0) ? (static_cast<double>(poll_rate_ms) / 1000.0) : 0.0) << "\""
+      << " timeout=\"" << ((timeout_ms > 0) ? (static_cast<double>(timeout_ms) / 1000.0) : 0.0)
+      << "\""
+      << " poll_rate=\""
+      << ((poll_rate_ms > 0) ? (static_cast<double>(poll_rate_ms) / 1000.0) : 0.0) << "\""
       << " prefix=\"" << robot_prefix << "\""
       << "/>";
 
@@ -582,11 +472,8 @@ std::string buildWaitForObject(
 }
 
 std::string buildCheckKeyBool(
-  const std::string & robot_prefix,
-  const std::string & node_prefix,
-  const std::string & key,
-  const bool & value,
-  const bool & hmi_message_logic)
+  const std::string & robot_prefix, const std::string & node_prefix, const std::string & key,
+  const bool & value, const bool & hmi_message_logic)
 {
   // Construct a node name
   std::string node_name = robot_prefix + node_prefix + "_CheckKey";
@@ -603,12 +490,8 @@ std::string buildCheckKeyBool(
 }
 
 std::string buildWaitForKeyBool(
-  const std::string & robot_prefix,
-  const std::string & node_prefix,
-  const std::string & key_id,
-  const bool & expected_value,
-  const int timeout_ms,
-  const int poll_rate_ms)
+  const std::string & robot_prefix, const std::string & node_prefix, const std::string & key_id,
+  const bool & expected_value, const int timeout_ms, const int poll_rate_ms)
 {
   // Construct a unique name for the node
   std::string node_name = robot_prefix + node_prefix + "_WaitForKey";
@@ -628,9 +511,7 @@ std::string buildWaitForKeyBool(
 }
 
 std::string buildSetKeyBool(
-  const std::string & robot_prefix,
-  const std::string & node_prefix,
-  const std::string & key,
+  const std::string & robot_prefix, const std::string & node_prefix, const std::string & key,
   const bool & value)
 {
   // Construct a node name
@@ -648,12 +529,8 @@ std::string buildSetKeyBool(
 }
 
 std::string buildCheckRobotStateXML(
-  const std::string & robot_prefix,
-  const std::string & node_prefix,
-  const std::string & ready_key,
-  const std::string & err_key,
-  const std::string & mode_key,
-  const std::string & state_key,
+  const std::string & robot_prefix, const std::string & node_prefix, const std::string & ready_key,
+  const std::string & err_key, const std::string & mode_key, const std::string & state_key,
   const std::string & message_key)
 {
   // Construct a node name
@@ -686,8 +563,7 @@ std::string buildCheckRobotStateXML(
 }
 
 std::string buildResetRobotStateXML(
-  const std::string & robot_prefix,
-  const std::string & node_prefix,
+  const std::string & robot_prefix, const std::string & node_prefix,
   const std::string & robot_model)
 {
   // Construct a node name
@@ -700,31 +576,22 @@ std::string buildResetRobotStateXML(
       << "robot_model=\"" << robot_model << "\" ";
 
   // Output
-  xml << " success=\"{" << "robot_state_success" << "}\"";
+  xml << " success=\"{"
+      << "robot_state_success"
+      << "}\"";
 
   xml << "/>";
 
   return sequenceWrapperXML(
     node_name + "_WaitTimeout",
-    {
-      xml.str(),
-      buildSetKeyBool(
-        robot_prefix,
-        node_prefix,
-        robot_prefix + "stop_execution",
-        true)
-    });
+    {xml.str(), buildSetKeyBool(robot_prefix, node_prefix, robot_prefix + "stop_execution", true)});
 
   return xml.str();
 }
 
 std::string buildGetLinkPoseXML(
-  const std::string & node_prefix,
-  const std::string & link_name_key,
-  const std::string & pose_key,
-  const std::string & ref_frame_key,
-  const std::string & pre_key,
-  const std::string & post_key)
+  const std::string & node_prefix, const std::string & link_name_key, const std::string & pose_key,
+  const std::string & ref_frame_key, const std::string & pre_key, const std::string & post_key)
 {
   std::ostringstream xml;
   xml << "<GetLinkPoseAction name=\"" << node_prefix << "_GetLinkPose\" "
@@ -737,9 +604,7 @@ std::string buildGetLinkPoseXML(
 }
 
 std::string buildCopyPoseXML(
-  const std::string & robot_prefix,
-  const std::string & node_prefix,
-  const std::string & source_key,
+  const std::string & robot_prefix, const std::string & node_prefix, const std::string & source_key,
   const std::string & target_key)
 {
   // Construct a node name with the given prefixes
@@ -755,10 +620,8 @@ std::string buildCopyPoseXML(
 }
 
 std::string buildCheckPoseDistanceXML(
-  const std::string & node_prefix,
-  const std::string & reference_pose_key,
-  const std::string & target_pose_key,
-  double tolerance)
+  const std::string & node_prefix, const std::string & reference_pose_key,
+  const std::string & target_pose_key, double tolerance)
 {
   std::ostringstream xml;
   xml << "<CheckPoseDistance name=\"" << node_prefix << "_CheckPoseDistance\" "
@@ -769,9 +632,7 @@ std::string buildCheckPoseDistanceXML(
 }
 
 std::string buildCheckPoseBoundsXML(
-  const std::string & node_prefix,
-  const std::string & pose_key,
-  const std::vector<double> & bounds,
+  const std::string & node_prefix, const std::string & pose_key, const std::vector<double> & bounds,
   bool inclusive)
 {
   std::ostringstream xml;
@@ -787,8 +648,7 @@ std::string buildCheckPoseBoundsXML(
 // ----------------------------------------------------------------------------
 
 std::string sequenceWrapperXML(
-  const std::string & sequence_name,
-  const std::vector<std::string> & branches)
+  const std::string & sequence_name, const std::vector<std::string> & branches)
 {
   std::ostringstream xml;
   xml << "  <Sequence name=\"" << sequence_name << "\">\n";
@@ -800,10 +660,8 @@ std::string sequenceWrapperXML(
 }
 
 std::string parallelWrapperXML(
-  const std::string & sequence_name,
-  const std::vector<std::string> & branches,
-  const int & success_threshold,
-  const int & failure_threshold)
+  const std::string & sequence_name, const std::vector<std::string> & branches,
+  const int & success_threshold, const int & failure_threshold)
 {
   std::ostringstream xml;
   xml << "  <Parallel name=\"" << sequence_name << "\""
@@ -817,8 +675,7 @@ std::string parallelWrapperXML(
 }
 
 std::string reactiveWrapperXML(
-  const std::string & sequence_name,
-  const std::vector<std::string> & branches)
+  const std::string & sequence_name, const std::vector<std::string> & branches)
 {
   std::ostringstream xml;
   xml << "  <ReactiveSequence name=\"" << sequence_name << "\">\n";
@@ -830,8 +687,7 @@ std::string reactiveWrapperXML(
 }
 
 std::string repeatSequenceWrapperXML(
-  const std::string & sequence_name,
-  const std::vector<std::string> & branches,
+  const std::string & sequence_name, const std::vector<std::string> & branches,
   const int num_cycles)
 {
   std::ostringstream xml;
@@ -846,8 +702,7 @@ std::string repeatSequenceWrapperXML(
 }
 
 std::string repeatFallbackWrapperXML(
-  const std::string & sequence_name,
-  const std::vector<std::string> & branches,
+  const std::string & sequence_name, const std::vector<std::string> & branches,
   const int num_cycles)
 {
   std::ostringstream xml;
@@ -862,13 +717,12 @@ std::string repeatFallbackWrapperXML(
 }
 
 std::string retrySequenceWrapperXML(
-  const std::string & sequence_name,
-  const std::vector<std::string> & branches,
+  const std::string & sequence_name, const std::vector<std::string> & branches,
   const int num_cycles)
 {
   std::ostringstream xml;
-  xml << "  <RetryNode name=\"" << "Retry_" << sequence_name << "\" num_attempts=\"" <<
-    num_cycles << "\">\n";
+  xml << "  <RetryNode name=\""
+      << "Retry_" << sequence_name << "\" num_attempts=\"" << num_cycles << "\">\n";
   xml << "    <Sequence name=\"" << sequence_name << "_sequence\">\n";
   for (const auto & b : branches) {
     xml << b << "\n";
@@ -879,8 +733,7 @@ std::string retrySequenceWrapperXML(
 }
 
 std::string fallbackWrapperXML(
-  const std::string & sequence_name,
-  const std::vector<std::string> & branches)
+  const std::string & sequence_name, const std::vector<std::string> & branches)
 {
   std::ostringstream xml;
   xml << "  <Fallback name=\"" << sequence_name << "\">\n";
@@ -891,12 +744,11 @@ std::string fallbackWrapperXML(
   return xml.str();
 }
 
-std::string mainTreeWrapperXML(
-  const std::string & tree_id,
-  const std::string & content)
+std::string mainTreeWrapperXML(const std::string & tree_id, const std::string & content)
 {
   std::ostringstream xml;
-  xml << R"(<?xml version="1.0" encoding="UTF-8"?>)" << "\n";
+  xml << R"(<?xml version="1.0" encoding="UTF-8"?>)"
+      << "\n";
   xml << "<root main_tree_to_execute=\"" << tree_id << "\">\n";
   xml << "  <BehaviorTree ID=\"" << tree_id << "\">\n";
   xml << content << "\n";
@@ -910,8 +762,7 @@ std::string mainTreeWrapperXML(
 // ----------------------------------------------------------------------------
 
 geometry_msgs::msg::Pose createPose(
-  double x, double y, double z,
-  double qx, double qy, double qz, double qw)
+  double x, double y, double z, double qx, double qy, double qz, double qw)
 {
   geometry_msgs::msg::Pose p;
   p.position.x = x;
@@ -925,11 +776,7 @@ geometry_msgs::msg::Pose createPose(
 }
 
 geometry_msgs::msg::Pose createPoseRPY(
-  const double & x,
-  const double & y,
-  const double & z,
-  const double & roll,
-  const double & pitch,
+  const double & x, const double & y, const double & z, const double & roll, const double & pitch,
   const double & yaw)
 {
   auto pose = geometry_msgs::msg::Pose();
@@ -941,10 +788,7 @@ geometry_msgs::msg::Pose createPoseRPY(
 
   // Convert roll, pitch, yaw to a quaternion
   tf2::Quaternion quaternion;
-  quaternion.setRPY(
-    roll,
-    pitch,
-    yaw);
+  quaternion.setRPY(roll, pitch, yaw);
 
   // Set orientation
   pose.orientation.x = quaternion.x();
@@ -977,29 +821,19 @@ std::string objectActionTypeToString(ObjectActionType type)
 std::string serializePose(const geometry_msgs::msg::Pose & pose)
 {
   std::ostringstream oss;
-  oss << "position: {x: " << pose.position.x
-      << ", y: " << pose.position.y
-      << ", z: " << pose.position.z
-      << "}, orientation: {x: " << pose.orientation.x
-      << ", y: " << pose.orientation.y
-      << ", z: " << pose.orientation.z
-      << ", w: " << pose.orientation.w
-      << "}";
+  oss << "position: {x: " << pose.position.x << ", y: " << pose.position.y
+      << ", z: " << pose.position.z << "}, orientation: {x: " << pose.orientation.x
+      << ", y: " << pose.orientation.y << ", z: " << pose.orientation.z
+      << ", w: " << pose.orientation.w << "}";
   return oss.str();
 }
 
 void setHmiMessage(
-  BT::Blackboard::Ptr blackboard,
-  const std::string prefix,
-  const std::string message,
+  BT::Blackboard::Ptr blackboard, const std::string prefix, const std::string message,
   const std::string color)
 {
-  blackboard->set(
-    prefix + "message",
-    message);
-  blackboard->set(
-    prefix + "message_color",
-    color);
+  blackboard->set(prefix + "message", message);
+  blackboard->set(prefix + "message_color", color);
 }
 
-} // namespace manymove_cpp_trees
+}  // namespace manymove_cpp_trees

@@ -29,32 +29,28 @@
 #ifndef MANYMOVE_CPP_TREES_ACTION_NODES_SIGNALS_HPP
 #define MANYMOVE_CPP_TREES_ACTION_NODES_SIGNALS_HPP
 
-#include "manymove_cpp_trees/move.hpp"
-
-#include <rclcpp/rclcpp.hpp>
-#include <rclcpp_action/rclcpp_action.hpp>
 #include <behaviortree_cpp_v3/action_node.h>
 
-#include "manymove_msgs/action/plan_manipulator.hpp"
-#include "manymove_msgs/action/unload_traj_controller.hpp"
-#include "manymove_msgs/action/load_traj_controller.hpp"
-
-#include "manymove_msgs/action/add_collision_object.hpp"
-#include "manymove_msgs/action/remove_collision_object.hpp"
-#include "manymove_msgs/action/attach_detach_object.hpp"
-#include "manymove_msgs/action/check_object_exists.hpp"
-#include "manymove_msgs/action/get_object_pose.hpp"
-
-#include "manymove_msgs/action/set_output.hpp"
-#include "manymove_msgs/action/get_input.hpp"
-#include "manymove_msgs/action/check_robot_state.hpp"
-#include "manymove_msgs/action/reset_robot_state.hpp"
-
-#include <moveit_msgs/msg/robot_trajectory.hpp>
 #include <geometry_msgs/msg/pose.hpp>
-
+#include <moveit_msgs/msg/robot_trajectory.hpp>
+#include <rclcpp/rclcpp.hpp>
+#include <rclcpp_action/rclcpp_action.hpp>
 #include <string>
 #include <vector>
+
+#include "manymove_cpp_trees/move.hpp"
+#include "manymove_msgs/action/add_collision_object.hpp"
+#include "manymove_msgs/action/attach_detach_object.hpp"
+#include "manymove_msgs/action/check_object_exists.hpp"
+#include "manymove_msgs/action/check_robot_state.hpp"
+#include "manymove_msgs/action/get_input.hpp"
+#include "manymove_msgs/action/get_object_pose.hpp"
+#include "manymove_msgs/action/load_traj_controller.hpp"
+#include "manymove_msgs/action/plan_manipulator.hpp"
+#include "manymove_msgs/action/remove_collision_object.hpp"
+#include "manymove_msgs/action/reset_robot_state.hpp"
+#include "manymove_msgs/action/set_output.hpp"
+#include "manymove_msgs/action/unload_traj_controller.hpp"
 
 namespace manymove_cpp_trees
 {
@@ -68,30 +64,18 @@ public:
   using SetOutput = manymove_msgs::action::SetOutput;
   using GoalHandleSetOutput = rclcpp_action::ClientGoalHandle<SetOutput>;
 
-  SetOutputAction(
-    const std::string & name,
-    const BT::NodeConfiguration & config);
+  SetOutputAction(const std::string & name, const BT::NodeConfiguration & config);
 
   static BT::PortsList providedPorts()
   {
-    return
-      {
-        BT::InputPort<std::string>(
-          "io_type",
-          "IO type: 'tool' or 'controller'"),
-        BT::InputPort<int>(
-          "ionum",
-          "Which IO channel number"),
-        BT::InputPort<int>(
-          "value",
-          "Desired output value (0 or 1)"),
-        BT::InputPort<std::string>(
-          "robot_prefix",
-          "Optional robot namespace prefix, e.g. 'R_' or 'L_'."),
-        BT::OutputPort<bool>(
-          "success",
-          "Whether set_output succeeded"),
-      };
+    return {
+      BT::InputPort<std::string>("io_type", "IO type: 'tool' or 'controller'"),
+      BT::InputPort<int>("ionum", "Which IO channel number"),
+      BT::InputPort<int>("value", "Desired output value (0 or 1)"),
+      BT::InputPort<std::string>(
+        "robot_prefix", "Optional robot namespace prefix, e.g. 'R_' or 'L_'."),
+      BT::OutputPort<bool>("success", "Whether set_output succeeded"),
+    };
   }
 
 protected:
@@ -127,27 +111,17 @@ public:
   using GetInput = manymove_msgs::action::GetInput;
   using GoalHandleGetInput = rclcpp_action::ClientGoalHandle<GetInput>;
 
-  GetInputAction(
-    const std::string & name,
-    const BT::NodeConfiguration & config);
+  GetInputAction(const std::string & name, const BT::NodeConfiguration & config);
 
   static BT::PortsList providedPorts()
   {
-    return
-      {
-        BT::InputPort<std::string>(
-          "io_type",
-          "IO type: 'tool' or 'controller'"),
-        BT::InputPort<int>(
-          "ionum",
-          "Which IO channel to read"),
-        BT::InputPort<std::string>(
-          "robot_prefix",
-          "Optional robot namespace prefix, e.g. 'R_' or 'L_'."),
-        BT::OutputPort<int>(
-          "value",
-          "Read value from the input (0 or 1)"),
-      };
+    return {
+      BT::InputPort<std::string>("io_type", "IO type: 'tool' or 'controller'"),
+      BT::InputPort<int>("ionum", "Which IO channel to read"),
+      BT::InputPort<std::string>(
+        "robot_prefix", "Optional robot namespace prefix, e.g. 'R_' or 'L_'."),
+      BT::OutputPort<int>("value", "Read value from the input (0 or 1)"),
+    };
   }
 
 protected:
@@ -183,33 +157,18 @@ public:
   using CheckRobotState = manymove_msgs::action::CheckRobotState;
   using GoalHandleCheckRobotState = rclcpp_action::ClientGoalHandle<CheckRobotState>;
 
-  CheckRobotStateAction(
-    const std::string & name,
-    const BT::NodeConfiguration & config);
+  CheckRobotStateAction(const std::string & name, const BT::NodeConfiguration & config);
 
   static BT::PortsList providedPorts()
   {
-    return
-      {
-        BT::InputPort<std::string>(
-          "robot_prefix",
-          "Optional robot namespace prefix, e.g. 'R_' or 'L_'."),
-        BT::OutputPort<bool>(
-          "ready",
-          "True if robot is ready"),
-        BT::OutputPort<int>(
-          "err",
-          "Current error code"),
-        BT::OutputPort<int>(
-          "mode",
-          "Robot mode"),
-        BT::OutputPort<int>(
-          "state",
-          "Robot state"),
-        BT::OutputPort<std::string>(
-          "message",
-          "Status message")
-      };
+    return {
+      BT::InputPort<std::string>(
+        "robot_prefix", "Optional robot namespace prefix, e.g. 'R_' or 'L_'."),
+      BT::OutputPort<bool>("ready", "True if robot is ready"),
+      BT::OutputPort<int>("err", "Current error code"),
+      BT::OutputPort<int>("mode", "Robot mode"),
+      BT::OutputPort<int>("state", "Robot state"),
+      BT::OutputPort<std::string>("message", "Status message")};
   }
 
 protected:
@@ -246,24 +205,16 @@ public:
   using LoadTrajController = manymove_msgs::action::LoadTrajController;
   using GoalHandleLoadTrajController = rclcpp_action::ClientGoalHandle<LoadTrajController>;
 
-  ResetRobotStateAction(
-    const std::string & name,
-    const BT::NodeConfiguration & config);
+  ResetRobotStateAction(const std::string & name, const BT::NodeConfiguration & config);
 
   static BT::PortsList providedPorts()
   {
-    return
-      {
-        BT::InputPort<std::string>(
-          "robot_prefix",
-          "Optional robot namespace prefix, e.g. 'R_' or 'L_'."),
-        BT::InputPort<std::string>(
-          "robot_model",
-          "Name of the robot model, e.g. 'lite6'."),
-        BT::OutputPort<bool>(
-          "success",
-          "True if robot reset is successful"),
-      };
+    return {
+      BT::InputPort<std::string>(
+        "robot_prefix", "Optional robot namespace prefix, e.g. 'R_' or 'L_'."),
+      BT::InputPort<std::string>("robot_model", "Name of the robot model, e.g. 'lite6'."),
+      BT::OutputPort<bool>("success", "True if robot reset is successful"),
+    };
   }
 
 protected:
@@ -275,8 +226,7 @@ private:
   void goalResponseCallback(std::shared_ptr<GoalHandleResetRobotState> goal_handle);
   void resultCallback(const GoalHandleResetRobotState::WrappedResult & result);
 
-  void goalResponseCallbackUnloadTraj(
-    std::shared_ptr<GoalHandleUnloadTrajController> goal_handle);
+  void goalResponseCallbackUnloadTraj(std::shared_ptr<GoalHandleUnloadTrajController> goal_handle);
   void resultCallbackUnloadTraj(const GoalHandleUnloadTrajController::WrappedResult & result);
 
   void goalResponseCallbackLoadTraj(std::shared_ptr<GoalHandleLoadTrajController> goal_handle);
@@ -309,41 +259,19 @@ private:
 class WaitForInputAction : public BT::StatefulActionNode
 {
 public:
-  WaitForInputAction(
-    const std::string & name,
-    const BT::NodeConfiguration & config);
+  WaitForInputAction(const std::string & name, const BT::NodeConfiguration & config);
 
-// ...
+  // ...
   static BT::PortsList providedPorts()
   {
-    return
-      {
-        BT::InputPort<std::string>(
-          "io_type",
-          "IO type: 'tool' or 'controller'"),
-        BT::InputPort<int>(
-          "ionum",
-          "Which IO channel to read"),
-        BT::InputPort<int>(
-          "desired_value",
-          1,
-          "Desired input value (0 or 1)"),
-        BT::InputPort<double>(
-          "timeout",
-          10.0,
-          "Seconds before giving up (0 => infinite)"),
-        BT::InputPort<double>(
-          "poll_rate",
-          0.25,
-          "Check frequency (s)"),
-        BT::InputPort<std::string>(
-          "robot_prefix",
-          "",
-          "Optional namespace prefix"),
-        BT::OutputPort<int>(
-          "value",
-          "Final read value (0 or 1)")
-      };
+    return {
+      BT::InputPort<std::string>("io_type", "IO type: 'tool' or 'controller'"),
+      BT::InputPort<int>("ionum", "Which IO channel to read"),
+      BT::InputPort<int>("desired_value", 1, "Desired input value (0 or 1)"),
+      BT::InputPort<double>("timeout", 10.0, "Seconds before giving up (0 => infinite)"),
+      BT::InputPort<double>("poll_rate", 0.25, "Check frequency (s)"),
+      BT::InputPort<std::string>("robot_prefix", "", "Optional namespace prefix"),
+      BT::OutputPort<int>("value", "Final read value (0 or 1)")};
   }
 
 protected:
@@ -352,10 +280,10 @@ protected:
   void onHalted() override;
 
 private:
-// Helper to send the "get_input" request
+  // Helper to send the "get_input" request
   void sendCheckRequest();
 
-// Action callbacks
+  // Action callbacks
   void goalResponseCallback(
     std::shared_ptr<rclcpp_action::ClientGoalHandle<manymove_msgs::action::GetInput>> goal_handle);
   void resultCallback(
@@ -366,7 +294,7 @@ private:
   rclcpp::Node::SharedPtr node_;
   rclcpp_action::Client<GetInput>::SharedPtr action_client_;
 
-// from Ports:
+  // from Ports:
   std::string io_type_;
   int ionum_;
   int desired_value_;
@@ -374,17 +302,17 @@ private:
   double poll_rate_;
   std::string prefix_;
 
-// internal state
+  // internal state
   bool goal_sent_;
   bool result_received_;
   rclcpp::Time start_time_;
   rclcpp::Time next_check_time_;
 
-// last read from the server
+  // last read from the server
   bool last_success_;
   int last_value_;
 };
 
-} // namespace manymove_cpp_trees
+}  // namespace manymove_cpp_trees
 
 #endif

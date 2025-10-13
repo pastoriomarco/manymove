@@ -37,12 +37,10 @@ class DefaultAppModule : public AppModule
 {
 public:
   explicit DefaultAppModule(QWidget * parent = nullptr)
-  : AppModule(buildKeys(), parent)
-  {
-  }
+  : AppModule(buildKeys(), parent) {}
 
 private:
   static std::vector<KeyConfig> buildKeys();
 };
 
-#endif   /* DEFAULT_APP_HMI_HPP */
+#endif /* DEFAULT_APP_HMI_HPP */

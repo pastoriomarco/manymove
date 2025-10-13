@@ -30,6 +30,7 @@
 #define MANYMOVE_CPP_TREES_HMI_HELPER_NODE_HPP
 
 #include <behaviortree_cpp_v3/blackboard.h>
+
 #include <chrono>
 #include <string>
 #include <unordered_map>
@@ -37,18 +38,13 @@
 namespace manymove_cpp_trees
 {
 inline void setHMIMessage(
-  const BT::Blackboard::Ptr & blackboard,
-  const std::string & key,
-  const std::string & value,
-  const std::string & color,
-  double rate_hz = 5.0)
+  const BT::Blackboard::Ptr & blackboard, const std::string & key, const std::string & value,
+  const std::string & color, double rate_hz = 5.0)
 {
   using clock = std::chrono::steady_clock;
   struct State
   {
-    clock::time_point last_time
-    {
-    };
+    clock::time_point last_time{};
     std::string last_value;
     std::string last_color;
   };
@@ -66,17 +62,13 @@ inline void setHMIMessage(
   }
 
   if (should_update) {
-    blackboard->set(
-      key + "message",
-      value);
-    blackboard->set(
-      key + "message_color",
-      color);
+    blackboard->set(key + "message", value);
+    blackboard->set(key + "message_color", color);
     st.last_time = now;
     st.last_value = value;
     st.last_color = color;
   }
 }
-} // namespace manymove_cpp_trees
+}  // namespace manymove_cpp_trees
 
-#endif // MANYMOVE_CPP_TREES_HMI_HELPER_NODE_HPP
+#endif  // MANYMOVE_CPP_TREES_HMI_HELPER_NODE_HPP

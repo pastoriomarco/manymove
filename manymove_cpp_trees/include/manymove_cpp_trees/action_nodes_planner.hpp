@@ -29,31 +29,27 @@
 #ifndef MANYMOVE_CPP_TREES_ACTION_NODES_PLANNER_HPP
 #define MANYMOVE_CPP_TREES_ACTION_NODES_PLANNER_HPP
 
-#include "manymove_cpp_trees/move.hpp"
-
-#include <rclcpp/rclcpp.hpp>
-#include <rclcpp_action/rclcpp_action.hpp>
 #include <behaviortree_cpp_v3/action_node.h>
 #include <behaviortree_cpp_v3/condition_node.h>
 
-#include <manymove_msgs/action/move_manipulator.hpp>
-
+#include <geometry_msgs/msg/pose.hpp>
 #include <manymove_msgs/action/add_collision_object.hpp>
-#include <manymove_msgs/action/remove_collision_object.hpp>
 #include <manymove_msgs/action/attach_detach_object.hpp>
 #include <manymove_msgs/action/check_object_exists.hpp>
 #include <manymove_msgs/action/get_object_pose.hpp>
-
-#include "manymove_msgs/action/set_output.hpp"
-#include "manymove_msgs/action/get_input.hpp"
-#include "manymove_msgs/action/check_robot_state.hpp"
-#include "manymove_msgs/action/reset_robot_state.hpp"
-
+#include <manymove_msgs/action/move_manipulator.hpp>
+#include <manymove_msgs/action/remove_collision_object.hpp>
 #include <moveit_msgs/msg/robot_trajectory.hpp>
-#include <geometry_msgs/msg/pose.hpp>
-
+#include <rclcpp/rclcpp.hpp>
+#include <rclcpp_action/rclcpp_action.hpp>
 #include <string>
 #include <vector>
+
+#include "manymove_cpp_trees/move.hpp"
+#include "manymove_msgs/action/check_robot_state.hpp"
+#include "manymove_msgs/action/get_input.hpp"
+#include "manymove_msgs/action/reset_robot_state.hpp"
+#include "manymove_msgs/action/set_output.hpp"
 
 namespace manymove_cpp_trees
 {
@@ -68,27 +64,18 @@ public:
 
   static BT::PortsList providedPorts()
   {
-    return
-      {
-        BT::InputPort<std::string>("move_id"),
-        BT::InputPort<std::string>("robot_prefix"),
-        BT::InputPort<moveit_msgs::msg::RobotTrajectory>("trajectory"),
-        BT::InputPort<std::string>(
-          "pose_key",
-          "Optional key to retrieve the dynamic target pose"),
-        BT::InputPort<bool>(
-          "collision_detected",
-          "If a collision is detected, the execution fails"),
-        BT::InputPort<bool>(
-          "invalidate_traj_on_exec",
-          "Flag to indicate if the trajectory should be invalidated on exec even if successful"),
-        BT::InputPort<bool>(
-          "stop_execution",
-          "Flag to indicate that the execution is stopped"),
-        BT::InputPort<int>(
-          "max_tries",
-          "Number of times to try the execution"),
-      };
+    return {
+      BT::InputPort<std::string>("move_id"),
+      BT::InputPort<std::string>("robot_prefix"),
+      BT::InputPort<moveit_msgs::msg::RobotTrajectory>("trajectory"),
+      BT::InputPort<std::string>("pose_key", "Optional key to retrieve the dynamic target pose"),
+      BT::InputPort<bool>("collision_detected", "If a collision is detected, the execution fails"),
+      BT::InputPort<bool>(
+        "invalidate_traj_on_exec",
+        "Flag to indicate if the trajectory should be invalidated on exec even if successful"),
+      BT::InputPort<bool>("stop_execution", "Flag to indicate that the execution is stopped"),
+      BT::InputPort<int>("max_tries", "Number of times to try the execution"),
+    };
   }
 
 protected:
@@ -127,36 +114,31 @@ private:
 class ResetTrajectories : public BT::SyncActionNode
 {
 public:
-/**
+  /**
  * @brief Constructor for the ResetTrajectories node.
  * @param name The name of the BT node.
  * @param config The BT NodeConfiguration (ports, blackboard, etc.).
  */
   ResetTrajectories(const std::string & name, const BT::NodeConfiguration & config);
 
-/**
+  /**
  * @brief Define the required/optional ports for this node.
  */
   static BT::PortsList providedPorts()
   {
-    return
-      {
-        BT::InputPort<std::string>(
-          "move_ids",
-          "Comma-separated list of move IDs to reset")
-      };
+    return {BT::InputPort<std::string>("move_ids", "Comma-separated list of move IDs to reset")};
   }
 
-/**
+  /**
  * @brief Tick function that performs the reset actions.
  */
   BT::NodeStatus tick() override;
 
 private:
-// ROS2 node
+  // ROS2 node
   rclcpp::Node::SharedPtr node_;
 };
 
-} // namespace manymove_cpp_trees
+}  // namespace manymove_cpp_trees
 
 #endif

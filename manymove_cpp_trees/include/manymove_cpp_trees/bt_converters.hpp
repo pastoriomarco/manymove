@@ -30,6 +30,7 @@
 #define MANYMOVE_CPP_TREES_BT_CONVERTERS_HPP
 
 #include <behaviortree_cpp_v3/behavior_tree.h>
+
 #include <geometry_msgs/msg/pose.hpp>
 #include <sstream>
 #include <stdexcept>
@@ -51,65 +52,42 @@ inline geometry_msgs::msg::Pose convertFromString(StringView str)
       throw std::invalid_argument("Missing 'position' field.");
     }
 
-    size_t x_pos = s.find(
-      "x:",
-      pos_start);
-    size_t y_pos = s.find(
-      "y:",
-      pos_start);
-    size_t z_pos = s.find(
-      "z:",
-      pos_start);
+    size_t x_pos = s.find("x:", pos_start);
+    size_t y_pos = s.find("y:", pos_start);
+    size_t z_pos = s.find("z:", pos_start);
 
     if (x_pos == std::string::npos || y_pos == std::string::npos || z_pos == std::string::npos) {
       throw std::invalid_argument("Incomplete 'position' fields.");
     }
 
-    pose.position.x = std::stod(
-      s.substr(x_pos + 2));
-    pose.position.y = std::stod(
-      s.substr(y_pos + 2));
-    pose.position.z = std::stod(
-      s.substr(z_pos + 2));
+    pose.position.x = std::stod(s.substr(x_pos + 2));
+    pose.position.y = std::stod(s.substr(y_pos + 2));
+    pose.position.z = std::stod(s.substr(z_pos + 2));
 
     // Parse orientation
-    size_t ori_start = s.find(
-      "orientation:",
-      pos_start);
+    size_t ori_start = s.find("orientation:", pos_start);
     if (ori_start == std::string::npos) {
       throw std::invalid_argument("Missing 'orientation' field.");
     }
 
-    size_t ox_pos = s.find(
-      "x:",
-      ori_start);
-    size_t oy_pos = s.find(
-      "y:",
-      ori_start);
-    size_t oz_pos = s.find(
-      "z:",
-      ori_start);
-    size_t ow_pos = s.find(
-      "w:",
-      ori_start);
+    size_t ox_pos = s.find("x:", ori_start);
+    size_t oy_pos = s.find("y:", ori_start);
+    size_t oz_pos = s.find("z:", ori_start);
+    size_t ow_pos = s.find("w:", ori_start);
 
-    if (ox_pos == std::string::npos || oy_pos == std::string::npos ||
-      oz_pos == std::string::npos || ow_pos == std::string::npos)
+    if (
+      ox_pos == std::string::npos || oy_pos == std::string::npos || oz_pos == std::string::npos ||
+      ow_pos == std::string::npos)
     {
       throw std::invalid_argument("Incomplete 'orientation' fields.");
     }
 
-    pose.orientation.x = std::stod(
-      s.substr(ox_pos + 2));
-    pose.orientation.y = std::stod(
-      s.substr(oy_pos + 2));
-    pose.orientation.z = std::stod(
-      s.substr(oz_pos + 2));
-    pose.orientation.w = std::stod(
-      s.substr(ow_pos + 2));
+    pose.orientation.x = std::stod(s.substr(ox_pos + 2));
+    pose.orientation.y = std::stod(s.substr(oy_pos + 2));
+    pose.orientation.z = std::stod(s.substr(oz_pos + 2));
+    pose.orientation.w = std::stod(s.substr(ow_pos + 2));
   } catch (const std::exception & e) {
-    throw BT::RuntimeError(
-            std::string("Failed to parse Pose string: ") + e.what());
+    throw BT::RuntimeError(std::string("Failed to parse Pose string: ") + e.what());
   }
 
   return pose;
@@ -171,16 +149,10 @@ inline std::vector<std::string> convertFromString(StringView str)
   }
 
   // Remove the brackets
-  s = s.substr(
-    1,
-    s.size() - 2);
+  s = s.substr(1, s.size() - 2);
 
   std::istringstream ss(s);
-  while (std::getline(
-      ss,
-      value,
-      ','))
-  {
+  while (std::getline(ss, value, ',')) {
     vec.push_back(value);
   }
 
@@ -216,6 +188,6 @@ inline std::string toStr<std::vector<std::string>>(std::vector<std::string> valu
   return oss.str();
 }
 
-}
+}  // namespace BT
 
-#endif // MANYMOVE_CPP_TREES_BT_CONVERTERS_HPP
+#endif  // MANYMOVE_CPP_TREES_BT_CONVERTERS_HPP

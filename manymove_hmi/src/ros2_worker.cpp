@@ -28,32 +28,23 @@
 
 #include "manymove_hmi/ros2_worker.hpp"
 
-#include <sstream>
 #include <QMetaObject>
 #include <algorithm>
 #include <cctype>
+#include <sstream>
 #include <stdexcept>
 
 using namespace std::chrono_literals;
 
 Ros2Worker::Ros2Worker(
-  const std::string & node_name, HmiGui * gui,
-  const std::string & robot_prefix)
+  const std::string & node_name, HmiGui * gui, const std::string & robot_prefix)
 : Node(node_name), gui_(gui), robot_prefix_(robot_prefix)
 {
-  RCLCPP_INFO_STREAM(
-    this->get_logger(),
-    "Ros2Worker node started with prefix: " << robot_prefix_);
+  RCLCPP_INFO_STREAM(this->get_logger(), "Ros2Worker node started with prefix: " << robot_prefix_);
 
   // Subscribe to the blackboard_status topic.
   subscription_ = this->create_subscription<std_msgs::msg::String>(
-    "blackboard_status",
-    10,
-    std::bind(
-      &Ros2Worker::
-      statusCallback,
-      this,
-      std::placeholders::_1));
+    "blackboard_status", 10, std::bind(&Ros2Worker::statusCallback, this, std::placeholders::_1));
 
   // Create a client for the update_blackboard service.
   update_blackboard_client_ =
@@ -67,9 +58,7 @@ Ros2Worker::Ros2Worker(
   }
 
   RCLCPP_INFO(
-    this->get_logger(),
-    "Ros2Worker fully initialized for prefix '%s'.",
-    robot_prefix_.c_str());
+    this->get_logger(), "Ros2Worker fully initialized for prefix '%s'.", robot_prefix_.c_str());
 }
 
 void Ros2Worker::statusCallback(const std_msgs::msg::String::SharedPtr msg)
@@ -80,29 +69,16 @@ void Ros2Worker::statusCallback(const std_msgs::msg::String::SharedPtr msg)
   const bool stop_execution =
     data.find("\"" + robot_prefix_ + "stop_execution\":true") != std::string::npos ||
     data.find("\"" + robot_prefix_ + "stop_execution\": true") != std::string::npos;
-  const bool reset =
-    data.find("\"" + robot_prefix_ + "reset\":true") != std::string::npos ||
+  const bool reset = data.find("\"" + robot_prefix_ + "reset\":true") != std::string::npos ||
     data.find("\"" + robot_prefix_ + "reset\": true") != std::string::npos;
   const bool collision_detected =
     data.find("\"" + robot_prefix_ + "collision_detected\":true") != std::string::npos ||
     data.find("\"" + robot_prefix_ + "collision_detected\": true") != std::string::npos;
 
   QMetaObject::invokeMethod(
-    gui_,
-    "updateStatus",
-    Qt::QueuedConnection,
-    Q_ARG(
-      QString,
-      QString::fromStdString(robot_prefix_)),
-    Q_ARG(
-      bool,
-      stop_execution),
-    Q_ARG(
-      bool,
-      reset),
-    Q_ARG(
-      bool,
-      collision_detected));
+    gui_, "updateStatus", Qt::QueuedConnection,
+    Q_ARG(QString, QString::fromStdString(robot_prefix_)), Q_ARG(bool, stop_execution),
+    Q_ARG(bool, reset), Q_ARG(bool, collision_detected));
 
   /* ---------- HMI keys ----------------------------------------- */
   AppModule * appModule = gui_->findChild<AppModule *>();
@@ -112,12 +88,9 @@ void Ros2Worker::statusCallback(const std_msgs::msg::String::SharedPtr msg)
 
   const auto & knownKeys = appModule->getKnownKeys();
 
-  auto stripQuotes = [](std::string & s)
-    {
+  auto stripQuotes = [](std::string & s) {
       if (!s.empty() && s.front() == '"') {
-        s.erase(
-          0,
-          1);
+        s.erase(0, 1);
       }
       if (!s.empty() && s.back() == '"') {
         s.pop_back();
@@ -130,15 +103,8 @@ void Ros2Worker::statusCallback(const std_msgs::msg::String::SharedPtr msg)
     size_t pos = data.find(pattern);
     if (pos == std::string::npos) {
       QMetaObject::invokeMethod(
-        appModule,
-        "updateField",
-        Qt::QueuedConnection,
-        Q_ARG(
-          QString,
-          bk.key),
-        Q_ARG(
-          QString,
-          QString()));
+        appModule, "updateField", Qt::QueuedConnection, Q_ARG(QString, bk.key),
+        Q_ARG(QString, QString()));
       continue;
     }
 
@@ -152,15 +118,11 @@ void Ros2Worker::statusCallback(const std_msgs::msg::String::SharedPtr msg)
 
     /* ---------------- numeric DOUBLE ------------------------- */
     if (bk.type == "double") {
-      size_t valEnd = data.find_first_of(
-        ",}",
-        valStart);
+      size_t valEnd = data.find_first_of(",}", valStart);
       if (valEnd == std::string::npos) {
         valEnd = data.size();
       }
-      valueStr = data.substr(
-        valStart,
-        valEnd - valStart);
+      valueStr = data.substr(valStart, valEnd - valStart);
       stripQuotes(valueStr);
 
       try {
@@ -172,15 +134,11 @@ void Ros2Worker::statusCallback(const std_msgs::msg::String::SharedPtr msg)
     }
     /* ---------------- integer INT ---------------------------- */
     else if (bk.type == "int") {
-      size_t valEnd = data.find_first_of(
-        ",}",
-        valStart);
+      size_t valEnd = data.find_first_of(",}", valStart);
       if (valEnd == std::string::npos) {
         valEnd = data.size();
       }
-      valueStr = data.substr(
-        valStart,
-        valEnd - valStart);
+      valueStr = data.substr(valStart, valEnd - valStart);
       stripQuotes(valueStr);
 
       try {
@@ -194,15 +152,11 @@ void Ros2Worker::statusCallback(const std_msgs::msg::String::SharedPtr msg)
     else if (bk.type == "double_array") {
       if (data[valStart] == '"') {
         ++valStart;
-      }                   // skip leading quote
-      if (data[valStart] == '[') {                   // keep the brackets
-        size_t end = data.find(
-          ']',
-          valStart);
+      }                             // skip leading quote
+      if (data[valStart] == '[') {  // keep the brackets
+        size_t end = data.find(']', valStart);
         if (end != std::string::npos) {
-          valueStr = data.substr(
-            valStart,
-            end - valStart + 1);
+          valueStr = data.substr(valStart, end - valStart + 1);
         }
       }
       stripQuotes(valueStr);
@@ -210,13 +164,12 @@ void Ros2Worker::statusCallback(const std_msgs::msg::String::SharedPtr msg)
     /* ---------------- pose (JSON object) --------------------- */
     else if (bk.type == "pose") {
       if (data[valStart] == '"') {
-        ++valStart;                         // optional quote
-
+        ++valStart;  // optional quote
       }
       if (data[valStart] == '{') {
         int braces = 0;
         size_t idx = valStart;
-        do{
+        do {
           if (data[idx] == '{') {
             ++braces;
           }
@@ -225,42 +178,28 @@ void Ros2Worker::statusCallback(const std_msgs::msg::String::SharedPtr msg)
           }
           ++idx;
         } while (idx < data.size() && braces);
-        valueStr = data.substr(
-          valStart,
-          idx - valStart);
+        valueStr = data.substr(valStart, idx - valStart);
       }
       stripQuotes(valueStr);
     }
     /* ---------------- bool / string / default --------------- */
     else {
-      size_t valEnd = data.find_first_of(
-        ",}",
-        valStart);
+      size_t valEnd = data.find_first_of(",}", valStart);
       if (valEnd == std::string::npos) {
         valEnd = data.size();
       }
-      valueStr = data.substr(
-        valStart,
-        valEnd - valStart);
+      valueStr = data.substr(valStart, valEnd - valStart);
       stripQuotes(valueStr);
     }
 
     /* push to GUI -------------------------------------------- */
     QMetaObject::invokeMethod(
-      appModule,
-      "updateField",
-      Qt::QueuedConnection,
-      Q_ARG(
-        QString,
-        bk.key),
-      Q_ARG(
-        QString,
-        QString::fromStdString(valueStr)));
+      appModule, "updateField", Qt::QueuedConnection, Q_ARG(QString, bk.key),
+      Q_ARG(QString, QString::fromStdString(valueStr)));
   }
 
   /* ---------- per-robot message -------------------------------- */
-  auto findString = [&](const std::string & key) -> std::string
-    {
+  auto findString = [&](const std::string & key) -> std::string {
       std::string pattern = "\"" + key + "\":";
       size_t pos = data.find(pattern);
       if (pos == std::string::npos) {
@@ -274,15 +213,11 @@ void Ros2Worker::statusCallback(const std_msgs::msg::String::SharedPtr msg)
         return std::string();
       }
       ++pos;
-      size_t end = data.find(
-        '"',
-        pos);
+      size_t end = data.find('"', pos);
       if (end == std::string::npos) {
         return std::string();
       }
-      return data.substr(
-        pos,
-        end - pos);
+      return data.substr(pos, end - pos);
     };
 
   const std::string msgKey = robot_prefix_ + "message";
@@ -290,32 +225,18 @@ void Ros2Worker::statusCallback(const std_msgs::msg::String::SharedPtr msg)
   std::string msgText = findString(msgKey);
   std::string msgColor = findString(colorKey);
   QMetaObject::invokeMethod(
-    gui_,
-    "updateRobotMessage",
-    Qt::QueuedConnection,
-    Q_ARG(
-      QString,
-      QString::fromStdString(robot_prefix_)),
-    Q_ARG(
-      QString,
-      QString::fromStdString(msgText)),
-    Q_ARG(
-      QString,
-      QString::fromStdString(msgColor)));
+    gui_, "updateRobotMessage", Qt::QueuedConnection,
+    Q_ARG(QString, QString::fromStdString(robot_prefix_)),
+    Q_ARG(QString, QString::fromStdString(msgText)),
+    Q_ARG(QString, QString::fromStdString(msgColor)));
 
   /* ---------- general message ---------------------------------- */
   std::string genMsg = findString("hmi_message");
   std::string genColor = findString("hmi_message_color");
   QMetaObject::invokeMethod(
-    appModule,
-    "updateGeneralMessage",
-    Qt::QueuedConnection,
-    Q_ARG(
-      QString,
-      QString::fromStdString(genMsg)),
-    Q_ARG(
-      QString,
-      QString::fromStdString(genColor)));
+    appModule, "updateGeneralMessage", Qt::QueuedConnection,
+    Q_ARG(QString, QString::fromStdString(genMsg)),
+    Q_ARG(QString, QString::fromStdString(genColor)));
 }
 
 void Ros2Worker::callStartExecution()
@@ -324,14 +245,12 @@ void Ros2Worker::callStartExecution()
 
   request->key.push_back(robot_prefix_ + "stop_execution");
   request->value_type.push_back("bool");
-  request->value_data.push_back("false");                                  // JSON "false"
+  request->value_data.push_back("false");  // JSON "false"
 
   auto future = update_blackboard_client_->async_send_request(request);
 
   if (!update_blackboard_client_->wait_for_service(1s)) {
-    RCLCPP_WARN(
-      this->get_logger(),
-      "callStartExecution() => service not available yet.");
+    RCLCPP_WARN(this->get_logger(), "callStartExecution() => service not available yet.");
   }
 }
 
@@ -345,9 +264,7 @@ void Ros2Worker::callStopExecution()
 
   auto future = update_blackboard_client_->async_send_request(request);
   if (!update_blackboard_client_->wait_for_service(1s)) {
-    RCLCPP_WARN(
-      this->get_logger(),
-      "callStopExecution() => service not available yet.");
+    RCLCPP_WARN(this->get_logger(), "callStopExecution() => service not available yet.");
   }
 }
 
@@ -366,8 +283,6 @@ void Ros2Worker::callResetProgram()
 
   auto future = update_blackboard_client_->async_send_request(request);
   if (!update_blackboard_client_->wait_for_service(1s)) {
-    RCLCPP_WARN(
-      this->get_logger(),
-      "callResetProgram() => service not available yet.");
+    RCLCPP_WARN(this->get_logger(), "callResetProgram() => service not available yet.");
   }
 }

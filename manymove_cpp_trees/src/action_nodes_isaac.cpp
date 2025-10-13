@@ -27,27 +27,29 @@
 // POSSIBILITY OF SUCH DAMAGE.
 
 #include "manymove_cpp_trees/action_nodes_isaac.hpp"
-#include "manymove_cpp_trees/bt_converters.hpp"
+
+#include <tf2/LinearMath/Matrix3x3.h>
 
 #include <algorithm>
 #include <chrono>
 #include <cmath>
 #include <functional>
+#include <geometry_msgs/msg/accel.hpp>
+#include <geometry_msgs/msg/twist.hpp>
 #include <mutex>
 #include <optional>
+#include <std_msgs/msg/header.hpp>
 #include <utility>
 
-#include <geometry_msgs/msg/twist.hpp>
-#include <geometry_msgs/msg/accel.hpp>
-#include <std_msgs/msg/header.hpp>
-#include <tf2/LinearMath/Matrix3x3.h>
+#include "manymove_cpp_trees/bt_converters.hpp"
 #if __has_include(<tf2/LinearMath/Quaternion.hpp>)
- # include <tf2/LinearMath/Quaternion.hpp>
+#include <tf2/LinearMath/Quaternion.hpp>
 #else
- # include <tf2/LinearMath/Quaternion.h>
+#include <tf2/LinearMath/Quaternion.h>
 #endif
 #include <tf2/LinearMath/Vector3.h>
 #include <tf2/time.h>
+
 #include <tf2_geometry_msgs/tf2_geometry_msgs.hpp>
 
 using namespace std::chrono_literals;
@@ -58,15 +60,10 @@ namespace manymove_cpp_trees
 // ======================================================================
 // GetEntityPoseNode
 // ======================================================================
-GetEntityPoseNode::GetEntityPoseNode(
-  const std::string & name,
-  const BT::NodeConfiguration & config)
+GetEntityPoseNode::GetEntityPoseNode(const std::string & name, const BT::NodeConfiguration & config)
 : BT::StatefulActionNode(name, config)
 {
-  if (!config.blackboard || !config.blackboard->get(
-      "node",
-      node_) || !node_)
-  {
+  if (!config.blackboard || !config.blackboard->get("node", node_) || !node_) {
     throw BT::RuntimeError("GetEntityPoseNode: missing 'node' in blackboard");
   }
   current_get_service_name_ = "/isaacsim/GetEntityState";
@@ -77,40 +74,21 @@ BT::NodeStatus GetEntityPoseNode::onStart()
 {
   // Read fixed ports (strings naming BB keys)
   std::string service_name = current_get_service_name_;
-  getInput(
-    "service_name",
-    service_name);
+  getInput("service_name", service_name);
 
-  if (!getInput(
-      "entity_path_key",
-      entity_path_) || entity_path_.empty())
-  {
-    RCLCPP_ERROR(
-      node_->get_logger(),
-      "[%s] Missing input 'entity_path_key'",
-      name().c_str());
+  if (!getInput("entity_path_key", entity_path_) || entity_path_.empty()) {
+    RCLCPP_ERROR(node_->get_logger(), "[%s] Missing input 'entity_path_key'", name().c_str());
     return BT::NodeStatus::FAILURE;
   }
-  if (!getInput(
-      "pose_key",
-      pose_key_) || pose_key_.empty())
-  {
-    RCLCPP_ERROR(
-      node_->get_logger(),
-      "[%s] Missing input 'pose_key'",
-      name().c_str());
+  if (!getInput("pose_key", pose_key_) || pose_key_.empty()) {
+    RCLCPP_ERROR(node_->get_logger(), "[%s] Missing input 'pose_key'", name().c_str());
     return BT::NodeStatus::FAILURE;
   }
 
   // Read entity path from BB
-  if (!config().blackboard->get(
-      entity_path_,
-      entity_path_) || entity_path_.empty())
-  {
+  if (!config().blackboard->get(entity_path_, entity_path_) || entity_path_.empty()) {
     RCLCPP_ERROR(
-      node_->get_logger(),
-      "[%s] BB key '%s' not found or empty",
-      name().c_str(),
+      node_->get_logger(), "[%s] BB key '%s' not found or empty", name().c_str(),
       entity_path_.c_str());
     return BT::NodeStatus::FAILURE;
   }
@@ -124,12 +102,8 @@ BT::NodeStatus GetEntityPoseNode::onStart()
   // If service not up yet, keep trying (node will be ticked again)
   if (!get_client_->wait_for_service(0s)) {
     RCLCPP_WARN_THROTTLE(
-      node_->get_logger(),
-      *node_->get_clock(),
-      2000,
-      "[%s] Waiting for service '%s'...",
-      name().c_str(),
-      current_get_service_name_.c_str());
+      node_->get_logger(), *node_->get_clock(), 2000, "[%s] Waiting for service '%s'...",
+      name().c_str(), current_get_service_name_.c_str());
     return BT::NodeStatus::RUNNING;
   }
 
@@ -159,34 +133,21 @@ BT::NodeStatus GetEntityPoseNode::onRunning()
 
   if (!resp || resp->result.result != 1) {
     RCLCPP_ERROR(
-      node_->get_logger(),
-      "[%s] GetEntityState error: %s",
-      name().c_str(),
+      node_->get_logger(), "[%s] GetEntityState error: %s", name().c_str(),
       resp ? resp->result.error_message.c_str() : "null response");
     return BT::NodeStatus::FAILURE;
   }
 
   const auto pose = resp->state.pose;
-  config().blackboard->set(
-    pose_key_,
-    pose);
-  setOutput(
-    "pose",
-    pose);
+  config().blackboard->set(pose_key_, pose);
+  setOutput("pose", pose);
 
   RCLCPP_INFO(
     node_->get_logger(),
     "[%s] pose of '%s' -> BB['%s'] "
     "(%.3f, %.3f, %.3f | %.3f, %.3f, %.3f, %.3f)",
-    name().c_str(),
-    entity_path_.c_str(),
-    pose_key_.c_str(),
-    pose.position.x,
-    pose.position.y,
-    pose.position.z,
-    pose.orientation.x,
-    pose.orientation.y,
-    pose.orientation.z,
+    name().c_str(), entity_path_.c_str(), pose_key_.c_str(), pose.position.x, pose.position.y,
+    pose.position.z, pose.orientation.x, pose.orientation.y, pose.orientation.z,
     pose.orientation.w);
 
   return BT::NodeStatus::SUCCESS;
@@ -201,15 +162,10 @@ void GetEntityPoseNode::onHalted()
 // ======================================================================
 // SetEntityPoseNode
 // ======================================================================
-SetEntityPoseNode::SetEntityPoseNode(
-  const std::string & name,
-  const BT::NodeConfiguration & config)
+SetEntityPoseNode::SetEntityPoseNode(const std::string & name, const BT::NodeConfiguration & config)
 : BT::StatefulActionNode(name, config)
 {
-  if (!config.blackboard || !config.blackboard->get(
-      "node",
-      node_) || !node_)
-  {
+  if (!config.blackboard || !config.blackboard->get("node", node_) || !node_) {
     throw BT::RuntimeError("SetEntityPoseNode: missing 'node' in blackboard");
   }
   current_set_service_name_ = "/isaacsim/SetEntityState";
@@ -219,52 +175,27 @@ SetEntityPoseNode::SetEntityPoseNode(
 BT::NodeStatus SetEntityPoseNode::onStart()
 {
   std::string service_name = current_set_service_name_;
-  getInput(
-    "service_name",
-    service_name);
+  getInput("service_name", service_name);
 
-  if (!getInput(
-      "entity_path_key",
-      entity_path_) || entity_path_.empty())
-  {
-    RCLCPP_ERROR(
-      node_->get_logger(),
-      "[%s] Missing input 'entity_path_key'",
-      name().c_str());
+  if (!getInput("entity_path_key", entity_path_) || entity_path_.empty()) {
+    RCLCPP_ERROR(node_->get_logger(), "[%s] Missing input 'entity_path_key'", name().c_str());
     return BT::NodeStatus::FAILURE;
   }
-  if (!getInput(
-      "pose_key",
-      pose_key_) || pose_key_.empty())
-  {
-    RCLCPP_ERROR(
-      node_->get_logger(),
-      "[%s] Missing input 'pose_key'",
-      name().c_str());
+  if (!getInput("pose_key", pose_key_) || pose_key_.empty()) {
+    RCLCPP_ERROR(node_->get_logger(), "[%s] Missing input 'pose_key'", name().c_str());
     return BT::NodeStatus::FAILURE;
   }
 
   // Resolve values from BB
-  if (!config().blackboard->get(
-      entity_path_,
-      entity_path_) || entity_path_.empty())
-  {
+  if (!config().blackboard->get(entity_path_, entity_path_) || entity_path_.empty()) {
     RCLCPP_ERROR(
-      node_->get_logger(),
-      "[%s] BB key '%s' not found or empty",
-      name().c_str(),
+      node_->get_logger(), "[%s] BB key '%s' not found or empty", name().c_str(),
       entity_path_.c_str());
     return BT::NodeStatus::FAILURE;
   }
-  if (!config().blackboard->get(
-      pose_key_,
-      pose_))
-  {
+  if (!config().blackboard->get(pose_key_, pose_)) {
     RCLCPP_ERROR(
-      node_->get_logger(),
-      "[%s] BB key '%s' not found (Pose)",
-      name().c_str(),
-      pose_key_.c_str());
+      node_->get_logger(), "[%s] BB key '%s' not found (Pose)", name().c_str(), pose_key_.c_str());
     return BT::NodeStatus::FAILURE;
   }
 
@@ -276,21 +207,17 @@ BT::NodeStatus SetEntityPoseNode::onStart()
 
   if (!set_client_->wait_for_service(0s)) {
     RCLCPP_WARN_THROTTLE(
-      node_->get_logger(),
-      *node_->get_clock(),
-      2000,
-      "[%s] Waiting for service '%s'...",
-      name().c_str(),
-      current_set_service_name_.c_str());
+      node_->get_logger(), *node_->get_clock(), 2000, "[%s] Waiting for service '%s'...",
+      name().c_str(), current_set_service_name_.c_str());
     return BT::NodeStatus::RUNNING;
   }
 
   auto req = std::make_shared<SetEntityState::Request>();
   req->entity = entity_path_;
-  req->state.header = std_msgs::msg::Header();                          // default
+  req->state.header = std_msgs::msg::Header();  // default
   req->state.pose = pose_;
-  req->state.twist = geometry_msgs::msg::Twist();                                     // zeros
-  req->state.acceleration = geometry_msgs::msg::Accel();                              // zeros
+  req->state.twist = geometry_msgs::msg::Twist();         // zeros
+  req->state.acceleration = geometry_msgs::msg::Accel();  // zeros
 
   auto pending = set_client_->async_send_request(req);
   future_ = pending.future.share();
@@ -314,9 +241,7 @@ BT::NodeStatus SetEntityPoseNode::onRunning()
 
   if (!resp || resp->result.result != 1) {
     RCLCPP_ERROR(
-      node_->get_logger(),
-      "[%s] SetEntityState error: %s",
-      name().c_str(),
+      node_->get_logger(), "[%s] SetEntityState error: %s", name().c_str(),
       resp ? resp->result.error_message.c_str() : "null response");
     return BT::NodeStatus::FAILURE;
   }
@@ -325,32 +250,20 @@ BT::NodeStatus SetEntityPoseNode::onRunning()
     node_->get_logger(),
     "[%s] pose set on '%s' from BB['%s'] "
     "(%.3f, %.3f, %.3f | %.3f, %.3f, %.3f, %.3f)",
-    name().c_str(),
-    entity_path_.c_str(),
-    pose_key_.c_str(),
-    pose_.position.x,
-    pose_.position.y,
-    pose_.position.z,
-    pose_.orientation.x,
-    pose_.orientation.y,
-    pose_.orientation.z,
+    name().c_str(), entity_path_.c_str(), pose_key_.c_str(), pose_.position.x, pose_.position.y,
+    pose_.position.z, pose_.orientation.x, pose_.orientation.y, pose_.orientation.z,
     pose_.orientation.w);
 
   return BT::NodeStatus::SUCCESS;
 }
 
-void SetEntityPoseNode::onHalted()
-{
-  request_sent_ = false;
-}
+void SetEntityPoseNode::onHalted() {request_sent_ = false;}
 
 namespace
 {
 constexpr double kEpsilon = 1e-6;
 
-inline tf2::Vector3 projectOntoPlane(
-  const tf2::Vector3 & vector,
-  const tf2::Vector3 & normal)
+inline tf2::Vector3 projectOntoPlane(const tf2::Vector3 & vector, const tf2::Vector3 & normal)
 {
   return vector - (vector.dot(normal)) * normal;
 }
@@ -358,47 +271,36 @@ inline tf2::Vector3 projectOntoPlane(
 inline tf2::Vector3 pickPerpendicularFallback(const tf2::Vector3 & axis)
 {
   const tf2::Vector3 world_y(0.0, 1.0, 0.0);
-  tf2::Vector3 candidate = projectOntoPlane(
-    world_y,
-    axis);
+  tf2::Vector3 candidate = projectOntoPlane(world_y, axis);
   if (candidate.length2() > kEpsilon) {
     candidate.normalize();
     return candidate;
   }
 
   const tf2::Vector3 world_down(0.0, 0.0, -1.0);
-  candidate = projectOntoPlane(
-    world_down,
-    axis);
+  candidate = projectOntoPlane(world_down, axis);
   if (candidate.length2() > kEpsilon) {
     candidate.normalize();
     return candidate;
   }
 
   const tf2::Vector3 world_x(1.0, 0.0, 0.0);
-  candidate = projectOntoPlane(
-    world_x,
-    axis);
+  candidate = projectOntoPlane(world_x, axis);
   if (candidate.length2() > kEpsilon) {
     candidate.normalize();
     return candidate;
   }
 
-  return tf2::Vector3(
-    0.0,
-    0.0,
-    1.0);
+  return tf2::Vector3(0.0, 0.0, 1.0);
 }
 
-}     // namespace
+}  // namespace
 
 geometry_msgs::msg::Pose align_foundationpose_orientation(
-  const geometry_msgs::msg::Pose & input_pose,
-  bool force_z_vertical)
+  const geometry_msgs::msg::Pose & input_pose, bool force_z_vertical)
 {
-  tf2::Quaternion source_q(input_pose.orientation.x,
-    input_pose.orientation.y,
-    input_pose.orientation.z,
+  tf2::Quaternion source_q(
+    input_pose.orientation.x, input_pose.orientation.y, input_pose.orientation.z,
     input_pose.orientation.w);
   if (source_q.length2() > 0.0) {
     source_q.normalize();
@@ -409,24 +311,16 @@ geometry_msgs::msg::Pose align_foundationpose_orientation(
   const tf2::Vector3 world_down(0.0, 0.0, -1.0);
 
   if (force_z_vertical) {
-    tf2::Vector3 new_x = projectOntoPlane(
-      x_axis,
-      world_down);
+    tf2::Vector3 new_x = projectOntoPlane(x_axis, world_down);
     if (new_x.length2() < kEpsilon) {
-      new_x = tf2::Vector3(
-        1.0,
-        0.0,
-        0.0);
+      new_x = tf2::Vector3(1.0, 0.0, 0.0);
     } else {
       new_x.normalize();
     }
 
     tf2::Vector3 new_y = world_down.cross(new_x);
     if (new_y.length2() < kEpsilon) {
-      new_y = tf2::Vector3(
-        0.0,
-        1.0,
-        0.0);
+      new_y = tf2::Vector3(0.0, 1.0, 0.0);
     } else {
       new_y.normalize();
     }
@@ -434,9 +328,8 @@ geometry_msgs::msg::Pose align_foundationpose_orientation(
     const tf2::Vector3 corrected_z = world_down;
 
     tf2::Matrix3x3 corrected_matrix(
-      new_x.x(), new_y.x(), corrected_z.x(),
-      new_x.y(), new_y.y(), corrected_z.y(),
-      new_x.z(), new_y.z(), corrected_z.z());
+      new_x.x(), new_y.x(), corrected_z.x(), new_x.y(), new_y.y(), corrected_z.y(), new_x.z(),
+      new_y.z(), corrected_z.z());
 
     tf2::Quaternion corrected_q;
     corrected_matrix.getRotation(corrected_q);
@@ -449,9 +342,7 @@ geometry_msgs::msg::Pose align_foundationpose_orientation(
     return result;
   }
 
-  tf2::Vector3 projected_vertical = projectOntoPlane(
-    world_down,
-    x_axis);
+  tf2::Vector3 projected_vertical = projectOntoPlane(world_down, x_axis);
   tf2::Vector3 new_z;
   if (projected_vertical.length2() > kEpsilon) {
     new_z = projected_vertical.normalized();
@@ -460,10 +351,7 @@ geometry_msgs::msg::Pose align_foundationpose_orientation(
   }
 
   if (new_z.length2() < kEpsilon) {
-    new_z = tf2::Vector3(
-      0.0,
-      0.0,
-      -1.0);
+    new_z = tf2::Vector3(0.0, 0.0, -1.0);
   }
 
   if (new_z.dot(world_down) < 0.0) {
@@ -489,9 +377,8 @@ geometry_msgs::msg::Pose align_foundationpose_orientation(
   }
 
   tf2::Matrix3x3 corrected_matrix(
-    x_axis.x(), new_y.x(), corrected_z.x(),
-    x_axis.y(), new_y.y(), corrected_z.y(),
-    x_axis.z(), new_y.z(), corrected_z.z());
+    x_axis.x(), new_y.x(), corrected_z.x(), x_axis.y(), new_y.y(), corrected_z.y(), x_axis.z(),
+    new_y.z(), corrected_z.z());
 
   tf2::Quaternion corrected_q;
   corrected_matrix.getRotation(corrected_q);
@@ -505,40 +392,27 @@ geometry_msgs::msg::Pose align_foundationpose_orientation(
 }
 
 FoundationPoseAlignmentNode::FoundationPoseAlignmentNode(
-  const std::string & name,
-  const BT::NodeConfiguration & config)
+  const std::string & name, const BT::NodeConfiguration & config)
 : BT::StatefulActionNode(name, config)
 {
-  if (!config.blackboard || !config.blackboard->get(
-      "node",
-      node_) || !node_)
-  {
+  if (!config.blackboard || !config.blackboard->get("node", node_) || !node_) {
     throw BT::RuntimeError("FoundationPoseAlignmentNode: missing 'node' in blackboard");
   }
 
-  tf_buffer_ = std::make_unique<tf2_ros::Buffer>(
-    node_->get_clock());
+  tf_buffer_ = std::make_unique<tf2_ros::Buffer>(node_->get_clock());
   tf_listener_ = std::make_unique<tf2_ros::TransformListener>(*tf_buffer_);
 }
 
 void FoundationPoseAlignmentNode::ensureSubscription(const std::string & topic)
 {
-  if (subscription_ && topic == current_topic_ && subscription_->get_topic_name() ==
-    topic)
-  {
+  if (subscription_ && topic == current_topic_ && subscription_->get_topic_name() == topic) {
     return;
   }
 
   current_topic_ = topic;
-  auto callback = [this](DetectionArray::SharedPtr msg)
-    {
-      detectionCallback(
-        std::move(msg));
-    };
-  subscription_ = node_->create_subscription<DetectionArray>(
-    topic,
-    rclcpp::SensorDataQoS(),
-    callback);
+  auto callback = [this](DetectionArray::SharedPtr msg) {detectionCallback(std::move(msg));};
+  subscription_ =
+    node_->create_subscription<DetectionArray>(topic, rclcpp::SensorDataQoS(), callback);
 }
 
 void FoundationPoseAlignmentNode::detectionCallback(const DetectionArray::SharedPtr msg)
@@ -565,10 +439,7 @@ FoundationPoseAlignmentNode::pickDetection(const DetectionArray & array)
         continue;
       }
       if (!best_selection || hypothesis.score > best_score) {
-        best_selection = DetectionSelection
-        {
-          detection, result
-        };
+        best_selection = DetectionSelection{detection, result};
         best_score = hypothesis.score;
       }
     }
@@ -582,83 +453,39 @@ BT::NodeStatus FoundationPoseAlignmentNode::onStart()
   // Topic is always used, but has a sensible default in providedPorts().
   // Treat missing as optional and fall back to the default.
   std::string topic = "pose_estimation/output";
-  (void)getInput(
-    "input_topic",
-    topic);
+  (void)getInput("input_topic", topic);
 
-  if (!getInput(
-      "pick_pose_key",
-      pick_pose_key_) || pick_pose_key_.empty())
-  {
+  if (!getInput("pick_pose_key", pick_pose_key_) || pick_pose_key_.empty()) {
     RCLCPP_ERROR(
-      node_->get_logger(),
-      "[%s] Missing required input 'pick_pose_key'",
-      name().c_str());
+      node_->get_logger(), "[%s] Missing required input 'pick_pose_key'", name().c_str());
     return BT::NodeStatus::FAILURE;
   }
-  if (!getInput(
-      "approach_pose_key",
-      approach_pose_key_) ||
-    approach_pose_key_.empty())
-  {
+  if (!getInput("approach_pose_key", approach_pose_key_) || approach_pose_key_.empty()) {
     RCLCPP_ERROR(
-      node_->get_logger(),
-      "[%s] Missing required input 'approach_pose_key'",
-      name().c_str());
+      node_->get_logger(), "[%s] Missing required input 'approach_pose_key'", name().c_str());
     return BT::NodeStatus::FAILURE;
   }
-  if (!getInput(
-      "object_pose_key",
-      object_pose_key_) || object_pose_key_.empty())
-  {
+  if (!getInput("object_pose_key", object_pose_key_) || object_pose_key_.empty()) {
     RCLCPP_ERROR(
-      node_->get_logger(),
-      "[%s] Missing required input 'object_pose_key'",
-      name().c_str());
+      node_->get_logger(), "[%s] Missing required input 'object_pose_key'", name().c_str());
     return BT::NodeStatus::FAILURE;
   }
   // Optional inputs: if not provided, keep pre-initialized defaults
-  (void)getInput(
-    "header_key",
-    header_key_);
-  (void)getInput(
-    "target_id",
-    target_id_);
-  (void)getInput(
-    "minimum_score",
-    minimum_score_);
-  (void)getInput(
-    "timeout",
-    timeout_seconds_);
+  (void)getInput("header_key", header_key_);
+  (void)getInput("target_id", target_id_);
+  (void)getInput("minimum_score", minimum_score_);
+  (void)getInput("timeout", timeout_seconds_);
   // (void)getInput("approach_pose_key", approach_pose_key_);
   // (void)getInput("object_pose_key", object_pose_key_);
-  (void)getInput(
-    "pick_transform",
-    pick_transform_);
-  (void)getInput(
-    "approach_transform",
-    approach_transform_);
-  (void)getInput(
-    "planning_frame",
-    planning_frame_);
-  (void)getInput(
-    "transform_timeout",
-    transform_timeout_);
-  (void)getInput(
-    "z_threshold_activation",
-    z_threshold_activation_);
-  (void)getInput(
-    "z_threshold",
-    z_threshold_);
-  (void)getInput(
-    "normalize_pose",
-    normalize_pose_);
-  (void)getInput(
-    "force_z_vertical",
-    force_z_vertical_);
-  transform_timeout_ = std::max(
-    0.0,
-    transform_timeout_);
+  (void)getInput("pick_transform", pick_transform_);
+  (void)getInput("approach_transform", approach_transform_);
+  (void)getInput("planning_frame", planning_frame_);
+  (void)getInput("transform_timeout", transform_timeout_);
+  (void)getInput("z_threshold_activation", z_threshold_activation_);
+  (void)getInput("z_threshold", z_threshold_);
+  (void)getInput("normalize_pose", normalize_pose_);
+  (void)getInput("force_z_vertical", force_z_vertical_);
+  transform_timeout_ = std::max(0.0, transform_timeout_);
 
   store_pick_pose_ = !pick_pose_key_.empty();
   store_header_ = !header_key_.empty();
@@ -697,9 +524,7 @@ BT::NodeStatus FoundationPoseAlignmentNode::onRunning()
       const rclcpp::Duration elapsed = clock->now() - start_time_;
       if (elapsed.seconds() > timeout_seconds_) {
         RCLCPP_WARN(
-          node_->get_logger(),
-          "[%s] Timed out waiting for detections on '%s'",
-          name().c_str(),
+          node_->get_logger(), "[%s] Timed out waiting for detections on '%s'", name().c_str(),
           current_topic_.c_str());
         return BT::NodeStatus::FAILURE;
       }
@@ -710,13 +535,9 @@ BT::NodeStatus FoundationPoseAlignmentNode::onRunning()
   const auto selection = pickDetection(message_snapshot);
   if (!selection) {
     RCLCPP_WARN_THROTTLE(
-      node_->get_logger(),
-      *clock,
-      5000,
-      "[%s] No detection passed filters (target_id='%s', min_score=%.3f)",
-      name().c_str(),
-      target_id_.c_str(),
-      minimum_score_);
+      node_->get_logger(), *clock, 5000,
+      "[%s] No detection passed filters (target_id='%s', min_score=%.3f)", name().c_str(),
+      target_id_.c_str(), minimum_score_);
 
     if (timeout_seconds_ > 0.0) {
       const rclcpp::Duration elapsed = clock->now() - start_time_;
@@ -724,9 +545,7 @@ BT::NodeStatus FoundationPoseAlignmentNode::onRunning()
         RCLCPP_WARN(
           node_->get_logger(),
           "[%s] Timed out waiting for a valid detection (target_id='%s', min_score=%.3f)",
-          name().c_str(),
-          target_id_.c_str(),
-          minimum_score_);
+          name().c_str(), target_id_.c_str(), minimum_score_);
         return BT::NodeStatus::FAILURE;
       }
     }
@@ -752,34 +571,23 @@ BT::NodeStatus FoundationPoseAlignmentNode::onRunning()
   geometry_msgs::msg::PoseStamped pose_in_alignment;
   if (detection_pose.header.frame_id.empty()) {
     RCLCPP_ERROR(
-      node_->get_logger(),
-      "[%s] Detection header has empty frame_id; cannot transform pose",
+      node_->get_logger(), "[%s] Detection header has empty frame_id; cannot transform pose",
       name().c_str());
     return BT::NodeStatus::FAILURE;
   }
 
   try {
     pose_in_alignment = tf_buffer_->transform(
-      detection_pose,
-      alignment_frame,
-      tf2::durationFromSec(transform_timeout_));
+      detection_pose, alignment_frame, tf2::durationFromSec(transform_timeout_));
   } catch (const tf2::TransformException & ex) {
     RCLCPP_WARN_THROTTLE(
-      node_->get_logger(),
-      *clock,
-      2000,
-      "[%s] Failed to transform pose from '%s' to '%s': %s",
-      name().c_str(),
-      detection_pose.header.frame_id.c_str(),
-      alignment_frame.c_str(),
-      ex.what());
+      node_->get_logger(), *clock, 2000, "[%s] Failed to transform pose from '%s' to '%s': %s",
+      name().c_str(), detection_pose.header.frame_id.c_str(), alignment_frame.c_str(), ex.what());
     if (timeout_seconds_ > 0.0) {
       const rclcpp::Duration elapsed = clock->now() - start_time_;
       if (elapsed.seconds() > timeout_seconds_) {
         RCLCPP_ERROR(
-          node_->get_logger(),
-          "[%s] Timed out waiting for TF transform to '%s'",
-          name().c_str(),
+          node_->get_logger(), "[%s] Timed out waiting for TF transform to '%s'", name().c_str(),
           alignment_frame.c_str());
         return BT::NodeStatus::FAILURE;
       }
@@ -792,9 +600,7 @@ BT::NodeStatus FoundationPoseAlignmentNode::onRunning()
 
   geometry_msgs::msg::Pose aligned_pose = pose_in_alignment.pose;
   if (normalize_pose_) {
-    aligned_pose = align_foundationpose_orientation(
-      pose_in_alignment.pose,
-      force_z_vertical_);
+    aligned_pose = align_foundationpose_orientation(pose_in_alignment.pose, force_z_vertical_);
   }
 
   geometry_msgs::msg::PoseStamped aligned_pose_ps = pose_in_alignment;
@@ -808,28 +614,18 @@ BT::NodeStatus FoundationPoseAlignmentNode::onRunning()
 
     try {
       transformed_pose = tf_buffer_->transform(
-        world_pose_for_transform,
-        planning_frame_,
-        tf2::durationFromSec(transform_timeout_));
+        world_pose_for_transform, planning_frame_, tf2::durationFromSec(transform_timeout_));
       corrected_pose = transformed_pose.pose;
     } catch (const tf2::TransformException & ex) {
       RCLCPP_WARN_THROTTLE(
-        node_->get_logger(),
-        *clock,
-        2000,
-        "[%s] Failed to transform pose from '%s' to '%s': %s",
-        name().c_str(),
-        alignment_frame.c_str(),
-        planning_frame_.c_str(),
-        ex.what());
+        node_->get_logger(), *clock, 2000, "[%s] Failed to transform pose from '%s' to '%s': %s",
+        name().c_str(), alignment_frame.c_str(), planning_frame_.c_str(), ex.what());
 
       if (timeout_seconds_ > 0.0) {
         const rclcpp::Duration elapsed = clock->now() - start_time_;
         if (elapsed.seconds() > timeout_seconds_) {
           RCLCPP_ERROR(
-            node_->get_logger(),
-            "[%s] Timed out waiting for TF transform to '%s'",
-            name().c_str(),
+            node_->get_logger(), "[%s] Timed out waiting for TF transform to '%s'", name().c_str(),
             planning_frame_.c_str());
           return BT::NodeStatus::FAILURE;
         }
@@ -846,42 +642,34 @@ BT::NodeStatus FoundationPoseAlignmentNode::onRunning()
   // Helper to apply a local XYZRPY transform (6 elements) to a pose: T_out = T_pose * T_delta
   auto apply_local_xyzrpy = [](
     const geometry_msgs::msg::Pose & base,
-    const std::vector<double> & xyzrpy) -> geometry_msgs::msg::Pose
-    {
+    const std::vector<double> & xyzrpy) -> geometry_msgs::msg::Pose {
       std::vector<double> v(6, 0.0);
-      for (size_t i = 0; i < std::min<size_t>(
-          6,
-          xyzrpy.size()); ++i)
-      {
+      for (size_t i = 0; i < std::min<size_t>(6, xyzrpy.size()); ++i) {
         v[i] = xyzrpy[i];
       }
 
-      tf2::Quaternion q_base(base.orientation.x, base.orientation.y,
-        base.orientation.z,
-        base.orientation.w);
+      tf2::Quaternion q_base(
+        base.orientation.x, base.orientation.y, base.orientation.z, base.orientation.w);
       if (q_base.length2() > 0.0) {
         q_base.normalize();
       }
       tf2::Matrix3x3 R_base(q_base);
 
       tf2::Quaternion q_delta;
-      q_delta.setRPY(
-        v[3],
-        v[4],
-        v[5]);
+      q_delta.setRPY(v[3], v[4], v[5]);
 
       tf2::Vector3 t_delta(v[0], v[1], v[2]);
-      tf2::Vector3 t_world = R_base * t_delta;                                     // local -> world
-                                                                                   // translation
+      tf2::Vector3 t_world = R_base * t_delta; // local -> world
+                                               // translation
 
       geometry_msgs::msg::Pose out = base;
       out.position.x += t_world.x();
       out.position.y += t_world.y();
       out.position.z += t_world.z();
 
-      tf2::Quaternion q_out = q_base * q_delta;                                     // local
-                                                                                    // rotation
-                                                                                    // composition
+      tf2::Quaternion q_out = q_base * q_delta; // local
+                                                // rotation
+                                                // composition
       if (q_out.length2() > 0.0) {
         q_out.normalize();
       }
@@ -895,40 +683,26 @@ BT::NodeStatus FoundationPoseAlignmentNode::onRunning()
   // Compute final pick pose (pose output) by applying pick_transform after Z-thresholding
   geometry_msgs::msg::Pose final_pose = corrected_pose;
   if (!pick_transform_.empty()) {
-    final_pose = apply_local_xyzrpy(
-      corrected_pose,
-      pick_transform_);
+    final_pose = apply_local_xyzrpy(corrected_pose, pick_transform_);
   }
 
   if (store_pick_pose_) {
-    config().blackboard->set(
-      pick_pose_key_,
-      final_pose);
+    config().blackboard->set(pick_pose_key_, final_pose);
   }
   if (store_object_pose_) {
-    config().blackboard->set(
-      object_pose_key_,
-      corrected_pose);
+    config().blackboard->set(object_pose_key_, corrected_pose);
   }
-  setOutput(
-    "pose",
-    final_pose);
+  setOutput("pose", final_pose);
 
   geometry_msgs::msg::Pose approach_pose = corrected_pose;
   bool compute_approach = !approach_transform_.empty() || store_approach_;
   if (!approach_transform_.empty()) {
-    approach_pose = apply_local_xyzrpy(
-      corrected_pose,
-      approach_transform_);
+    approach_pose = apply_local_xyzrpy(corrected_pose, approach_transform_);
   }
   if (store_approach_) {
-    config().blackboard->set(
-      approach_pose_key_,
-      approach_pose);
+    config().blackboard->set(approach_pose_key_, approach_pose);
   }
-  setOutput(
-    "approach_pose",
-    approach_pose);
+  setOutput("approach_pose", approach_pose);
 
   std_msgs::msg::Header header = transformed_pose.header;
   if (header.frame_id.empty()) {
@@ -939,26 +713,15 @@ BT::NodeStatus FoundationPoseAlignmentNode::onRunning()
     header.frame_id = planning_frame_;
   }
   if (store_header_) {
-    config().blackboard->set(
-      header_key_,
-      header);
+    config().blackboard->set(header_key_, header);
   }
-  setOutput(
-    "header",
-    header);
+  setOutput("header", header);
 
   RCLCPP_INFO(
-    node_->get_logger(),
-    "[%s] published pose (%.3f, %.3f, %.3f | %.3f, %.3f, %.3f, %.3f)%s",
-    name().c_str(),
-    final_pose.position.x,
-    final_pose.position.y,
-    final_pose.position.z,
-    final_pose.orientation.x,
-    final_pose.orientation.y,
-    final_pose.orientation.z,
-    final_pose.orientation.w,
-    compute_approach ? " with approach pose" : "");
+    node_->get_logger(), "[%s] published pose (%.3f, %.3f, %.3f | %.3f, %.3f, %.3f, %.3f)%s",
+    name().c_str(), final_pose.position.x, final_pose.position.y, final_pose.position.z,
+    final_pose.orientation.x, final_pose.orientation.y, final_pose.orientation.z,
+    final_pose.orientation.w, compute_approach ? " with approach pose" : "");
 
   return BT::NodeStatus::SUCCESS;
 }
@@ -968,4 +731,4 @@ void FoundationPoseAlignmentNode::onHalted()
   // No specific action required; keep the last detection
 }
 
-} // namespace manymove_cpp_trees
+}  // namespace manymove_cpp_trees

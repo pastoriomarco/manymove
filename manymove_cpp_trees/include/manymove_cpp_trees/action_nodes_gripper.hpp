@@ -30,11 +30,13 @@
 #define MANYMOVE_CPP_TREES_ACTION_NODES_GRIPPER_HPP
 
 #include <behaviortree_cpp_v3/action_node.h>
+
+#include <control_msgs/action/follow_joint_trajectory.hpp>
 #include <rclcpp/rclcpp.hpp>
 #include <rclcpp_action/rclcpp_action.hpp>
-#include "control_msgs/action/gripper_command.hpp"
-#include <control_msgs/action/follow_joint_trajectory.hpp>
 #include <sensor_msgs/msg/joint_state.hpp>
+
+#include "control_msgs/action/gripper_command.hpp"
 
 namespace manymove_cpp_trees
 {
@@ -52,23 +54,11 @@ public:
 
   static BT::PortsList providedPorts()
   {
-    return
-      {
-        BT::InputPort<double>(
-          "position",
-          0.0,
-          "Desired gripper position"),
-        BT::InputPort<double>(
-          "max_effort",
-          0.0,
-          "Maximum effort"),
-        BT::InputPort<std::string>(
-          "action_server",
-          "Action server name"),
-        BT::OutputPort<double>(
-          "current_position",
-          "Current gripper position")
-      };
+    return {
+      BT::InputPort<double>("position", 0.0, "Desired gripper position"),
+      BT::InputPort<double>("max_effort", 0.0, "Maximum effort"),
+      BT::InputPort<std::string>("action_server", "Action server name"),
+      BT::OutputPort<double>("current_position", "Current gripper position")};
   }
 
   BT::NodeStatus onStart() override;
@@ -88,7 +78,7 @@ private:
   bool goal_sent_;
   bool result_received_;
 
-// Store the final result from the action server
+  // Store the final result from the action server
   GripperCommand::Result action_result_;
 };
 
@@ -105,22 +95,11 @@ public:
 
   static BT::PortsList providedPorts()
   {
-    return
-      {
-        BT::InputPort<std::string>(
-          "action_server",
-          "FollowJointTrajectory server name"),
-        BT::InputPort<std::vector<std::string>>(
-          "joint_names",
-          "List of gripper joint names"),
-        BT::InputPort<std::vector<double>>(
-          "positions",
-          "Target joint positions for each joint_name"),
-        BT::InputPort<double>(
-          "time_from_start",
-          1.0,
-          "Trajectory duration in seconds")
-      };
+    return {
+      BT::InputPort<std::string>("action_server", "FollowJointTrajectory server name"),
+      BT::InputPort<std::vector<std::string>>("joint_names", "List of gripper joint names"),
+      BT::InputPort<std::vector<double>>("positions", "Target joint positions for each joint_name"),
+      BT::InputPort<double>("time_from_start", 1.0, "Trajectory duration in seconds")};
   }
 
   BT::NodeStatus onStart() override;
@@ -150,29 +129,13 @@ public:
 
   static BT::PortsList providedPorts()
   {
-    return
-      {
-        BT::InputPort<std::string>(
-          "topic",
-          "/isaac_joint_commands_gripper",
-          "Topic to publish"),
-        BT::InputPort<std::vector<std::string>>(
-          "joint_names",
-          "Joint names"),
-        BT::InputPort<std::vector<double>>(
-          "joint_positions",
-          "Positions (optional)"),
-        BT::InputPort<std::vector<double>>(
-          "joint_velocities",
-          "Velocities (optional)"),
-        BT::InputPort<std::vector<double>>(
-          "joint_efforts",
-          "Efforts (optional)"),
-        BT::InputPort<bool>(
-          "stamp_now",
-          true,
-          "Stamp header with node->now()")
-      };
+    return {
+      BT::InputPort<std::string>("topic", "/isaac_joint_commands_gripper", "Topic to publish"),
+      BT::InputPort<std::vector<std::string>>("joint_names", "Joint names"),
+      BT::InputPort<std::vector<double>>("joint_positions", "Positions (optional)"),
+      BT::InputPort<std::vector<double>>("joint_velocities", "Velocities (optional)"),
+      BT::InputPort<std::vector<double>>("joint_efforts", "Efforts (optional)"),
+      BT::InputPort<bool>("stamp_now", true, "Stamp header with node->now()")};
   }
 
   BT::NodeStatus tick() override;
@@ -183,6 +146,6 @@ private:
   std::string current_topic_;
 };
 
-} // namespace manymove_cpp_trees
+}  // namespace manymove_cpp_trees
 
-#endif // MANYMOVE_CPP_TREES_ACTION_NODES_GRIPPER_HPP
+#endif  // MANYMOVE_CPP_TREES_ACTION_NODES_GRIPPER_HPP

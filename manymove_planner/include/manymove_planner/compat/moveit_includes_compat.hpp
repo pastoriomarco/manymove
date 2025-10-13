@@ -33,86 +33,86 @@
 
 // MoveGroupInterface
 #if __has_include(<moveit/move_group_interface/move_group_interface.hpp>)
- # include <moveit/move_group_interface/move_group_interface.hpp>
+#include <moveit/move_group_interface/move_group_interface.hpp>
 #else
- # include <moveit/move_group_interface/move_group_interface.h>
+#include <moveit/move_group_interface/move_group_interface.h>
 #endif
 
 // PlanningSceneInterface
 #if __has_include(<moveit/planning_scene_interface/planning_scene_interface.hpp>)
- # include <moveit/planning_scene_interface/planning_scene_interface.hpp>
+#include <moveit/planning_scene_interface/planning_scene_interface.hpp>
 #else
- # include <moveit/planning_scene_interface/planning_scene_interface.h>
+#include <moveit/planning_scene_interface/planning_scene_interface.h>
 #endif
 
 // RobotTrajectory
 #if __has_include(<moveit/robot_trajectory/robot_trajectory.hpp>)
- # include <moveit/robot_trajectory/robot_trajectory.hpp>
+#include <moveit/robot_trajectory/robot_trajectory.hpp>
 #else
- # include <moveit/robot_trajectory/robot_trajectory.h>
+#include <moveit/robot_trajectory/robot_trajectory.h>
 #endif
 
 // Trajectory processing: TOTG and Ruckig
 #if __has_include(<moveit/trajectory_processing/time_optimal_trajectory_generation.hpp>)
- # include <moveit/trajectory_processing/time_optimal_trajectory_generation.hpp>
+#include <moveit/trajectory_processing/time_optimal_trajectory_generation.hpp>
 #else
- # include <moveit/trajectory_processing/time_optimal_trajectory_generation.h>
+#include <moveit/trajectory_processing/time_optimal_trajectory_generation.h>
 #endif
 
 #if __has_include(<moveit/trajectory_processing/ruckig_traj_smoothing.hpp>)
- # include <moveit/trajectory_processing/ruckig_traj_smoothing.hpp>
+#include <moveit/trajectory_processing/ruckig_traj_smoothing.hpp>
 #else
- # include <moveit/trajectory_processing/ruckig_traj_smoothing.h>
+#include <moveit/trajectory_processing/ruckig_traj_smoothing.h>
 #endif
 
 // Planning Scene + Monitor + Collision common
 #if __has_include(<moveit/planning_scene/planning_scene.hpp>)
- # include <moveit/planning_scene/planning_scene.hpp>
+#include <moveit/planning_scene/planning_scene.hpp>
 #else
- # include <moveit/planning_scene/planning_scene.h>
+#include <moveit/planning_scene/planning_scene.h>
 #endif
 
 #if __has_include(<moveit/planning_scene_monitor/planning_scene_monitor.hpp>)
- # include <moveit/planning_scene_monitor/planning_scene_monitor.hpp>
+#include <moveit/planning_scene_monitor/planning_scene_monitor.hpp>
 #else
- # include <moveit/planning_scene_monitor/planning_scene_monitor.h>
+#include <moveit/planning_scene_monitor/planning_scene_monitor.h>
 #endif
 
 #if __has_include(<moveit/collision_detection/collision_common.hpp>)
- # include <moveit/collision_detection/collision_common.hpp>
+#include <moveit/collision_detection/collision_common.hpp>
 #else
- # include <moveit/collision_detection/collision_common.h>
+#include <moveit/collision_detection/collision_common.h>
 #endif
 
 // RobotModel
 #if __has_include(<moveit/robot_model/robot_model.hpp>)
- # include <moveit/robot_model/robot_model.hpp>
+#include <moveit/robot_model/robot_model.hpp>
 #else
- # include <moveit/robot_model/robot_model.h>
+#include <moveit/robot_model/robot_model.h>
 #endif
 
 // MoveItCpp + PlanningPipeline + PlanningComponent
 #if __has_include(<moveit/moveit_cpp/moveit_cpp.hpp>)
- # include <moveit/moveit_cpp/moveit_cpp.hpp>
+#include <moveit/moveit_cpp/moveit_cpp.hpp>
 #else
- # include <moveit/moveit_cpp/moveit_cpp.h>
+#include <moveit/moveit_cpp/moveit_cpp.h>
 #endif
 
 #if __has_include(<moveit/planning_pipeline/planning_pipeline.hpp>)
- # include <moveit/planning_pipeline/planning_pipeline.hpp>
+#include <moveit/planning_pipeline/planning_pipeline.hpp>
 #else
- # include <moveit/planning_pipeline/planning_pipeline.h>
+#include <moveit/planning_pipeline/planning_pipeline.h>
 #endif
 
 #if __has_include(<moveit/moveit_cpp/planning_component.hpp>)
- # include <moveit/moveit_cpp/planning_component.hpp>
+#include <moveit/moveit_cpp/planning_component.hpp>
 #else
- # include <moveit/moveit_cpp/planning_component.h>
+#include <moveit/moveit_cpp/planning_component.h>
 #endif
 
 // Cartesian Interpolator
 #if __has_include(<moveit/robot_state/cartesian_interpolator.hpp>)
- # include <moveit/robot_state/cartesian_interpolator.hpp>
+#include <moveit/robot_state/cartesian_interpolator.hpp>
 #else
- # include <moveit/robot_state/cartesian_interpolator.h>
+#include <moveit/robot_state/cartesian_interpolator.h>
 #endif
