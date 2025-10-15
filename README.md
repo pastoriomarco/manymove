@@ -25,7 +25,7 @@ This series of packages was created around Ufactory Lite6 and UF850 cobots, but 
 - Install **ROS 2 Humble** or **ROS 2 Jazzy** from the official docs:
   - [ROS 2 Humble](https://docs.ros.org/en/ros2_documentation/humble/Installation.html)
   - [ROS 2 Jazzy](https://docs.ros.org/en/ros2_documentation/jazzy/Installation.html)
-- `rosdep`, Gazebo and MoveIt 2 are required. When using `rosdep install` (see below) they will be pulled automatically.
+- `MoveIt 2` is required. When using `rosdep install` (see below) it will be pulled automatically.
 - Recommended: ensure the environment variable `ROS_DISTRO` is exported (`echo $ROS_DISTRO`) before following the quick start procedure.
 
 ---
@@ -34,48 +34,44 @@ This series of packages was created around Ufactory Lite6 and UF850 cobots, but 
 
 The commands below are distro-agnostic and rely on the `ROS_DISTRO` environment variable. When you source `/opt/ros/<distro>/setup.bash`, the variable is exported automatically.
 
-**1. Define your workspace path**
+**1. Define your workspace path and create dir**
 ```bash
 export MANYMOVE_ROS_WS=~/workspaces/dev_ws
-```
-
-**2. Create the workspace folders (skip if already present)**
-```bash
-cd ~
 mkdir -p ${MANYMOVE_ROS_WS}/src
 ```
 
-**3. Source ROS 2**
+**2. Source ROS 2**
+
+Humble:
 ```bash
-source /opt/ros/${ROS_DISTRO}/setup.bash
+source /opt/ros/humble/setup.bash
 ```
 
-**4. Clone ManyMove and xarm_ros2**
-- Do not omit `--recursive`, otherwise the dependent submodules are not downloaded.
-- `xarm_ros2` uses distro-specific branches, while `manymove` keeps all compatibility work on `main`.
+Jazzy:
+```bash
+source /opt/ros/jazzy/setup.bash
+```
+
+**3. Clone ManyMove**
 ```bash
 cd ${MANYMOVE_ROS_WS}/src
-git clone https://github.com/pastoriomarco/xarm_ros2.git --recursive -b $ROS_DISTRO
 git clone https://github.com/pastoriomarco/manymove.git -b main
 ```
 
-**5. Update repositories (optional refresh)**
+**4. Update repositories (optional refresh)**
 ```bash
-cd ${MANYMOVE_ROS_WS}/src/xarm_ros2
-git submodule update --init --recursive
-git pull --recurse-submodules
 cd ${MANYMOVE_ROS_WS}/src/manymove
 git pull
 ```
 
-**6. Install dependencies**
+**5. Install dependencies**
 ```bash
 cd ${MANYMOVE_ROS_WS}
 rosdep update
 rosdep install --from-paths . --ignore-src --rosdistro $ROS_DISTRO -y
 ```
 
-**7. (OPTIONAL) Install Groot** for visualising behavior trees
+**6. (OPTIONAL) Install Groot** for visualising behavior trees
 ```bash
 cd ${MANYMOVE_ROS_WS}/src/
 git clone --recurse-submodules https://github.com/pastoriomarco/Groot.git
@@ -87,17 +83,17 @@ rosdep update
 rosdep install --from-paths . --ignore-src --rosdistro $ROS_DISTRO -y
 ```
 
-**8. Build the workspace**
+**7. Build the workspace**
 ```bash
 cd ${MANYMOVE_ROS_WS} && colcon build
 ```
 
-**9. Source the overlay**
+**8. Source the overlay**
 ```bash
 source ${MANYMOVE_ROS_WS}/install/setup.bash
 ```
 
-That’s it! Repeat steps 3–9 whenever you open a new shell.
+That’s it! Repeat steps 2–8 whenever you open a new shell.
 
 ---
 
@@ -129,7 +125,7 @@ blackboard->set("pick_pre_transform_xyz_rpy_1_key", std::vector<double>{-0.102, 
 ```
 
 Right now the most extensive executable examples are found in manymove_cpp_trees repo: you can start from one of the executables there, taking care to use valid joint targets and poses for your robot. Also take some time setting up *move.hpp* coherently with the speed limits of your robot and planning pipeline of your choice.
-When you go through the code, you'll notice I explain what each section does and how to use it: I tried to keep it updated while modifying the repo, but some comments may be outdated or not relevant anymore. **Please let me know if something is not clear**!
+When you go through the code, you'll notice we explain what each section does and how to use it: we tried to keep it updated while modifying the repo, but some comments may be outdated or not relevant anymore. **Please let me know if something is not clear**!
 
 ---
 
@@ -189,72 +185,91 @@ Starting from an empty scene, you'll delop a pick and place application with Man
 
 ## Examples
 
-### Launching the Examples
+### UFactory launchers and examples
 
-- **Lite6, uf850 and xarm7 manipulators**
-  with MoveItCPP and BehaviorTree.CPP:
-  ```bash
-  ros2 launch manymove_bringup lite_moveitcpp_fake_cpp_trees.launch.py
-  ```
-  with MoveItCPP and BehaviorTree.CPP:
-  ```bash
-  ros2 launch manymove_bringup uf850_moveitcpp_fake_cpp_trees.launch.py
-  ```
-  with MoveItCPP and BehaviorTree.CPP:
-  ```bash
-  ros2 launch manymove_bringup xarm7_moveitcpp_fake_cpp_trees.launch.py
-  ```
+To launch UFactory robots example you'll need to build from source my branch of `xarm_ros2` repo.
+The following instructions require you to have already followed the Quick Start section.
+More info in [my fork of xarm_ros2](https://github.com/pastoriomarco/xarm_ros2).
 
-  with MoveGroupInterface and BehaviorTree.CPP:
-  ```bash
-  ros2 launch manymove_bringup lite_movegroup_fake_cpp_trees.launch.py
-  ```
-  ```bash
-  ros2 launch manymove_bringup uf850_movegroup_fake_cpp_trees.launch.py
-  ```
-  ```bash
-  ros2 launch manymove_bringup xarm7_movegroup_fake_cpp_trees.launch.py
-  ```
+```bash
+export MANYMOVE_ROS_WS=~/workspaces/dev_ws
+cd ${MANYMOVE_ROS_WS}/src
+git clone https://github.com/pastoriomarco/xarm_ros2.git --recursive -b $ROS_DISTRO
+cd ${MANYMOVE_ROS_WS}/src/xarm_ros2
+git submodule update --init --recursive
+git pull --recurse-submodules
+cd ${MANYMOVE_ROS_WS}
+rosdep update
+rosdep install --from-paths . --ignore-src --rosdistro $ROS_DISTRO -y
+cd ${MANYMOVE_ROS_WS} && colcon build
+source ${MANYMOVE_ROS_WS}/install/setup.bash
+```
+#### Lite6, uf850 and xarm7 manipulators
 
-  with MoveGroupInterface and py_trees (minimal):
-  ```bash
-  ros2 launch manymove_bringup lite_movegroup_fake_py_trees.launch.py
-  ```
-- **Dual robot (Lite 6 + UF850)**
-  ```bash
-  ros2 launch manymove_bringup dual_moveitcpp_fake_cpp_trees.launch.py
-  ```
+with MoveItCPP and BehaviorTree.CPP:
+```bash
+ros2 launch manymove_bringup lite_moveitcpp_fake_cpp_trees.launch.py
+```
+```bash
+ros2 launch manymove_bringup uf850_moveitcpp_fake_cpp_trees.launch.py
+```
+```bash
+ros2 launch manymove_bringup xarm7_moveitcpp_fake_cpp_trees.launch.py
+```
 
-- **Panda Manipulator** (requires the installation of [moveit2_tutorials](https://moveit.picknik.ai/humble/doc/tutorials/getting_started/getting_started.html) )
+with MoveGroupInterface and BehaviorTree.CPP:
+```bash
+ros2 launch manymove_bringup lite_movegroup_fake_cpp_trees.launch.py
+```
+```bash
+ros2 launch manymove_bringup uf850_movegroup_fake_cpp_trees.launch.py
+```
+```bash
+ros2 launch manymove_bringup xarm7_movegroup_fake_cpp_trees.launch.py
+```
 
-  Standalone launchers for MoveItCPP or MoveGroup with Panda robot (you need the moveit2_tutorials package sourced):
+with MoveGroupInterface and py_trees (minimal):
+```bash
+ros2 launch manymove_bringup lite_movegroup_fake_py_trees.launch.py
+```
+#### Dual robot (Lite 6 + UF850)
 
-    with BehaviorTree.CPP:
-     ```bash
-     ros2 launch manymove_bringup panda_moveitcpp_fake_cpp_trees.launch.py
-     ```
-     ```bash
-     ros2 launch manymove_bringup panda_movegroup_fake_cpp_trees.launch.py
-     ```
-    with py_trees:
-     ```bash
-     ros2 launch manymove_bringup panda_movegroup_fake_py_trees.launch.py
-     ```
-  Alternative with standard panda demo launch and manymove started from a separate launcher:
+```bash
+ros2 launch manymove_bringup dual_moveitcpp_fake_cpp_trees.launch.py
+```
 
-  In **terminal 1** (with `moveit2_tutorials` installed and sourced):
-     ```bash
-     ros2 launch moveit2_tutorials demo.launch.py
-     ```
-  In **terminal 2**, with MoveGroupInterface and BehaviorTree.CPP:
-     ```bash
-     ros2 launch manymove_planner panda_fake_cpp_trees.launch.py
-     ```
+### Panda Manipulator
 
-   **Alternative**: **in terminal 2**, with MoveGroupInterface and **py_trees** (minimal):
-     ```bash
-     ros2 launch manymove_planner panda_fake_py_trees.launch.py
-     ```
+Requires the installation of [moveit2_tutorials](https://moveit.picknik.ai/humble/doc/tutorials/getting_started/getting_started.html)
+
+Standalone launchers for MoveItCPP or MoveGroup with Panda robot (you need the moveit2_tutorials package sourced):
+
+with BehaviorTree.CPP:
+```bash
+ros2 launch manymove_bringup panda_moveitcpp_fake_cpp_trees.launch.py
+```
+```bash
+ros2 launch manymove_bringup panda_movegroup_fake_cpp_trees.launch.py
+```
+with py_trees:
+```bash
+ros2 launch manymove_bringup panda_movegroup_fake_py_trees.launch.py
+```
+Alternative with standard panda demo launch and manymove started from a separate launcher:
+
+In **terminal 1** (with `moveit2_tutorials` installed and sourced):
+```bash
+ros2 launch moveit2_tutorials demo.launch.py
+```
+In **terminal 2**, with MoveGroupInterface and BehaviorTree.CPP:
+```bash
+ros2 launch manymove_planner panda_fake_cpp_trees.launch.py
+```
+
+**Alternative**: **in terminal 2**, with MoveGroupInterface and **py_trees** (minimal):
+```bash
+ros2 launch manymove_planner panda_fake_py_trees.launch.py
+```
 
 These launch files spin up the appropriate environment (fake or real) plus the nodes that handle planning, object management, signals, and optional HMI components. You can then interact with these action servers and send them requests using the provided C++ or Python-based behavior tree clients.
 
