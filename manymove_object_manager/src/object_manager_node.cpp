@@ -75,15 +75,15 @@ ObjectManagerNode::ObjectManagerNode()
     this, "/get_planning_scene", service_callback_group_);
 
   RCLCPP_INFO(this->get_logger(), "Waiting for /get_planning_scene service...");
-  if (!get_planning_scene_client_->wait_for_service(std::chrono::seconds(10))) {
-    RCLCPP_ERROR(this->get_logger(), "/get_planning_scene service not available. Exiting.");
-    rclcpp::shutdown();
-    return;
+  if (ensurePlanningSceneService(std::chrono::seconds(10))) {
+    RCLCPP_INFO(this->get_logger(), "/get_planning_scene service is available.");
+    printPlanningScene();
+  } else {
+    RCLCPP_WARN(
+      this->get_logger(),
+      "/get_planning_scene service not available yet. Retrying periodically in the background.");
+    schedulePlanningSceneRetry();
   }
-  RCLCPP_INFO(this->get_logger(), "/get_planning_scene service is available.");
-
-  // Call the function to print the current planning scene
-  printPlanningScene();
 
   // Create a separate callback group for action servers
   action_callback_group_ =
@@ -169,6 +169,16 @@ void ObjectManagerNode::handleCheckExistExecute(const std::shared_ptr<CheckGoalH
   auto goal = goal_handle->get_goal();
   auto result = std::make_shared<CheckObjectExists::Result>();
 
+  if (!ensurePlanningSceneService(std::chrono::seconds(0))) {
+    schedulePlanningSceneRetry();
+    result->exists = false;
+    result->is_attached = false;
+    result->link_name = "";
+    result->message = "Planning scene service unavailable.";
+    goal_handle->abort(result);
+    return;
+  }
+
   // Check if the object exists
   bool collision_object_exists = objectExists(goal->object_id);
   bool attached_object_exists = attachedObjectExists(goal->object_id);
@@ -205,6 +215,14 @@ void ObjectManagerNode::handleCheckExistExecute(const std::shared_ptr<CheckGoalH
 
 void ObjectManagerNode::printPlanningScene()
 {
+  if (!ensurePlanningSceneService(std::chrono::seconds(0))) {
+    RCLCPP_WARN(
+      this->get_logger(),
+      "Cannot print planning scene because /get_planning_scene service is unavailable.");
+    schedulePlanningSceneRetry();
+    return;
+  }
+
   auto request = std::make_shared<moveit_msgs::srv::GetPlanningScene::Request>();
   request->components.components =
     moveit_msgs::msg::PlanningSceneComponents::WORLD_OBJECT_NAMES |
@@ -263,7 +281,74 @@ void ObjectManagerNode::printPlanningScene()
     }
   } else {
     RCLCPP_ERROR(this->get_logger(), "Timeout while waiting for /get_planning_scene response.");
+    planning_scene_ready_.store(false, std::memory_order_relaxed);
+    schedulePlanningSceneRetry();
   }
+}
+
+bool ObjectManagerNode::ensurePlanningSceneService(const std::chrono::nanoseconds & timeout)
+{
+  if (!get_planning_scene_client_) {
+    return false;
+  }
+
+  if (get_planning_scene_client_->service_is_ready()) {
+    onPlanningSceneServiceReady();
+    return true;
+  }
+
+  planning_scene_ready_.store(false, std::memory_order_relaxed);
+
+  if (timeout.count() == 0) {
+    return false;
+  }
+
+  if (!get_planning_scene_client_->wait_for_service(timeout)) {
+    return false;
+  }
+
+  onPlanningSceneServiceReady();
+  return true;
+}
+
+bool ObjectManagerNode::onPlanningSceneServiceReady()
+{
+  bool expected = false;
+  if (planning_scene_ready_.compare_exchange_strong(expected, true)) {
+    if (service_wait_timer_) {
+      service_wait_timer_->cancel();
+      service_wait_timer_.reset();
+    }
+    return true;
+  }
+  return false;
+}
+
+void ObjectManagerNode::schedulePlanningSceneRetry()
+{
+  if (service_wait_timer_) {
+    return;
+  }
+
+  constexpr std::chrono::seconds retry_period(5);
+  service_wait_timer_ = this->create_wall_timer(
+    retry_period,
+    [this]() {
+      if (ensurePlanningSceneService(std::chrono::seconds(1))) {
+        RCLCPP_INFO(
+          this->get_logger(), "/get_planning_scene service is now available. Resuming operations.");
+        if (service_wait_timer_) {
+          service_wait_timer_->cancel();
+          service_wait_timer_.reset();
+        }
+        printPlanningScene();
+      } else {
+        RCLCPP_WARN_THROTTLE(
+          this->get_logger(), *this->get_clock(), 5000,
+          "/get_planning_scene service still unavailable. Will continue retrying.");
+      }
+    },
+    service_callback_group_);
 }
 
 // ----------------------------------------------------------------------------
@@ -302,6 +387,14 @@ void ObjectManagerNode::handleAddExecute(const std::shared_ptr<AddGoalHandle> go
 {
   auto goal = goal_handle->get_goal();
   auto result = std::make_shared<AddCollisionObject::Result>();
+
+  if (!ensurePlanningSceneService(std::chrono::seconds(0))) {
+    schedulePlanningSceneRetry();
+    result->success = false;
+    result->message = "Planning scene service unavailable.";
+    goal_handle->abort(result);
+    return;
+  }
 
   // Publish the collision object
   auto collision_object = createCollisionObject(
@@ -372,6 +465,14 @@ void ObjectManagerNode::handleRemoveExecute(const std::shared_ptr<RemoveGoalHand
 {
   auto goal = goal_handle->get_goal();
   auto result = std::make_shared<RemoveCollisionObject::Result>();
+
+  if (!ensurePlanningSceneService(std::chrono::seconds(0))) {
+    schedulePlanningSceneRetry();
+    result->success = false;
+    result->message = "Planning scene service unavailable.";
+    goal_handle->abort(result);
+    return;
+  }
 
   // Check if the object is attached before trying to remove
   if (attachedObjectExists(goal->id)) {
@@ -474,6 +575,14 @@ void ObjectManagerNode::handleAttachDetachExecute(
 {
   auto goal = goal_handle->get_goal();
   auto result = std::make_shared<AttachDetachObject::Result>();
+
+  if (!ensurePlanningSceneService(std::chrono::seconds(0))) {
+    schedulePlanningSceneRetry();
+    result->success = false;
+    result->message = "Planning scene service unavailable.";
+    goal_handle->abort(result);
+    return;
+  }
 
   // I call once the search functions to avoid dalays
   auto attached_object_exists = attachedObjectExists(goal->object_id);
@@ -684,6 +793,14 @@ void ObjectManagerNode::handleGetObjectPoseExecute(
   auto goal = goal_handle->get_goal();
   auto result = std::make_shared<GetObjectPose::Result>();
 
+  if (!ensurePlanningSceneService(std::chrono::seconds(0))) {
+    schedulePlanningSceneRetry();
+    result->success = false;
+    result->message = "Planning scene service unavailable.";
+    goal_handle->abort(result);
+    return;
+  }
+
   // 1. Retrieve the CollisionObject from the planning scene
   auto collision_object_opt = getObjectDataById(goal->object_id);
   if (!collision_object_opt) {
@@ -856,6 +973,15 @@ void ObjectManagerNode::handleGetObjectPoseExecute(
 // ----------------------------------------------------------------------------
 bool ObjectManagerNode::objectExists(const std::string & id)
 {
+  if (!ensurePlanningSceneService(std::chrono::seconds(0))) {
+    RCLCPP_WARN(
+      this->get_logger(),
+      "Unable to check object '%s' because /get_planning_scene service is unavailable.",
+      id.c_str());
+    schedulePlanningSceneRetry();
+    return false;
+  }
+
   auto request = std::make_shared<moveit_msgs::srv::GetPlanningScene::Request>();
   request->components.components = moveit_msgs::msg::PlanningSceneComponents::WORLD_OBJECT_NAMES;
 
@@ -876,9 +1002,15 @@ bool ObjectManagerNode::objectExists(const std::string & id)
       }
     } else {
       RCLCPP_ERROR(this->get_logger(), "Received null response from /get_planning_scene.");
+      planning_scene_ready_.store(false, std::memory_order_relaxed);
+      schedulePlanningSceneRetry();
+      return false;
     }
   } else {
     RCLCPP_ERROR(this->get_logger(), "Timeout while waiting for /get_planning_scene response.");
+    planning_scene_ready_.store(false, std::memory_order_relaxed);
+    schedulePlanningSceneRetry();
+    return false;
   }
 
   RCLCPP_INFO(this->get_logger(), "Object '%s' not found in the planning scene.", id.c_str());
@@ -890,6 +1022,15 @@ bool ObjectManagerNode::objectExists(const std::string & id)
 // ----------------------------------------------------------------------------
 bool ObjectManagerNode::attachedObjectExists(const std::string & id, const std::string & link_name)
 {
+  if (!ensurePlanningSceneService(std::chrono::seconds(0))) {
+    RCLCPP_WARN(
+      this->get_logger(),
+      "Unable to check attached object '%s' because /get_planning_scene service is unavailable.",
+      id.c_str());
+    schedulePlanningSceneRetry();
+    return false;
+  }
+
   auto request = std::make_shared<moveit_msgs::srv::GetPlanningScene::Request>();
   request->components.components =
     moveit_msgs::msg::PlanningSceneComponents::ROBOT_STATE_ATTACHED_OBJECTS;
@@ -920,9 +1061,15 @@ bool ObjectManagerNode::attachedObjectExists(const std::string & id, const std::
       }
     } else {
       RCLCPP_ERROR(this->get_logger(), "Received null response from /get_planning_scene.");
+      planning_scene_ready_.store(false, std::memory_order_relaxed);
+      schedulePlanningSceneRetry();
+      return false;
     }
   } else {
     RCLCPP_ERROR(this->get_logger(), "Timeout while waiting for /get_planning_scene response.");
+    planning_scene_ready_.store(false, std::memory_order_relaxed);
+    schedulePlanningSceneRetry();
+    return false;
   }
 
   RCLCPP_INFO(
@@ -937,6 +1084,15 @@ bool ObjectManagerNode::attachedObjectExists(const std::string & id, const std::
 std::optional<moveit_msgs::msg::CollisionObject> ObjectManagerNode::getObjectDataById(
   const std::string & object_id)
 {
+  if (!ensurePlanningSceneService(std::chrono::seconds(0))) {
+    RCLCPP_WARN(
+      this->get_logger(),
+      "Unable to retrieve object '%s' because /get_planning_scene service is unavailable.",
+      object_id.c_str());
+    schedulePlanningSceneRetry();
+    return std::nullopt;
+  }
+
   // Request planning scene world data
   auto request = std::make_shared<moveit_msgs::srv::GetPlanningScene::Request>();
   request->components.components =
@@ -974,9 +1130,15 @@ std::optional<moveit_msgs::msg::CollisionObject> ObjectManagerNode::getObjectDat
         this->get_logger(), "Object '%s' not found in planning scene.", object_id.c_str());
     } else {
       RCLCPP_ERROR(this->get_logger(), "Null response received from /get_planning_scene.");
+      planning_scene_ready_.store(false, std::memory_order_relaxed);
+      schedulePlanningSceneRetry();
+      return std::nullopt;
     }
   } else {
     RCLCPP_ERROR(this->get_logger(), "Timeout while waiting for /get_planning_scene response.");
+    planning_scene_ready_.store(false, std::memory_order_relaxed);
+    schedulePlanningSceneRetry();
+    return std::nullopt;
   }
 
   // Return empty if not found
@@ -989,6 +1151,15 @@ std::optional<moveit_msgs::msg::CollisionObject> ObjectManagerNode::getObjectDat
 std::optional<std::string> ObjectManagerNode::getAttachedObjectLinkById(
   const std::string & object_id)
 {
+  if (!ensurePlanningSceneService(std::chrono::seconds(0))) {
+    RCLCPP_WARN(
+      this->get_logger(),
+      "Unable to get attached link for '%s'; /get_planning_scene service unavailable.",
+      object_id.c_str());
+    schedulePlanningSceneRetry();
+    return std::nullopt;
+  }
+
   // Request planning scene world data
   auto request = std::make_shared<moveit_msgs::srv::GetPlanningScene::Request>();
   request->components.components =
@@ -1015,9 +1186,15 @@ std::optional<std::string> ObjectManagerNode::getAttachedObjectLinkById(
       RCLCPP_WARN(this->get_logger(), "Link '%s' not found in planning scene.", object_id.c_str());
     } else {
       RCLCPP_ERROR(this->get_logger(), "Null response received from /get_planning_scene.");
+      planning_scene_ready_.store(false, std::memory_order_relaxed);
+      schedulePlanningSceneRetry();
+      return std::nullopt;
     }
   } else {
     RCLCPP_ERROR(this->get_logger(), "Timeout while waiting for /get_planning_scene response.");
+    planning_scene_ready_.store(false, std::memory_order_relaxed);
+    schedulePlanningSceneRetry();
+    return std::nullopt;
   }
 
   // Return empty if not found
@@ -1156,23 +1333,3 @@ bool ObjectManagerNode::validateShapeAndDimensions(
 }
 
 }  // namespace manymove_object_manager
-
-// ----------------------------------------------------------------------------
-// Main Function
-// ----------------------------------------------------------------------------
-int main(int argc, char ** argv)
-{
-  rclcpp::init(argc, argv);
-
-  auto node = std::make_shared<manymove_object_manager::ObjectManagerNode>();
-
-  // Use a MultiThreadedExecutor with multiple threads
-  // rclcpp::executors::MultiThreadedExecutor executor(rclcpp::ExecutorOptions(), 4); // 4 threads
-  rclcpp::executors::MultiThreadedExecutor executor;
-  executor.add_node(node);
-
-  executor.spin();
-
-  rclcpp::shutdown();
-  return 0;
-}

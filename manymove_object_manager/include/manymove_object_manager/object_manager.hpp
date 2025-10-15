@@ -32,6 +32,8 @@
 #include <tf2_ros/buffer.h>
 #include <tf2_ros/transform_listener.h>
 
+#include <atomic>
+#include <chrono>
 #include <memory>
 #include <optional>
 #include <sstream>
@@ -255,6 +257,25 @@ private:
     const std::optional<std::string> & mesh_file) const;
 
   /**
+   * @brief Ensure the /get_planning_scene service is ready.
+   * @param timeout Maximum time to wait for the service.
+   * @return True if the service is ready, false otherwise.
+   */
+  bool ensurePlanningSceneService(
+    const std::chrono::nanoseconds & timeout = std::chrono::seconds(0));
+
+  /**
+   * @brief Handle the transition when the planning scene service becomes available.
+   * @return True if this was the first time the service became available.
+   */
+  bool onPlanningSceneServiceReady();
+
+  /**
+   * @brief Schedule periodic retries to wait for the planning scene service.
+   */
+  void schedulePlanningSceneRetry();
+
+  /**
  * @brief Check if an object exists in the planning scene.
  * @param id The identifier of the object to look for.
  * @return True if the object is found, false otherwise.
@@ -315,6 +336,9 @@ private:
   // /get_planning_scene service.
   rclcpp::CallbackGroup::SharedPtr action_callback_group_;  ///< Callback group for action
   // servers.
+
+  std::atomic<bool> planning_scene_ready_{false};  ///< Tracks availability of planning scene.
+  rclcpp::TimerBase::SharedPtr service_wait_timer_;  ///< Retry timer for planning scene service.
 };
 }  // namespace manymove_object_manager
 
