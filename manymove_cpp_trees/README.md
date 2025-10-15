@@ -1,94 +1,51 @@
 # ManyMove C++ Trees
 
-This **manymove_cpp_trees** package is part of the [**`manymove`**](../README.md) project for **ROS 2** Humble. It offers a **BehaviorTree.CPP**-based framework for composing motion sequences, object manipulation, and I/O signal handling, using the action servers and messages defined throughout `manymove` packages.
+`manymove_cpp_trees` extends [ManyMove](../README.md) with a BehaviorTree.CPP toolkit that orchestrates planners, object management, and signal handling for ROS 2 Humble applications. It ships reusable BT nodes plus sample clients that demonstrate how to stitch robotic behaviors together.
 
-**Use at your own risk**; this repository is experimental and does **not** provide safety features.
-
----
+**Caution:** the package is experimental and provides no built-in safety features.
 
 ## Overview
+- BehaviorTree.CPP integration for planning, object manipulation, gripper control, I/O checks, and Isaac Sim bridges.
+- Runtime blackboard utilities that keep motion goals, object metadata, and HMI feedback configurable without recompiling.
+- Example BT clients that exercise end-to-end pick, place, and dual-arm scenarios while spinning an accompanying HMI service node.
 
-### Key Functionalities
+## Behavior Tree Node Families
+- `action_nodes_planner.hpp` – plans and executes manipulator moves via `manymove_planner`, caching trajectories and exposing reset hooks.
+- `action_nodes_objects.hpp` – creates, attaches, detaches, and queries collision objects through `manymove_object_manager` actions.
+- `action_nodes_signals.hpp` – toggles digital I/O, inspects robot state, and (un)loads controllers using `manymove_msgs` actions.
+- `action_nodes_gripper.hpp` – wraps `control_msgs` gripper command and trajectory actions plus a utility to publish `sensor_msgs/JointState`.
+- `action_nodes_logic.hpp` – provides flow-control helpers (pause/reset decorators, blackboard guards, wait conditions).
+- `action_nodes_isaac.hpp` – exchanges poses with Isaac Sim through `simulation_interfaces` services and detection topics.
 
-- **BehaviorTree.CPP Integration**
-  Provides a set of **custom BT nodes** (planner, object manipulation, signals, etc.) that can be used to build modular robotic behaviors.
+Support code in `tree_helper.hpp`, `blackboard_utils.hpp`, and `main_imports_helper.hpp` builds XML snippets, seeds default parameters, and registers node types with the BehaviorTree.CPP factory.
 
-- **MoveIt 2 & Action Server Bridges**
-  Easily plan and execute motions, manage collision objects, attach/detach objects, and send/receive I/O signals by leveraging the action servers in `manymove_planner` and `manymove_object_manager`.
+## Runtime Services
+- [`HMIServiceNode`](./include/manymove_cpp_trees/hmi_service_node.hpp) exposes the `update_blackboard` service and publishes JSON-formatted blackboard snapshots every 250 ms so external HMIs can monitor or update execution state.
 
-- **Reconfigurable at Runtime**
-  Much of the tree logic (target poses, velocities, attach operations, etc.) is dynamically drawn from the Blackboard, allowing for flexible updates without recompiling.
+## Executables
+- `bt_client` – single-arm sample that builds a programmatic tree for pick-and-place, including motion planning, object updates, and signal checks.
+- `bt_client_dual` – coordinates two robot prefixes and shared objects to demonstrate cooperative sequencing.
+- `bt_client_app_dual` – richer dual-arm application with blackboard-driven parameters, mesh scaling, and HMI messaging.
+- `bt_client_isaac` – connects the tree to Isaac Sim entities and publishes joint commands for simulated hardware.
+- `collision_test` – regression scenario that stresses collision handling and trajectory resets within the planner pipeline.
+- `tutorial_01` / `tutorial_01_complete` – incremental learning examples showing how to assemble and extend the helper utilities.
 
-- **HMI Service Node**
-  A dedicated node that exposes services for controlling behavior execution (start, stop, reset) and publishes Blackboard status.
+Each executable spins the BT factory, registers the custom nodes, and runs the `HMIServiceNode` alongside a `MultiThreadedExecutor`. The created ROS node is named `bt_client_node`.
 
----
+## Usage
+- For workspace setup, dependencies, and launch instructions, follow the top-level [ManyMove README](../README.md).
 
-## Architecture
+## Dependencies
+- BehaviorTree.CPP (`behaviortree_cpp_v3`)
+- ManyMove core packages: `manymove_planner`, `manymove_object_manager`, `manymove_msgs`
+- Motion and transforms: `moveit_msgs`, `geometry_msgs`, `tf2`, `tf2_ros`, `tf2_geometry_msgs`
+- Control and runtime messaging: `rclcpp`, `rclcpp_action`, `control_msgs`, `std_msgs`, `std_srvs`, `topic_based_ros2_control`
+- Simulation and perception bridges: `simulation_interfaces`, `vision_msgs`
 
-1. **Behavior Tree Nodes**
-   - **`action_nodes_planner.hpp`**: Nodes for planning/executing manipulator motions.
-   - **`action_nodes_objects.hpp`**: Nodes for adding/removing collision objects and checking or attaching them.
-   - **`action_nodes_signals.hpp`**: Nodes for sending/reading digital I/O signals and checking robot state.
-   - **`action_nodes_logic.hpp`**: Custom decorator/condition nodes for controlling execution flow (e.g., pausing, aborting, blackboard key checks).
+## Notes
+- Robot safety mechanisms (stop buttons, workspace supervision) must be handled externally.
+- Review the main README for project-wide disclaimers, contribution guidance, and licensing details.
 
-2. **bt_client_node**
-   - A reference implementation (in [`bt_client.cpp`](./src/bt_client.cpp)) that programmatically constructs a complex Behavior Tree.
-   - Demonstrates combining the above custom BT nodes (e.g., for scanning the environment, picking/dropping objects, checking signals, etc.).
-   - Uses a **MultiThreadedExecutor** to spin the tree logic in parallel with the HMI service node.
-
-3. **HMI Service Node**
-   - [`HMIServiceNode`](./include/manymove_cpp_trees/hmi_service_node.hpp) provides services to start/stop/reset execution.
-   - Publishes execution status (e.g., `stop_execution`, `reset`, etc.) at a fixed interval.
-
----
-
-## Installation & Dependencies
-
-Please refer to the main [**ManyMove README**](../README.md) for overall setup instructions, build steps, and prerequisites.
-
-### Usage
-
-#### Running the bt_client_node
-
-The bt_client_node is an example node that programmatically creates a Behavior Tree:
-
-```bash
-ros2 run manymove_cpp_trees bt_client_node
-```
-
-Parameters (can be set via the command line or a launch file):
-- `robot_model` (default: "lite6")
-- `robot_prefix` (default: "")
-- `tcp_frame` (default: "")
-- `is_robot_real` (default: false), determines if real I/O signals are used or mocked.
-
-#### Defining Your Own Trees
-
-- Include the desired node headers (action_nodes_*) in your custom .cpp.
-- Register them with BehaviorTree.CPP (see tree_helper.hpp and action_nodes_planner.cpp for examples).
-- Construct an XML tree (or build it programmatically) referencing these node types.
-- Create a BT::Tree from the factory and tick it in a loop or an executor.
-
-### Example Features
-
-- **Motion Planning & Execution**
-  `MoveManipulatorAction` node for MoveIt 2-based motion.
-
-- **Collision Object Management**
-  `AddCollisionObjectAction`, `RemoveCollisionObjectAction`, `AttachDetachObjectAction`, etc.
-
-- **I/O Signals & Robot State**
-  `SetOutputAction`, `GetInputAction`, `CheckRobotStateAction`, and so on.
-
----
-
-### Notes & Disclaimer
-
-- **Experimental**: This package is under development; no warranty of stability.
-- **No Safety Features**: Robot safety must be handled externally.
-- **Check Main README**: For detailed disclaimers, licensing, and more information.
-
-### Contributing
-
-Feedback and pull requests are welcome. If you discover any issues or have suggestions, please open an issue or PR in the main manymove repository.
+## License and Maintainers
+This package is licensed under BSD-3-Clause. Maintainer: Marco Pastorio <pastoriomarco@gmail.com>.
+See main [ManyMove README](../README.md) for `CONTRIBUTION` details.

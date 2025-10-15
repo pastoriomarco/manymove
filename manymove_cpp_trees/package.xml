@@ -4,7 +4,7 @@
   <name>manymove_cpp_trees</name>
   <version>0.1.0</version>
   <description>Package to generate behaviortrees for manymove_planner using BehaviorTree.CPP</description>
-  <maintainer email="marco.pastorio@flexingroup.com">Marco Pastorio</maintainer>
+  <maintainer email="pastoriomarco@gmail.com">Marco Pastorio</maintainer>
   <license>BSD-3-Clause</license>
   <author email="pastoriomarco@gmail.com">Marco Pastorio</author>
 

@@ -4,8 +4,9 @@
   <name>manymove_bringup</name>
   <version>0.1.0</version>
   <description>Bringup for manymove repo</description>
-  <maintainer email="pastoriomarco@gmail.com">tndlux</maintainer>
+  <maintainer email="pastoriomarco@gmail.com">Marco Pastorio</maintainer>
   <license>BSD-3-Clause</license>
+  <author email="pastoriomarco@gmail.com">Marco Pastorio</author>
 
   <test_depend>ament_lint_auto</test_depend>
   <test_depend>ament_pep257</test_depend>

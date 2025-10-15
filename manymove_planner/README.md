@@ -1,104 +1,53 @@
-# ManyMove Planner
+# manymove_planner
 
-This package provides a **simplified** set of motion planning and trajectory execution action servers for robotic manipulators, built on **ROS 2** and **MoveIt 2**. It is part of the **`manymove`** project and is highly experimental. **Use at your own risk**; see the main repository’s disclaimer regarding safety and stability.
+`manymove_planner` packages motion-planning action servers that wrap MoveIt 2 so downstream logic (behavior trees, task planners, HMI) can issue consistent actions for industrial robots. It sits alongside the bringup, object management, and message packages in the ManyMove workspace.
 
-`manymove_planner` exposes action servers that make possible to organize the planning and execution actions in logic builder packages using a unified interface, without having to worry if the underlying implementation uses MoveGroupInterface or MoveitCPP.
-It supports diverse robots, with an example configuration for Franka Emika Panda, which is the default demo model for Moveit, but most of the exmples are built around Ufactory Lite6 and UF850, simply because I'm going in production with these first.
+Refer to the repository-level [README](../README.md) for workspace setup, build instructions, and global safety guidance.
 
 ## Overview
 
-### Key Functionalities
+- Hosts action servers that plan and execute manipulator motions via MoveIt 2 with collision checking, time parameterisation, and velocity/acceleration scaling.
+- Supports joint, pose, Cartesian, and named-target requests and exposes helper actions for loading/unloading FollowJointTrajectory controllers.
+- Provides a controlled stop interface that back-drives trajectory controllers to achieve smooth deceleration.
+- Ships ready-to-launch examples for fake hardware, real controllers, and dual-arm deployments.
 
-- **Move Manipulator Action Server**\
-  Accepts single-goal planning requests via the `MoveManipulator` action (joint, named, pose, or Cartesian targets).\
-  Applies time parameterization to generate smooth, velocity-scaled trajectories.
-  Uses cartesian speed limit for all moves.
-  Handles soft stop with spring-back action and deceleration time on all moves.
+## Core Components
 
-- **Stop Motion**\
-  Issues a controlled stop command to smoothly decelerate the manipulator.
+- **ManipulatorActionServer** (`include/manymove_planner/action_server.hpp`, `src/action_server.cpp`): wraps the Move / Plan / Load / Unload actions from `manymove_msgs`, applies collision validation, and dispatches trajectories to the selected controller.
+- **PlannerInterface** (`include/manymove_planner/planner_interface.hpp`): abstract API defining `plan`, `applyTimeParameterization`, trajectory validation, and `sendControlledStop`.
+- **MoveGroupPlanner** (`src/move_group_planner.cpp`): implements `PlannerInterface` on top of `MoveGroupInterface`, supporting joint, pose, Cartesian, and named goal types with time parameterisation and Cartesian speed limiting.
+- **MoveItCppPlanner** (`src/moveit_cpp_planner.cpp`): `PlannerInterface` implementation that reuses a shared `moveit_cpp::MoveItCpp` instance, providing path-length estimation, motion smoothing, and direct access to PlanningSceneMonitor services.
+- **Executables** from `CMakeLists.txt`:
+  - `action_server_node`: parameter-driven node that instantiates either planner backend; supports per-robot prefixes (`node_prefix`) and controller names.
+  - `moveitcpp_action_server_node`: creates one `MoveItCpp` instance and spins multiple `ManipulatorActionServer`s for multi-robot/dual-arm applications.
 
-- **Load & Unload Controllers**\
-  Offers dedicated actions (`LoadTrajController` and `UnloadTrajController`) for dynamic controller management (e.g., loading a new trajectory controller or unloading one at runtime).
+## Launch & Usage
+- For workspace setup, dependencies, and launch instructions, follow the top-level [ManyMove README](../README.md).
 
-### Architecture
+## Interactions
 
-1. **Planner Interface**\
-   An abstract C++ interface (`planner_interface.hpp`) defining essential methods:
+- **Messages and actions:** consumes `manymove_msgs` definitions (`PlanManipulator`, `MoveManipulator`, `LoadTrajController`, `MovementConfig`) for goals and constraints.
+- **Planning scene:** pairs with `manymove_object_manager` to populate collision objects; launch files start this node alongside the planner so the MoveIt planning scene stays synchronised.
+- **Robot bringup:** relies on bringup packages to load URDF, SRDF, controllers, and ros2_control pipelines before motion commands are accepted.
+- **MoveIt dependencies:** uses `moveit_core`, `moveit_ros_planning_interface`, and `moveit_cpp::PlanningComponent` for planning, and `control_msgs/FollowJointTrajectory` for execution feedback.
 
-   - `plan(...)`: path planning for joint, named, pose, or Cartesian goals.
-   - `applyTimeParameterization(...)`: smoothing and velocity constraint application.
-   - `executeTrajectory(...)`: sends trajectories to the robot’s controller.
-   - `sendControlledStop(...)`: gently stops motion on demand.
+## Dependencies
 
-2. **Planner Implementations**
+Key runtime dependencies declared in [`package.xml`](package.xml) include:
 
-   - **`MoveItCppPlanner`**: Uses MoveItCpp for planning, collision checks, and parametric trajectory generation.
-   - **`MoveGroupPlanner`**: (Alternative) leverages `move_group_interface` for those who prefer MoveGroup’s standard pipeline.
+- `rclcpp`, `rclcpp_action`, `action_msgs` for ROS 2 node and action infrastructure.
+- `moveit_core`, `moveit_ros_planning_interface`, `geometry_msgs`, `tf2_geometry_msgs`, `moveit_msgs` for planning and scene representation.
+- `control_msgs`, `controller_manager_msgs` to command trajectory controllers and manage their lifecycle.
+- `manymove_msgs` for custom action/goal definitions shared across the ManyMove stack.
 
-3. **Action Servers** (in `action_server.cpp` & `action_server_node.cpp`):
+## Extending the Planner
 
-   - **`move_manipulator`**: Receives planning requests, executes the resulting `RobotTrajectory`.
-   - **`stop_motion`**: Sends a single-point, decelerating trajectory to stop the manipulator safely.
-   - **`load_trajectory_controller` / `unload_trajectory_controller`**: Dynamically loads/unloads a trajectory controller.
+To integrate a new planning backend:
 
-4. **ROS 2 Node**
+1. Implement `PlannerInterface`, providing planning, time-parameterisation, trajectory validation, and stop logic tailored to your backend.
+2. Link the new class into `action_server_node` or a custom executable and expose a `planner_type` parameter so launch files can select it.
+3. Add any backend-specific configuration to the `config/` directory and reference it from your launch description.
 
-   - The main node (`action_server_node`) loads parameters and spins up the chosen planner plus the action servers.
-   - Supports **prefixes** (e.g., `prefix:=L_` or `prefix:=R_`) for multi-robot setups.
-
----
-
-## Installation & Dependencies
-
-Please refer to the main [**ManyMove README**](../README.md) for overall setup instructions, build steps, and prerequisites.
-
-### Controllers
-
-This package expects a standard `FollowJointTrajectory`-type controller (e.g., a `JointTrajectoryController`). Use the included actions to dynamically load or unload controllers if needed.
-
----
-
-## Configuration & Parameters
-
-Key parameters (set via launch files):
-
-- **`planner_type`**:
-
-  - Selects the underlying planning approach.
-  - Valid options: `"moveitcpp"` (default) or `"movegroup"`.
-
-- **`planning_group`**:
-
-  - Sets the MoveIt planning group name for the manipulator (e.g., `"lite6"`).
-
-- **`base_frame`**:
-
-  - The robot’s base link frame.
-
-- **`tcp_frame`**:
-
-  - The manipulator’s end-effector (TCP) frame.
-
-## Notes & Disclaimer
-
-- This package does **not** provide safety features. Always configure appropriate safety systems on your robot controller.
-- It is highly experimental; use with caution.
-- See the [manymove main README](../README.md) for disclaimers, licensing, and credits.
-
----
-
-## Compatibility (Humble ↔ Jazzy)
-
-This package uses a small, internal compatibility layer to build cleanly on both ROS 2 Humble and Jazzy without changing code paths per distro:
-
-- MoveIt includes: a compat header selects `.hpp` (Jazzy) or `.h` (Humble) using `__has_include`.
-  - See `manymove_planner/compat/moveit_includes_compat.hpp`.
-- MoveGroupInterface API: a shim normalizes the `.trajectory` vs `.trajectory_` member and `computeCartesianPath(...)` signature drift (with/without `jump_threshold`).
-  - See `manymove_planner/compat/moveit_compat.hpp`.
-- CartesianInterpolator API: a shim selects between Humble’s `JumpThreshold` and Jazzy’s `CartesianPrecision`.
-  - See `manymove_planner/compat/cartesian_interpolator_compat.hpp`.
-
-Message definitions are unified via a superset `MovementConfig.msg`. Jazzy-only fields (Cartesian precision) get sensible defaults and are ignored on Humble. Conversely, Humble-only `jump_threshold` is ignored on Jazzy.
-
-CI should build a matrix over `{humble, jazzy}` to verify changes across distros.
+## License and Maintainers
+This package is licensed under BSD-3-Clause. Maintainer: Marco Pastorio <pastoriomarco@gmail.com>.
+See main [ManyMove README](../README.md) for `CONTRIBUTION` details.

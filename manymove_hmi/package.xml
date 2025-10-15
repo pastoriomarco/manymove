@@ -2,9 +2,9 @@
 <?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
 <package format="3">
   <name>manymove_hmi</name>
-  <version>0.0.0</version>
+  <version>0.1.0</version>
   <description>Interface to control execution of manymove behaviortree packages</description>
-  <maintainer email="marco.pastorio@flexingroup.com">Marco Pastorio</maintainer>
+  <maintainer email="pastoriomarco@gmail.com">Marco Pastorio</maintainer>
   <license>BSD-3-Clause</license>
   <author email="pastoriomarco@gmail.com">Marco Pastorio</author>
 

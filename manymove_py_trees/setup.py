@@ -18,7 +18,7 @@ setup(
     maintainer='Marco Pastorio',
     maintainer_email='pastoriomarco@gmail.com',
     description='PyTrees-based client for manymove_planner actions',
-    license='Apache-2.0',
+    license='BSD-3-Clause',
     tests_require=['pytest'],
     entry_points={
         'console_scripts': [

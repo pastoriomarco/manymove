@@ -4,7 +4,7 @@
   <name>manymove_planner</name>
   <version>0.1.0</version>
   <description>Package publishing action servers to plan and execute moves with move_group and moveitcpp</description>
-  <maintainer email="marco.pastorio@flexingroup.com">Marco Pastorio</maintainer>
+  <maintainer email="pastoriomarco@gmail.com">Marco Pastorio</maintainer>
   <license>BSD-3-Clause</license>
   <author email="pastoriomarco@gmail.com">Marco Pastorio</author>
 

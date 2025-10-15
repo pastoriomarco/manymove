@@ -1,3 +1,5 @@
+[![CI](https://github.com/pastoriomarco/manymove/actions/workflows/ci.yml/badge.svg)](https://github.com/pastoriomarco/manymove/actions/workflows/ci.yml)
+
 # ManyMove project — ROS 2 Humble & Jazzy
 
 ![ManyMove structure](media/manymove_example.gif)
