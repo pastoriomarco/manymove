@@ -38,12 +38,8 @@
 #include <utility>
 #include <vector>
 
-#if !__has_include(<moveit/robot_model/robot_model.hpp>)
-#include <moveit/robot_model/robot_model.h>
-#endif
-#if !__has_include(<tf2/LinearMath/Quaternion.hpp>)
-#include <tf2/LinearMath/Quaternion.h>
-#endif
+// TF2 linear algebra (compat)
+#include "manymove_planner/compat/tf2_linear_compat.hpp"
 
 #include <rclcpp/rclcpp.hpp>
 
@@ -51,16 +47,12 @@
 
 #include <control_msgs/action/follow_joint_trajectory.hpp>
 #include <geometry_msgs/msg/pose_stamped.hpp>
-#if __has_include(<moveit/robot_model/robot_model.hpp>)
-#include <moveit/robot_model/robot_model.hpp>
-#endif
+// Robot model headers are pulled via compat includes
 #include <moveit_msgs/msg/collision_object.hpp>
 #include <moveit_msgs/msg/robot_trajectory.hpp>
 #include <moveit_msgs/srv/get_planning_scene.hpp>
 #include <sensor_msgs/msg/joint_state.hpp>
-#if __has_include(<tf2/LinearMath/Quaternion.hpp>)
-#include <tf2/LinearMath/Quaternion.hpp>
-#endif
+// (Quaternion include handled by compat header)
 
 #include "manymove_msgs/msg/move_manipulator_goal.hpp"
 #include "manymove_planner/compat/moveit_includes_compat.hpp"

@@ -28,20 +28,16 @@
 
 #include "manymove_cpp_trees/hmi_service_node.hpp"
 
-#include <tf2/LinearMath/Matrix3x3.h>
-#if !__has_include(<tf2/LinearMath/Quaternion.hpp>)
-#include <tf2/LinearMath/Quaternion.h>
-#endif
-
 #include <chrono>
 #include <sstream>
 #include <string>
 #include <vector>
 
 #include <geometry_msgs/msg/pose.hpp>
-#if __has_include(<tf2/LinearMath/Quaternion.hpp>)
-#include <tf2/LinearMath/Quaternion.hpp>
-#endif
+
+// (Quaternion include handled by compat header)
+// TF2 linear algebra (compat)
+#include "manymove_cpp_trees/compat/tf2_linear_compat.hpp"
 
 namespace manymove_cpp_trees
 {

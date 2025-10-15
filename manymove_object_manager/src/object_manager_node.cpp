@@ -32,12 +32,6 @@
 #include <geometric_shapes/shape_operations.h>
 #include <geometric_shapes/shapes.h>
 
-#include <tf2/LinearMath/Matrix3x3.h>
-#if !__has_include(<tf2/LinearMath/Quaternion.hpp>)
-#include <tf2/LinearMath/Quaternion.h>
-#endif
-#include <tf2/LinearMath/Transform.h>
-
 #include <chrono>
 #include <cstdint>
 #include <thread>
@@ -47,44 +41,17 @@
 #include <rclcpp/qos.hpp>
 #include <rclcpp_action/rclcpp_action.hpp>
 
-#if __has_include(<tf2/LinearMath/Quaternion.hpp>)
-#include <tf2/LinearMath/Quaternion.hpp>
-#endif
+
+// TF2 linear algebra (compat)
+// (Quaternion include handled by compat header)
+// rclcpp client compat (create_client signature)
+#include "manymove_object_manager/compat/tf2_linear_compat.hpp"
+#include "manymove_object_manager/compat/rclcpp_client_compat.hpp"
 
 namespace manymove_object_manager
 {
 
-namespace
-{
-template<typename ServiceT>
-auto create_service_client(
-  rclcpp::Node * node, const std::string & service_name,
-  const rclcpp::CallbackGroup::SharedPtr & callback_group, int)
--> decltype(node->create_client<ServiceT>(service_name, rclcpp::ServicesQoS(), callback_group))
-{
-  auto qos = rclcpp::ServicesQoS();
-  return node->create_client<ServiceT>(service_name, qos, callback_group);
-}
-
-template<typename ServiceT>
-auto create_service_client(
-  rclcpp::Node * node, const std::string & service_name,
-  const rclcpp::CallbackGroup::SharedPtr & callback_group, std::int64_t)
--> decltype(node->create_client<ServiceT>(
-  service_name, rmw_qos_profile_services_default, callback_group))
-{
-  return node->create_client<ServiceT>(
-    service_name, rmw_qos_profile_services_default, callback_group);
-}
-
-template<typename ServiceT>
-auto create_service_client(
-  rclcpp::Node * node, const std::string & service_name,
-  const rclcpp::CallbackGroup::SharedPtr & callback_group)
-{
-  return create_service_client<ServiceT>(node, service_name, callback_group, 0);
-}
-}  // namespace
+using manymove_object_manager_compat::create_service_client;
 
 ObjectManagerNode::ObjectManagerNode()
 : Node("object_manager_node")

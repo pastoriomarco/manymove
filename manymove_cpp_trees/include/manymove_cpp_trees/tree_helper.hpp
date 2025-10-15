@@ -49,11 +49,8 @@
 #include "manymove_cpp_trees/move.hpp"
 #include "manymove_cpp_trees/object.hpp"
 #include "manymove_msgs/msg/movement_config.hpp"
-#if __has_include(<tf2/LinearMath/Quaternion.hpp>)
-#include <tf2/LinearMath/Quaternion.hpp>
-#else
-#include <tf2/LinearMath/Quaternion.h>
-#endif
+// TF2 linear algebra (compat)
+#include "manymove_cpp_trees/compat/tf2_linear_compat.hpp"
 
 namespace manymove_cpp_trees
 {

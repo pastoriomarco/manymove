@@ -262,6 +262,28 @@ For launchers that use **NVIDIA cuMotion** planning library, refer to [THIS READ
 
 ---
 
+## Compatibility Policy (Humble & Jazzy)
+
+To keep the codebase portable across ROS 2 Humble and Jazzy, we follow a consistent pattern for compatibility shims:
+
+- Location: all compile‑time shims live under `include/<package>/compat/`.
+- Naming:
+  - `*_includes_compat.hpp` selects headers when upstream moved `.h` → `.hpp`.
+  - `*_compat.hpp` wraps API drift with small inline helpers (SFINAE/overloads).
+- Technique:
+  - Prefer `__has_include` for header drift and SFINAE/`decltype` for API drift.
+  - Keep shims header‑only and self‑contained; avoid global macros.
+- Usage:
+  - Production code includes the compat headers instead of using `__has_include` directly.
+
+Examples adopted in this repo:
+- MoveIt headers and API: `manymove_planner/compat/moveit_includes_compat.hpp`, `manymove_planner/compat/moveit_compat.hpp`, `manymove_planner/compat/cartesian_interpolator_compat.hpp`.
+- TF2 linear algebra: per‑package `compat/tf2_linear_compat.hpp` included where needed.
+
+Our CI enforces this style by failing if `__has_include` appears outside `include/**/compat/`.
+
+---
+
 ## Credits
 
 - **BehaviorTree.CPP v3.8** installed through ROS dependencies (`ros-humble-behaviortree-cpp-v3`)

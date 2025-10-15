@@ -38,9 +38,8 @@
 #include <utility>
 #include <vector>
 
-#if !__has_include(<tf2/LinearMath/Quaternion.hpp>)
-#include <tf2/LinearMath/Quaternion.h>
-#endif
+// TF2 linear algebra (compat)
+#include "manymove_planner/compat/tf2_linear_compat.hpp"
 
 #include <rclcpp/rclcpp.hpp>
 
@@ -51,9 +50,7 @@
 #include <sensor_msgs/msg/joint_state.hpp>
 #include <tf2_eigen/tf2_eigen.hpp>
 
-#if __has_include(<tf2/LinearMath/Quaternion.hpp>)
-#include <tf2/LinearMath/Quaternion.hpp>
-#endif
+// (Quaternion include handled by compat header)
 
 #include "manymove_planner/compat/moveit_includes_compat.hpp"
 // Included via compat: robot_state/cartesian_interpolator, robot_trajectory,

@@ -28,7 +28,8 @@
 
 #include "manymove_cpp_trees/action_nodes_isaac.hpp"
 
-#include <tf2/LinearMath/Matrix3x3.h>
+#include <tf2/LinearMath/Vector3.h>
+#include <tf2/time.h>
 
 #include <algorithm>
 #include <chrono>
@@ -38,22 +39,17 @@
 #include <optional>
 #include <utility>
 
-#if !__has_include(<tf2/LinearMath/Quaternion.hpp>)
-#include <tf2/LinearMath/Quaternion.h>
-#endif
-
 #include <geometry_msgs/msg/accel.hpp>
 #include <geometry_msgs/msg/twist.hpp>
 #include <std_msgs/msg/header.hpp>
 
 #include "manymove_cpp_trees/bt_converters.hpp"
-#if __has_include(<tf2/LinearMath/Quaternion.hpp>)
-#include <tf2/LinearMath/Quaternion.hpp>
-#endif
-#include <tf2/LinearMath/Vector3.h>
-#include <tf2/time.h>
 
 #include <tf2_geometry_msgs/tf2_geometry_msgs.hpp>
+
+// (Quaternion include handled by compat header)
+// TF2 linear algebra (compat)
+#include "manymove_cpp_trees/compat/tf2_linear_compat.hpp"
 
 using namespace std::chrono_literals;
 
