@@ -5,6 +5,9 @@ project(manymove_planner)
 if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
   add_compile_options(-Wall -Wextra -Wpedantic)
 endif()
+if(CMAKE_CXX_COMPILER_ID MATCHES "Clang")
+  add_compile_options(-Wthread-safety)
+endif()
 
 # Find required packages
 find_package(ament_cmake REQUIRED)
@@ -19,6 +22,7 @@ find_package(action_msgs REQUIRED)
 find_package(control_msgs REQUIRED)
 find_package(controller_manager_msgs REQUIRED)
 find_package(manymove_msgs REQUIRED)
+find_package(rcpputils REQUIRED)
 
 # Include public headers
 include_directories(include)
@@ -39,6 +43,7 @@ ament_target_dependencies(move_group_planner_lib
   geometry_msgs
   control_msgs
   manymove_msgs
+  rcpputils
 )
 
 # Build the MoveItCppPlanner Library
@@ -53,6 +58,7 @@ ament_target_dependencies(moveit_cpp_planner_lib
   geometry_msgs
   control_msgs
   manymove_msgs
+  rcpputils
 )
 
 ##########################
@@ -78,6 +84,7 @@ ament_target_dependencies(manipulator_action_server_lib
   control_msgs
   sensor_msgs
   manymove_msgs
+  rcpputils
 )
 target_include_directories(manipulator_action_server_lib PUBLIC
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
@@ -91,6 +98,7 @@ target_link_libraries(action_server_node
 )
 ament_target_dependencies(action_server_node
   rclcpp
+  rcpputils
 )
 
 add_executable(moveitcpp_action_server_node
@@ -109,6 +117,7 @@ ament_target_dependencies(moveitcpp_action_server_node
   action_msgs
   controller_manager_msgs
   manymove_msgs
+  rcpputils
 )
 
 ##########################
@@ -159,6 +168,7 @@ ament_export_dependencies(
   action_msgs
   rclcpp_action
   manymove_msgs
+  rcpputils
 )
 ament_export_include_directories(include)
 
@@ -181,6 +191,7 @@ if(BUILD_TESTING)
     geometry_msgs
     trajectory_msgs
     manymove_msgs
+    rcpputils
   )
 
   find_package(ament_cmake_test QUIET)

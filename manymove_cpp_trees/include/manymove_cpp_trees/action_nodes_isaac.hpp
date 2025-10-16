@@ -48,6 +48,8 @@
 #include <std_msgs/msg/header.hpp>
 #include <vision_msgs/msg/detection3_d_array.hpp>
 
+#include "rcpputils/thread_safety_annotations.hpp"
+
 namespace manymove_cpp_trees
 {
 
@@ -317,15 +319,15 @@ private:
   void detectionCallback(const DetectionArray::SharedPtr msg);
   std::optional<DetectionSelection> pickDetection(const DetectionArray & array);
 
-  rclcpp::Node::SharedPtr node_;
-  rclcpp::Subscription<DetectionArray>::SharedPtr subscription_;
-  std::string current_topic_;
-
   std::mutex mutex_;
-  DetectionArray latest_detection_;
-  bool have_message_{false};
-  uint64_t message_sequence_{0};
-  uint64_t last_processed_sequence_{0};
+  rclcpp::Node::SharedPtr node_;
+  rclcpp::Subscription<DetectionArray>::SharedPtr subscription_
+  RCPPUTILS_TSA_PT_GUARDED_BY(mutex_);
+  std::string current_topic_ RCPPUTILS_TSA_GUARDED_BY(mutex_);
+  DetectionArray latest_detection_ RCPPUTILS_TSA_GUARDED_BY(mutex_);
+  bool have_message_ RCPPUTILS_TSA_GUARDED_BY(mutex_) = false;
+  uint64_t message_sequence_ RCPPUTILS_TSA_GUARDED_BY(mutex_) = 0;
+  uint64_t last_processed_sequence_ RCPPUTILS_TSA_GUARDED_BY(mutex_) = 0;
 
   rclcpp::Time start_time_;
   double timeout_seconds_{0.0};

@@ -59,6 +59,7 @@
 #include <control_msgs/action/follow_joint_trajectory.hpp>
 
 #include "manymove_msgs/msg/move_manipulator_goal.hpp"
+#include "rcpputils/thread_safety_annotations.hpp"
 
 // Included via compat: robot_model, planning_scene, planning_component
 
@@ -320,6 +321,6 @@ private:
   // subscriber.
 
   mutable std::mutex js_mutex_;
-  std::map<std::string, double> current_positions_;
-  std::map<std::string, double> current_velocities_;
+  std::map<std::string, double> current_positions_ RCPPUTILS_TSA_GUARDED_BY(js_mutex_);
+  std::map<std::string, double> current_velocities_ RCPPUTILS_TSA_GUARDED_BY(js_mutex_);
 };

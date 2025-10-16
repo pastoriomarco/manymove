@@ -47,6 +47,8 @@
 #include <rclcpp_action/rclcpp_action.hpp>
 #include <sensor_msgs/msg/joint_state.hpp>
 
+#include "rcpputils/thread_safety_annotations.hpp"
+
 #include "manymove_msgs/action/load_traj_controller.hpp"
 #include "manymove_msgs/action/move_manipulator.hpp"
 #include "manymove_msgs/action/plan_manipulator.hpp"
@@ -100,17 +102,22 @@ private:
   // Joint States
   rclcpp::Subscription<sensor_msgs::msg::JointState>::SharedPtr joint_states_sub_;
   std::mutex joint_states_mutex_;
-  std::unordered_map<std::string, double> current_joint_positions_;
+  std::unordered_map<std::string, double> current_joint_positions_
+  RCPPUTILS_TSA_GUARDED_BY(joint_states_mutex_);
 
   std::mutex move_state_mutex_;
-  MoveExecutionState move_state_{MoveExecutionState::IDLE};
+  MoveExecutionState move_state_ RCPPUTILS_TSA_GUARDED_BY(move_state_mutex_) =
+    MoveExecutionState::IDLE;
 
-  moveit_msgs::msg::RobotTrajectory executing_traj_;
-  rclcpp::Time executing_start_time_;
-  manymove_msgs::msg::MoveManipulatorGoal move_manipulator_goal_;
+  moveit_msgs::msg::RobotTrajectory executing_traj_
+  RCPPUTILS_TSA_GUARDED_BY(move_state_mutex_);
+  rclcpp::Time executing_start_time_ RCPPUTILS_TSA_GUARDED_BY(move_state_mutex_);
+  manymove_msgs::msg::MoveManipulatorGoal move_manipulator_goal_
+  RCPPUTILS_TSA_GUARDED_BY(move_state_mutex_);
   using FjtGoalHandle =
     rclcpp_action::ClientGoalHandle<control_msgs::action::FollowJointTrajectory>;
-  std::shared_ptr<FjtGoalHandle> executing_fjt_goal_handle_;
+  std::shared_ptr<FjtGoalHandle> executing_fjt_goal_handle_
+  RCPPUTILS_TSA_PT_GUARDED_BY(move_state_mutex_);
   std::atomic<bool> move_cancel_requested_{false};
   std::atomic<bool> fjt_cancel_requested_{false};
 

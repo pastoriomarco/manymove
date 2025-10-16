@@ -404,14 +404,22 @@ FoundationPoseAlignmentNode::FoundationPoseAlignmentNode(
 
 void FoundationPoseAlignmentNode::ensureSubscription(const std::string & topic)
 {
-  if (subscription_ && topic == current_topic_ && subscription_->get_topic_name() == topic) {
-    return;
+  {
+    std::lock_guard<std::mutex> lock(mutex_);
+    if (subscription_ && topic == current_topic_ && subscription_->get_topic_name() == topic) {
+      return;
+    }
+    current_topic_ = topic;
   }
 
-  current_topic_ = topic;
   auto callback = [this](DetectionArray::SharedPtr msg) {detectionCallback(std::move(msg));};
-  subscription_ =
+  auto new_subscription =
     node_->create_subscription<DetectionArray>(topic, rclcpp::SensorDataQoS(), callback);
+
+  {
+    std::lock_guard<std::mutex> lock(mutex_);
+    subscription_ = new_subscription;
+  }
 }
 
 void FoundationPoseAlignmentNode::detectionCallback(const DetectionArray::SharedPtr msg)
@@ -507,6 +515,7 @@ BT::NodeStatus FoundationPoseAlignmentNode::onRunning()
 {
   DetectionArray message_snapshot;
   bool has_new_message = false;
+  std::string topic_snapshot;
   {
     std::lock_guard<std::mutex> lock(mutex_);
     if (have_message_ && message_sequence_ != last_processed_sequence_) {
@@ -514,6 +523,7 @@ BT::NodeStatus FoundationPoseAlignmentNode::onRunning()
       last_processed_sequence_ = message_sequence_;
       has_new_message = true;
     }
+    topic_snapshot = current_topic_;
   }
 
   auto clock = node_->get_clock();
@@ -524,7 +534,7 @@ BT::NodeStatus FoundationPoseAlignmentNode::onRunning()
       if (elapsed.seconds() > timeout_seconds_) {
         RCLCPP_WARN(
           node_->get_logger(), "[%s] Timed out waiting for detections on '%s'", name().c_str(),
-          current_topic_.c_str());
+          topic_snapshot.c_str());
         return BT::NodeStatus::FAILURE;
       }
     }

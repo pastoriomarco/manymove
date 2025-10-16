@@ -45,6 +45,7 @@ The package follows ROS 2 and MoveIt coding standards and is actively maintained
 
 - Linters enabled via `ament_lint_auto` and `ament_lint_common` with `ament_cmake_uncrustify` configured when available.
 - The CMake logic gracefully skips linting if `ament_cmake_test` is unavailable in the environment.
+- Core concurrency hotspots (joint-state caches, action execution state, planner feedback) are annotated with `rcpputils` thread-safety macros, but the default CI path still uses GCC/libstdc++; therefore the thread-safety analysis is not enforced automatically yet.
 
 ### 4.3 Continuous Integration
 
@@ -84,6 +85,7 @@ Related ManyMove packages (same repository):
 | Integration tests       | Unit/component tests against fakes           | Add `launch_testing_ros` with MoveIt + real controllers in loop     |
 | Documentation           | README + headers                             | Auto-generated API docs and practical deployment recipes            |
 | Code coverage           | Unreported                                   | Add gcovr/Codecov metrics                                           |
+| Thread-safety analysis  | Annotations present; clang/libc++ build optional | Add dedicated clang/libc++ CI job to run `-Wthread-safety` checks   |
 | API stability           | Pre-1.0                                      | Freeze public actions/params post-1.0                               |
 
 ---
