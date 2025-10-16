@@ -265,21 +265,6 @@ with py_trees:
 ```bash
 ros2 launch manymove_bringup panda_movegroup_fake_py_trees.launch.py
 ```
-Alternative with standard panda demo launch and manymove started from a separate launcher:
-
-In **terminal 1** (with `moveit2_tutorials` installed and sourced):
-```bash
-ros2 launch moveit2_tutorials demo.launch.py
-```
-In **terminal 2**, with MoveGroupInterface and BehaviorTree.CPP:
-```bash
-ros2 launch manymove_planner panda_fake_cpp_trees.launch.py
-```
-
-**Alternative**: **in terminal 2**, with MoveGroupInterface and **py_trees** (minimal):
-```bash
-ros2 launch manymove_planner panda_fake_py_trees.launch.py
-```
 
 These launch files spin up the appropriate environment (fake or real) plus the nodes that handle planning, object management, signals, and optional HMI components. You can then interact with these action servers and send them requests using the provided C++ or Python-based behavior tree clients.
 
@@ -305,7 +290,7 @@ Examples adopted in this repo:
 - MoveIt headers and API: `manymove_planner/compat/moveit_includes_compat.hpp`, `manymove_planner/compat/moveit_compat.hpp`, `manymove_planner/compat/cartesian_interpolator_compat.hpp`.
 - TF2 linear algebra: per‑package `compat/tf2_linear_compat.hpp` included where needed.
 
-Our CI enforces this style by failing if `__has_include` appears outside `include/**/compat/`.
+We do not yet lint this automatically in CI, so please double-check before introducing new `__has_include` usage outside `include/**/compat/`.
 
 ---
 
