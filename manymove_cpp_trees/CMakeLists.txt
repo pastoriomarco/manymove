@@ -127,7 +127,51 @@ ament_export_dependencies(
 if(BUILD_TESTING)
   find_package(ament_lint_auto REQUIRED)
   find_package(ament_cmake_uncrustify REQUIRED)
+  find_package(ament_cmake_gtest REQUIRED)
+
   ament_lint_auto_find_test_dependencies()
+
+  # -----------------------------
+  # Helper function to add a gtest
+  # -----------------------------
+  function(manymove_cpp_trees_add_gtest target)
+    ament_add_gtest(${target} ${ARGN})
+    if(TARGET ${target})
+      target_link_libraries(${target} manymove_cpp_trees_lib)
+      ament_target_dependencies(${target}
+        rclcpp rclcpp_action behaviortree_cpp_v3
+        manymove_planner manymove_object_manager
+        moveit_msgs geometry_msgs tf2 tf2_ros tf2_geometry_msgs std_srvs manymove_msgs control_msgs
+        std_msgs topic_based_ros2_control simulation_interfaces vision_msgs)
+    endif()
+  endfunction()
+
+  # -----------------------------
+  # Unit tests
+  # -----------------------------
+  manymove_cpp_trees_add_gtest(test_bt_converters
+    test/test_bt_converters.cpp)
+
+  manymove_cpp_trees_add_gtest(test_tree_helper
+    test/test_tree_helper.cpp)
+
+  manymove_cpp_trees_add_gtest(test_logic_nodes
+    test/test_logic_nodes.cpp)
+
+  manymove_cpp_trees_add_gtest(test_tf_node
+    test/test_tf_node.cpp)
+
+  manymove_cpp_trees_add_gtest(test_action_nodes_objects
+    test/test_action_nodes_objects.cpp)
+
+  manymove_cpp_trees_add_gtest(test_action_nodes_signals
+    test/test_action_nodes_signals.cpp)
+
+  manymove_cpp_trees_add_gtest(test_action_nodes_gripper
+    test/test_action_nodes_gripper.cpp)
+
+  manymove_cpp_trees_add_gtest(test_bt_integration
+    test/test_bt_integration.cpp)
 endif()
 
 ament_package()
