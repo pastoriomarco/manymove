@@ -70,6 +70,11 @@ The package follows ROS 2 and MoveIt coding standards and is actively maintained
   `rclcpp`, `rclcpp_action`, `geometry_msgs`, `shape_msgs`, `moveit_ros_planning_interface`, `tf2_ros`, etc.
 * Uses only API surfaces considered stable within ROS 2 Humble and later.
 
+Related ManyMove packages (same repository):
+* `manymove_cpp_trees` – behavior-tree nodes that call object manager actions/services.
+* `manymove_planner` – planning backends that consume the maintained planning scene.
+* `manymove_hmi` – GUI that surfaces object-related statuses via the BT blackboard.
+
 ---
 
 ## 6. Security and Robustness

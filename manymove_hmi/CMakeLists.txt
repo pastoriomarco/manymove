@@ -85,6 +85,28 @@ if(BUILD_TESTING)
   find_package(ament_lint_auto REQUIRED)
   find_package(ament_cmake_uncrustify REQUIRED)
   ament_lint_auto_find_test_dependencies()
+
+  find_package(ament_cmake_gtest REQUIRED)
+
+  # AppModule tests (Qt widgets + signals)
+  ament_add_gtest(test_hmi_app_module
+    test/test_app_module.cpp)
+  if(TARGET test_hmi_app_module)
+    target_link_libraries(test_hmi_app_module
+      manymove_hmi_lib Qt5::Core Qt5::Widgets Qt5::Network)
+    ament_target_dependencies(test_hmi_app_module
+      rclcpp std_msgs std_srvs manymove_msgs)
+  endif()
+
+  # HmiGui tests (button state updates)
+  ament_add_gtest(test_hmi_gui
+    test/test_hmi_gui.cpp)
+  if(TARGET test_hmi_gui)
+    target_link_libraries(test_hmi_gui
+      manymove_hmi_lib Qt5::Core Qt5::Widgets Qt5::Network)
+    ament_target_dependencies(test_hmi_gui
+      rclcpp std_msgs std_srvs manymove_msgs)
+  endif()
 endif()
 
 ament_package()
