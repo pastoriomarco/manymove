@@ -22,37 +22,30 @@ jobs:
       ROS_DISTRO: ${{ matrix.ros_distro }}
       COLCON_HOME: /tmp/colcon
       ROS_WS: /tmp/ros_ws
+      CCACHE_DIR: /root/.ccache
+      CCACHE_BASEDIR: /tmp/ros_ws
+      CCACHE_COMPRESS: "1"
+      CCACHE_MAXSIZE: 5G
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      # Cache colcon build artifacts
-      - name: Cache colcon workspace
+      # Cache compiler artifacts with ccache
+      - name: Cache ccache
         uses: actions/cache@v4
         with:
-          path: |
-            /tmp/ros_ws/build
-            /tmp/ros_ws/install
-            /tmp/ros_ws/log
-          key: colcon-${{ matrix.ros_distro }}-${{ hashFiles('**/package.xml', '**/CMakeLists.txt') }}
+          path: /root/.ccache
+          key: ccache-${{ matrix.ros_distro }}-${{ runner.os }}-v1
           restore-keys: |
-            colcon-${{ matrix.ros_distro }}-
-
-      # Cache APT packages
-      - name: Cache APT packages
-        uses: actions/cache@v4
-        with:
-          path: /var/cache/apt/archives
-          key: apt-${{ matrix.ros_distro }}-${{ hashFiles('.github/workflows/**') }}
-          restore-keys: |
-            apt-${{ matrix.ros_distro }}-
+            ccache-${{ matrix.ros_distro }}-
 
       - name: Install build tooling
         run: |
           set -e
           apt-get update
           apt-get install -y \
+            ccache \
             ros-$ROS_DISTRO-topic-based-ros2-control \
             python3-colcon-common-extensions python3-rosdep git \
             ros-$ROS_DISTRO-moveit \
@@ -97,7 +90,16 @@ jobs:
           set -e
           source /opt/ros/$ROS_DISTRO/setup.bash
           cd ${ROS_WS}
-          colcon build --base-paths ${ROS_WS}/src --event-handlers console_cohesion+
+          # Show ccache status before build
+          ccache -s || true
+          colcon build \
+            --base-paths ${ROS_WS}/src \
+            --event-handlers console_cohesion+ \
+            --cmake-args \
+              -DCMAKE_C_COMPILER_LAUNCHER=ccache \
+              -DCMAKE_CXX_COMPILER_LAUNCHER=ccache
+          # Show ccache status after build
+          ccache -s || true
 
       - name: Run tests
         shell: bash
