@@ -103,38 +103,21 @@ ManipulatorActionServer::ManipulatorActionServer(
     create_service_client<controller_manager_msgs::srv::ConfigureController>(
     node_, "/controller_manager/configure_controller", param_callback_group_);
 
-  // **Wait for Services to Be Available**
-  bool all_services_available = true;
-
-  if (!unload_controller_client_->wait_for_service(std::chrono::seconds(5))) {
-    RCLCPP_ERROR(
-      node_->get_logger(), "Service '/controller_manager/unload_controller' not available.");
-    all_services_available = false;
-  }
-
-  if (!load_controller_client_->wait_for_service(std::chrono::seconds(5))) {
-    RCLCPP_ERROR(
-      node_->get_logger(), "Service '/controller_manager/load_controller' not available.");
-    all_services_available = false;
-  }
-
-  if (!switch_controller_client_->wait_for_service(std::chrono::seconds(5))) {
-    RCLCPP_ERROR(
-      node_->get_logger(), "Service '/controller_manager/switch_controller' not available.");
-    all_services_available = false;
-  }
-
-  if (!configure_controller_client_->wait_for_service(std::chrono::seconds(5))) {
-    RCLCPP_ERROR(
-      node_->get_logger(), "Service '/controller_manager/configure_controller' not available.");
-    all_services_available = false;
-  }
-
-  if (!all_services_available) {
-    RCLCPP_ERROR(node_->get_logger(), "Not all required services are available. Shutting down.");
-    rclcpp::shutdown();
-    return;
-  }
+  // Do not hard-fail if controller_manager services are not available at startup.
+  // The async helpers below check readiness before sending requests and will
+  // report clear errors. This avoids tearing down the process during e.g. tests
+  // or late-starting systems.
+  auto warn_if_unavailable = [this](auto & client, const char * name) {
+      if (!client->service_is_ready()) {
+        RCLCPP_WARN(
+          node_->get_logger(),
+          "Service '%s' not available at startup; will retry on demand.", name);
+      }
+    };
+  warn_if_unavailable(unload_controller_client_, "/controller_manager/unload_controller");
+  warn_if_unavailable(load_controller_client_, "/controller_manager/load_controller");
+  warn_if_unavailable(switch_controller_client_, "/controller_manager/switch_controller");
+  warn_if_unavailable(configure_controller_client_, "/controller_manager/configure_controller");
 
   // Subscribe to /joint_states to let ExecuteTrajectory handle the collision check feedback
   joint_states_sub_ = node_->create_subscription<sensor_msgs::msg::JointState>(
@@ -944,7 +927,13 @@ bool ManipulatorActionServer::executeTrajectoryWithCollisionChecks(
       result_promise->set_value(success);
     };
 
-  // 7) Send the trajectory execution goal
+  // 7) Ensure the FollowJointTrajectory action server is available, then send the goal
+  if (!follow_joint_traj_client->wait_for_action_server(std::chrono::seconds(5))) {
+    abort_reason = "FollowJointTrajectory action server not available";
+    return false;
+  }
+
+  // Send the trajectory execution goal
   auto goal_handle_future = follow_joint_traj_client->async_send_goal(fjt_goal, opts);
   if (goal_handle_future.wait_for(std::chrono::seconds(5)) != std::future_status::ready) {
     abort_reason = "Timeout sending FollowJointTrajectory goal";
