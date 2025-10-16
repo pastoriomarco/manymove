@@ -111,6 +111,7 @@ private:
   using FjtGoalHandle =
     rclcpp_action::ClientGoalHandle<control_msgs::action::FollowJointTrajectory>;
   std::shared_ptr<FjtGoalHandle> executing_fjt_goal_handle_;
+  std::atomic<bool> move_cancel_requested_{false};
   std::atomic<bool> fjt_cancel_requested_{false};
 
   // MoveManipulator Callbacks

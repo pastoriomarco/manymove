@@ -192,6 +192,9 @@ rclcpp_action::GoalResponse ManipulatorActionServer::handle_move_goal(
     move_state_ = MoveExecutionState::PLANNING;
   }
 
+  move_cancel_requested_.store(false);
+  fjt_cancel_requested_.store(false);
+
   return rclcpp_action::GoalResponse::ACCEPT_AND_EXECUTE;
 }
 
@@ -219,6 +222,8 @@ rclcpp_action::CancelResponse ManipulatorActionServer::handle_move_cancel(
     }
   }
 
+  move_cancel_requested_.store(true);
+
   // Also propagate cancel to the underlying FollowJointTrajectory goal if present
   try {
     auto fjt_client = planner_->getFollowJointTrajClient();
@@ -228,8 +233,10 @@ rclcpp_action::CancelResponse ManipulatorActionServer::handle_move_cancel(
       fjt_handle_copy = executing_fjt_goal_handle_;
     }
     if (fjt_client && fjt_handle_copy) {
-      (void)fjt_client->async_cancel_goal(fjt_handle_copy);
-      fjt_cancel_requested_.store(true);
+      bool expected = false;
+      if (fjt_cancel_requested_.compare_exchange_strong(expected, true)) {
+        (void)fjt_client->async_cancel_goal(fjt_handle_copy);
+      }
     }
   } catch (const std::exception & e) {
     RCLCPP_WARN(node_->get_logger(), "[MoveManipulator] Failed to cancel FJT goal: %s", e.what());
@@ -360,7 +367,16 @@ void ManipulatorActionServer::execute_move(
         move_state_ = MoveExecutionState::CANCELLED;
       }
 
-      goal_handle->canceled(result);
+      // In some runtime races the goal may still report EXECUTING here.
+      // Only report CANCELED if the goal_handle is actually canceling.
+      if (goal_handle->is_canceling()) {
+        goal_handle->canceled(result);
+      } else {
+        RCLCPP_WARN(
+          node_->get_logger(),
+          "[MoveManipulator] Cancel requested but goal not in CANCELING state; aborting instead");
+        goal_handle->abort(result);
+      }
       return;
     }
 
@@ -942,6 +958,24 @@ bool ManipulatorActionServer::executeTrajectoryWithCollisionChecks(
   {
     std::lock_guard<std::mutex> lock(move_state_mutex_);
     executing_fjt_goal_handle_ = fjt_goal_handle;
+  }
+
+  if (move_cancel_requested_.load()) {
+    bool expected = false;
+    if (fjt_cancel_requested_.compare_exchange_strong(expected, true)) {
+      RCLCPP_DEBUG(
+        node_->get_logger(),
+        "[MoveManipulator] Forwarding queued cancel request to FollowJointTrajectory goal");
+      try {
+        (void)follow_joint_traj_client->async_cancel_goal(fjt_goal_handle);
+      } catch (const std::exception & e) {
+        fjt_cancel_requested_.store(false);
+        RCLCPP_WARN(
+          node_->get_logger(),
+          "[MoveManipulator] Failed to forward queued cancel to FJT goal: %s", e.what());
+      }
+    }
+  } else {
     fjt_cancel_requested_.store(false);
   }
 
