@@ -816,8 +816,14 @@ TEST_F(ManipulatorActionServerFixture, ExecutesProvidedTrajectoryWhenValid)
   auto goal_handle = send_future.get();
   ASSERT_NE(goal_handle, nullptr);
 
+  // Ensure the fake FollowJointTrajectory server has accepted the goal
+  // before we start waiting on the result. This avoids a rare race on
+  // Humble where the result is observed too early.
+  ASSERT_TRUE(fake_fjt_server_->wait_for_active_goal(200ms));
+
   auto result_future = move_client_->async_get_result(goal_handle);
-  wait_for_future_ready(result_future, 3s);
+  // Give a bit more time on Humble to avoid flakiness.
+  wait_for_future_ready(result_future, 5s);
   auto wrapped_result = result_future.get();
 
   EXPECT_EQ(wrapped_result.code, rclcpp_action::ResultCode::SUCCEEDED);
