@@ -22,11 +22,21 @@ This series of packages was created around Ufactory Lite6 and UF850 cobots, but 
 
 ## Prerequisites
 
-- Install **ROS 2 Humble** or **ROS 2 Jazzy** from the official docs:
+Install **ROS 2 Humble** or **ROS 2 Jazzy** from the official docs:
   - [ROS 2 Humble](https://docs.ros.org/en/ros2_documentation/humble/Installation.html)
   - [ROS 2 Jazzy](https://docs.ros.org/en/ros2_documentation/jazzy/Installation.html)
-- `MoveIt 2` is required. When using `rosdep install` (see below) it will be pulled automatically.
-- Recommended: ensure the environment variable `ROS_DISTRO` is exported (`echo $ROS_DISTRO`) before following the quick start procedure.
+
+`MoveIt 2` is required. When using `rosdep install` (see below) it will be pulled automatically.
+
+Recommended: **source ROS2** and ensure the environment variable `ROS_DISTRO` is exported (`echo $ROS_DISTRO`) before following the quick start procedure.
+
+```bash
+#Humble:
+source /opt/ros/humble/setup.bash
+#Jazzy:
+source /opt/ros/jazzy/setup.bash
+```
+Other distributions are not tested yet.
 
 ---
 
@@ -35,43 +45,33 @@ This series of packages was created around Ufactory Lite6 and UF850 cobots, but 
 The commands below are distro-agnostic and rely on the `ROS_DISTRO` environment variable. When you source `/opt/ros/<distro>/setup.bash`, the variable is exported automatically.
 
 **1. Define your workspace path and create dir**
+
+Modify the MANYMOVE_ROS_WS definition if you want to install it in another folder
 ```bash
 export MANYMOVE_ROS_WS=~/workspaces/dev_ws
 mkdir -p ${MANYMOVE_ROS_WS}/src
 ```
 
-**2. Source ROS 2**
-
-Humble:
-```bash
-source /opt/ros/humble/setup.bash
-```
-
-Jazzy:
-```bash
-source /opt/ros/jazzy/setup.bash
-```
-
-**3. Clone ManyMove**
+**2. Clone ManyMove**
 ```bash
 cd ${MANYMOVE_ROS_WS}/src
 git clone https://github.com/pastoriomarco/manymove.git -b main
 ```
 
-**4. Update repositories (optional refresh)**
+**3. Update repositories (optional refresh)**
 ```bash
 cd ${MANYMOVE_ROS_WS}/src/manymove
 git pull
 ```
 
-**5. Install dependencies**
+**4. Install dependencies**
 ```bash
 cd ${MANYMOVE_ROS_WS}
 rosdep update
 rosdep install --from-paths . --ignore-src --rosdistro $ROS_DISTRO -y
 ```
 
-**6. (OPTIONAL) Install Groot** for visualising behavior trees
+**5. (OPTIONAL) Install Groot** for visualising behavior trees
 ```bash
 cd ${MANYMOVE_ROS_WS}/src/
 git clone --recurse-submodules https://github.com/pastoriomarco/Groot.git
@@ -83,17 +83,26 @@ rosdep update
 rosdep install --from-paths . --ignore-src --rosdistro $ROS_DISTRO -y
 ```
 
-**7. Build the workspace**
+**6. Build the workspace**
 ```bash
 cd ${MANYMOVE_ROS_WS} && colcon build
 ```
 
-**8. Source the overlay**
+**7. Source the overlay**
 ```bash
 source ${MANYMOVE_ROS_WS}/install/setup.bash
 ```
 
-That’s it! Repeat steps 2–8 whenever you open a new shell.
+That’s it!
+
+### For each new shell:
+Whenever you open a new shell, run:
+```bash
+export MANYMOVE_ROS_WS=~/workspaces/dev_ws
+cd ${MANYMOVE_ROS_WS}
+source ${MANYMOVE_ROS_WS}/install/setup.bash
+```
+For `MANYMOVE_ROS_WS`, you'll need to be consistent with the value you set in point **1** of **Quick Start** above.
 
 ---
 
@@ -190,6 +199,7 @@ Starting from an empty scene, you'll delop a pick and place application with Man
 To launch UFactory robots example you'll need to build from source my branch of `xarm_ros2` repo.
 The following instructions require you to have already followed the Quick Start section.
 More info in [my fork of xarm_ros2](https://github.com/pastoriomarco/xarm_ros2).
+For `MANYMOVE_ROS_WS`, you'll need to be consistent with the value you set in point **1** of **Quick Start** above.
 
 ```bash
 export MANYMOVE_ROS_WS=~/workspaces/dev_ws

@@ -219,6 +219,22 @@ rclcpp_action::CancelResponse ManipulatorActionServer::handle_move_cancel(
     }
   }
 
+  // Also propagate cancel to the underlying FollowJointTrajectory goal if present
+  try {
+    auto fjt_client = planner_->getFollowJointTrajClient();
+    std::shared_ptr<FjtGoalHandle> fjt_handle_copy;
+    {
+      std::lock_guard<std::mutex> lock(move_state_mutex_);
+      fjt_handle_copy = executing_fjt_goal_handle_;
+    }
+    if (fjt_client && fjt_handle_copy) {
+      (void)fjt_client->async_cancel_goal(fjt_handle_copy);
+      fjt_cancel_requested_.store(true);
+    }
+  } catch (const std::exception & e) {
+    RCLCPP_WARN(node_->get_logger(), "[MoveManipulator] Failed to cancel FJT goal: %s", e.what());
+  }
+
   return rclcpp_action::CancelResponse::ACCEPT;
 }
 
@@ -329,9 +345,25 @@ void ManipulatorActionServer::execute_move(
 
   // 3) Execute the trajectory with real-time collision checking and partial feedback.
   std::string abort_reason;
-  bool exec_ok = executeTrajectoryWithCollisionChecks(goal_handle, final_traj, abort_reason);
+  bool execution_canceled = false;
+  bool exec_ok = executeTrajectoryWithCollisionChecks(
+    goal_handle, final_traj, abort_reason, execution_canceled);
 
   if (!exec_ok) {
+    if (execution_canceled) {
+      RCLCPP_INFO(node_->get_logger(), "[MoveManipulator] Execution canceled by client");
+      result->success = false;
+      result->message = "Execution canceled";
+
+      {
+        std::lock_guard<std::mutex> lock(move_state_mutex_);
+        move_state_ = MoveExecutionState::CANCELLED;
+      }
+
+      goal_handle->canceled(result);
+      return;
+    }
+
     RCLCPP_ERROR(
       node_->get_logger(), "[MoveManipulator] Execution failed => %s", abort_reason.c_str());
     result->success = false;
@@ -765,8 +797,11 @@ void ManipulatorActionServer::configureControllerAsync(
 
 bool ManipulatorActionServer::executeTrajectoryWithCollisionChecks(
   const std::shared_ptr<GoalHandleMoveManipulator> & goal_handle,
-  const moveit_msgs::msg::RobotTrajectory & traj, std::string & abort_reason)
+  const moveit_msgs::msg::RobotTrajectory & traj, std::string & abort_reason,
+  bool & canceled)
 {
+  canceled = false;
+
   // 1) Preliminary checks: is the trajectory empty?
   const auto & points = traj.joint_trajectory.points;
   if (points.empty()) {
@@ -812,6 +847,7 @@ bool ManipulatorActionServer::executeTrajectoryWithCollisionChecks(
   auto result_promise = std::make_shared<std::promise<bool>>();
   std::future<bool> result_future = result_promise->get_future();
   std::atomic<bool> collision_detected(false);
+  std::atomic<bool> canceled_by_client(false);
 
   // 5) Build the FollowJointTrajectory goal
   control_msgs::action::FollowJointTrajectory::Goal fjt_goal;
@@ -881,7 +917,11 @@ bool ManipulatorActionServer::executeTrajectoryWithCollisionChecks(
     };
 
   // Result callback: set the promise value based on execution result
-  opts.result_callback = [this, result_promise, &collision_detected](const auto & wrapped_result) {
+  opts.result_callback = [this, result_promise, &collision_detected, &canceled_by_client](
+    const auto & wrapped_result) {
+      if (wrapped_result.code == rclcpp_action::ResultCode::CANCELED) {
+        canceled_by_client.store(true);
+      }
       bool success =
         (!collision_detected.load()) &&
         (wrapped_result.code == rclcpp_action::ResultCode::SUCCEEDED);
@@ -899,13 +939,37 @@ bool ManipulatorActionServer::executeTrajectoryWithCollisionChecks(
     abort_reason = "FollowJointTrajectory goal rejected by server";
     return false;
   }
+  {
+    std::lock_guard<std::mutex> lock(move_state_mutex_);
+    executing_fjt_goal_handle_ = fjt_goal_handle;
+    fjt_cancel_requested_.store(false);
+  }
 
   // 8) Wait for and process the result
   auto res_future = follow_joint_traj_client->async_get_result(fjt_goal_handle);
 
   double timeout_s = std::max(2.0 * total_time_s, 5.0);
 
-  if (res_future.wait_for(std::chrono::duration<double>(timeout_s)) != std::future_status::ready) {
+  const auto timeout_duration = std::chrono::duration<double>(timeout_s);
+  const auto deadline = std::chrono::steady_clock::now() + timeout_duration;
+  std::future_status wait_status = std::future_status::timeout;
+  while (std::chrono::steady_clock::now() < deadline) {
+    wait_status = res_future.wait_for(std::chrono::milliseconds(50));
+    if (wait_status == std::future_status::ready) {
+      break;
+    }
+    if (fjt_cancel_requested_.load()) {
+      canceled = true;
+      abort_reason = "FollowJointTrajectory goal canceled";
+      {
+        std::lock_guard<std::mutex> lock(move_state_mutex_);
+        executing_fjt_goal_handle_.reset();
+      }
+      fjt_cancel_requested_.store(false);
+      return false;
+    }
+  }
+  if (wait_status != std::future_status::ready) {
     abort_reason =
       "Timeout (" + std::to_string(timeout_s) + " s) waiting for FollowJointTrajectory result";
     return false;
@@ -914,6 +978,13 @@ bool ManipulatorActionServer::executeTrajectoryWithCollisionChecks(
   auto wrapped_result = res_future.get();
   bool final_status = result_future.get();
   if (!final_status) {
+    if (canceled_by_client.load()) {
+      canceled = true;
+      abort_reason = "FollowJointTrajectory goal canceled";
+      fjt_cancel_requested_.store(false);
+      return false;
+    }
+
     if (collision_detected.load()) {
       abort_reason = "Collision detected during trajectory execution";
     } else {
@@ -927,5 +998,10 @@ bool ManipulatorActionServer::executeTrajectoryWithCollisionChecks(
   }
 
   // Success
+  {
+    std::lock_guard<std::mutex> lock(move_state_mutex_);
+    executing_fjt_goal_handle_.reset();
+  }
+  fjt_cancel_requested_.store(false);
   return true;
 }

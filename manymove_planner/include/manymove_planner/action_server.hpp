@@ -30,6 +30,7 @@
 #ifndef MANYMOVE_PLANNER__ACTION_SERVER_HPP_
 #define MANYMOVE_PLANNER__ACTION_SERVER_HPP_
 
+#include <atomic>
 #include <functional>
 #include <memory>
 #include <mutex>
@@ -40,6 +41,7 @@
 #include <controller_manager_msgs/srv/load_controller.hpp>
 #include <controller_manager_msgs/srv/switch_controller.hpp>
 #include <controller_manager_msgs/srv/unload_controller.hpp>
+#include <control_msgs/action/follow_joint_trajectory.hpp>
 #include <moveit_msgs/msg/constraints.hpp>
 #include <rclcpp/rclcpp.hpp>
 #include <rclcpp_action/rclcpp_action.hpp>
@@ -106,6 +108,10 @@ private:
   moveit_msgs::msg::RobotTrajectory executing_traj_;
   rclcpp::Time executing_start_time_;
   manymove_msgs::msg::MoveManipulatorGoal move_manipulator_goal_;
+  using FjtGoalHandle =
+    rclcpp_action::ClientGoalHandle<control_msgs::action::FollowJointTrajectory>;
+  std::shared_ptr<FjtGoalHandle> executing_fjt_goal_handle_;
+  std::atomic<bool> fjt_cancel_requested_{false};
 
   // MoveManipulator Callbacks
   rclcpp_action::GoalResponse handle_move_goal(
@@ -146,7 +152,8 @@ private:
   // Helper functions
   bool executeTrajectoryWithCollisionChecks(
     const std::shared_ptr<GoalHandleMoveManipulator> & goal_handle,
-    const moveit_msgs::msg::RobotTrajectory & traj, std::string & abort_reason);
+    const moveit_msgs::msg::RobotTrajectory & traj, std::string & abort_reason,
+    bool & canceled);
 };
 
 #endif  // MANYMOVE_PLANNER__ACTION_SERVER_HPP_
