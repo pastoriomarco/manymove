@@ -250,7 +250,7 @@ ros2 launch manymove_bringup dual_moveitcpp_fake_cpp_trees.launch.py
 
 ### Panda Manipulator
 
-Requires the installation of [moveit2_tutorials](https://moveit.picknik.ai/humble/doc/tutorials/getting_started/getting_started.html)
+Requires the installation of `moveit_resources_panda_moveit_config` package.
 
 Standalone launchers for MoveItCPP or MoveGroup with Panda robot (you need the moveit2_tutorials package sourced):
 

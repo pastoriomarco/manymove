@@ -56,7 +56,7 @@ Adjust arguments to match your robots (frames, prefixes, degrees of freedom, gri
 The launch files rely on:
 - Manymove runtime packages: `manymove_planner`, `manymove_object_manager`, `manymove_cpp_trees`, `manymove_hmi`, and `manymove_py_trees`.
 - UFactory robot stack: `uf_ros_lib`, `xarm_api`, `xarm_controller`, and their configuration resources.
-- ROS 2 core tooling: `ros2_control` (`controller_manager`, joint state broadcaster), `robot_state_publisher`, `tf2_ros`, `rviz2`, `moveit_ros_move_group`, and standard MoveIt resources.
+- ROS 2 core tooling: `ros2_control` (`controller_manager`, joint state broadcaster), `robot_state_publisher`, `tf2_ros`, `rviz2`, `moveit_ros_move_group`, and standard MoveIt resources (e.g., `moveit_resources_panda_moveit_config` for Panda demos).
 - Scenario-specific extras: NVIDIA `isaac_ros_cumotion_moveit`, Isaac Sim control plugins, and (for foundation pose demos) the Isaac ROS FoundationPose stack.
 
 Ensure these packages are built in the workspace or available as installed dependencies before running the bringup launches.
