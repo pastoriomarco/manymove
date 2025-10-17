@@ -186,9 +186,13 @@ rclcpp_action::CancelResponse ManipulatorActionServer::handle_move_cancel(
 {
   RCLCPP_INFO(node_->get_logger(), "[MoveManipulator] Received cancel request");
 
+  bool executing = false;
+  auto stop_result = PlannerInterface::ControlledStopResult::NOT_REQUIRED;
+
   {
     std::lock_guard<std::mutex> lock(move_state_mutex_);
     if (move_state_ == MoveExecutionState::EXECUTING) {
+      executing = true;
       const double elapsed = (node_->now() - executing_start_time_).seconds();
 
       RCLCPP_INFO(
@@ -197,32 +201,62 @@ rclcpp_action::CancelResponse ManipulatorActionServer::handle_move_cancel(
         "controlled stop (elapsed %.3f s).",
         elapsed);
 
-      planner_->sendControlledStop(move_manipulator_goal_.config, executing_traj_, elapsed);
+      stop_result =
+        planner_->sendControlledStop(move_manipulator_goal_.config, executing_traj_, elapsed);
     } else {
       // Cancel while PLANNING or IDLE => do nothing to the controller
       RCLCPP_INFO(
         node_->get_logger(), "[MoveManipulator] Cancel while PLANNING/IDLE => no stop needed");
+      stop_result = PlannerInterface::ControlledStopResult::NOT_REQUIRED;
     }
   }
 
-  move_cancel_requested_.store(true);
+  bool should_queue_cancel = true;
+  if (executing) {
+    switch (stop_result) {
+      case PlannerInterface::ControlledStopResult::NOT_REQUIRED:
+        should_queue_cancel = false;
+        RCLCPP_INFO(
+          node_->get_logger(),
+          "[MoveManipulator] Cancel request received near motion completion; letting trajectory "
+          "finish naturally.");
+        break;
+      case PlannerInterface::ControlledStopResult::STOP_SENT:
+        should_queue_cancel = true;
+        break;
+      case PlannerInterface::ControlledStopResult::FAILED:
+        should_queue_cancel = true;
+        RCLCPP_WARN(
+          node_->get_logger(),
+          "[MoveManipulator] Controlled stop failed; forwarding cancel to "
+          "FollowJointTrajectory.");
+        break;
+    }
+  }
+
+  move_cancel_requested_.store(should_queue_cancel);
 
   // Also propagate cancel to the underlying FollowJointTrajectory goal if present
-  try {
-    auto fjt_client = planner_->getFollowJointTrajClient();
-    std::shared_ptr<FjtGoalHandle> fjt_handle_copy;
-    {
-      std::lock_guard<std::mutex> lock(move_state_mutex_);
-      fjt_handle_copy = executing_fjt_goal_handle_;
-    }
-    if (fjt_client && fjt_handle_copy) {
-      bool expected = false;
-      if (fjt_cancel_requested_.compare_exchange_strong(expected, true)) {
-        (void)fjt_client->async_cancel_goal(fjt_handle_copy);
+  if (should_queue_cancel) {
+    try {
+      auto fjt_client = planner_->getFollowJointTrajClient();
+      std::shared_ptr<FjtGoalHandle> fjt_handle_copy;
+      {
+        std::lock_guard<std::mutex> lock(move_state_mutex_);
+        fjt_handle_copy = executing_fjt_goal_handle_;
       }
+      if (fjt_client && fjt_handle_copy) {
+        bool expected = false;
+        if (fjt_cancel_requested_.compare_exchange_strong(expected, true)) {
+          (void)fjt_client->async_cancel_goal(fjt_handle_copy);
+        }
+      }
+    } catch (const std::exception & e) {
+      RCLCPP_WARN(
+        node_->get_logger(), "[MoveManipulator] Failed to cancel FJT goal: %s", e.what());
     }
-  } catch (const std::exception & e) {
-    RCLCPP_WARN(node_->get_logger(), "[MoveManipulator] Failed to cancel FJT goal: %s", e.what());
+  } else {
+    fjt_cancel_requested_.store(false);
   }
 
   return rclcpp_action::CancelResponse::ACCEPT;

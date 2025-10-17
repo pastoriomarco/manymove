@@ -144,7 +144,8 @@ public:
  * ramped down to zero.
  * @param running_traj Current traj to stop
  * @param elapsed_s Elapsed time from the start of the current traj
- * @return True if the stop command was sent and executed successfully, false otherwise.
+ * @return STOP_SENT if the stop command was sent successfully, NOT_REQUIRED if the motion will
+ *         finish naturally, or FAILED when the stop could not be issued.
  *
  * @details If the running_traj is not set, this function sends a single-point trajectory to the
  * robot’s trajectory controller that holds the current
@@ -156,7 +157,7 @@ public:
  * Increasing the deceleration_time leads to a smoother stop, but also increases
  * the movement required to decelerate.
  */
-  bool sendControlledStop(
+  PlannerInterface::ControlledStopResult sendControlledStop(
     const manymove_msgs::msg::MovementConfig & move_cfg,
     const moveit_msgs::msg::RobotTrajectory & running_traj = moveit_msgs::msg::RobotTrajectory(),
     double elapsed_s = 0.0);

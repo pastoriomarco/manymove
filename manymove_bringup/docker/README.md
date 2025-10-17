@@ -1,6 +1,6 @@
 # ManyMove Docker Environments
 
-This directory contains pre-configured Dockerfiles and helper scripts to spin up ROS 2 development containers for ManyMove on either Humble or Jazzy.
+This directory contains a unified `Dockerfile.manymove` and helper scripts to spin up ROS 2 development containers for ManyMove on either Humble or Jazzy.
 
 ## Prerequisites
 - Docker Engine installed and running on the host.
@@ -16,7 +16,9 @@ ${MANYMOVE_ROS_WS}/src/manymove/manymove_bringup/docker/run_manymove_container.s
 ```
 
 Swap the final argument for `humble` to launch the Humble variant. The helper script:
-- Builds (or rebuilds) the image automatically when the corresponding Dockerfile changes.
+- Builds (or rebuilds) the image automatically when `Dockerfile.manymove` or the helper scripts change.
+- Pass `--pull-latest` to fetch the latest ManyMove commit; the script skips a rebuild if the image already embeds that commit.
+- Pass `--build-only` to refresh the image without starting a container (useful before launching composed stacks).
 - Clones the `dev` branch of `manymove` inside the image at `/opt/manymove_ws/src/manymove`.
 - Runs `rosdep` and `colcon build` during image creation so the overlay is ready out of the box.
 - Starts the container without mounting your host workspace, keeping the environment self-contained.
@@ -26,8 +28,40 @@ Swap the final argument for `humble` to launch the Humble variant. The helper sc
 Need custom `docker run` flags? Append `--` and your options:
 
 ```bash
-./run_manymove_container.sh humble -- -v /data/logs:/logs
+export MANYMOVE_ROS_WS=~/workspaces/dev_ws
+${MANYMOVE_ROS_WS}/src/manymove/manymove_bringup/docker/run_manymove_container.sh humble -- -v /data/logs:/logs
 ```
+
+### Refresh ManyMove sources
+
+To update the baked-in ManyMove checkout to the latest `dev` commit (and rebuild only if a new commit exists):
+
+```bash
+export MANYMOVE_ROS_WS=~/workspaces/dev_ws
+${MANYMOVE_ROS_WS}/src/manymove/manymove_bringup/docker/run_manymove_container.sh jazzy --pull-latest
+```
+
+The script inspects existing images for the stored commit hash, skips the rebuild if it already matches, and records the resolved commit inside the image at `/opt/manymove_ws/.manymove_commit`.
+
+### Inspect baked commits
+
+Use Docker labels to check the commits baked into the images:
+
+```bash
+docker image inspect manymove:jazzy --format '{{ index .Config.Labels "manymove.commit" }}'
+docker image inspect manymove-xarm:jazzy --format '{{ index .Config.Labels "manymove.xarm.commit" }}'
+```
+
+### ManyMove + xArm image
+
+Need the xArm driver baked in? Use the layered helper script:
+
+```bash
+export MANYMOVE_ROS_WS=~/workspaces/dev_ws
+${MANYMOVE_ROS_WS}/src/manymove/manymove_bringup/docker/run_manymove_xarm_container.sh humble
+```
+
+Add `--pull-latest` to refresh both `manymove` and `xarm_ros2` to the newest commits (per ROS distro branch) before rebuilding, or `--build-only` to prime the image without launching it. During the build the resolved xArm commit is written to `/opt/manymove_ws/.xarm_ros2_commit`, and the resulting image tracks its base `manymove:<distro>` source to avoid running stale workspaces.
 
 ## Inside the container
 
@@ -74,9 +108,24 @@ docker build \
   --build-arg USER_UID=$(id -u) \
   --build-arg USER_GID=$(id -g) \
   --build-arg MANYMOVE_BRANCH=main \
+  --build-arg MANYMOVE_COMMIT=$(git ls-remote --heads https://github.com/pastoriomarco/manymove.git main | awk '{print $1}') \
   -t manymove:humble \
-  -f Dockerfile.humble \
+  -f Dockerfile.manymove \
   .
 ```
 
-Adjust build arguments (e.g., `MANYMOVE_BRANCH`) and select `Dockerfile.jazzy` for the Jazzy image. The built workspace lives at `/opt/manymove_ws`; mount or override it only if you intentionally want to develop against a host directory.
+Adjust build arguments (e.g., `MANYMOVE_BRANCH`) and set `ROS_DISTRO=jazzy` for the Jazzy image. The built workspace lives at `/opt/manymove_ws`; mount or override it only if you intentionally want to develop against a host directory.
+
+For the xArm-enabled image:
+
+```bash
+docker build \
+  --build-arg ROS_DISTRO=humble \
+  --build-arg XARM_BRANCH=humble \
+  --build-arg XARM_COMMIT=$(git ls-remote --heads https://github.com/pastoriomarco/xarm_ros2.git humble | awk '{print $1}') \
+  -t manymove-xarm:humble \
+  -f Dockerfile.manymove_xarm \
+  .
+```
+
+Set `ROS_DISTRO`/`XARM_BRANCH` to `jazzy` (or your preferred branch) to target Jazzy.

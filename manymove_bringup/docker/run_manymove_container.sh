@@ -4,11 +4,16 @@ set -euo pipefail
 
 usage() {
   cat <<'EOF'
-Usage: run_manymove_container.sh <humble|jazzy> [--] [additional docker run args...]
+Usage: run_manymove_container.sh <humble|jazzy> [--pull-latest] [--build-only] [--] [additional docker run args...]
 
 Builds (if needed) and launches the ManyMove development container for the
-requested ROS 2 distribution. Any arguments after "--" are passed directly to
-"docker run".
+requested ROS 2 distribution.
+
+Options:
+  --pull-latest   Fetch the latest ManyMove commit before rebuilding; skip the rebuild if already current.
+  --build-only    Build or refresh the image but do not start a container.
+
+Arguments after "--" are passed straight to "docker run".
 EOF
 }
 
@@ -29,58 +34,141 @@ case "${DISTRO}" in
     ;;
 esac
 
-if [[ $# -gt 0 && "$1" == "--" ]]; then
-  shift
-else
-  # no explicit "--", fall through with existing args
-  :
-fi
+PULL_LATEST=false
+BUILD_ONLY=false
+EXTRA_DOCKER_ARGS=()
 
-EXTRA_DOCKER_ARGS=("$@")
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+    --pull-latest)
+      PULL_LATEST=true
+      shift
+      ;;
+    --build-only)
+      BUILD_ONLY=true
+      shift
+      ;;
+    --)
+      shift
+      EXTRA_DOCKER_ARGS+=("$@")
+      break
+      ;;
+    *)
+      EXTRA_DOCKER_ARGS+=("$1")
+      shift
+      ;;
+  esac
+done
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 DOCKER_DIR="${SCRIPT_DIR}"
-DOCKERFILE="${DOCKER_DIR}/Dockerfile.${DISTRO}"
+DOCKERFILE="${DOCKER_DIR}/Dockerfile.manymove"
 
 if [[ ! -f "${DOCKERFILE}" ]]; then
-  echo "Dockerfile for distro '${DISTRO}' not found at ${DOCKERFILE}" >&2
+  echo "Unified Dockerfile not found at ${DOCKERFILE}" >&2
   exit 1
 fi
 
 IMAGE_TAG="manymove:${DISTRO}"
 CONTAINER_USER="${USER:-manymove}"
 
-CONTEXT_HASH="$(
-  cat \
-    "${DOCKERFILE}" \
-    "${DOCKER_DIR}/scripts/setup_workspace.sh" \
-    "${DOCKER_DIR}/scripts/auto_source_overlay.sh" \
-    | sha256sum | awk '{print $1}'
-)"
+MANYMOVE_REPO_DEFAULT="https://github.com/pastoriomarco/manymove.git"
+MANYMOVE_BRANCH_DEFAULT="dev"
+TARGET_COMMIT=""
+LABEL_COMMIT=""
+
 IMAGE_PRESENT=false
 EXISTING_HASH=""
 LABEL_KEY="manymove.context.sha"
+COMMIT_LABEL_KEY="manymove.commit"
+EXISTING_COMMIT=""
 
 if docker image inspect "${IMAGE_TAG}" >/dev/null 2>&1; then
   IMAGE_PRESENT=true
   EXISTING_HASH="$(docker image inspect "${IMAGE_TAG}" --format "{{ index .Config.Labels \"${LABEL_KEY}\" }}" 2>/dev/null || true)"
+  EXISTING_COMMIT="$(docker image inspect "${IMAGE_TAG}" --format "{{ index .Config.Labels \"${COMMIT_LABEL_KEY}\" }}" 2>/dev/null || true)"
+  if [[ -n "${EXISTING_COMMIT}" ]]; then
+    LABEL_COMMIT="${EXISTING_COMMIT}"
+  fi
 fi
 
-if [[ "${IMAGE_PRESENT}" == false || "${EXISTING_HASH}" != "${CONTEXT_HASH}" ]]; then
+REMOTE_COMMIT=""
+if [[ "${PULL_LATEST}" == true || -z "${LABEL_COMMIT}" ]]; then
+  REMOTE_REF="$(git ls-remote --heads "${MANYMOVE_REPO_DEFAULT}" "${MANYMOVE_BRANCH_DEFAULT}" 2>/dev/null || true)"
+  if [[ -z "${REMOTE_REF}" ]]; then
+    if [[ "${PULL_LATEST}" == true ]]; then
+      echo "Failed to query latest commit for ${MANYMOVE_BRANCH_DEFAULT} from ${MANYMOVE_REPO_DEFAULT}" >&2
+      exit 1
+    else
+      echo "Warning: unable to determine latest ManyMove commit; labeling build as 'unknown'." >&2
+    fi
+  else
+    REMOTE_COMMIT="${REMOTE_REF%%[[:space:]]*}"
+    if [[ "${PULL_LATEST}" == true ]]; then
+      TARGET_COMMIT="${REMOTE_COMMIT}"
+      echo "Latest ManyMove commit on '${MANYMOVE_BRANCH_DEFAULT}': ${TARGET_COMMIT}"
+    fi
+    if [[ -z "${LABEL_COMMIT}" || "${PULL_LATEST}" == true ]]; then
+      LABEL_COMMIT="${REMOTE_COMMIT}"
+    fi
+  fi
+fi
+
+if [[ -z "${LABEL_COMMIT}" ]]; then
+  LABEL_COMMIT="unknown"
+fi
+
+CONTEXT_HASH="$(
+  {
+    printf '%s\n' "${DISTRO}";
+    if [[ -n "${TARGET_COMMIT}" ]]; then
+      printf '%s\n' "${TARGET_COMMIT}";
+    fi
+    cat \
+      "${DOCKERFILE}" \
+      "${DOCKER_DIR}/scripts/setup_workspace.sh" \
+      "${DOCKER_DIR}/scripts/auto_source_overlay.sh";
+  } | sha256sum | awk '{print $1}'
+)"
+
+NEEDS_BUILD=false
+
+if [[ "${IMAGE_PRESENT}" == false ]]; then
+  NEEDS_BUILD=true
+elif [[ "${EXISTING_HASH}" != "${CONTEXT_HASH}" ]]; then
+  NEEDS_BUILD=true
+elif [[ -n "${TARGET_COMMIT}" && "${EXISTING_COMMIT}" != "${TARGET_COMMIT}" ]]; then
+  NEEDS_BUILD=true
+fi
+
+if [[ "${NEEDS_BUILD}" == false ]]; then
+  if [[ "${PULL_LATEST}" == true && -n "${TARGET_COMMIT}" ]]; then
+    echo "ManyMove sources already up to date (commit ${TARGET_COMMIT}); skipping rebuild."
+  fi
+else
   if [[ "${IMAGE_PRESENT}" == true ]]; then
-    echo "Rebuilding image '${IMAGE_TAG}' (container build context changed)."
+    echo "Rebuilding image '${IMAGE_TAG}' (context or ManyMove sources changed)."
   else
     echo "Building image '${IMAGE_TAG}' from ${DOCKERFILE}"
   fi
-  docker build \
-    --build-arg ROS_DISTRO="${DISTRO}" \
-    --build-arg USERNAME="${CONTAINER_USER}" \
-    --build-arg USER_UID="$(id -u)" \
-    --build-arg USER_GID="$(id -g)" \
-    --label "${LABEL_KEY}=${CONTEXT_HASH}" \
-    -f "${DOCKERFILE}" \
-    -t "${IMAGE_TAG}" \
+  BUILD_CMD=(
+    docker build
+    "--build-arg" "ROS_DISTRO=${DISTRO}"
+    "--build-arg" "USERNAME=${CONTAINER_USER}"
+    "--build-arg" "USER_UID=$(id -u)"
+    "--build-arg" "USER_GID=$(id -g)"
+    "--label" "${LABEL_KEY}=${CONTEXT_HASH}"
+    "--label" "${COMMIT_LABEL_KEY}=${LABEL_COMMIT}"
+  )
+  if [[ "${LABEL_COMMIT}" != "unknown" ]]; then
+    BUILD_CMD+=("--build-arg" "MANYMOVE_COMMIT=${LABEL_COMMIT}")
+  fi
+  BUILD_CMD+=(
+    "-f" "${DOCKERFILE}"
+    "-t" "${IMAGE_TAG}"
     "${DOCKER_DIR}"
+  )
+  "${BUILD_CMD[@]}"
 fi
 
 RUN_ARGS=(
@@ -103,6 +191,10 @@ fi
 
 if command -v nvidia-smi >/dev/null 2>&1; then
   RUN_ARGS+=("--gpus" "all")
+fi
+
+if [[ "${BUILD_ONLY}" == true ]]; then
+  exit 0
 fi
 
 echo "Launching container '${IMAGE_TAG}'"

@@ -779,16 +779,18 @@ std::pair<bool, moveit_msgs::msg::RobotTrajectory> MoveItCppPlanner::applyTimePa
   return {false, moveit_msgs::msg::RobotTrajectory()};
 }
 
-bool MoveItCppPlanner::sendControlledStop(
+PlannerInterface::ControlledStopResult MoveItCppPlanner::sendControlledStop(
   const manymove_msgs::msg::MovementConfig & move_cfg,
   const moveit_msgs::msg::RobotTrajectory & running_traj, double elapsed_s)
 {
+  using ControlledStopResult = PlannerInterface::ControlledStopResult;
+
   /* -------------------------------------------------------------
   * 0)  Make sure the server is alive
   * ------------------------------------------------------------*/
   if (!follow_joint_traj_client_->wait_for_action_server(std::chrono::seconds(2))) {
     RCLCPP_ERROR(logger_, "FollowJointTrajectory server not available – cannot send stop.");
-    return false;
+    return ControlledStopResult::FAILED;
   }
 
   /* -------------------------------------------------------------
@@ -813,7 +815,7 @@ bool MoveItCppPlanner::sendControlledStop(
       "Remaining time (%.3f) in trajectory is less than min_stop_time (%.3f). Stopping motion "
       "naturally.",
       remaining_time, move_cfg.min_stop_time);
-    return true;
+    return ControlledStopResult::NOT_REQUIRED;
   }
 
   // Remove the past points up to the current time (elapsed_s)
@@ -853,12 +855,12 @@ bool MoveItCppPlanner::sendControlledStop(
   auto gh_fut = follow_joint_traj_client_->async_send_goal(goal);
   if (gh_fut.wait_for(std::chrono::seconds(5)) != std::future_status::ready) {
     RCLCPP_ERROR(logger_, "Timeout while sending stop goal.");
-    return false;
+    return ControlledStopResult::FAILED;
   }
   auto gh = gh_fut.get();
   if (!gh) {
     RCLCPP_ERROR(logger_, "Stop goal rejected by controller.");
-    return false;
+    return ControlledStopResult::FAILED;
   }
 
   const double timeout_s = std::max(0.5 + 2.0 * stop_time, 5.0);
@@ -866,9 +868,17 @@ bool MoveItCppPlanner::sendControlledStop(
 
   if (res_fut.wait_for(std::chrono::duration<double>(timeout_s)) != std::future_status::ready) {
     RCLCPP_ERROR(logger_, "Stop goal timed-out (%.2f s).", timeout_s);
-    return false;
+    return ControlledStopResult::FAILED;
   }
-  return res_fut.get().code == rclcpp_action::ResultCode::SUCCEEDED;
+  const auto result = res_fut.get();
+  if (result.code == rclcpp_action::ResultCode::SUCCEEDED) {
+    RCLCPP_INFO(logger_, "Controlled stop completed successfully.");
+    return ControlledStopResult::STOP_SENT;
+  }
+
+  RCLCPP_WARN(
+    logger_, "Controlled stop failed with result code %d.", static_cast<int>(result.code));
+  return ControlledStopResult::FAILED;
 }
 
 bool MoveItCppPlanner::isStateValid(

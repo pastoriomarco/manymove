@@ -325,6 +325,11 @@ public:
     return action_name_;
   }
 
+  bool cancel_requested() const
+  {
+    return cancel_requested_.load();
+  }
+
 private:
   rclcpp_action::GoalResponse handle_goal(
     const rclcpp_action::GoalUUID &, std::shared_ptr<const FollowJointTrajectory::Goal>)
@@ -428,6 +433,7 @@ public:
     std::lock_guard<std::mutex> lock(mutex_);
     plan_calls_ = 0;
     controlled_stop_calls_ = 0;
+    controlled_stop_result_ = PlannerInterface::ControlledStopResult::STOP_SENT;
     start_valid_responses_ = std::queue<bool>();
     default_start_valid_ = true;
     end_valid_ = true;
@@ -507,13 +513,19 @@ public:
     return {true, input_traj};
   }
 
-  bool sendControlledStop(
+  PlannerInterface::ControlledStopResult sendControlledStop(
     const manymove_msgs::msg::MovementConfig &,
     const moveit_msgs::msg::RobotTrajectory &, double) override
   {
     std::lock_guard<std::mutex> lock(mutex_);
     ++controlled_stop_calls_;
-    return true;
+    return controlled_stop_result_;
+  }
+
+  void set_controlled_stop_result(PlannerInterface::ControlledStopResult result)
+  {
+    std::lock_guard<std::mutex> lock(mutex_);
+    controlled_stop_result_ = result;
   }
 
   rclcpp_action::Client<control_msgs::action::FollowJointTrajectory>::SharedPtr
@@ -577,6 +589,8 @@ private:
   mutable std::mutex mutex_;
   mutable size_t plan_calls_{0};
   mutable size_t controlled_stop_calls_{0};
+  PlannerInterface::ControlledStopResult controlled_stop_result_{
+    PlannerInterface::ControlledStopResult::STOP_SENT};
   mutable std::queue<bool> start_valid_responses_;
   bool default_start_valid_{true};
   bool end_valid_{true};
@@ -986,6 +1000,57 @@ TEST_F(ManipulatorActionServerFixture, CancelDuringExecutionTriggersControlledSt
 
   EXPECT_EQ(wrapped_result.code, rclcpp_action::ResultCode::CANCELED);
   EXPECT_EQ(fake_planner_->controlled_stop_call_count(), 1u);
+  EXPECT_TRUE(fake_fjt_server_->cancel_requested());
+}
+
+TEST_F(ManipulatorActionServerFixture, CancelDuringExecutionNearCompletionFinishesNaturally)
+{
+  using namespace std::chrono_literals;
+
+  const std::vector<std::string> joints{"joint_x", "joint_y"};
+  const std::vector<double> start{0.0, 0.0};
+  const std::vector<double> end{0.5, -0.1};
+
+  auto existing_traj = makeTrajectory(joints, start, end);
+
+  fake_planner_->reset();
+  fake_planner_->set_start_valid(true);
+  fake_planner_->set_end_valid(true);
+  fake_planner_->set_plan_result(true, existing_traj);
+  fake_planner_->set_trajectory_valid_responses({true, true, true}, true);
+  fake_planner_->set_controlled_stop_result(
+    PlannerInterface::ControlledStopResult::NOT_REQUIRED);
+
+  fake_fjt_server_->set_success(true);
+  fake_fjt_server_->set_hold_until_cancel(false);
+
+  publish_joint_state(joints, start);
+
+  auto goal = makeMoveGoal(existing_traj);
+  auto send_future = move_client_->async_send_goal(goal);
+  wait_for_future_ready(send_future, 2s);
+  auto goal_handle = send_future.get();
+  ASSERT_NE(goal_handle, nullptr);
+
+  ASSERT_TRUE(fake_fjt_server_->wait_for_active_goal(200ms));
+
+  auto cancel_future = move_client_->async_cancel_goal(goal_handle);
+  wait_for_future_ready(cancel_future, 4s);
+  auto cancel_response = cancel_future.get();
+  ASSERT_NE(cancel_response, nullptr);
+  EXPECT_EQ(
+    cancel_response->return_code,
+    action_msgs::srv::CancelGoal::Response::ERROR_NONE);
+
+  auto result_future = move_client_->async_get_result(goal_handle);
+  wait_for_future_ready(result_future, 6s);
+  auto wrapped_result = result_future.get();
+
+  EXPECT_EQ(wrapped_result.code, rclcpp_action::ResultCode::SUCCEEDED);
+  ASSERT_NE(wrapped_result.result, nullptr);
+  EXPECT_TRUE(wrapped_result.result->success);
+  EXPECT_EQ(fake_planner_->controlled_stop_call_count(), 1u);
+  EXPECT_FALSE(fake_fjt_server_->cancel_requested());
 }
 
 TEST_F(ManipulatorActionServerFixture, LoadControllerActionSucceeds)

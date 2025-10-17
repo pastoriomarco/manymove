@@ -1,5 +1,5 @@
 # syntax=docker/dockerfile:1
-ARG ROS_DISTRO=jazzy
+ARG ROS_DISTRO=humble
 ARG BASE_IMAGE=ros:${ROS_DISTRO}
 FROM ${BASE_IMAGE}
 
@@ -8,6 +8,7 @@ ARG USER_UID=1000
 ARG USER_GID=1000
 ARG MANYMOVE_REPO=https://github.com/pastoriomarco/manymove.git
 ARG MANYMOVE_BRANCH=dev
+ARG MANYMOVE_COMMIT=""
 
 ENV DEBIAN_FRONTEND=noninteractive \
     MANYMOVE_WS=/opt/manymove_ws \
@@ -65,11 +66,20 @@ RUN apt-get update && \
         ros-${ROS_DISTRO}-topic-based-ros2-control \
         ros-${ROS_DISTRO}-simulation-interfaces \
         ros-${ROS_DISTRO}-vision-msgs \
-        ros-${ROS_DISTRO}-camera-info-manager \
-        ros-${ROS_DISTRO}-ros-gz \
-        ros-${ROS_DISTRO}-ros-gz-bridge \
-        ros-${ROS_DISTRO}-ros-gz-sim \
-    && rm -rf /var/lib/apt/lists/*
+        ros-${ROS_DISTRO}-camera-info-manager && \
+    if [ "${ROS_DISTRO}" = "humble" ]; then \
+        apt-get install -y --no-install-recommends \
+            ros-${ROS_DISTRO}-gazebo-ros \
+            ros-${ROS_DISTRO}-gazebo-plugins \
+            ros-${ROS_DISTRO}-gazebo-ros2-control; \
+    else \
+        apt-get install -y --no-install-recommends \
+            ros-${ROS_DISTRO}-ros-gz \
+            ros-${ROS_DISTRO}-ros-gz-bridge \
+            ros-${ROS_DISTRO}-gz-ros2-control \
+            ros-${ROS_DISTRO}-ros-gz-sim; \
+    fi && \
+    rm -rf /var/lib/apt/lists/*
 
 RUN locale-gen en_US.UTF-8 && update-locale LANG=en_US.UTF-8
 
@@ -93,11 +103,17 @@ RUN if getent group ${USER_GID} >/dev/null 2>&1; then \
 RUN mkdir -p /tmp/runtime-${USERNAME} && chown ${USERNAME}:${USER_GID} /tmp/runtime-${USERNAME}
 ENV XDG_RUNTIME_DIR=/tmp/runtime-${USERNAME}
 
-# Prepare and populate workspace
 RUN mkdir -p ${MANYMOVE_WS}/src && chown -R ${USERNAME}:${USER_GID} ${MANYMOVE_WS}
-RUN gosu ${USERNAME} bash -lc "git clone --branch ${MANYMOVE_BRANCH} --depth 1 ${MANYMOVE_REPO} ${MANYMOVE_WS}/src/manymove"
+RUN gosu ${USERNAME} bash -lc "set -euo pipefail; \
+    rm -rf ${MANYMOVE_WS}/src/manymove && \
+    git clone --branch ${MANYMOVE_BRANCH} --depth 1 ${MANYMOVE_REPO} ${MANYMOVE_WS}/src/manymove && \
+    cd ${MANYMOVE_WS}/src/manymove && \
+    if [ -n \"${MANYMOVE_COMMIT}\" ]; then \
+        git fetch --depth 1 origin ${MANYMOVE_COMMIT} && \
+        git checkout --detach ${MANYMOVE_COMMIT}; \
+    fi && \
+    git rev-parse HEAD > ${MANYMOVE_WS}/.manymove_commit"
 
-# Resolve dependencies and build ManyMove
 RUN source /opt/ros/${ROS_DISTRO}/setup.bash && \
     cd ${MANYMOVE_WS} && \
     if [ ! -f /etc/ros/rosdep/sources.list.d/20-default.list ]; then rosdep init; fi && \
