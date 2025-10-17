@@ -30,7 +30,7 @@
 
 """Helpers for composing MoveManipulator requests and convenience moves."""
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import Dict
 from typing import List
 from typing import Optional
@@ -56,7 +56,7 @@ class Move:
     pose_target: Optional[Pose] = None
     named_target: Optional[str] = None
     joint_values: Optional[List[float]] = None
-    config: MovementConfig = MovementConfig()
+    config: MovementConfig = field(default_factory=MovementConfig)
 
     def __post_init__(self):
         """Validate that the requested move type is supported."""

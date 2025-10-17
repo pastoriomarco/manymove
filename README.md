@@ -194,6 +194,28 @@ Starting from an empty scene, you'll delop a pick and place application with Man
 
 ## Examples
 
+### Panda Manipulator
+
+Requires the installation of `moveit_resources_panda_moveit_config` package.
+If not already installed, execute:
+```bash
+sudo apt install ros-jazzy-moveit-resources-panda-moveit-config
+```
+
+Standalone launchers for MoveItCPP or MoveGroup with Panda robot (you need the moveit2_tutorials package sourced):
+
+with **BehaviorTree.CPP**:
+```bash
+ros2 launch manymove_bringup panda_moveitcpp_fake_cpp_trees.launch.py
+```
+```bash
+ros2 launch manymove_bringup panda_movegroup_fake_cpp_trees.launch.py
+```
+with **py_trees**:
+```bash
+ros2 launch manymove_bringup panda_movegroup_fake_py_trees.launch.py
+```
+
 ### UFactory launchers and examples
 
 To launch UFactory robots example you'll need to build from source my branch of `xarm_ros2` repo.
@@ -216,7 +238,7 @@ source ${MANYMOVE_ROS_WS}/install/setup.bash
 ```
 #### Lite6, uf850 and xarm7 manipulators
 
-with MoveItCPP and BehaviorTree.CPP:
+with MoveItCPP and **BehaviorTree.CPP**:
 ```bash
 ros2 launch manymove_bringup lite_moveitcpp_fake_cpp_trees.launch.py
 ```
@@ -227,7 +249,7 @@ ros2 launch manymove_bringup uf850_moveitcpp_fake_cpp_trees.launch.py
 ros2 launch manymove_bringup xarm7_moveitcpp_fake_cpp_trees.launch.py
 ```
 
-with MoveGroupInterface and BehaviorTree.CPP:
+with MoveGroupInterface and **BehaviorTree.CPP**:
 ```bash
 ros2 launch manymove_bringup lite_movegroup_fake_cpp_trees.launch.py
 ```
@@ -238,7 +260,7 @@ ros2 launch manymove_bringup uf850_movegroup_fake_cpp_trees.launch.py
 ros2 launch manymove_bringup xarm7_movegroup_fake_cpp_trees.launch.py
 ```
 
-with MoveGroupInterface and py_trees (minimal):
+with MoveGroupInterface and **py_trees** (minimal):
 ```bash
 ros2 launch manymove_bringup lite_movegroup_fake_py_trees.launch.py
 ```
@@ -246,24 +268,6 @@ ros2 launch manymove_bringup lite_movegroup_fake_py_trees.launch.py
 
 ```bash
 ros2 launch manymove_bringup dual_moveitcpp_fake_cpp_trees.launch.py
-```
-
-### Panda Manipulator
-
-Requires the installation of `moveit_resources_panda_moveit_config` package.
-
-Standalone launchers for MoveItCPP or MoveGroup with Panda robot (you need the moveit2_tutorials package sourced):
-
-with BehaviorTree.CPP:
-```bash
-ros2 launch manymove_bringup panda_moveitcpp_fake_cpp_trees.launch.py
-```
-```bash
-ros2 launch manymove_bringup panda_movegroup_fake_cpp_trees.launch.py
-```
-with py_trees:
-```bash
-ros2 launch manymove_bringup panda_movegroup_fake_py_trees.launch.py
 ```
 
 These launch files spin up the appropriate environment (fake or real) plus the nodes that handle planning, object management, signals, and optional HMI components. You can then interact with these action servers and send them requests using the provided C++ or Python-based behavior tree clients.
