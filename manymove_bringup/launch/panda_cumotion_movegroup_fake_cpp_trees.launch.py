@@ -120,11 +120,7 @@ def launch_setup(context, *args, **kwargs):
     )
 
     # RViz
-    rviz_config_file = os.path.join(
-        get_package_share_directory('moveit_resources_panda_moveit_config'),
-        'launch',
-        'moveit.rviz',
-    )
+    rviz_config_file = get_package_share_directory('manymove_planner') + '/config/micpp_demo.rviz'
     rviz_node = Node(
         package='rviz2',
         executable='rviz2',
