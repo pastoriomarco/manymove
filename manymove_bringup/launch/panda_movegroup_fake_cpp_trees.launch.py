@@ -71,6 +71,13 @@ def launch_setup(context, *args, **kwargs):
         .robot_description_semantic(file_path='config/panda.srdf')
         .trajectory_execution(file_path='config/gripper_moveit_controllers.yaml')
         .planning_pipelines(pipelines=['ompl', 'chomp', 'pilz_industrial_motion_planner'])
+        .moveit_cpp(
+            file_path=os.path.join(
+                get_package_share_directory('manymove_planner'),
+                'config',
+                'moveit_cpp.yaml',
+            )
+        )
         .to_moveit_configs()
     )
 

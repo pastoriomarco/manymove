@@ -1,0 +1,120 @@
+# syntax=docker/dockerfile:1
+ARG ROS_DISTRO=jazzy
+ARG BASE_IMAGE=ros:${ROS_DISTRO}
+FROM ${BASE_IMAGE}
+
+ARG USERNAME=manymove
+ARG USER_UID=1000
+ARG USER_GID=1000
+ARG MANYMOVE_REPO=https://github.com/pastoriomarco/manymove.git
+ARG MANYMOVE_BRANCH=dev
+
+ENV DEBIAN_FRONTEND=noninteractive \
+    MANYMOVE_WS=/opt/manymove_ws \
+    ROS_DISTRO=${ROS_DISTRO} \
+    LANG=C.UTF-8 \
+    LC_ALL=C.UTF-8 \
+    TZ=UTC \
+    USERNAME=${USERNAME} \
+    USER=${USERNAME} \
+    QT_X11_NO_MITSHM=1 \
+    LIBGL_ALWAYS_SOFTWARE=1
+
+SHELL ["/bin/bash", "-o", "pipefail", "-c"]
+
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
+        build-essential \
+        curl \
+        git \
+        gosu \
+        locales \
+        python3-colcon-common-extensions \
+        python3-vcstool \
+        python3-rosdep \
+        python3-pip \
+        sudo \
+        mesa-utils \
+        libgl1-mesa-dri \
+        libglu1-mesa \
+        libglvnd0 \
+        libglx-mesa0 \
+        libegl1 \
+        libxcb-xinerama0 \
+        libxkbcommon-x11-0 \
+        ros-${ROS_DISTRO}-behaviortree-cpp-v3 \
+        ros-${ROS_DISTRO}-joint-state-publisher-gui \
+        ros-${ROS_DISTRO}-moveit \
+        ros-${ROS_DISTRO}-moveit-resources-panda-moveit-config \
+        ros-${ROS_DISTRO}-py-trees \
+        ros-${ROS_DISTRO}-py-trees-ros \
+        ros-${ROS_DISTRO}-py-trees-ros-interfaces \
+        ros-${ROS_DISTRO}-tf-transformations \
+        ros-${ROS_DISTRO}-xacro \
+        ros-${ROS_DISTRO}-control-toolbox \
+        ros-${ROS_DISTRO}-controller-manager \
+        ros-${ROS_DISTRO}-image-view \
+        ros-${ROS_DISTRO}-find-object-2d \
+        ros-${ROS_DISTRO}-joy \
+        ros-${ROS_DISTRO}-moveit-servo \
+        ros-${ROS_DISTRO}-controller-manager-msgs \
+        ros-${ROS_DISTRO}-joint-state-broadcaster \
+        ros-${ROS_DISTRO}-joint-trajectory-controller \
+        ros-${ROS_DISTRO}-diff-drive-controller \
+        ros-${ROS_DISTRO}-hardware-interface \
+        ros-${ROS_DISTRO}-topic-based-ros2-control \
+        ros-${ROS_DISTRO}-simulation-interfaces \
+        ros-${ROS_DISTRO}-vision-msgs \
+        ros-${ROS_DISTRO}-camera-info-manager \
+        ros-${ROS_DISTRO}-ros-gz \
+        ros-${ROS_DISTRO}-ros-gz-bridge \
+        ros-${ROS_DISTRO}-ros-gz-sim \
+    && rm -rf /var/lib/apt/lists/*
+
+RUN locale-gen en_US.UTF-8 && update-locale LANG=en_US.UTF-8
+
+RUN if getent group ${USER_GID} >/dev/null 2>&1; then \
+      groupadd --non-unique --gid ${USER_GID} ${USERNAME}; \
+    else \
+      groupadd --gid ${USER_GID} ${USERNAME}; \
+    fi \
+    && if getent passwd ${USERNAME} >/dev/null 2>&1; then \
+      usermod --gid ${USER_GID} "${USERNAME}"; \
+    elif getent passwd ${USER_UID} >/dev/null 2>&1; then \
+      useradd --non-unique --uid ${USER_UID} --gid ${USER_GID} -m -s /bin/bash "${USERNAME}"; \
+    else \
+      useradd --uid ${USER_UID} --gid ${USER_GID} -m -s /bin/bash "${USERNAME}"; \
+    fi \
+    && usermod --shell /bin/bash "${USERNAME}" \
+    && usermod -aG sudo "${USERNAME}" \
+    && echo "${USERNAME} ALL=(ALL) NOPASSWD:ALL" > /etc/sudoers.d/${USERNAME} \
+    && chmod 0440 /etc/sudoers.d/${USERNAME}
+
+RUN mkdir -p /tmp/runtime-${USERNAME} && chown ${USERNAME}:${USER_GID} /tmp/runtime-${USERNAME}
+ENV XDG_RUNTIME_DIR=/tmp/runtime-${USERNAME}
+
+# Prepare and populate workspace
+RUN mkdir -p ${MANYMOVE_WS}/src && chown -R ${USERNAME}:${USER_GID} ${MANYMOVE_WS}
+RUN gosu ${USERNAME} bash -lc "git clone --branch ${MANYMOVE_BRANCH} --depth 1 ${MANYMOVE_REPO} ${MANYMOVE_WS}/src/manymove"
+
+# Resolve dependencies and build ManyMove
+RUN source /opt/ros/${ROS_DISTRO}/setup.bash && \
+    cd ${MANYMOVE_WS} && \
+    if [ ! -f /etc/ros/rosdep/sources.list.d/20-default.list ]; then rosdep init; fi && \
+    rosdep update && \
+    rosdep install --from-paths src --ignore-src --rosdistro ${ROS_DISTRO} -y -r && \
+    apt-get clean && rm -rf /var/lib/apt/lists/*
+RUN gosu ${USERNAME} bash -lc "set -eo pipefail && source /opt/ros/${ROS_DISTRO}/setup.bash && cd ${MANYMOVE_WS} && colcon build --symlink-install"
+RUN chown -R ${USERNAME}:${USER_GID} ${MANYMOVE_WS}
+
+WORKDIR ${MANYMOVE_WS}
+
+COPY scripts/setup_workspace.sh /opt/manymove/setup_workspace.sh
+COPY scripts/auto_source_overlay.sh /opt/manymove/auto_source_overlay.sh
+RUN chmod +x /opt/manymove/setup_workspace.sh /opt/manymove/auto_source_overlay.sh \
+    && echo 'source /opt/manymove/auto_source_overlay.sh' >> /etc/bash.bashrc
+
+USER ${USERNAME}
+
+ENTRYPOINT ["/ros_entrypoint.sh"]
+CMD ["bash"]
