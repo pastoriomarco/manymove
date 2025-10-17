@@ -96,6 +96,22 @@ void wait_for_future_ready(const FutureT & future, const std::chrono::seconds ti
   ASSERT_EQ(future.wait_for(timeout), std::future_status::ready);
 }
 
+template<typename PredicateT>
+bool wait_until(
+  PredicateT && predicate,
+  const std::chrono::milliseconds timeout,
+  const std::chrono::milliseconds poll_interval = std::chrono::milliseconds{50})
+{
+  const auto deadline = std::chrono::steady_clock::now() + timeout;
+  while (std::chrono::steady_clock::now() < deadline) {
+    if (predicate()) {
+      return true;
+    }
+    std::this_thread::sleep_for(poll_interval);
+  }
+  return predicate();
+}
+
 moveit_msgs::msg::RobotTrajectory makeTrajectory(
   const std::vector<std::string> & joint_names,
   const std::vector<double> & start_positions,
@@ -1122,8 +1138,17 @@ TEST_F(ManipulatorActionServerFixture, UnloadControllerActionSucceeds)
   auto goal_handle = send_future.get();
   ASSERT_NE(goal_handle, nullptr);
 
+  const auto expected_unloaded = goal.controller_name;
   auto result_future = unload_client_->async_get_result(goal_handle);
-  wait_for_future_ready(result_future, 2s);
+  ASSERT_TRUE(
+    wait_until(
+      [this, expected_unloaded]() {
+        return controller_manager_->last_unloaded() == expected_unloaded;
+      },
+      std::chrono::milliseconds{3000}))
+    << "Timed out waiting for controller_manager to record unload request";
+
+  wait_for_future_ready(result_future, 5s);
   auto wrapped_result = result_future.get();
 
   EXPECT_EQ(wrapped_result.code, rclcpp_action::ResultCode::SUCCEEDED);
