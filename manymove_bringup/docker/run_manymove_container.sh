@@ -4,14 +4,15 @@ set -euo pipefail
 
 usage() {
   cat <<'EOF'
-Usage: run_manymove_container.sh <humble|jazzy> [--pull-latest] [--build-only] [--] [additional docker run args...]
+Usage: run_manymove_container.sh <humble|jazzy> [--pull-latest] [--force-rebuild] [--build-only] [--] [additional docker run args...]
 
 Builds (if needed) and launches the ManyMove development container for the
 requested ROS 2 distribution.
 
 Options:
   --pull-latest   Fetch the latest ManyMove commit before rebuilding; skip the rebuild if already current.
-  --build-only    Build or refresh the image but do not start a container.
+  --build-only      Build or refresh the image but do not start a container.
+  --force-rebuild   Rebuild the image even if the cached context looks current.
 
 Arguments after "--" are passed straight to "docker run".
 EOF
@@ -36,6 +37,7 @@ esac
 
 PULL_LATEST=false
 BUILD_ONLY=false
+FORCE_REBUILD=false
 EXTRA_DOCKER_ARGS=()
 
 while [[ $# -gt 0 ]]; do
@@ -46,6 +48,10 @@ while [[ $# -gt 0 ]]; do
       ;;
     --build-only)
       BUILD_ONLY=true
+      shift
+      ;;
+    --force-rebuild)
+      FORCE_REBUILD=true
       shift
       ;;
     --)
@@ -131,7 +137,7 @@ CONTEXT_HASH="$(
   } | sha256sum | awk '{print $1}'
 )"
 
-NEEDS_BUILD=false
+NEEDS_BUILD=${FORCE_REBUILD}
 
 if [[ "${IMAGE_PRESENT}" == false ]]; then
   NEEDS_BUILD=true

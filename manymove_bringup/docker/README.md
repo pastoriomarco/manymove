@@ -1,6 +1,6 @@
 # ManyMove Docker Environments
 
-This directory contains a unified `Dockerfile.manymove` and helper scripts to spin up ROS 2 development containers for ManyMove on either Humble or Jazzy.
+This directory contains a unified `Dockerfile.manymove` and helper scripts to spin up ROS 2 development containers for ManyMove on either Humble or Jazzy.
 
 ## Prerequisites
 - Docker Engine installed and running on the host.
@@ -41,7 +41,7 @@ export MANYMOVE_ROS_WS=~/workspaces/dev_ws
 ${MANYMOVE_ROS_WS}/src/manymove/manymove_bringup/docker/run_manymove_container.sh jazzy --pull-latest
 ```
 
-The script inspects existing images for the stored commit hash, skips the rebuild if it already matches, and records the resolved commit inside the image at `/opt/manymove_ws/.manymove_commit`.
+The script inspects existing images for the stored commit hash, skips the rebuild if it already matches, and records the resolved commit inside the image at `/opt/manymove_ws/.manymove_commit`. Need to refresh even when nothing changed? Append `--force-rebuild`.
 
 ### Inspect baked commits
 
@@ -61,7 +61,9 @@ export MANYMOVE_ROS_WS=~/workspaces/dev_ws
 ${MANYMOVE_ROS_WS}/src/manymove/manymove_bringup/docker/run_manymove_xarm_container.sh humble
 ```
 
-Add `--pull-latest` to refresh both `manymove` and `xarm_ros2` to the newest commits (per ROS distro branch) before rebuilding, or `--build-only` to prime the image without launching it. During the build the resolved xArm commit is written to `/opt/manymove_ws/.xarm_ros2_commit`, and the resulting image tracks its base `manymove:<distro>` source to avoid running stale workspaces.
+Add `--pull-latest` to refresh both `manymove` and `xarm_ros2` to the newest commits (per ROS distro branch) before rebuilding, `--force-rebuild` to rebuild even when hashes match, or `--build-only` to prime the image without launching it. During the build the resolved xArm commit is written to `/opt/manymove_ws/.xarm_ros2_commit`, and the resulting image tracks its base `manymove:<distro>` source to avoid running stale workspaces.
+
+Hardware acceleration tip: append `-- -e LIBGL_ALWAYS_SOFTWARE=0` when invoking either run script if you want to keep software rendering disabled from the start.
 
 ## Inside the container
 

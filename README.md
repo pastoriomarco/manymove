@@ -40,7 +40,22 @@ Other distributions are not tested yet.
 
 ---
 
-## Quick start (Humble & Jazzy)
+## Setup with DOCKER CONTAINERS
+
+ManyMove ships Docker images so you can spin up a pre-built ROS 2 environment without touching your host system.
+
+**manymove_bringup/docker**
+- `manymove_bringup/docker/Dockerfile.manymove` — generic Humble/Jazzy image with the full ManyMove stack ready to go; launch it via `manymove_bringup/docker/run_manymove_container.sh <distro>` when you want an isolated development or demo shell.
+- `manymove_bringup/docker/Dockerfile.manymove_xarm` — extends the base image with the xArm ROS 2 driver; call `manymove_bringup/docker/run_manymove_xarm_container.sh <distro>` whenever you need to exercise UFactory hardware or simulate that driver stack.
+- See the full container walkthrough in [manymove_bringup/docker/README.md](manymove_bringup/docker/README.md).
+
+**manymove_planner/config/isaac_ros**
+- `manymove_planner/config/isaac_ros/Dockerfile.manymove` — desktop/x86_64 Isaac ROS workspace tuned for the cuMotion planner demos; pair it with `manymove_planner/config/isaac_ros/manymove_isaac_ros_startup.sh` when running GPU-accelerated examples on a PC.
+- Follow the Isaac ROS setup steps in [manymove_planner/config/isaac_ros/cumotion_startup.md](manymove_planner/config/isaac_ros/cumotion_startup.md) when preparing the cuMotion demos.
+
+---
+
+## Building from source: Quick start (Humble & Jazzy)
 
 The commands below are distro-agnostic and rely on the `ROS_DISTRO` environment variable. When you source `/opt/ros/<distro>/setup.bash`, the variable is exported automatically.
 
@@ -202,7 +217,7 @@ If not already installed, execute:
 sudo apt install ros-jazzy-moveit-resources-panda-moveit-config
 ```
 
-Standalone launchers for MoveItCPP or MoveGroup with Panda robot (you need the moveit2_tutorials package sourced):
+Standalone launchers for MoveItCPP or MoveGroup with Panda robot:
 
 with **BehaviorTree.CPP**:
 ```bash
@@ -220,8 +235,8 @@ ros2 launch manymove_bringup panda_movegroup_fake_py_trees.launch.py
 
 To launch UFactory robots example you'll need to build from source my branch of `xarm_ros2` repo.
 The following instructions require you to have already followed the Quick Start section.
-More info in [my fork of xarm_ros2](https://github.com/pastoriomarco/xarm_ros2).
 For `MANYMOVE_ROS_WS`, you'll need to be consistent with the value you set in point **1** of **Quick Start** above.
+More info in [my fork of xarm_ros2 HERE](https://github.com/pastoriomarco/xarm_ros2).
 
 ```bash
 export MANYMOVE_ROS_WS=~/workspaces/dev_ws
