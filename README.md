@@ -214,7 +214,7 @@ Starting from an empty scene, you'll delop a pick and place application with Man
 Requires the installation of `moveit_resources_panda_moveit_config` package.
 If not already installed, execute:
 ```bash
-sudo apt install ros-jazzy-moveit-resources-panda-moveit-config
+sudo apt install ros-$ROS_DISTRO-moveit-resources-panda-moveit-config
 ```
 
 Standalone launchers for MoveItCPP or MoveGroup with Panda robot:
