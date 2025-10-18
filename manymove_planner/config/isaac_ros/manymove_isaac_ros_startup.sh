@@ -24,14 +24,14 @@ ensure_repo() {
   fi
 }
 
-# Repos (release-3.2 where applicable)
+# Repos (release-3.2+ where applicable)
 ensure_repo isaac_ros_common https://github.com/NVIDIA-ISAAC-ROS/isaac_ros_common.git -b release-3.2
 ensure_repo isaac_ros_cumotion https://github.com/NVIDIA-ISAAC-ROS/isaac_ros_cumotion.git --recurse-submodules -b release-3.2
 ensure_repo isaac_ros_object_detection https://github.com/NVIDIA-ISAAC-ROS/isaac_ros_object_detection.git -b release-3.2
 ensure_repo isaac_ros_pose_estimation https://github.com/NVIDIA-ISAAC-ROS/isaac_ros_pose_estimation.git -b release-3.2
 ensure_repo isaac_ros_custom_bringup https://github.com/pastoriomarco/isaac_ros_custom_bringup.git
 ensure_repo xarm_ros2 https://github.com/pastoriomarco/xarm_ros2.git --recursive -b humble_no_gazebo
-ensure_repo manymove https://github.com/pastoriomarco/manymove.git --branch=humble
+ensure_repo manymove https://github.com/pastoriomarco/manymove.git --branch=dev
 ensure_repo isaac_sim_custom_examples https://github.com/pastoriomarco/isaac_sim_custom_examples.git
 ensure_repo third_party https://github.com/pastoriomarco/moveit_calibration.git
 
