@@ -972,9 +972,14 @@ TEST_F(ManipulatorActionServerFixture, CollisionDetectedDuringExecutionAborts)
   EXPECT_EQ(wrapped_result.code, rclcpp_action::ResultCode::ABORTED);
   ASSERT_NE(wrapped_result.result, nullptr);
   EXPECT_FALSE(wrapped_result.result->success);
+  const std::string & abort_message = wrapped_result.result->message;
+  std::string lowercase_message = abort_message;
+  std::transform(
+    lowercase_message.begin(), lowercase_message.end(), lowercase_message.begin(),
+    [](unsigned char ch) {return static_cast<char>(std::tolower(ch));});
   EXPECT_NE(
-    wrapped_result.result->message.find("collision"),
-    std::string::npos);
+    lowercase_message.find("collision"),
+    std::string::npos) << "Expected abort message to mention collision, got: " << abort_message;
 }
 
 TEST_F(ManipulatorActionServerFixture, CancelDuringExecutionTriggersControlledStop)
