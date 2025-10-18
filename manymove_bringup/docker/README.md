@@ -19,7 +19,7 @@ Swap the final argument for `humble` to launch the Humble variant. The helper sc
 - Builds (or rebuilds) the image automatically when `Dockerfile.manymove` or the helper scripts change.
 - Pass `--pull-latest` to fetch the latest ManyMove commit; the script skips a rebuild if the image already embeds that commit.
 - Pass `--build-only` to refresh the image without starting a container (useful before launching composed stacks).
-- Clones the `main` branch of `manymove` inside the image at `/opt/manymove_ws/src/manymove`.
+- Clones the ManyMove branch that matches your local checkout (falls back to `main`) inside the image at `/opt/manymove_ws/src/manymove`. Set `MANYMOVE_BRANCH` to override explicitly.
 - Runs `rosdep` and `colcon build` during image creation so the overlay is ready out of the box.
 - Starts the container without mounting your host workspace, keeping the environment self-contained.
 - Forwards X11 variables when available and enables GPU access automatically if `nvidia-smi` exists on the host.
@@ -34,7 +34,7 @@ ${MANYMOVE_ROS_WS}/src/manymove/manymove_bringup/docker/run_manymove_container.s
 
 ### Refresh ManyMove sources
 
-To update the baked-in ManyMove checkout to the latest `dev` commit (and rebuild only if a new commit exists):
+To update the baked-in ManyMove checkout to the latest commit on the selected branch (and rebuild only if a new commit exists):
 
 ```bash
 export MANYMOVE_ROS_WS=~/workspaces/dev_ws

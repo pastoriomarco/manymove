@@ -31,7 +31,7 @@ ensure_repo isaac_ros_object_detection https://github.com/NVIDIA-ISAAC-ROS/isaac
 ensure_repo isaac_ros_pose_estimation https://github.com/NVIDIA-ISAAC-ROS/isaac_ros_pose_estimation.git -b release-3.2
 ensure_repo isaac_ros_custom_bringup https://github.com/pastoriomarco/isaac_ros_custom_bringup.git
 ensure_repo xarm_ros2 https://github.com/pastoriomarco/xarm_ros2.git --recursive -b humble_no_gazebo
-ensure_repo manymove https://github.com/pastoriomarco/manymove.git --branch=dev
+ensure_repo manymove https://github.com/pastoriomarco/manymove.git -b main
 ensure_repo isaac_sim_custom_examples https://github.com/pastoriomarco/isaac_sim_custom_examples.git
 ensure_repo third_party https://github.com/pastoriomarco/moveit_calibration.git
 

@@ -75,13 +75,35 @@ if [[ ! -f "${DOCKERFILE}" ]]; then
   exit 1
 fi
 
+resolve_manymove_branch() {
+  if [[ -n "${MANYMOVE_BRANCH:-}" ]]; then
+    echo "${MANYMOVE_BRANCH}"
+    return
+  fi
+
+  local repo_root=""
+  repo_root="$(git -C "${SCRIPT_DIR}" rev-parse --show-toplevel 2>/dev/null || true)"
+  if [[ -n "${repo_root}" ]]; then
+    local current_branch=""
+    current_branch="$(git -C "${repo_root}" rev-parse --abbrev-ref HEAD 2>/dev/null || true)"
+    if [[ -n "${current_branch}" && "${current_branch}" != "HEAD" ]]; then
+      echo "${current_branch}"
+      return
+    fi
+  fi
+
+  echo "main"
+}
+
 IMAGE_TAG="manymove:${DISTRO}"
 CONTAINER_USER="${USER:-manymove}"
 
 MANYMOVE_REPO_DEFAULT="https://github.com/pastoriomarco/manymove.git"
-MANYMOVE_BRANCH_DEFAULT="dev"
+MANYMOVE_BRANCH_DEFAULT="$(resolve_manymove_branch)"
 TARGET_COMMIT=""
 LABEL_COMMIT=""
+
+echo "Using ManyMove branch '${MANYMOVE_BRANCH_DEFAULT}' (override with MANYMOVE_BRANCH env var)."
 
 IMAGE_PRESENT=false
 EXISTING_HASH=""
@@ -169,6 +191,7 @@ else
   if [[ "${LABEL_COMMIT}" != "unknown" ]]; then
     BUILD_CMD+=("--build-arg" "MANYMOVE_COMMIT=${LABEL_COMMIT}")
   fi
+  BUILD_CMD+=("--build-arg" "MANYMOVE_BRANCH=${MANYMOVE_BRANCH_DEFAULT}")
   BUILD_CMD+=(
     "-f" "${DOCKERFILE}"
     "-t" "${IMAGE_TAG}"

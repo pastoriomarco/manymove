@@ -950,7 +950,8 @@ TEST_F(ManipulatorActionServerFixture, CollisionDetectedDuringExecutionAborts)
   fake_planner_->set_start_valid(true);
   fake_planner_->set_end_valid(true);
   fake_planner_->set_plan_result(true, existing_traj);
-  fake_planner_->set_trajectory_valid_responses({true, false}, false);
+  // Let pre-execution validations pass once and surface the collision during feedback.
+  fake_planner_->set_trajectory_valid_responses({true, true, false}, false);
   fake_fjt_server_->set_success(true);
 
   publish_joint_state(joints, start);
@@ -961,8 +962,11 @@ TEST_F(ManipulatorActionServerFixture, CollisionDetectedDuringExecutionAborts)
   auto goal_handle = send_future.get();
   ASSERT_NE(goal_handle, nullptr);
 
+  // Ensure the fake FollowJointTrajectory server has accepted the goal before we observe results.
+  ASSERT_TRUE(fake_fjt_server_->wait_for_active_goal(200ms));
+
   auto result_future = move_client_->async_get_result(goal_handle);
-  wait_for_future_ready(result_future, 3s);
+  wait_for_future_ready(result_future, 5s);
   auto wrapped_result = result_future.get();
 
   EXPECT_EQ(wrapped_result.code, rclcpp_action::ResultCode::ABORTED);
