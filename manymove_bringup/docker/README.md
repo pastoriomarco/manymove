@@ -19,7 +19,7 @@ Swap the final argument for `humble` to launch the Humble variant. The helper sc
 - Builds (or rebuilds) the image automatically when `Dockerfile.manymove` or the helper scripts change.
 - Pass `--pull-latest` to fetch the latest ManyMove commit; the script skips a rebuild if the image already embeds that commit.
 - Pass `--build-only` to refresh the image without starting a container (useful before launching composed stacks).
-- Clones the `dev` branch of `manymove` inside the image at `/opt/manymove_ws/src/manymove`.
+- Clones the `main` branch of `manymove` inside the image at `/opt/manymove_ws/src/manymove`.
 - Runs `rosdep` and `colcon build` during image creation so the overlay is ready out of the box.
 - Starts the container without mounting your host workspace, keeping the environment self-contained.
 - Forwards X11 variables when available and enables GPU access automatically if `nvidia-smi` exists on the host.

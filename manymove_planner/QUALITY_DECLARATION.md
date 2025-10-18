@@ -6,7 +6,7 @@ This document declares the quality level for the `manymove_planner` package of t
 
 `manymove_planner` provides motion-planning action servers that wrap MoveIt 2, exposing consistent ROS 2 actions for planning and executing manipulator motions. It supports multiple planner backends (`MoveGroupInterface` and `MoveItCpp`), controller load/unload, and controlled stops.
 
-The package follows ROS 2 and MoveIt coding standards and is actively maintained within the ManyMove repository (`dev` branch).
+The package follows ROS 2 and MoveIt coding standards and is actively maintained within the ManyMove repository (`dev`/`main` branch).
 
 ---
 

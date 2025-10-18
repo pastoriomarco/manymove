@@ -6,7 +6,7 @@ This document declares the quality level for the `manymove_hmi` package of the M
 
 `manymove_hmi` provides the Qt-based Human–Machine Interface used to supervise and steer ManyMove behavior-tree deployments. It renders per‑robot controls (start/stop/reset), displays status/messages, and optionally exposes an application panel (`AppModule`) to view and edit curated blackboard keys. A `Ros2Worker` node bridges the GUI to ROS 2 topics/services.
 
-The package follows ROS 2 and Qt coding standards and is actively maintained within the ManyMove repository (`dev` branch).
+The package follows ROS 2 and Qt coding standards and is actively maintained within the ManyMove repository (`dev`/`main` branch).
 
 ---
 

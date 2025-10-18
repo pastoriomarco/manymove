@@ -7,7 +7,7 @@ This document declares the quality level for the `manymove_object_manager` packa
 `manymove_object_manager` provides the node and library responsible for adding, removing, attaching, detaching, and querying collision objects in a MoveIt planning scene.
 It exposes these capabilities as ROS 2 actions and services, and provides a YAML-driven configuration for object definitions and a standalone collision-spawner utility.
 
-The package follows ROS 2 and MoveIt coding standards and is actively maintained within the **ManyMove** repository (`dev` branch).
+The package follows ROS 2 and MoveIt coding standards and is actively maintained within the **ManyMove** repository (`dev`/`main` branch).
 
 ---
 

@@ -6,7 +6,7 @@ This document declares the quality level for the `manymove_cpp_trees` package of
 
 `manymove_cpp_trees` provides a BehaviorTree.CPP-based toolkit of C++ nodes and helper utilities that orchestrate motion planning (`manymove_planner`), collision object management (`manymove_object_manager`), grippers and I/O signals, and optional bridges to simulation/perception stacks. It also ships example BT clients and an HMI service node for blackboard inspection and updates.
 
-The package follows ROS 2 and MoveIt coding standards and is actively maintained within the ManyMove repository (`dev` branch).
+The package follows ROS 2 and MoveIt coding standards and is actively maintained within the ManyMove repository (`dev`/`main` branch).
 
 ---
 
