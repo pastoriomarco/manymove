@@ -75,8 +75,11 @@ if [[ ! -f "${DOCKERFILE}" ]]; then
   exit 1
 fi
 
+MANYMOVE_BRANCH_SOURCE="fallback"
+
 resolve_manymove_branch() {
   if [[ -n "${MANYMOVE_BRANCH:-}" ]]; then
+    MANYMOVE_BRANCH_SOURCE="env"
     echo "${MANYMOVE_BRANCH}"
     return
   fi
@@ -87,6 +90,7 @@ resolve_manymove_branch() {
     local current_branch=""
     current_branch="$(git -C "${repo_root}" rev-parse --abbrev-ref HEAD 2>/dev/null || true)"
     if [[ -n "${current_branch}" && "${current_branch}" != "HEAD" ]]; then
+      MANYMOVE_BRANCH_SOURCE="repo"
       echo "${current_branch}"
       return
     fi
@@ -103,7 +107,17 @@ MANYMOVE_BRANCH_DEFAULT="$(resolve_manymove_branch)"
 TARGET_COMMIT=""
 LABEL_COMMIT=""
 
-echo "Using ManyMove branch '${MANYMOVE_BRANCH_DEFAULT}' (override with MANYMOVE_BRANCH env var)."
+case "${MANYMOVE_BRANCH_SOURCE}" in
+  env)
+    echo "Using ManyMove branch '${MANYMOVE_BRANCH_DEFAULT}' from MANYMOVE_BRANCH env var."
+    ;;
+  repo)
+    echo "Using ManyMove branch '${MANYMOVE_BRANCH_DEFAULT}' detected from local git checkout."
+    ;;
+  *)
+    echo "Using ManyMove branch '${MANYMOVE_BRANCH_DEFAULT}' (fallback to main)."
+    ;;
+esac
 
 IMAGE_PRESENT=false
 EXISTING_HASH=""

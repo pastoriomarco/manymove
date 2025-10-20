@@ -11,6 +11,8 @@ It’ very important that you completely follow the above setup steps for the pl
 
 Download [manymove_isaac_ros_startup.sh](https://github.com/pastoriomarco/manymove/blob/humble/manymove_planner/config/isaac_ros/manymove_isaac_ros_startup.sh), make it executable and run it. It will download all the packages tested with ManyMove and Isaac ROS.
 
+> **Developers on `dev`**: export `MANYMOVE_BRANCH=dev` before running the script so it checks out the development branch instead of `main`.
+
 ## Step 3: Check isaac_ros_common-config
 
 Since I’m working with realsense cameras, the current config includes the realsense package. If you are using them too, skip this step.

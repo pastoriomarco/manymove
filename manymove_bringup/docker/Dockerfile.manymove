@@ -43,42 +43,24 @@ RUN apt-get update && \
         libegl1 \
         libxcb-xinerama0 \
         libxkbcommon-x11-0 \
-        ros-${ROS_DISTRO}-behaviortree-cpp-v3 \
-        ros-${ROS_DISTRO}-joint-state-publisher-gui \
+        qtbase5-dev \
         ros-${ROS_DISTRO}-moveit \
-        ros-${ROS_DISTRO}-moveit-resources-panda-moveit-config \
+        ros-${ROS_DISTRO}-moveit-msgs \
+        ros-${ROS_DISTRO}-controller-manager \
+        ros-${ROS_DISTRO}-ros2-controllers \
+        ros-${ROS_DISTRO}-gripper-controllers \
+        ros-${ROS_DISTRO}-geometric-shapes \
         ros-${ROS_DISTRO}-py-trees \
         ros-${ROS_DISTRO}-py-trees-ros \
-        ros-${ROS_DISTRO}-py-trees-ros-interfaces \
-        ros-${ROS_DISTRO}-tf-transformations \
-        ros-${ROS_DISTRO}-xacro \
-        ros-${ROS_DISTRO}-control-toolbox \
-        ros-${ROS_DISTRO}-controller-manager \
-        ros-${ROS_DISTRO}-image-view \
-        ros-${ROS_DISTRO}-find-object-2d \
-        ros-${ROS_DISTRO}-joy \
-        ros-${ROS_DISTRO}-moveit-servo \
+        ros-${ROS_DISTRO}-control-msgs \
         ros-${ROS_DISTRO}-controller-manager-msgs \
-        ros-${ROS_DISTRO}-joint-state-broadcaster \
-        ros-${ROS_DISTRO}-joint-trajectory-controller \
-        ros-${ROS_DISTRO}-diff-drive-controller \
-        ros-${ROS_DISTRO}-hardware-interface \
+        ros-${ROS_DISTRO}-moveit-resources-panda-moveit-config \
+        ros-${ROS_DISTRO}-behaviortree-cpp-v3 \
         ros-${ROS_DISTRO}-topic-based-ros2-control \
         ros-${ROS_DISTRO}-simulation-interfaces \
         ros-${ROS_DISTRO}-vision-msgs \
-        ros-${ROS_DISTRO}-camera-info-manager && \
-    if [ "${ROS_DISTRO}" = "humble" ]; then \
-        apt-get install -y --no-install-recommends \
-            ros-${ROS_DISTRO}-gazebo-ros \
-            ros-${ROS_DISTRO}-gazebo-plugins \
-            ros-${ROS_DISTRO}-gazebo-ros2-control; \
-    else \
-        apt-get install -y --no-install-recommends \
-            ros-${ROS_DISTRO}-ros-gz \
-            ros-${ROS_DISTRO}-ros-gz-bridge \
-            ros-${ROS_DISTRO}-gz-ros2-control \
-            ros-${ROS_DISTRO}-ros-gz-sim; \
-    fi && \
+        ros-${ROS_DISTRO}-moveit-ros-planning-interface \
+        ros-${ROS_DISTRO}-moveit-core && \
     rm -rf /var/lib/apt/lists/*
 
 RUN locale-gen en_US.UTF-8 && update-locale LANG=en_US.UTF-8

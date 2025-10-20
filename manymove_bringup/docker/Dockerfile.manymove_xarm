@@ -10,6 +10,36 @@ USER root
 
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
+        ros-${ROS_DISTRO}-joint-state-publisher-gui \
+        ros-${ROS_DISTRO}-py-trees-ros-interfaces \
+        ros-${ROS_DISTRO}-tf-transformations \
+        ros-${ROS_DISTRO}-xacro \
+        ros-${ROS_DISTRO}-control-toolbox \
+        ros-${ROS_DISTRO}-image-view \
+        ros-${ROS_DISTRO}-find-object-2d \
+        ros-${ROS_DISTRO}-joy \
+        ros-${ROS_DISTRO}-moveit-servo \
+        ros-${ROS_DISTRO}-joint-state-broadcaster \
+        ros-${ROS_DISTRO}-joint-trajectory-controller \
+        ros-${ROS_DISTRO}-diff-drive-controller \
+        ros-${ROS_DISTRO}-hardware-interface \
+        ros-${ROS_DISTRO}-camera-info-manager && \
+    if [ "${ROS_DISTRO}" = "humble" ]; then \
+        apt-get install -y --no-install-recommends \
+            ros-${ROS_DISTRO}-gazebo-ros \
+            ros-${ROS_DISTRO}-gazebo-plugins \
+            ros-${ROS_DISTRO}-gazebo-ros2-control; \
+    else \
+        apt-get install -y --no-install-recommends \
+            ros-${ROS_DISTRO}-ros-gz \
+            ros-${ROS_DISTRO}-ros-gz-bridge \
+            ros-${ROS_DISTRO}-gz-ros2-control \
+            ros-${ROS_DISTRO}-ros-gz-sim; \
+    fi && \
+    rm -rf /var/lib/apt/lists/*
+
 RUN gosu "${USERNAME}" bash -lc "set -euo pipefail; \
     cd \"${MANYMOVE_WS}/src\" && \
     rm -rf xarm_ros2 && \
