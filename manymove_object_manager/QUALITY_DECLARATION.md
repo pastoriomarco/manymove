@@ -14,7 +14,7 @@ The package follows ROS 2 and MoveIt coding standards and is actively maintained
 ## 2. Version Policy
 
 - **Versioning:** Semantic versioning (MAJOR.MINOR.PATCH) will be followed.
-  Current version: `0.1.0`.
+  Current version: `0.2.0`.
 - **Change control:** All changes are reviewed through pull requests on GitHub and are verified by automated builds in the CI workflow.
 - **API stability:** Public API (headers, actions, and parameters) is still in early development and may change until `1.0.0`.
 
@@ -93,7 +93,7 @@ Related ManyMove packages (same repository):
 | **Quality declaration** | Present (this file)                      | Align with REP-2004 once stable APIs are frozen                     |
 | **Documentation**       | Minimal README                           | Auto-generated API docs, richer examples                            |
 | **Code coverage**       | Unreported                               | Add gcovr/Codecov metrics                                           |
-| **Versioning**          | 0.1.0                                    | Increment per semantic versioning and maintain CHANGELOG.rst        |
+| **Versioning**          | 0.2.0                                    | Increment per semantic versioning and maintain CHANGELOG.rst        |
 
 ---
 

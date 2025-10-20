@@ -9,78 +9,66 @@ high-level history.
 Forthcoming
 -----------
 
-**Scope**
+*TBD.*
 
-This section covers the *upcoming merge* that promotes `dev` to the new `main` branch,
-with the goal of keeping a single codebase compatible with ROS 2 Humble and Jazzy.
+0.2.0 (2025-10-20)
+------------------
 
-Repository-wide
-^^^^^^^^^^^^^^^
-- Readmes aligned across sub-packages; versions/maintainers made uniform.
-- Linting/formatting modernized: `ruff` and `isort` for Python; Uncrustify configs aligned
-  to pass on both 0.72 (Humble) and 0.78 (Jazzy); stricter CI checks; fixes for `colcon test`.
-- General code cleanup, consistent line-length (≈100), license/copyright headers,
-  and minimum CMake uplift where applicable.
+Summary
+^^^^^^^
+- First ManyMove release promoted from `dev` to the new `main` branch.
+- Aligns the full stack for ROS 2 Humble and Jazzy while standardizing documentation,
+  packaging, and quality gates.
 
-Package highlights
-^^^^^^^^^^^^^^^^^^
+Highlights
+^^^^^^^^^^
 
-manymove_planner
-~~~~~~~~~~~~~~~~
-- **New unified motion action**: transition to a single ``MoveManipulator`` action and streamlined
-  planning/execution path; improved stop handling, logging, and validation.
-- Broader example coverage (MoveItCpp & MoveGroup), with polish to planning pipelines,
-  sequential execution examples, and Docker/Isaac ROS helper updates.
-- Numerous formatting and linter updates; increased Jazzy compatibility.
-  *(See per-package history for finer details.)*
+Unified manipulation command stack
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+- Introduces a single ``MoveManipulator`` action that covers planning and execution across
+  planner servers, behavior-tree clients, and message definitions.
+- Streamlines action handling with improved preemption, logging, and validation, while updating
+  Docker/Isaac ROS flows and tutorials to the unified interface.
 
-manymove_cpp_trees
-~~~~~~~~~~~~~~~~~~
-- Expanded BehaviorTree.CPP nodes and helpers; improved HMI integration and logging.
-- Added a hands-on tutorial and example clients; foundationpose/Isaac Sim interactions.
-- Formatting, uncrustify alignment (Humble & Jazzy), and CI refinements.
-
-manymove_object_manager
+Behavior tree libraries
 ~~~~~~~~~~~~~~~~~~~~~~~
-- Action improvements for adding/removing/attaching objects; result messages clarified.
-- Asset and mesh updates/renames; correctness and robustness improvements.
-- Consistent formatting and linter enforcement.
+- Expands the BehaviorTree.CPP node catalog, improves HMI integration/logging, and adds
+  walkthrough tutorials and example clients.
+- Refreshes the Python behavior-tree examples to the new ``MoveManipulator`` action with linting,
+  formatting, and unit-test coverage improvements.
 
-manymove_hmi
-~~~~~~~~~~~~
-- GUI/HMI improvements (input validation, new field types, clearer styles).
-- New service logic to update behavior-tree blackboard keys; better feedback and status flows.
-- Uncrustify and CMake updates; fixes to pass `colcon test`.
+Object and scene management
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+- Enhances object manager actions for adding/removing/attaching objects, clarifies result messages,
+  and refreshes referenced assets and meshes.
+- Revises the message package to centralize custom interfaces and decouple legacy dependencies.
 
-manymove_msgs
-~~~~~~~~~~~~~
-- Centralized custom interfaces for manipulation and object management; introduction and
-  maturation of ``MoveManipulator`` action with supporting messages.
-- Clean separation from signals-related dependencies and other minor interface refinements.
+Operator experience and bringup
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+- Updates HMI widgets with stronger validation, additional field types, and clearer feedback for
+  runtime status flows.
+- Delivers new and refined launchers (single- and dual-robot demos), sequential bringup scripts,
+  and Docker/Isaac ROS helpers that keep example pipelines reproducible.
 
-manymove_py_trees
-~~~~~~~~~~~~~~~~~
-- Python behavior-tree examples updated to the unified ``MoveManipulator`` action.
-- Linting, formatting, and testing profile improvements; small correctness fixes.
-
-manymove_bringup
-~~~~~~~~~~~~~~~~
-- New/updated launchers for single/dual-robot demos; sequential start-up and clearer params.
-- Examples expanded (pilz/chomp mixes, STOMP refs, dual-arm scenarios); fixes for `colcon test`.
-- Stricter checks, formatting cleanups.
+Tooling and quality
+^^^^^^^^^^^^^^^^^^^
+- Standardizes READMEs and maintainer metadata across packages.
+- Establishes pre-commit style automation with `ruff`, `isort`, and Uncrustify profiles that pass
+  on Humble (0.72) and Jazzy (0.78), tightening CI plus `colcon test` coverage.
+- Applies broad formatting, license, and minimum CMake updates to keep the codebase consistent.
 
 Breaking changes / deprecations
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-- **Behavior/Planner action unification**: previous split between “plan” and “execute” actions is
-  replaced by the single ``MoveManipulator`` action and updated BT nodes/clients. Migrate any user
-  code that depended on the older separate actions to the new interface.
+- **Behavior/Planner action unification**: the previous split between “plan” and “execute” actions
+  is replaced by ``MoveManipulator`` and the updated behavior-tree nodes/clients. Update any custom
+  integrations that relied on the legacy actions.
 
 Migration notes
 ^^^^^^^^^^^^^^^
 - Replace references to legacy plan/execute actions with the new ``MoveManipulator`` action.
-- Review launchers and parameters: several examples and names were normalized.
-- Ensure formatting hooks (pre-commit) and `ament_*` linters are installed/used so CI and local
-  results match.
+- Review launchers, parameter names, and tutorials: several examples were normalized during the
+  unification effort.
+- Install and use the provided formatting/linting hooks so local results match CI expectations.
 
 Contributors
 ^^^^^^^^^^^^

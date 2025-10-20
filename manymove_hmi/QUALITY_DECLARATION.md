@@ -12,7 +12,7 @@ The package follows ROS 2 and Qt coding standards and is actively maintained wi
 
 ## 2. Version Policy
 
-- Versioning: Semantic versioning (MAJOR.MINOR.PATCH) is followed. Current version: `0.1.0` (from `package.xml`).
+- Versioning: Semantic versioning (MAJOR.MINOR.PATCH) is followed. Current version: `0.2.0`.
 - Change control: All changes are proposed via pull requests and reviewed on GitHub; automated CI builds validate the workspace.
 - API stability: Public APIs (Qt widgets/signals, expected blackboard keys handled by the default app module) are pre‑1.0 and may change until `1.0.0`.
 
