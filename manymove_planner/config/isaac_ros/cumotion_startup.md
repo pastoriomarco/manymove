@@ -9,7 +9,7 @@ It’ very important that you completely follow the above setup steps for the pl
 
 ## Step 2: Download and run the setup script
 
-Download [manymove_isaac_ros_startup.sh](https://github.com/pastoriomarco/manymove/blob/humble/manymove_planner/config/isaac_ros/manymove_isaac_ros_startup.sh), make it executable and run it. It will download all the packages tested with ManyMove and Isaac ROS.
+Download [manymove_isaac_ros_startup.sh](https://github.com/pastoriomarco/manymove/blob/main/manymove_planner/config/isaac_ros/manymove_isaac_ros_startup.sh), make it executable and run it. It will download all the packages tested with ManyMove and Isaac ROS.
 
 > **Developers on `dev`**: export `MANYMOVE_BRANCH=dev` before running the script so it checks out the development branch instead of `main`.
 

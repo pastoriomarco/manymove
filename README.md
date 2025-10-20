@@ -287,7 +287,7 @@ ros2 launch manymove_bringup dual_moveitcpp_fake_cpp_trees.launch.py
 
 These launch files spin up the appropriate environment (fake or real) plus the nodes that handle planning, object management, signals, and optional HMI components. You can then interact with these action servers and send them requests using the provided C++ or Python-based behavior tree clients.
 
-For launchers that use **NVIDIA cuMotion** planning library, refer to [THIS README](https://github.com/pastoriomarco/manymove/blob/humble/manymove_planner/config/isaac_ros/cumotion_startup.md).
+For launchers that use **NVIDIA cuMotion** planning library, refer to [THIS README](https://github.com/pastoriomarco/manymove/blob/main/manymove_planner/config/isaac_ros/cumotion_startup.md).
 
 ---
 
