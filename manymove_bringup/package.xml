@@ -20,7 +20,6 @@
   <exec_depend>manymove_hmi</exec_depend>
   <exec_depend>manymove_object_manager</exec_depend>
   <exec_depend>manymove_planner</exec_depend>
-  <exec_depend>manymove_py_trees</exec_depend>
   <exec_depend>moveit_configs_utils</exec_depend>
   <exec_depend>moveit_resources_panda_moveit_config</exec_depend>
   <exec_depend>moveit_ros_move_group</exec_depend>

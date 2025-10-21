@@ -19,9 +19,6 @@
           liburdfdom-headers-dev \
           ros-${ROS_DISTRO}-rclcpp \
           ros-${ROS_DISTRO}-nvblox-msgs \
-          ros-${ROS_DISTRO}-py-trees \
-          ros-${ROS_DISTRO}-py-trees-ros \
-          ros-${ROS_DISTRO}-py-trees-ros-interfaces \
           ros-${ROS_DISTRO}-isaac-manipulator-ros-python-utils \
           ros-${ROS_DISTRO}-moveit-common \
           ros-${ROS_DISTRO}-joint-state-publisher-gui \

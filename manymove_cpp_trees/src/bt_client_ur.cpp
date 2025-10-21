@@ -1,0 +1,342 @@
+// Copyright 2025 Flexin Group SRL
+//
+// Redistribution and use in source and binary forms, with or without
+// modification, are permitted provided that the following conditions are met:
+//
+//    * Redistributions of source code must retain the above copyright
+//      notice, this list of conditions and the following disclaimer.
+//
+//    * Redistributions in binary form must reproduce the above copyright
+//      notice, this list of conditions and the following disclaimer in the
+//      documentation and/or other materials provided with the distribution.
+//
+//    * Neither the name of the Flexin Group SRL nor the names of its
+//      contributors may be used to endorse or promote products derived from
+//      this software without specific prior written permission.
+//
+// THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+// AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+// IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+// ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
+// LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+// CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+// SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+// INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+// CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+// ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+// POSSIBILITY OF SUCH DAMAGE.
+
+#include "manymove_cpp_trees/main_imports_helper.hpp"
+
+int main(int argc, char ** argv)
+{
+  rclcpp::init(argc, argv);
+
+  auto node = rclcpp::Node::make_shared("bt_client_node");
+  RCLCPP_INFO(node->get_logger(), "BT Client Node started for UR manipulators.");
+
+  // ----------------------------------------------------------------------------
+  // 1) Create a blackboard and set "node"
+  // ----------------------------------------------------------------------------
+  auto blackboard = BT::Blackboard::create();
+  blackboard->set("node", node);
+  RCLCPP_INFO(node->get_logger(), "Blackboard: set('node', <rclcpp::Node>)");
+
+  std::vector<manymove_cpp_trees::BlackboardEntry> keys;
+
+  // Provide UR-friendly defaults (model falls back to ur3e, tcp frame to tool0).
+  RobotParams rp = defineRobotParams(node, blackboard, keys, "", "ur3e", "", "tool0");
+
+  // ----------------------------------------------------------------------------
+  // 2) Setup joint targets, poses and moves
+  // ----------------------------------------------------------------------------
+
+  auto move_configs = defineMovementConfigs();
+  for (auto & entry : move_configs) {
+    entry.second.planning_pipeline = "move_group";
+    if (entry.second.planner_id == "RRTConnect") {
+      entry.second.planner_id.clear();  // allow default planner within move_group pipeline
+    }
+  }
+
+  // Typical UR 6-DOF configurations (radians) for rest and scanning poses.
+  std::vector<double> joint_rest = {0.0, -1.57, 1.57, -1.57, -1.57, 0.0};
+  std::vector<double> joint_look_sx = {0.6, -1.25, 1.70, -1.30, -1.57, 0.8};
+  std::vector<double> joint_look_dx = {-0.6, -1.25, 1.70, -1.30, -1.57, -0.8};
+  std::string named_home = "home";
+
+  blackboard->set("pick_target_key", Pose());
+  blackboard->set("approach_pick_target_key", Pose());
+
+  Pose drop_target = createPoseRPY(0.45, -0.05, 0.23, 3.14, 0.0, 0.0);
+  blackboard->set("drop_target_key", drop_target);
+
+  Pose approach_drop_target = drop_target;
+  approach_drop_target.position.z += 0.08;
+  blackboard->set("approach_drop_target_key", approach_drop_target);
+
+  std::string tcp_frame_name = rp.prefix + rp.tcp_frame;
+
+  std::vector<Move> rest_position = {
+    {rp.prefix, tcp_frame_name, "joint", move_configs["max_move"], "", joint_rest},
+  };
+
+  std::vector<Move> scan_surroundings = {
+    {rp.prefix, tcp_frame_name, "joint", move_configs["mid_move"], "", joint_look_sx},
+    {rp.prefix, tcp_frame_name, "joint", move_configs["mid_move"], "", joint_look_dx},
+  };
+
+  std::vector<Move> pick_sequence = {
+    {rp.prefix, tcp_frame_name, "pose", move_configs["mid_move"], "approach_pick_target_key"},
+    {rp.prefix, tcp_frame_name, "cartesian", move_configs["cartesian_slow_move"],
+      "pick_target_key"},
+  };
+
+  std::vector<Move> drop_sequence = {
+    {rp.prefix, tcp_frame_name, "cartesian", move_configs["cartesian_mid_move"],
+      "approach_pick_target_key"},
+    {rp.prefix, tcp_frame_name, "pose", move_configs["max_move"], "approach_drop_target_key"},
+    {rp.prefix, tcp_frame_name, "cartesian", move_configs["cartesian_slow_move"],
+      "drop_target_key"},
+  };
+
+  std::vector<Move> home_position = {
+    {rp.prefix, tcp_frame_name, "cartesian", move_configs["cartesian_mid_move"],
+      "approach_drop_target_key"},
+    {rp.prefix, tcp_frame_name, "named", move_configs["max_move"], "", {}, named_home},
+  };
+
+  std::string to_rest_reset_xml =
+    buildMoveXML(rp.prefix, rp.prefix + "toRest", rest_position, blackboard, true);
+  std::string to_rest_xml =
+    buildMoveXML(rp.prefix, rp.prefix + "toRest", rest_position, blackboard);
+  std::string scan_around_xml =
+    buildMoveXML(rp.prefix, rp.prefix + "scanAround", scan_surroundings, blackboard);
+  std::string pick_object_xml =
+    buildMoveXML(rp.prefix, rp.prefix + "pick", pick_sequence, blackboard);
+  std::string drop_object_xml =
+    buildMoveXML(rp.prefix, rp.prefix + "drop", drop_sequence, blackboard);
+  std::string to_home_xml = buildMoveXML(rp.prefix, rp.prefix + "home", home_position, blackboard);
+
+  std::string prep_sequence_xml =
+    sequenceWrapperXML(rp.prefix + "ComposedPrepSequence", {to_rest_reset_xml, scan_around_xml});
+  std::string home_sequence_xml =
+    sequenceWrapperXML(rp.prefix + "ComposedHomeSequence", {to_home_xml, to_rest_xml});
+
+  // ----------------------------------------------------------------------------
+  // 3) Build blocks for objects handling
+  // ----------------------------------------------------------------------------
+
+  blackboard->set("ground_id_key", "obstacle_ground");
+  blackboard->set("ground_shape_key", "box");
+  blackboard->set("ground_dimension_key", std::vector<double>{1.0, 1.0, 0.1});
+  blackboard->set("ground_pose_key", createPoseRPY(0.0, 0.0, -0.051, 0.0, 0.0, 0.0));
+  blackboard->set("ground_scale_key", std::vector<double>{1.0, 1.0, 1.0});
+
+  blackboard->set("wall_id_key", "obstacle_wall");
+  blackboard->set("wall_shape_key", "box");
+  blackboard->set("wall_dimension_key", std::vector<double>{1.0, 0.02, 0.2});
+  blackboard->set("wall_pose_key", createPoseRPY(0.0, -0.20, 0.10, 0.0, 0.0, 0.0));
+  blackboard->set("wall_scale_key", std::vector<double>{1.0, 1.0, 1.0});
+
+  blackboard->set("cylinder_id_key", "graspable_cylinder");
+  blackboard->set("cylinder_shape_key", "cylinder");
+  blackboard->set("cylinder_dimension_key", std::vector<double>{0.12, 0.015});
+  blackboard->set("cylinder_pose_key", createPoseRPY(0.55, 0.15, 0.06, 0.0, 1.57, 0.0));
+  blackboard->set("cylinder_scale_key", std::vector<double>{1.0, 1.0, 1.0});
+
+  blackboard->set("mesh_id_key", "graspable_mesh");
+  blackboard->set("mesh_shape_key", "mesh");
+  blackboard->set("mesh_file_key", "package://manymove_object_manager/meshes/unit_tube.stl");
+  blackboard->set("mesh_scale_key", std::vector<double>{0.01, 0.01, 0.1});
+  blackboard->set(
+    "mesh_pose_key", createPoseRPY(
+      0.45, -0.25, 0.05, 0.785, 1.57, 0.0));
+
+  std::string check_ground_obj_xml =
+    buildObjectActionXML("check_ground", createCheckObjectExists("ground_id_key"));
+  std::string check_wall_obj_xml =
+    buildObjectActionXML("check_wall", createCheckObjectExists("wall_id_key"));
+  std::string check_cylinder_obj_xml =
+    buildObjectActionXML("check_cylinder", createCheckObjectExists("cylinder_id_key"));
+  std::string check_mesh_obj_xml =
+    buildObjectActionXML("check_mesh", createCheckObjectExists("mesh_id_key"));
+
+  std::string add_ground_obj_xml = buildObjectActionXML(
+    "add_ground", createAddObject(
+      "ground_id_key", "ground_shape_key", "ground_dimension_key", "ground_pose_key",
+      "ground_scale_key", ""));
+  std::string add_wall_obj_xml = buildObjectActionXML(
+    "add_wall", createAddObject(
+      "wall_id_key", "wall_shape_key", "wall_dimension_key", "wall_pose_key",
+      "wall_scale_key", ""));
+  std::string add_cylinder_obj_xml = buildObjectActionXML(
+    "add_cylinder", createAddObject(
+      "cylinder_id_key", "cylinder_shape_key", "cylinder_dimension_key",
+      "cylinder_pose_key", "cylinder_scale_key", ""));
+  std::string add_mesh_obj_xml = buildObjectActionXML(
+    "add_mesh",
+    createAddObject(
+      "mesh_id_key", "mesh_shape_key", "", "mesh_pose_key", "mesh_scale_key", "mesh_file_key"));
+
+  std::string init_ground_obj_xml =
+    fallbackWrapperXML("init_ground_obj", {check_ground_obj_xml, add_ground_obj_xml});
+  std::string init_wall_obj_xml =
+    fallbackWrapperXML("init_wall_obj", {check_wall_obj_xml, add_wall_obj_xml});
+  std::string init_cylinder_obj_xml =
+    fallbackWrapperXML("init_cylinder_obj", {check_cylinder_obj_xml, add_cylinder_obj_xml});
+  std::string init_mesh_obj_xml =
+    fallbackWrapperXML("init_mesh_obj", {check_mesh_obj_xml, add_mesh_obj_xml});
+
+  blackboard->set("tcp_frame_name_key", tcp_frame_name);
+  blackboard->set("object_to_manipulate_key", "graspable_cylinder");
+  blackboard->set("touch_links_empty_key", std::vector<std::string>{});
+
+  std::string attach_obj_xml = buildObjectActionXML(
+    "attach_obj_to_manipulate",
+    createAttachObject("object_to_manipulate_key", "tcp_frame_name_key", "touch_links_empty_key"));
+  std::string detach_obj_xml = buildObjectActionXML(
+    "detach_obj_to_manipulate",
+    createDetachObject("object_to_manipulate_key", "tcp_frame_name_key"));
+  std::string remove_obj_xml =
+    buildObjectActionXML("remove_obj_to_manipulate", createRemoveObject("object_to_manipulate_key"));
+
+  blackboard->set(
+    "pick_pre_transform_xyz_rpy_1_key", std::vector<double>{0.0, 0.0, 0.0, 0.0, 1.57, 0.0});
+  blackboard->set(
+    "approach_pick_pre_transform_xyz_rpy_1_key",
+    std::vector<double>{-0.08, 0.0, 0.0, 0.0, 1.57, 0.0});
+  blackboard->set(
+    "pick_post_transform_xyz_rpy_1_key", std::vector<double>{0.0, 0.0, -0.03, 3.14, 0.0, 0.0});
+
+  blackboard->set("world_frame_key", "world");
+
+  std::string get_pick_pose_xml = buildObjectActionXML(
+    "get_pick_pose", createGetObjectPose(
+      "object_to_manipulate_key", "pick_target_key", "world_frame_key",
+      "pick_pre_transform_xyz_rpy_1_key", "pick_post_transform_xyz_rpy_1_key"));
+  std::string get_approach_pose_xml = buildObjectActionXML(
+    "get_approach_pose",
+    createGetObjectPose(
+      "object_to_manipulate_key", "approach_pick_target_key", "world_frame_key",
+      "approach_pick_pre_transform_xyz_rpy_1_key", "pick_post_transform_xyz_rpy_1_key"));
+
+  // ----------------------------------------------------------------------------
+  // 5) Define Signals calls
+  // ----------------------------------------------------------------------------
+
+  std::string signal_gripper_close_xml =
+    (rp.is_real ? buildSetOutputXML(rp.prefix, "GripperClose", "controller", 0, 1) : "");
+  std::string signal_gripper_open_xml =
+    (rp.is_real ? buildSetOutputXML(rp.prefix, "GripperOpen", "controller", 0, 0) : "");
+  std::string check_gripper_close_xml =
+    (rp.is_real ? buildWaitForInput(rp.prefix, "WaitForSensor", "controller", 0, 1) :
+    "<Delay delay_msec=\"250\">\n<AlwaysSuccess />\n</Delay>\n");
+  std::string check_gripper_open_xml =
+    (rp.is_real ? buildWaitForInput(rp.prefix, "WaitForSensor", "controller", 0, 0) :
+    "<Delay delay_msec=\"250\">\n  <AlwaysSuccess />\n</Delay>\n");
+  std::string check_robot_state_xml = buildCheckRobotStateXML(
+    rp.prefix, "CheckRobot", "robot_ready", "error_code", "robot_mode", "robot_state", "robot_msg");
+  std::string reset_robot_state_xml = buildResetRobotStateXML(rp.prefix, "ResetRobot", rp.model);
+
+  std::string check_reset_robot_xml =
+    (rp.is_real ?
+    fallbackWrapperXML(
+      rp.prefix + "CheckResetFallback", {check_robot_state_xml, reset_robot_state_xml}) :
+    "<Delay delay_msec=\"250\">\n<AlwaysSuccess />\n</Delay>\n");
+
+  // ----------------------------------------------------------------------------
+  // 6) Full behavior composition
+  // ----------------------------------------------------------------------------
+
+  std::string spawn_fixed_objects_xml =
+    sequenceWrapperXML("SpawnFixedObjects", {init_ground_obj_xml, init_wall_obj_xml});
+  std::string spawn_graspable_objects_xml =
+    sequenceWrapperXML("SpawnGraspableObjects", {init_cylinder_obj_xml, init_mesh_obj_xml});
+  std::string get_grasp_object_poses_xml =
+    sequenceWrapperXML("GetGraspPoses", {get_pick_pose_xml, get_approach_pose_xml});
+  std::string go_to_pick_pose_xml = sequenceWrapperXML("GoToPickPose", {pick_object_xml});
+  std::string close_gripper_xml = sequenceWrapperXML(
+    "CloseGripper", {signal_gripper_close_xml, check_gripper_close_xml, attach_obj_xml});
+  std::string open_gripper_xml =
+    sequenceWrapperXML("OpenGripper", {signal_gripper_open_xml, detach_obj_xml});
+
+  std::string reset_graspable_objects_xml =
+    sequenceWrapperXML("reset_graspable_objects", {open_gripper_xml, remove_obj_xml});
+
+  std::string startup_sequence_xml = sequenceWrapperXML(
+    "StartUpSequence", {check_reset_robot_xml, spawn_fixed_objects_xml,
+      prep_sequence_xml});
+
+  std::string repeat_forever_wrapper_xml = repeatSequenceWrapperXML(
+    "RepeatForever",
+  {
+    check_reset_robot_xml,
+    spawn_graspable_objects_xml,
+    get_grasp_object_poses_xml,
+    go_to_pick_pose_xml,
+    close_gripper_xml,
+    drop_object_xml,
+    open_gripper_xml,
+    home_sequence_xml,
+    remove_obj_xml
+  },
+    -1);
+
+  std::string retry_forever_wrapper_xml =
+    retrySequenceWrapperXML("CycleForever", {startup_sequence_xml, repeat_forever_wrapper_xml}, -1);
+
+  std::vector<std::string> master_branches_xml = {retry_forever_wrapper_xml};
+  std::string master_body = sequenceWrapperXML("GlobalMasterSequence", master_branches_xml);
+  std::string final_tree_xml = mainTreeWrapperXML("MasterTree", master_body);
+
+  RCLCPP_INFO(
+    node->get_logger(), "=== Programmatically Generated Tree XML ===\n%s", final_tree_xml.c_str());
+
+  // ----------------------------------------------------------------------------
+  // 8) Register node types and build tree
+  // ----------------------------------------------------------------------------
+  BT::BehaviorTreeFactory factory;
+  registerAllNodeTypes(factory);
+
+  BT::Tree tree;
+  try {
+    tree = factory.createTreeFromText(final_tree_xml, blackboard);
+  } catch (const std::exception & ex) {
+    RCLCPP_ERROR(node->get_logger(), "Failed to create tree: %s", ex.what());
+    return 1;
+  }
+
+  BT::PublisherZMQ publisher(tree);
+  (void)publisher;
+
+  auto hmi_node =
+    std::make_shared<manymove_cpp_trees::HMIServiceNode>("hmi_service_node", blackboard, keys);
+  RCLCPP_INFO(node->get_logger(), "HMI Service Node instantiated.");
+
+  rclcpp::executors::MultiThreadedExecutor executor;
+  executor.add_node(node);
+  executor.add_node(hmi_node);
+
+  manymove_cpp_trees::setHmiMessage(
+    blackboard, rp.prefix, "Waiting for start command", "green");
+
+  rclcpp::Rate rate(100);
+  while (rclcpp::ok()) {
+    executor.spin_some();
+    BT::NodeStatus status = tree.tickRoot();
+
+    if (status == BT::NodeStatus::SUCCESS) {
+      RCLCPP_INFO(node->get_logger(), "BT ended SUCCESS.");
+      break;
+    } else if (status == BT::NodeStatus::FAILURE) {
+      RCLCPP_ERROR(node->get_logger(), "BT ended FAILURE.");
+      break;
+    }
+    rate.sleep();
+  }
+
+  tree.rootNode()->halt();
+  rclcpp::shutdown();
+  return 0;
+}

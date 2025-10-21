@@ -86,6 +86,7 @@ bt_client_exec(bt_client_panda)
 bt_client_exec(bt_client_panda_cumotion)
 bt_client_exec(bt_client_uf850)
 bt_client_exec(bt_client_xarm7)
+bt_client_exec(bt_client_ur)
 bt_client_exec(collision_test)
 bt_client_exec(tutorial_01)
 bt_client_exec(bt_client_foundationpose)
@@ -111,6 +112,7 @@ install(TARGETS
   bt_client_panda_cumotion
   bt_client_uf850
   bt_client_xarm7
+  bt_client_ur
   collision_test
   tutorial_01
   bt_client_foundationpose

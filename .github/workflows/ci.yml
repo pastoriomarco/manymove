@@ -64,8 +64,6 @@ jobs:
             ros-$ROS_DISTRO-behaviortree-cpp-v3 \
             ros-$ROS_DISTRO-moveit-visual-tools \
             ros-$ROS_DISTRO-vision-msgs \
-            ros-$ROS_DISTRO-py-trees \
-            ros-$ROS_DISTRO-py-trees-ros \
             ros-$ROS_DISTRO-simulation-interfaces
 
       - name: Setup rosdep

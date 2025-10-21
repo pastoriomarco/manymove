@@ -16,7 +16,7 @@ Every action uses the MoveIt `GetPlanningScene` service for verification and lea
 - For workspace setup, dependencies, and launch instructions, follow the top-level [ManyMove README](../README.md).
 
 ## Interactions and Dependencies
-Action definitions come from `manymove_msgs`, and message types are provided by `moveit_msgs`, `geometry_msgs`, `shape_msgs`, and the TF2 stack. The node is designed to cooperate with `manymove_planner`, `manymove_py_trees`, and `manymove_cpp_trees`, giving these planners a consistent interface for collision management without direct planning scene manipulation.
+Action definitions come from `manymove_msgs`, and message types are provided by `moveit_msgs`, `geometry_msgs`, `shape_msgs`, and the TF2 stack. The node is designed to cooperate with `manymove_planner`, and `manymove_cpp_trees`, giving these planners a consistent interface for collision management without direct planning scene manipulation.
 
 ## Configuration
 The file `config/objects.yaml` contains example obstacles and graspable objects that can be pre-loaded into the planning scene by companion tools such as a collision spawner. Customize this list to describe application-specific geometry, including mesh resources under `meshes/`, before invoking the object management actions.
