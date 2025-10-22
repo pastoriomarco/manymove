@@ -54,6 +54,7 @@ RUN gosu "${USERNAME}" bash -lc "set -euo pipefail; \
 
 RUN source /opt/ros/${ROS_DISTRO}/setup.bash && \
     cd ${MANYMOVE_WS} && \
+    apt-get update && \
     rosdep update && \
     rosdep install --from-paths src --ignore-src --rosdistro ${ROS_DISTRO} -y && \
     apt-get clean && rm -rf /var/lib/apt/lists/*

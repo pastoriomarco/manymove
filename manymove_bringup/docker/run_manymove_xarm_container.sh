@@ -110,13 +110,11 @@ COMMIT_LABEL_KEY="manymove.xarm.commit"
 BASE_LABEL_KEY="manymove.base.id"
 
 IMAGE_PRESENT=false
-EXISTING_HASH=""
 EXISTING_COMMIT=""
 EXISTING_BASE_ID=""
 
 if docker image inspect "${IMAGE_TAG}" >/dev/null 2>&1; then
   IMAGE_PRESENT=true
-  EXISTING_HASH="$(docker image inspect "${IMAGE_TAG}" --format "{{ index .Config.Labels \"${LABEL_KEY}\" }}" 2>/dev/null || true)"
   EXISTING_COMMIT="$(docker image inspect "${IMAGE_TAG}" --format "{{ index .Config.Labels \"${COMMIT_LABEL_KEY}\" }}" 2>/dev/null || true)"
   EXISTING_BASE_ID="$(docker image inspect "${IMAGE_TAG}" --format "{{ index .Config.Labels \"${BASE_LABEL_KEY}\" }}" 2>/dev/null || true)"
   if [[ -n "${EXISTING_COMMIT}" ]]; then
@@ -161,25 +159,30 @@ CONTEXT_HASH="$(
   } | sha256sum | awk '{print $1}'
 )"
 
-NEEDS_BUILD=${FORCE_REBUILD}
+NEEDS_BUILD=false
 
-if [[ "${IMAGE_PRESENT}" == false ]]; then
+if [[ "${FORCE_REBUILD}" == true ]]; then
   NEEDS_BUILD=true
-elif [[ "${EXISTING_HASH}" != "${CONTEXT_HASH}" ]]; then
+elif [[ "${IMAGE_PRESENT}" == false ]]; then
   NEEDS_BUILD=true
 elif [[ "${EXISTING_BASE_ID}" != "${BASE_IMAGE_ID}" ]]; then
   NEEDS_BUILD=true
-elif [[ -n "${TARGET_XARM_COMMIT}" && "${EXISTING_COMMIT}" != "${TARGET_XARM_COMMIT}" ]]; then
-  NEEDS_BUILD=true
+elif [[ "${PULL_LATEST}" == true ]]; then
+  if [[ -n "${TARGET_XARM_COMMIT}" ]]; then
+    if [[ "${EXISTING_COMMIT}" != "${TARGET_XARM_COMMIT}" ]]; then
+      NEEDS_BUILD=true
+    else
+      echo "xarm_ros2 sources already up to date (commit ${TARGET_XARM_COMMIT}); skipping rebuild."
+    fi
+  else
+    echo "Unable to resolve latest xarm_ros2 commit; rebuilding to ensure freshness."
+    NEEDS_BUILD=true
+  fi
 fi
 
-if [[ "${NEEDS_BUILD}" == false ]]; then
-  if [[ "${PULL_LATEST}" == true && -n "${TARGET_XARM_COMMIT}" ]]; then
-    echo "xarm_ros2 sources already up to date (commit ${TARGET_XARM_COMMIT}); skipping rebuild."
-  fi
-else
+if [[ "${NEEDS_BUILD}" == true ]]; then
   if [[ "${IMAGE_PRESENT}" == true ]]; then
-    echo "Rebuilding image '${IMAGE_TAG}' (context or xarm_ros2 sources changed)."
+    echo "Rebuilding image '${IMAGE_TAG}'."
   else
     echo "Building image '${IMAGE_TAG}' from ${DOCKERFILE}"
   fi
