@@ -306,7 +306,6 @@ def launch_setup(context, *args, **kwargs):
 
     normalize_pipeline_config(moveit_config.planning_pipelines)
 
-
     # robot state publisher node
     robot_state_publisher_node = Node(
         package='robot_state_publisher',

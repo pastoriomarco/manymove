@@ -11,7 +11,8 @@ package_name = 'manymove_bringup'
 
 
 def list_data_files(base_dir):
-    """Collect data files preserving their relative directory structure.
+    """
+    Collect data files preserving their relative directory structure.
 
     Symlinks are skipped to avoid packaging broken links across distros.
     """

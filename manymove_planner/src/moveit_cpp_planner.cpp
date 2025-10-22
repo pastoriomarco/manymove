@@ -485,7 +485,7 @@ std::pair<bool, moveit_msgs::msg::RobotTrajectory> MoveItCppPlanner::plan(
 
     std::string planning_frame = base_frame_;
     if (auto planning_scene_monitor =
-        manymove_planner_compat::getPlanningSceneMonitorRw(moveit_cpp_ptr_))
+      manymove_planner_compat::getPlanningSceneMonitorRw(moveit_cpp_ptr_))
     {
       auto planning_scene = planning_scene_monitor->getPlanningScene();
       if (planning_scene) {

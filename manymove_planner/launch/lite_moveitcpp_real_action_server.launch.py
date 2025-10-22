@@ -204,7 +204,6 @@ def launch_setup(context, *args, **kwargs):
 
     normalize_pipeline_config(moveit_config.planning_pipelines)
 
-
     moveit_config_dict = moveit_config.to_dict()
 
     # robot description launch
