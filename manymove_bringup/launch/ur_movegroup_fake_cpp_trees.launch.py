@@ -47,9 +47,9 @@ from launch_ros.actions import Node
 from launch_ros.parameter_descriptions import ParameterFile
 from launch_ros.parameter_descriptions import ParameterValue
 from launch_ros.substitutions import FindPackageShare
+from manymove_bringup.pipeline_utils import normalize_pipeline_config
 
 import yaml
-from manymove_bringup.pipeline_utils import normalize_pipeline_config
 
 
 def load_yaml(package_name, file_path):

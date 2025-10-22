@@ -37,8 +37,8 @@ from launch.actions import ExecuteProcess
 from launch.actions import OpaqueFunction
 from launch.substitutions import LaunchConfiguration
 from launch_ros.actions import Node
-
 from manymove_bringup.pipeline_utils import normalize_pipeline_config
+
 from moveit_configs_utils import MoveItConfigsBuilder
 
 

@@ -40,10 +40,9 @@ from launch.event_handlers import OnProcessStart
 from launch.launch_description_sources import load_python_launch_file_as_module
 from launch.substitutions import LaunchConfiguration  # , PathJoinSubstitution
 from launch_ros.actions import Node
+from manymove_bringup.pipeline_utils import normalize_pipeline_config
 from uf_ros_lib.moveit_configs_builder import MoveItConfigsBuilder
 from uf_ros_lib.uf_robot_utils import generate_ros2_control_params_temp_file
-
-from manymove_bringup.pipeline_utils import normalize_pipeline_config
 
 
 def launch_setup(context, *args, **kwargs):
