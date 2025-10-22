@@ -1,4 +1,7 @@
-[![CI](https://github.com/pastoriomarco/manymove/actions/workflows/ci.yml/badge.svg)](https://github.com/pastoriomarco/manymove/actions/workflows/ci.yml)
+| Branch | Status |
+|--------|--------|
+| `main` | [![CI](https://github.com/pastoriomarco/manymove/actions/workflows/ci.yml/badge.svg)](https://github.com/pastoriomarco/manymove/actions/workflows/ci.yml) |
+| `dev`  | [![CI](https://github.com/pastoriomarco/manymove/actions/workflows/ci.yml/badge.svg?branch=dev)](https://github.com/pastoriomarco/manymove/actions/workflows/ci.yml) |
 
 # ManyMove project — ROS 2 Humble & Jazzy
 
