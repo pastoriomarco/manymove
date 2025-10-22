@@ -35,6 +35,8 @@ from launch.substitutions import LaunchConfiguration
 from launch_ros.actions import Node
 from uf_ros_lib.moveit_configs_builder import MoveItConfigsBuilder
 
+from manymove_bringup.pipeline_utils import normalize_pipeline_config
+
 
 def launch_setup(context, *args, **kwargs):
     """Configure launch actions for the lite movegroup fake action server node scenario."""
@@ -147,6 +149,8 @@ def launch_setup(context, *args, **kwargs):
         geometry_mesh_tcp_xyz=geometry_mesh_tcp_xyz,
         geometry_mesh_tcp_rpy=geometry_mesh_tcp_rpy,
     ).to_moveit_configs()
+
+    normalize_pipeline_config(moveit_configs.planning_pipelines)
 
     # Define the action_server_node with new parameters
     action_server_node = Node(

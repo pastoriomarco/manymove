@@ -39,6 +39,7 @@ from launch.substitutions import LaunchConfiguration
 from launch_ros.actions import Node
 
 import yaml
+from manymove_bringup.pipeline_utils import normalize_pipeline_config
 from moveit_configs_utils import MoveItConfigsBuilder
 
 
@@ -75,6 +76,8 @@ def launch_setup(context, *args, **kwargs):
         .to_moveit_configs()
     )
 
+    normalize_pipeline_config(moveit_configs.planning_pipelines)
+
     # Load isaac_ros_cumotion_planning.yaml
     isaac_config_file_path = os.path.join(
         get_package_share_directory('isaac_ros_cumotion_moveit'),
@@ -83,7 +86,7 @@ def launch_setup(context, *args, **kwargs):
     )
 
     with open(isaac_config_file_path, 'r') as f:
-        isaac_pipeline_config = yaml.safe_load(f)
+        isaac_pipeline_config = normalize_pipeline_config(yaml.safe_load(f))
 
     # Add isaac pipeline and set as default
     moveit_configs.planning_pipelines['planning_pipelines'].append('isaac_ros_cumotion')

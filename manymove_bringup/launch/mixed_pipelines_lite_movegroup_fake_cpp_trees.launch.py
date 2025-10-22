@@ -43,6 +43,8 @@ from launch_ros.actions import Node
 from uf_ros_lib.moveit_configs_builder import MoveItConfigsBuilder
 from uf_ros_lib.uf_robot_utils import generate_ros2_control_params_temp_file
 
+from manymove_bringup.pipeline_utils import normalize_pipeline_config
+
 
 def launch_setup(context, *args, **kwargs):
     """Configure launch actions for the mixed pipelines lite movegroup fake cpp trees scenario."""
@@ -164,6 +166,8 @@ def launch_setup(context, *args, **kwargs):
         )
         .planning_pipelines(pipelines=['ompl', 'chomp', 'pilz_industrial_motion_planner'])
     ).to_moveit_configs()
+
+    normalize_pipeline_config(moveit_configs.planning_pipelines)
 
     # ================================================================
     # from: xarm_description/launch/_robot_description.launch.launch.py

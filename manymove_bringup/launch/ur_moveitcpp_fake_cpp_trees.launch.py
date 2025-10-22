@@ -48,6 +48,7 @@ from launch_ros.parameter_descriptions import ParameterValue
 from launch_ros.substitutions import FindPackageShare
 
 import yaml
+from manymove_bringup.pipeline_utils import normalize_pipeline_config
 
 
 def load_yaml(package_name, file_path):
@@ -217,7 +218,9 @@ def launch_setup(context, *args, **kwargs):
         'default_planning_pipeline': 'ompl',
     }
     for pipeline_name, (pkg, rel_path) in planning_pipeline_files.items():
-        planning_pipeline_config[pipeline_name] = load_yaml(pkg, rel_path)
+        planning_pipeline_config[pipeline_name] = normalize_pipeline_config(
+            load_yaml(pkg, rel_path)
+        )
     try:
         if 'planner_configs' not in planning_pipeline_config.get('ompl', {}):
             ompl_defaults = load_yaml(

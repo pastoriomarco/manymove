@@ -47,6 +47,7 @@ from uf_ros_lib.moveit_configs_builder import MoveItConfigsBuilder
 from uf_ros_lib.uf_robot_utils import generate_ros2_control_params_temp_file
 
 import yaml
+from manymove_bringup.pipeline_utils import normalize_pipeline_config
 
 
 def launch_setup(context, *args, **kwargs):
@@ -200,6 +201,9 @@ def launch_setup(context, *args, **kwargs):
         )
         .to_moveit_configs()
     )
+
+    normalize_pipeline_config(moveit_config.planning_pipelines)
+
 
     moveit_config_dict = moveit_config.to_dict()
 

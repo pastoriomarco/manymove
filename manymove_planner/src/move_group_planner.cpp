@@ -344,7 +344,7 @@ std::pair<bool, moveit_msgs::msg::RobotTrajectory> MoveGroupPlanner::applyTimePa
         logger_, "Adjusting cartesian speed from %.2f to <= %.2f. Reducing velocity scale...",
         max_speed, config.max_cartesian_speed);
 
-      double scale = (config.max_cartesian_speed * 0.99) / max_speed;
+      double scale = (config.max_cartesian_speed * 0.95) / max_speed;
       velocity_scaling_factor *= scale;
 
       // If it's too small, we abort

@@ -481,8 +481,18 @@ std::pair<bool, moveit_msgs::msg::RobotTrajectory> MoveItCppPlanner::plan(
     RCLCPP_DEBUG_STREAM(logger_, "Setting pose target for " << goal_msg.goal.config.tcp_frame);
 
     geometry_msgs::msg::PoseStamped target_pose;
-    target_pose.header.frame_id = base_frame_;
     target_pose.pose = goal_msg.goal.pose_target;
+
+    std::string planning_frame = base_frame_;
+    if (auto planning_scene_monitor =
+        manymove_planner_compat::getPlanningSceneMonitorRw(moveit_cpp_ptr_))
+    {
+      auto planning_scene = planning_scene_monitor->getPlanningScene();
+      if (planning_scene) {
+        planning_frame = planning_scene->getPlanningFrame();
+      }
+    }
+    target_pose.header.frame_id = planning_frame;
 
     const double position_tolerance = (cfg.linear_precision > 0.0) ? cfg.linear_precision : 1e-3;
     const double orientation_tolerance =
@@ -779,7 +789,7 @@ std::pair<bool, moveit_msgs::msg::RobotTrajectory> MoveItCppPlanner::applyTimePa
         logger_, "Adjusting cartesian speed from %.2f to <= %.2f. Reducing velocity scale...",
         max_speed, config.max_cartesian_speed);
 
-      double scale = (config.max_cartesian_speed * 0.99) / max_speed;
+      double scale = (config.max_cartesian_speed * 0.95) / max_speed;
       velocity_scaling_factor *= scale;
 
       // If it's too small, we abort
