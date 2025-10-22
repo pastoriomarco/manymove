@@ -28,6 +28,9 @@
 
 #include "manymove_planner/move_group_planner.hpp"
 
+#include <angles/angles.h>
+#include <moveit/robot_model/joint_model.h>
+
 #include "manymove_planner/compat/moveit_compat.hpp"
 
 MoveGroupPlanner::MoveGroupPlanner(
@@ -756,16 +759,32 @@ bool MoveGroupPlanner::isTrajectoryStartValid(
     return false;
   }
 
+  const auto & joint_names = traj.joint_trajectory.joint_names;
+  if (joint_names.size() != first_point.positions.size()) {
+    RCLCPP_ERROR(
+      logger_, "Mismatch between joint names (%zu) and joint positions (%zu).", joint_names.size(),
+      first_point.positions.size());
+    return false;
+  }
+
+  const auto robot_model = move_group_interface_->getRobotModel();
+
   // Check each joint's difference
   for (size_t i = 0; i < first_point.positions.size(); ++i) {
-    if (
-      std::fabs(first_point.positions[i] - current_joint_state[i]) >
-      move_request.config.rotational_precision)
-    {
+    double diff = std::fabs(first_point.positions[i] - current_joint_state[i]);
+
+    if (robot_model) {
+      const auto * joint_model = robot_model->getJointModel(joint_names[i]);
+      if (joint_model && joint_model->getType() == moveit::core::JointModel::REVOLUTE) {
+        diff = std::fabs(
+          angles::shortest_angular_distance(current_joint_state[i], first_point.positions[i]));
+      }
+    }
+
+    if (diff > move_request.config.rotational_precision) {
       RCLCPP_INFO(
-        logger_, "Joint %zu difference (%.6f) exceeds tolerance (%.6f).", i,
-        std::fabs(first_point.positions[i] - current_joint_state[i]),
-        move_request.config.rotational_precision);
+        logger_, "Joint %s difference (%.6f) exceeds tolerance (%.6f).", joint_names[i].c_str(),
+        diff, move_request.config.rotational_precision);
       return false;
     }
   }
@@ -997,4 +1016,67 @@ bool MoveGroupPlanner::isTrajectoryValid(
     nullptr);
 
   return valid;
+}
+
+void MoveGroupPlanner::alignTrajectoryToCurrentState(
+  trajectory_msgs::msg::JointTrajectory & joint_traj,
+  const std::vector<double> & current_joint_state) const
+{
+  if (joint_traj.points.empty()) {
+    return;
+  }
+
+  const auto joint_count = joint_traj.joint_names.size();
+  if (joint_count != current_joint_state.size()) {
+    RCLCPP_WARN(
+      logger_,
+      "alignTrajectoryToCurrentState: joint name count (%zu) mismatch with state size (%zu).",
+      joint_count, current_joint_state.size());
+    return;
+  }
+
+  const auto robot_model = move_group_interface_->getRobotModel();
+  if (!robot_model) {
+    RCLCPP_WARN(logger_, "alignTrajectoryToCurrentState: robot model unavailable.");
+    return;
+  }
+
+  constexpr double two_pi = 6.283185307179586;
+  constexpr double epsilon = 1e-6;
+  constexpr double fractional_threshold = 1e-3;
+
+  for (size_t idx = 0; idx < joint_count; ++idx) {
+    const auto * joint_model = robot_model->getJointModel(joint_traj.joint_names[idx]);
+    if (!joint_model || joint_model->getType() != moveit::core::JointModel::REVOLUTE) {
+      continue;
+    }
+
+    if (joint_traj.points.front().positions.size() <= idx) {
+      continue;
+    }
+
+    const double planned_start = joint_traj.points.front().positions[idx];
+    const double current = current_joint_state[idx];
+    const double delta = current - planned_start;
+
+    if (std::fabs(delta) < epsilon) {
+      continue;
+    }
+
+    const double relative_turns = delta / two_pi;
+    const double nearest_turns = std::round(relative_turns);
+
+    if (std::fabs(relative_turns - nearest_turns) > fractional_threshold ||
+      std::fabs(nearest_turns) < epsilon)
+    {
+      continue;
+    }
+
+    const double shift = delta;
+    for (auto & point : joint_traj.points) {
+      if (point.positions.size() > idx) {
+        point.positions[idx] += shift;
+      }
+    }
+  }
 }

@@ -52,23 +52,28 @@ int main(int argc, char ** argv)
   // ----------------------------------------------------------------------------
 
   auto move_configs = defineMovementConfigs();
-  for (auto & entry : move_configs) {
-    entry.second.planning_pipeline = "move_group";
-    if (entry.second.planner_id == "RRTConnect") {
-      entry.second.planner_id.clear();  // allow default planner within move_group pipeline
-    }
-  }
+
+  // Adjusting only the move params of default moves
+  auto & max_move = move_configs["max_move"];
+  max_move.planner_id = "RRTConnectkConfigDefault";
+  max_move.planning_time = 0.1;
+
+  auto & mid_move = move_configs["mid_move"];
+  mid_move.planner_id = "RRTConnectkConfigDefault";
+  mid_move.planning_time = 0.1;
+
+  auto & slow_move = move_configs["slow_move"];
+  slow_move.planner_id = "RRTConnectkConfigDefault";
+  slow_move.planning_time = 0.1;
 
   // Typical UR 6-DOF configurations (radians) for rest and scanning poses.
   std::vector<double> joint_rest = {0.0, -1.57, 1.57, -1.57, -1.57, 0.0};
-  std::vector<double> joint_look_sx = {0.6, -1.25, 1.70, -1.30, -1.57, 0.8};
-  std::vector<double> joint_look_dx = {-0.6, -1.25, 1.70, -1.30, -1.57, -0.8};
   std::string named_home = "home";
 
   blackboard->set("pick_target_key", Pose());
   blackboard->set("approach_pick_target_key", Pose());
 
-  Pose drop_target = createPoseRPY(0.45, -0.05, 0.23, 3.14, 0.0, 0.0);
+  Pose drop_target = createPoseRPY(0.3, 0.2, 0.05, 3.14, 0.0, 0.0);
   blackboard->set("drop_target_key", drop_target);
 
   Pose approach_drop_target = drop_target;
@@ -79,11 +84,6 @@ int main(int argc, char ** argv)
 
   std::vector<Move> rest_position = {
     {rp.prefix, tcp_frame_name, "joint", move_configs["max_move"], "", joint_rest},
-  };
-
-  std::vector<Move> scan_surroundings = {
-    {rp.prefix, tcp_frame_name, "joint", move_configs["mid_move"], "", joint_look_sx},
-    {rp.prefix, tcp_frame_name, "joint", move_configs["mid_move"], "", joint_look_dx},
   };
 
   std::vector<Move> pick_sequence = {
@@ -110,8 +110,6 @@ int main(int argc, char ** argv)
     buildMoveXML(rp.prefix, rp.prefix + "toRest", rest_position, blackboard, true);
   std::string to_rest_xml =
     buildMoveXML(rp.prefix, rp.prefix + "toRest", rest_position, blackboard);
-  std::string scan_around_xml =
-    buildMoveXML(rp.prefix, rp.prefix + "scanAround", scan_surroundings, blackboard);
   std::string pick_object_xml =
     buildMoveXML(rp.prefix, rp.prefix + "pick", pick_sequence, blackboard);
   std::string drop_object_xml =
@@ -119,7 +117,7 @@ int main(int argc, char ** argv)
   std::string to_home_xml = buildMoveXML(rp.prefix, rp.prefix + "home", home_position, blackboard);
 
   std::string prep_sequence_xml =
-    sequenceWrapperXML(rp.prefix + "ComposedPrepSequence", {to_rest_reset_xml, scan_around_xml});
+    sequenceWrapperXML(rp.prefix + "ComposedPrepSequence", {to_rest_reset_xml});
   std::string home_sequence_xml =
     sequenceWrapperXML(rp.prefix + "ComposedHomeSequence", {to_home_xml, to_rest_xml});
 
@@ -136,14 +134,8 @@ int main(int argc, char ** argv)
   blackboard->set("wall_id_key", "obstacle_wall");
   blackboard->set("wall_shape_key", "box");
   blackboard->set("wall_dimension_key", std::vector<double>{1.0, 0.02, 0.2});
-  blackboard->set("wall_pose_key", createPoseRPY(0.0, -0.20, 0.10, 0.0, 0.0, 0.0));
+  blackboard->set("wall_pose_key", createPoseRPY(0.0, -0.15, 0.10, 0.0, 0.0, 0.0));
   blackboard->set("wall_scale_key", std::vector<double>{1.0, 1.0, 1.0});
-
-  blackboard->set("cylinder_id_key", "graspable_cylinder");
-  blackboard->set("cylinder_shape_key", "cylinder");
-  blackboard->set("cylinder_dimension_key", std::vector<double>{0.12, 0.015});
-  blackboard->set("cylinder_pose_key", createPoseRPY(0.55, 0.15, 0.06, 0.0, 1.57, 0.0));
-  blackboard->set("cylinder_scale_key", std::vector<double>{1.0, 1.0, 1.0});
 
   blackboard->set("mesh_id_key", "graspable_mesh");
   blackboard->set("mesh_shape_key", "mesh");
@@ -151,14 +143,12 @@ int main(int argc, char ** argv)
   blackboard->set("mesh_scale_key", std::vector<double>{0.01, 0.01, 0.1});
   blackboard->set(
     "mesh_pose_key", createPoseRPY(
-      0.45, -0.25, 0.05, 0.785, 1.57, 0.0));
+      0.15, -0.4, 0.05, 0.785, 1.57, 0.0));
 
   std::string check_ground_obj_xml =
     buildObjectActionXML("check_ground", createCheckObjectExists("ground_id_key"));
   std::string check_wall_obj_xml =
     buildObjectActionXML("check_wall", createCheckObjectExists("wall_id_key"));
-  std::string check_cylinder_obj_xml =
-    buildObjectActionXML("check_cylinder", createCheckObjectExists("cylinder_id_key"));
   std::string check_mesh_obj_xml =
     buildObjectActionXML("check_mesh", createCheckObjectExists("mesh_id_key"));
 
@@ -170,10 +160,6 @@ int main(int argc, char ** argv)
     "add_wall", createAddObject(
       "wall_id_key", "wall_shape_key", "wall_dimension_key", "wall_pose_key",
       "wall_scale_key", ""));
-  std::string add_cylinder_obj_xml = buildObjectActionXML(
-    "add_cylinder", createAddObject(
-      "cylinder_id_key", "cylinder_shape_key", "cylinder_dimension_key",
-      "cylinder_pose_key", "cylinder_scale_key", ""));
   std::string add_mesh_obj_xml = buildObjectActionXML(
     "add_mesh",
     createAddObject(
@@ -183,13 +169,11 @@ int main(int argc, char ** argv)
     fallbackWrapperXML("init_ground_obj", {check_ground_obj_xml, add_ground_obj_xml});
   std::string init_wall_obj_xml =
     fallbackWrapperXML("init_wall_obj", {check_wall_obj_xml, add_wall_obj_xml});
-  std::string init_cylinder_obj_xml =
-    fallbackWrapperXML("init_cylinder_obj", {check_cylinder_obj_xml, add_cylinder_obj_xml});
   std::string init_mesh_obj_xml =
     fallbackWrapperXML("init_mesh_obj", {check_mesh_obj_xml, add_mesh_obj_xml});
 
   blackboard->set("tcp_frame_name_key", tcp_frame_name);
-  blackboard->set("object_to_manipulate_key", "graspable_cylinder");
+  blackboard->set("object_to_manipulate_key", "graspable_mesh");
   blackboard->set("touch_links_empty_key", std::vector<std::string>{});
 
   std::string attach_obj_xml = buildObjectActionXML(
@@ -199,10 +183,12 @@ int main(int argc, char ** argv)
     "detach_obj_to_manipulate",
     createDetachObject("object_to_manipulate_key", "tcp_frame_name_key"));
   std::string remove_obj_xml =
-    buildObjectActionXML("remove_obj_to_manipulate", createRemoveObject("object_to_manipulate_key"));
+    buildObjectActionXML(
+    "remove_obj_to_manipulate",
+    createRemoveObject("object_to_manipulate_key"));
 
   blackboard->set(
-    "pick_pre_transform_xyz_rpy_1_key", std::vector<double>{0.0, 0.0, 0.0, 0.0, 1.57, 0.0});
+    "pick_pre_transform_xyz_rpy_1_key", std::vector<double>{-0.04, 0.0, 0.0, 0.0, 1.57, 0.0});
   blackboard->set(
     "approach_pick_pre_transform_xyz_rpy_1_key",
     std::vector<double>{-0.08, 0.0, 0.0, 0.0, 1.57, 0.0});
@@ -252,7 +238,7 @@ int main(int argc, char ** argv)
   std::string spawn_fixed_objects_xml =
     sequenceWrapperXML("SpawnFixedObjects", {init_ground_obj_xml, init_wall_obj_xml});
   std::string spawn_graspable_objects_xml =
-    sequenceWrapperXML("SpawnGraspableObjects", {init_cylinder_obj_xml, init_mesh_obj_xml});
+    sequenceWrapperXML("SpawnGraspableObjects", {init_mesh_obj_xml});
   std::string get_grasp_object_poses_xml =
     sequenceWrapperXML("GetGraspPoses", {get_pick_pose_xml, get_approach_pose_xml});
   std::string go_to_pick_pose_xml = sequenceWrapperXML("GoToPickPose", {pick_object_xml});

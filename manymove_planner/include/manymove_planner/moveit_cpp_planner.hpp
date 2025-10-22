@@ -200,6 +200,10 @@ public:
     const robot_trajectory::RobotTrajectory & trajectory,
     const moveit_msgs::msg::Constraints & path_constraints, const double time_from_start) const;
 
+  void alignTrajectoryToCurrentState(
+    trajectory_msgs::msg::JointTrajectory & joint_traj,
+    const std::vector<double> & current_joint_state) const override;
+
 private:
   /**
  * @brief Compute the total path length of a given trajectory.

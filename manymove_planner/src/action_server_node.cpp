@@ -62,7 +62,7 @@ int main(int argc, char ** argv)
   std::string planning_group;
   node->get_parameter_or<std::string>("planning_group", planning_group, "lite6");
   std::string base_frame;
-  node->get_parameter_or<std::string>("base_link", base_frame, "link_base");
+  node->get_parameter_or<std::string>("base_frame", base_frame, "link_base");
   std::string tcp_frame;
   node->get_parameter_or<std::string>("tcp_frame", tcp_frame, "link_tcp");
   std::string traj_controller;

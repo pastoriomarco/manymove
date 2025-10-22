@@ -26,7 +26,7 @@
 # ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 
-"""Launch description for a UR MoveIt MoveGroup scenario using Manymove CPP trees."""
+"""Launch description for a UR MoveItCpp scenario using Manymove CPP trees."""
 
 import os
 
@@ -36,7 +36,6 @@ from launch.actions import DeclareLaunchArgument
 from launch.actions import IncludeLaunchDescription
 from launch.actions import OpaqueFunction
 from launch.actions import RegisterEventHandler
-from launch.conditions import IfCondition
 from launch.event_handlers import OnProcessStart
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch.substitutions import Command
@@ -59,13 +58,12 @@ def load_yaml(package_name, file_path):
 
 
 def launch_setup(context, *args, **kwargs):
-    """Configure LaunchDescription for running a UR robot with Manymove."""
+    """Configure LaunchDescription for running a UR robot with MoveItCpp."""
     ur_type = LaunchConfiguration('ur_type')
     robot_ip = LaunchConfiguration('robot_ip')
     use_fake_hardware = LaunchConfiguration('use_fake_hardware')
     initial_joint_controller = LaunchConfiguration('initial_joint_controller')
     launch_rviz = LaunchConfiguration('launch_rviz')
-    launch_servo = LaunchConfiguration('launch_servo')
     use_sim_time = LaunchConfiguration('use_sim_time')
     publish_robot_description_semantic = LaunchConfiguration('publish_robot_description_semantic')
     warehouse_sqlite_path = LaunchConfiguration('warehouse_sqlite_path')
@@ -78,7 +76,6 @@ def launch_setup(context, *args, **kwargs):
     moveit_config_package = LaunchConfiguration('moveit_config_package')
     moveit_config_file = LaunchConfiguration('moveit_config_file')
     moveit_joint_limits_file = LaunchConfiguration('moveit_joint_limits_file')
-    limited = LaunchConfiguration('limited')
 
     prefix_raw = LaunchConfiguration('prefix').perform(context)
     planner_type = LaunchConfiguration('planner_type').perform(context)
@@ -150,9 +147,6 @@ def launch_setup(context, *args, **kwargs):
             ' ',
             'output_recipe_filename:=rtde_output_recipe.txt',
             ' ',
-            'limited:=',
-            limited,
-            ' ',
             'prefix:=',
             LaunchConfiguration('prefix'),
             ' ',
@@ -175,9 +169,6 @@ def launch_setup(context, *args, **kwargs):
             ' ',
             'prefix:=',
             LaunchConfiguration('prefix'),
-            ' ',
-            'limited:=',
-            limited,
             ' ',
         ]
     )
@@ -206,7 +197,6 @@ def launch_setup(context, *args, **kwargs):
             cartesian_limits.get('cartesian_limits', {})
         )
 
-    # Planning pipelines from Manymove's UR YAMLs to match other bringup launchers
     planning_pipeline_files = {
         'ompl': 'ompl_planning.yaml',
         'chomp': 'chomp_planning.yaml',
@@ -220,7 +210,6 @@ def launch_setup(context, *args, **kwargs):
         planning_pipeline_config[pipeline_name] = load_yaml(
             'manymove_bringup', os.path.join('config', 'ur', config_file)
         )
-    # Ensure OMPL has planner_configs defaults like MoveItConfigsBuilder does
     try:
         if 'planner_configs' not in planning_pipeline_config.get('ompl', {}):
             ompl_defaults = load_yaml(
@@ -235,8 +224,8 @@ def launch_setup(context, *args, **kwargs):
 
     controllers_yaml = load_yaml(moveit_config_pkg_name, os.path.join('config', 'controllers.yaml'))
     if use_sim_time.perform(context).lower() == 'true':
-        controllers_yaml['scaled_joint_trajectory_controller']['default'] = True
-        controllers_yaml['joint_trajectory_controller']['default'] = False
+        controllers_yaml['scaled_joint_trajectory_controller']['default'] = False
+        controllers_yaml['joint_trajectory_controller']['default'] = True
     moveit_controllers = {
         'moveit_simple_controller_manager': controllers_yaml,
         'moveit_controller_manager': MOVEIT_CONTROLLER,
@@ -262,6 +251,15 @@ def launch_setup(context, *args, **kwargs):
         'warehouse_host': os.path.expanduser(warehouse_sqlite_path.perform(context)),
     }
 
+    moveit_cpp_config = load_yaml(
+        'manymove_bringup', os.path.join('config', 'ur', 'moveit_cpp.yaml')
+    )
+
+    planning_pipeline_names_param = {
+        'planning_pipelines.pipeline_names': list(planning_pipeline_files.keys()),
+        'planning_pipelines.default_planning_pipeline': 'ompl',
+    }
+
     moveit_parameter_overrides = [
         robot_description,
         robot_description_semantic,
@@ -269,6 +267,8 @@ def launch_setup(context, *args, **kwargs):
         robot_description_kinematics_file,
         robot_description_planning,
         planning_pipeline_config,
+        planning_pipeline_names_param,
+        moveit_cpp_config,
         trajectory_execution,
         moveit_controllers,
         planning_scene_monitor_parameters,
@@ -292,26 +292,7 @@ def launch_setup(context, *args, **kwargs):
             'description_file': description_file,
             'kinematics_params_file': kinematics_params,
             'tf_prefix': prefix_clean,
-            'limited': limited,
         }.items(),
-    )
-
-    move_group_node = Node(
-        package='moveit_ros_move_group',
-        executable='move_group',
-        output='screen',
-        parameters=moveit_parameter_overrides,
-    )
-
-    servo_parameters = moveit_parameter_overrides.copy()
-    servo_yaml = load_yaml(moveit_config_pkg_name, os.path.join('config', 'ur_servo.yaml'))
-    servo_parameters.append({'moveit_servo': servo_yaml})
-    servo_node = Node(
-        package='moveit_servo',
-        executable='servo_node',
-        condition=IfCondition(launch_servo),
-        output='screen',
-        parameters=servo_parameters,
     )
 
     rviz_launch_requested = launch_rviz.perform(context).lower() in ('true', '1', 't', 'yes', 'on')
@@ -391,12 +372,10 @@ def launch_setup(context, *args, **kwargs):
 
     launch_actions = [
         ur_control_launch,
-        move_group_node,
-        servo_node,
         action_server_node,
     ]
     if rviz_launch_requested and rviz_node is not None:
-        launch_actions.insert(3, rviz_node)
+        launch_actions.insert(1, rviz_node)
 
     handlers = [
         RegisterEventHandler(
@@ -459,12 +438,7 @@ def generate_launch_description():
             DeclareLaunchArgument(
                 'launch_rviz',
                 default_value='true',
-                description='Launch RViz from the UR MoveIt configuration.',
-            ),
-            DeclareLaunchArgument(
-                'launch_servo',
-                default_value='false',
-                description='Enable MoveIt Servo from the UR MoveIt configuration.',
+                description='Launch RViz configured for MoveItCpp.',
             ),
             DeclareLaunchArgument(
                 'use_sim_time',
@@ -488,7 +462,7 @@ def generate_launch_description():
             ),
             DeclareLaunchArgument(
                 'planner_type',
-                default_value='movegroup',
+                default_value='moveitcpp',
                 description='Planner type for Manymove (movegroup or moveitcpp).',
             ),
             DeclareLaunchArgument(
@@ -550,11 +524,6 @@ def generate_launch_description():
                 'moveit_joint_limits_file',
                 default_value='joint_limits.yaml',
                 description='Joint limits YAML file relative to the MoveIt config package.',
-            ),
-            DeclareLaunchArgument(
-                'limited',
-                default_value='true',
-                description='Force UR joints to use finite limits instead of continuous.',
             ),
             OpaqueFunction(function=launch_setup),
         ]
