@@ -197,19 +197,27 @@ def launch_setup(context, *args, **kwargs):
             cartesian_limits.get('cartesian_limits', {})
         )
 
+    # Resolve planning pipeline YAMLs per package to avoid distro-specific symlinks
     planning_pipeline_files = {
-        'ompl': 'ompl_planning.yaml',
-        'chomp': 'chomp_planning.yaml',
-        'pilz_industrial_motion_planner': 'pilz_industrial_motion_planner_planning.yaml',
+        'ompl': (
+            'manymove_bringup',
+            os.path.join('config', 'ur', 'ompl_planning.yaml'),
+        ),
+        'chomp': (
+            'moveit_resources_panda_moveit_config',
+            os.path.join('config', 'chomp_planning.yaml'),
+        ),
+        'pilz_industrial_motion_planner': (
+            'moveit_resources_panda_moveit_config',
+            os.path.join('config', 'pilz_industrial_motion_planner_planning.yaml'),
+        ),
     }
     planning_pipeline_config = {
         'planning_pipelines': list(planning_pipeline_files.keys()),
         'default_planning_pipeline': 'ompl',
     }
-    for pipeline_name, config_file in planning_pipeline_files.items():
-        planning_pipeline_config[pipeline_name] = load_yaml(
-            'manymove_bringup', os.path.join('config', 'ur', config_file)
-        )
+    for pipeline_name, (pkg, rel_path) in planning_pipeline_files.items():
+        planning_pipeline_config[pipeline_name] = load_yaml(pkg, rel_path)
     try:
         if 'planner_configs' not in planning_pipeline_config.get('ompl', {}):
             ompl_defaults = load_yaml(

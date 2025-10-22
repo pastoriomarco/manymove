@@ -11,14 +11,21 @@ package_name = 'manymove_bringup'
 
 
 def list_data_files(base_dir):
-    """Collect data files preserving their relative directory structure."""
+    """Collect data files preserving their relative directory structure.
+
+    Symlinks are skipped to avoid packaging broken links across distros.
+    """
     data_files = defaultdict(list)
     for root, _, files in os.walk(base_dir):
         if not files:
             continue
         install_root = os.path.join('share', package_name, root)
         for file_name in files:
-            data_files[install_root].append(os.path.join(root, file_name))
+            full_path = os.path.join(root, file_name)
+            # Skip symlinks (e.g., distro-specific absolute links)
+            if os.path.islink(full_path):
+                continue
+            data_files[install_root].append(full_path)
     return list(data_files.items())
 
 setup(
