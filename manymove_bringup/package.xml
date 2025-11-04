@@ -27,6 +27,10 @@
   <exec_depend>rviz2</exec_depend>
   <exec_depend>tf2_ros</exec_depend>
   <exec_depend>xacro</exec_depend>
+  <exec_depend>ur_robot_driver</exec_depend>
+  <exec_depend>ur_description</exec_depend>
+  <exec_depend>robotiq_description</exec_depend>
+  <exec_depend>robotiq_controllers</exec_depend>
 
   <export>
     <build_type>ament_python</build_type>
