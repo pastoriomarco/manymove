@@ -97,7 +97,6 @@ BT::NodeStatus MoveManipulatorAction::onStart()
   if (collision_detected) {
     RCLCPP_ERROR(
       node_->get_logger(), "[MoveManipulatorAction] [%s]: COLLISION DETECTED", name().c_str());
-    return BT::NodeStatus::FAILURE;
 
     // HMI message
     setHMIMessage(config().blackboard, robot_prefix_, "COLLISION DETECTED", "red");
