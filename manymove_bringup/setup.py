@@ -29,6 +29,33 @@ def list_data_files(base_dir):
             data_files[install_root].append(full_path)
     return list(data_files.items())
 
+
+def list_ur_variant_aliases(base_dir):
+    """Provide duplicate installs of UR parameter sets at config/<ur_type> for compatibility."""
+    variant_root = os.path.join(base_dir, 'ur')
+    if not os.path.isdir(variant_root):
+        return []
+
+    aliases = []
+    for variant in sorted(os.listdir(variant_root)):
+        variant_dir = os.path.join(variant_root, variant)
+        if not os.path.isdir(variant_dir):
+            continue
+        files = []
+        for file_name in sorted(os.listdir(variant_dir)):
+            full_path = os.path.join(variant_dir, file_name)
+            if not os.path.isfile(full_path) or os.path.islink(full_path):
+                continue
+            files.append(full_path)
+        if files:
+            install_root = os.path.join('share', package_name, base_dir, variant)
+            aliases.append((install_root, files))
+    return aliases
+
+
+config_data_files = list_data_files('config')
+config_data_files.extend(list_ur_variant_aliases('config'))
+
 setup(
     name=package_name,
     version='0.2.0',
@@ -38,7 +65,9 @@ setup(
         ('share/' + package_name, ['package.xml']),
         (os.path.join('share', package_name, 'launch'), glob('launch/*.launch.py')),
     ]
-    + list_data_files('config'),
+    + config_data_files
+    + list_data_files('urdf')
+    + list_data_files('srdf'),
     install_requires=['setuptools'],
     zip_safe=True,
     maintainer='Marco Pastorio',

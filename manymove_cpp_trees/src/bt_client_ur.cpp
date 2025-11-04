@@ -73,11 +73,11 @@ int main(int argc, char ** argv)
   blackboard->set("pick_target_key", Pose());
   blackboard->set("approach_pick_target_key", Pose());
 
-  Pose drop_target = createPoseRPY(0.3, 0.2, 0.05, 3.14, 0.0, 0.0);
+  Pose drop_target = createPoseRPY(0.3, 0.3, 0.25, 3.14, 0.0, -1.57);
   blackboard->set("drop_target_key", drop_target);
 
   Pose approach_drop_target = drop_target;
-  approach_drop_target.position.z += 0.08;
+  approach_drop_target.position.z += 0.1;
   blackboard->set("approach_drop_target_key", approach_drop_target);
 
   std::string tcp_frame_name = rp.prefix + rp.tcp_frame;
@@ -100,10 +100,10 @@ int main(int argc, char ** argv)
       "drop_target_key"},
   };
 
-  std::vector<Move> home_position = {
+  std::vector<Move> exit_drop_position = {
     {rp.prefix, tcp_frame_name, "cartesian", move_configs["cartesian_mid_move"],
       "approach_drop_target_key"},
-    {rp.prefix, tcp_frame_name, "named", move_configs["max_move"], "", {}, named_home},
+    // {rp.prefix, tcp_frame_name, "named", move_configs["max_move"], "", {}, named_home},
   };
 
   std::string to_rest_reset_xml =
@@ -114,12 +114,14 @@ int main(int argc, char ** argv)
     buildMoveXML(rp.prefix, rp.prefix + "pick", pick_sequence, blackboard);
   std::string drop_object_xml =
     buildMoveXML(rp.prefix, rp.prefix + "drop", drop_sequence, blackboard);
-  std::string to_home_xml = buildMoveXML(rp.prefix, rp.prefix + "home", home_position, blackboard);
+  std::string to_drop_exit_xml = buildMoveXML(
+    rp.prefix, rp.prefix + "home", exit_drop_position,
+    blackboard);
 
   std::string prep_sequence_xml =
     sequenceWrapperXML(rp.prefix + "ComposedPrepSequence", {to_rest_reset_xml});
   std::string home_sequence_xml =
-    sequenceWrapperXML(rp.prefix + "ComposedHomeSequence", {to_home_xml, to_rest_xml});
+    sequenceWrapperXML(rp.prefix + "ComposedHomeSequence", {to_drop_exit_xml, to_rest_xml});
 
   // ----------------------------------------------------------------------------
   // 3) Build blocks for objects handling
@@ -174,11 +176,14 @@ int main(int argc, char ** argv)
 
   blackboard->set("tcp_frame_name_key", tcp_frame_name);
   blackboard->set("object_to_manipulate_key", "graspable_mesh");
-  blackboard->set("touch_links_empty_key", std::vector<std::string>{});
+  blackboard->set(
+    "touch_links",
+    std::vector<std::string>{"robotiq_85_right_finger_tip_link",
+      "robotiq_85_left_finger_tip_link"});
 
   std::string attach_obj_xml = buildObjectActionXML(
     "attach_obj_to_manipulate",
-    createAttachObject("object_to_manipulate_key", "tcp_frame_name_key", "touch_links_empty_key"));
+    createAttachObject("object_to_manipulate_key", "tcp_frame_name_key", "touch_links"));
   std::string detach_obj_xml = buildObjectActionXML(
     "detach_obj_to_manipulate",
     createDetachObject("object_to_manipulate_key", "tcp_frame_name_key"));
@@ -188,12 +193,12 @@ int main(int argc, char ** argv)
     createRemoveObject("object_to_manipulate_key"));
 
   blackboard->set(
-    "pick_pre_transform_xyz_rpy_1_key", std::vector<double>{-0.04, 0.0, 0.0, 0.0, 1.57, 0.0});
+    "pick_pre_transform_xyz_rpy_1_key", std::vector<double>{-0.15, 0.0, 0.0, 0.0, 1.57, 0.0});
   blackboard->set(
     "approach_pick_pre_transform_xyz_rpy_1_key",
-    std::vector<double>{-0.08, 0.0, 0.0, 0.0, 1.57, 0.0});
+    std::vector<double>{-0.20, 0.0, 0.0, 0.0, 1.57, 0.0});
   blackboard->set(
-    "pick_post_transform_xyz_rpy_1_key", std::vector<double>{0.0, 0.0, -0.03, 3.14, 0.0, 0.0});
+    "pick_post_transform_xyz_rpy_1_key", std::vector<double>{0.0, 0.0, -0.03, -1.57, 0.0, 0.0});
 
   blackboard->set("world_frame_key", "world");
 
@@ -211,16 +216,42 @@ int main(int argc, char ** argv)
   // 5) Define Signals calls
   // ----------------------------------------------------------------------------
 
-  std::string signal_gripper_close_xml =
-    (rp.is_real ? buildSetOutputXML(rp.prefix, "GripperClose", "controller", 0, 1) : "");
-  std::string signal_gripper_open_xml =
-    (rp.is_real ? buildSetOutputXML(rp.prefix, "GripperOpen", "controller", 0, 0) : "");
-  std::string check_gripper_close_xml =
-    (rp.is_real ? buildWaitForInput(rp.prefix, "WaitForSensor", "controller", 0, 1) :
-    "<Delay delay_msec=\"250\">\n<AlwaysSuccess />\n</Delay>\n");
-  std::string check_gripper_open_xml =
-    (rp.is_real ? buildWaitForInput(rp.prefix, "WaitForSensor", "controller", 0, 0) :
-    "<Delay delay_msec=\"250\">\n  <AlwaysSuccess />\n</Delay>\n");
+  std::string gripper_action_server = rp.gripper_action_server;
+  const std::string deprecated_suffix = "gripper_command";
+  if (
+    !gripper_action_server.empty() &&
+    gripper_action_server.size() >= deprecated_suffix.size() &&
+    gripper_action_server.compare(
+      gripper_action_server.size() - deprecated_suffix.size(), deprecated_suffix.size(),
+      deprecated_suffix) == 0)
+  {
+    std::string converted =
+      gripper_action_server.substr(0, gripper_action_server.size() - deprecated_suffix.size()) +
+      "gripper_cmd";
+    RCLCPP_WARN(
+      node->get_logger(),
+      "Gripper action server '%s' uses deprecated suffix 'gripper_command'; using '%s' instead.",
+      gripper_action_server.c_str(), converted.c_str());
+    gripper_action_server = converted;
+    rp.gripper_action_server = converted;
+  }
+
+  const bool has_gripper_action_server = !gripper_action_server.empty();
+  if (!has_gripper_action_server) {
+    RCLCPP_WARN(
+      node->get_logger(),
+      "Parameter 'gripper_action_server' is empty; falling back to timed delays for gripper control.");
+  }
+  const std::string gripper_close_action_xml =
+    (has_gripper_action_server ?
+    "<GripperCommandAction position=\"0.75\" max_effort=\"40.0\" action_server=\"" +
+    gripper_action_server + "\"/>" :
+    "<Delay delay_msec=\"500\">\n  <AlwaysSuccess />\n</Delay>\n");
+  const std::string gripper_open_action_xml =
+    (has_gripper_action_server ?
+    "<GripperCommandAction position=\"0.25\" max_effort=\"40.0\" action_server=\"" +
+    gripper_action_server + "\"/>" :
+    "<Delay delay_msec=\"500\">\n  <AlwaysSuccess />\n</Delay>\n");
   std::string check_robot_state_xml = buildCheckRobotStateXML(
     rp.prefix, "CheckRobot", "robot_ready", "error_code", "robot_mode", "robot_state", "robot_msg");
   std::string reset_robot_state_xml = buildResetRobotStateXML(rp.prefix, "ResetRobot", rp.model);
@@ -243,16 +274,16 @@ int main(int argc, char ** argv)
     sequenceWrapperXML("GetGraspPoses", {get_pick_pose_xml, get_approach_pose_xml});
   std::string go_to_pick_pose_xml = sequenceWrapperXML("GoToPickPose", {pick_object_xml});
   std::string close_gripper_xml = sequenceWrapperXML(
-    "CloseGripper", {signal_gripper_close_xml, check_gripper_close_xml, attach_obj_xml});
+    "CloseGripper", {gripper_close_action_xml, attach_obj_xml});
   std::string open_gripper_xml =
-    sequenceWrapperXML("OpenGripper", {signal_gripper_open_xml, detach_obj_xml});
+    sequenceWrapperXML("OpenGripper", {gripper_open_action_xml, detach_obj_xml});
 
   std::string reset_graspable_objects_xml =
     sequenceWrapperXML("reset_graspable_objects", {open_gripper_xml, remove_obj_xml});
 
   std::string startup_sequence_xml = sequenceWrapperXML(
     "StartUpSequence", {check_reset_robot_xml, spawn_fixed_objects_xml,
-      prep_sequence_xml});
+      open_gripper_xml, prep_sequence_xml});
 
   std::string repeat_forever_wrapper_xml = repeatSequenceWrapperXML(
     "RepeatForever",

@@ -32,10 +32,12 @@ import os
 
 from ament_index_python.packages import get_package_share_directory
 from launch import LaunchDescription
+from launch import logging
 from launch.actions import DeclareLaunchArgument
 from launch.actions import IncludeLaunchDescription
 from launch.actions import OpaqueFunction
 from launch.actions import RegisterEventHandler
+from launch.actions import TimerAction
 from launch.conditions import IfCondition
 from launch.event_handlers import OnProcessStart
 from launch.launch_description_sources import PythonLaunchDescriptionSource
@@ -70,6 +72,7 @@ def launch_setup(context, *args, **kwargs):
     use_sim_time = LaunchConfiguration('use_sim_time')
     publish_robot_description_semantic = LaunchConfiguration('publish_robot_description_semantic')
     warehouse_sqlite_path = LaunchConfiguration('warehouse_sqlite_path')
+    controller_spawner_timeout = LaunchConfiguration('controller_spawner_timeout')
 
     description_package = LaunchConfiguration('description_package')
     description_file = LaunchConfiguration('description_file')
@@ -80,6 +83,8 @@ def launch_setup(context, *args, **kwargs):
     moveit_config_file = LaunchConfiguration('moveit_config_file')
     moveit_joint_limits_file = LaunchConfiguration('moveit_joint_limits_file')
     limited = LaunchConfiguration('limited')
+    srdf_package = LaunchConfiguration('srdf_package')
+    gripper_action_server_cfg = LaunchConfiguration('gripper_action_server')
 
     prefix_raw = LaunchConfiguration('prefix').perform(context)
     planner_type = LaunchConfiguration('planner_type').perform(context)
@@ -90,45 +95,66 @@ def launch_setup(context, *args, **kwargs):
 
     prefix_clean = prefix_raw.strip('"')
 
+    logger = logging.get_logger('ur_movegroup_fake_cpp_trees.launch')
+
+    def normalize_gripper_action(raw_value: str) -> str:
+        stripped = raw_value.lstrip('/')
+        if stripped.endswith('gripper_command'):
+            converted = stripped[: -len('gripper_command')] + 'gripper_cmd'
+            logger.warning(
+                "Parameter 'gripper_action_server' value '%s' uses deprecated suffix "
+                "'gripper_command'; using '%s' instead.",
+                raw_value,
+                converted,
+            )
+            return converted
+        return stripped
+
+    default_gripper_action = 'robotiq_gripper_controller/gripper_cmd'
+    gripper_action_value = gripper_action_server_cfg.perform(context)
+    gripper_action_stripped = normalize_gripper_action(gripper_action_value)
+    if not gripper_action_stripped:
+        gripper_action_server = ''
+    elif gripper_action_stripped == default_gripper_action:
+        resolved_action = (
+            f'{prefix_clean}{gripper_action_stripped}' if prefix_clean else gripper_action_stripped
+        )
+        gripper_action_server = f'/{resolved_action}'
+    else:
+        gripper_action_server = (
+            gripper_action_value
+            if gripper_action_value.startswith('/')
+            else f'/{gripper_action_stripped}'
+        )
+
     ur_type_value = ur_type.perform(context)
     use_fake_value = use_fake_hardware.perform(context).lower()
     is_robot_real = use_fake_value not in ('true', '1', 't', 'yes', 'on')
 
     moveit_config_pkg_name = moveit_config_package.perform(context)
 
-    joint_limit_params = PathJoinSubstitution(
-        [FindPackageShare(description_package), 'config', ur_type, 'joint_limits.yaml']
-    )
     kinematics_params = PathJoinSubstitution(
-        [FindPackageShare(description_package), 'config', ur_type, 'default_kinematics.yaml']
+        [FindPackageShare('ur_description'), 'config', ur_type, 'default_kinematics.yaml']
     )
-    physical_params = PathJoinSubstitution(
-        [FindPackageShare(description_package), 'config', ur_type, 'physical_parameters.yaml']
-    )
-    visual_params = PathJoinSubstitution(
-        [FindPackageShare(description_package), 'config', ur_type, 'visual_parameters.yaml']
-    )
+
+    description_file_value = description_file.perform(context)
+    if '/' in description_file_value:
+        description_path = PathJoinSubstitution(
+            [FindPackageShare(description_package), description_file]
+        )
+    else:
+        description_path = PathJoinSubstitution(
+            [FindPackageShare(description_package), 'urdf', description_file]
+        )
 
     robot_description_content = Command(
         [
             PathJoinSubstitution([FindExecutable(name='xacro')]),
             ' ',
-            PathJoinSubstitution([FindPackageShare(description_package), 'urdf', description_file]),
+            description_path,
             ' ',
             'robot_ip:=',
             robot_ip,
-            ' ',
-            'joint_limit_params:=',
-            joint_limit_params,
-            ' ',
-            'kinematics_params:=',
-            kinematics_params,
-            ' ',
-            'physical_params:=',
-            physical_params,
-            ' ',
-            'visual_params:=',
-            visual_params,
             ' ',
             'safety_limits:=',
             safety_limits,
@@ -163,13 +189,23 @@ def launch_setup(context, *args, **kwargs):
         'robot_description': ParameterValue(robot_description_content, value_type=str)
     }
 
+    moveit_config_file_value = moveit_config_file.perform(context)
+    if moveit_config_file_value.startswith('package://'):
+        srdf_path = moveit_config_file_value
+    elif moveit_config_file_value.startswith('/') or moveit_config_file_value.startswith('file://'):
+        srdf_path = moveit_config_file_value
+    elif '/' in moveit_config_file_value:
+        srdf_path = PathJoinSubstitution([FindPackageShare(srdf_package), moveit_config_file])
+    else:
+        srdf_path = PathJoinSubstitution(
+            [FindPackageShare(srdf_package), 'srdf', moveit_config_file]
+        )
+
     robot_description_semantic_content = Command(
         [
             PathJoinSubstitution([FindExecutable(name='xacro')]),
             ' ',
-            PathJoinSubstitution(
-                [FindPackageShare(moveit_config_package), 'srdf', moveit_config_file]
-            ),
+            srdf_path,
             ' ',
             'name:=',
             'ur',
@@ -298,12 +334,45 @@ def launch_setup(context, *args, **kwargs):
             'use_fake_hardware': use_fake_hardware,
             'initial_joint_controller': initial_joint_controller,
             'launch_rviz': 'false',
+            'runtime_config_package': 'manymove_bringup',
+            'controllers_file': 'ur/ur_with_robotiq_controllers.yaml',
             'description_package': description_package,
             'description_file': description_file,
             'kinematics_params_file': kinematics_params,
             'tf_prefix': prefix_clean,
             'limited': limited,
+            'controller_spawner_timeout': controller_spawner_timeout,
         }.items(),
+    )
+
+    gripper_controller_spawners = TimerAction(
+        period=3.0,
+        actions=[
+            Node(
+                package='controller_manager',
+                executable='spawner',
+                output='screen',
+                arguments=[
+                    '--controller-manager',
+                    '/controller_manager',
+                    '--controller-manager-timeout',
+                    controller_spawner_timeout,
+                    'robotiq_gripper_controller',
+                ],
+            ),
+            Node(
+                package='controller_manager',
+                executable='spawner',
+                output='screen',
+                arguments=[
+                    '--controller-manager',
+                    '/controller_manager',
+                    '--controller-manager-timeout',
+                    controller_spawner_timeout,
+                    'robotiq_activation_controller',
+                ],
+            ),
+        ],
     )
 
     move_group_node = Node(
@@ -382,6 +451,7 @@ def launch_setup(context, *args, **kwargs):
                 'robot_model': ur_type_value,
                 'robot_prefix': prefix_clean,
                 'tcp_frame': tcp_frame,
+                'gripper_action_server': gripper_action_server,
                 'is_robot_real': is_robot_real,
             }
         ],
@@ -401,6 +471,7 @@ def launch_setup(context, *args, **kwargs):
 
     launch_actions = [
         ur_control_launch,
+        gripper_controller_spawners,
         move_group_node,
         servo_node,
         action_server_node,
@@ -522,14 +593,24 @@ def generate_launch_description():
                 description='Follow joint trajectory controller name exposed by the UR driver.',
             ),
             DeclareLaunchArgument(
+                'gripper_action_server',
+                default_value='robotiq_gripper_controller/gripper_cmd',
+                description='Gripper command action server name (prefix applied automatically).',
+            ),
+            DeclareLaunchArgument(
+                'controller_spawner_timeout',
+                default_value='10',
+                description='Timeout (s) passed to controller spawner processes.',
+            ),
+            DeclareLaunchArgument(
                 'description_package',
-                default_value='ur_description',
-                description='Package providing the UR robot description.',
+                default_value='manymove_bringup',
+                description='Package providing the UR + gripper robot description.',
             ),
             DeclareLaunchArgument(
                 'description_file',
-                default_value='ur.urdf.xacro',
-                description='URDF/XACRO file describing the UR robot.',
+                default_value='ur_with_robotiq.xacro',
+                description='URDF/Xacro filename (located under the package urdf/ directory).',
             ),
             DeclareLaunchArgument(
                 'safety_limits',
@@ -552,9 +633,14 @@ def generate_launch_description():
                 description='MoveIt config package providing SRDF and planning parameters.',
             ),
             DeclareLaunchArgument(
+                'srdf_package',
+                default_value='manymove_bringup',
+                description='Package providing the SRDF/Xacro file.',
+            ),
+            DeclareLaunchArgument(
                 'moveit_config_file',
-                default_value='ur.srdf.xacro',
-                description='SRDF/XACRO file describing the UR MoveIt semantics.',
+                default_value='srdf/ur_with_robotiq.srdf.xacro',
+                description='SRDF/Xacro file describing the UR MoveIt semantics.',
             ),
             DeclareLaunchArgument(
                 'moveit_joint_limits_file',
