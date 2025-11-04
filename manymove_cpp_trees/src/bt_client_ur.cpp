@@ -240,7 +240,7 @@ int main(int argc, char ** argv)
   if (!has_gripper_action_server) {
     RCLCPP_WARN(
       node->get_logger(),
-      "Parameter 'gripper_action_server' is empty; falling back to timed delays for gripper control.");
+      "Param. 'gripper_action_server' empty; falling back to timed delays for gripper control.");
   }
   const std::string gripper_close_action_xml =
     (has_gripper_action_server ?
