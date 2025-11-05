@@ -34,18 +34,20 @@ from typing import Any
 from .ros_compat import use_legacy_moveit_adapter_format
 
 
-def _fix_request_adapter_prefix(value: str) -> str:
-    """Use the ROS 2 MoveIt adapter namespace (default_planner_request_adapters)."""
-    return value.replace(
-        'default_planning_request_adapters/', 'default_planner_request_adapters/'
-    )
+_LEGACY_ADAPTER_PREFIX = 'default_planner_request_adapters/'
+_MODERN_ADAPTER_PREFIX = 'default_planning_request_adapters/'
+
+
+def _normalize_request_adapter_prefix(value: str, legacy: bool) -> str:
+    """Ensure adapter prefixes match the expected naming convention for the distro."""
+    if legacy:
+        return value.replace(_MODERN_ADAPTER_PREFIX, _LEGACY_ADAPTER_PREFIX)
+    return value.replace(_LEGACY_ADAPTER_PREFIX, _MODERN_ADAPTER_PREFIX)
 
 
 def _maybe_fix_request_adapter(value: str, legacy: bool) -> str:
-    """Apply prefix fix only for legacy distros."""
-    if legacy:
-        return _fix_request_adapter_prefix(value)
-    return value
+    """Apply adapter prefix adjustments when required for the current distro."""
+    return _normalize_request_adapter_prefix(value, legacy)
 
 
 def _string_to_list(value: str) -> list[str]:
