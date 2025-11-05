@@ -53,18 +53,36 @@ def _string_to_list(value: str) -> list[str]:
 
 def normalize_pipeline_config(data: Any) -> Any:
     """Normalize MoveIt adapter fields to match the expected format for the current distro."""
+    legacy_format = use_legacy_moveit_adapter_format()
+
     if isinstance(data, dict):
         for key in list(data.keys()):
             value = data[key]
 
             if key == 'planning_plugins' and isinstance(value, list):
-                if value and 'planning_plugin' not in data:
-                    data['planning_plugin'] = value[0]
-                data.pop('planning_plugins', None)
+                if legacy_format:
+                    if value and 'planning_plugin' not in data:
+                        data['planning_plugin'] = value[0]
+                    data.pop('planning_plugins', None)
+                else:
+                    # Ensure nested structures keep list semantics
+                    data[key] = list(value)
                 continue
 
+            if key == 'planning_plugins' and isinstance(value, str):
+                if legacy_format:
+                    if 'planning_plugin' not in data:
+                        data['planning_plugin'] = value
+                    data.pop('planning_plugins', None)
+                else:
+                    data[key] = _string_to_list(value)
+                continue
+
+            if key == 'planning_plugin' and not legacy_format:
+                if 'planning_plugins' not in data and isinstance(value, str):
+                    data['planning_plugins'] = [value]
+
             if key in ('request_adapters', 'response_adapters'):
-                legacy_format = use_legacy_moveit_adapter_format()
                 new_value: Any = value
 
                 if isinstance(value, list):
