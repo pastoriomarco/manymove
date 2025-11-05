@@ -29,6 +29,7 @@
 """Launch description for a UR MoveItCpp scenario using Manymove CPP trees."""
 
 import os
+from copy import deepcopy
 
 from ament_index_python.packages import get_package_share_directory
 from launch import LaunchDescription
@@ -53,6 +54,18 @@ from manymove_bringup.pipeline_utils import normalize_pipeline_config
 from manymove_bringup.ros_compat import resolve_moveit_controller_config
 
 import yaml
+
+
+DEFAULT_UR_KINEMATICS = {
+    # Conservative defaults that work across ROS 2 releases when the upstream
+    # MoveIt config (e.g. on Jazzy) omits robot_description_kinematics.
+    'ur_manipulator': {
+        'kinematics_solver': 'kdl_kinematics_plugin/KDLKinematicsPlugin',
+        'kinematics_solver_search_resolution': 0.005,
+        'kinematics_solver_timeout': 0.005,
+        'kinematics_solver_attempts': 3,
+    }
+}
 
 
 def load_yaml(package_name, file_path):
@@ -236,7 +249,7 @@ def launch_setup(context, *args, **kwargs):
     raw_kinematics_yaml = load_yaml(
         moveit_config_pkg_name, os.path.join('config', 'kinematics.yaml')
     )
-    kinematics_data = {}
+    kinematics_data: dict[str, dict] = {}
     if isinstance(raw_kinematics_yaml, dict):
         if 'robot_description_kinematics' in raw_kinematics_yaml:
             kinematics_data = raw_kinematics_yaml['robot_description_kinematics']
@@ -246,6 +259,32 @@ def launch_setup(context, *args, **kwargs):
                 .get('ros__parameters', {})
                 .get('robot_description_kinematics', {})
             )
+
+    fallback_candidates = {planning_group, 'ur_manipulator'}
+    fallback_candidates.discard('')
+    for group_name in fallback_candidates:
+        existing_entry = kinematics_data.get(group_name, {})
+        needs_solver = not isinstance(existing_entry, dict) or not existing_entry.get(
+            'kinematics_solver'
+        )
+        if not needs_solver:
+            continue
+
+        default_config = DEFAULT_UR_KINEMATICS.get(group_name) or DEFAULT_UR_KINEMATICS.get(
+            'ur_manipulator'
+        )
+        if not default_config:
+            continue
+
+        merged_entry = deepcopy(default_config)
+        if isinstance(existing_entry, dict):
+            merged_entry.update(existing_entry)
+        kinematics_data[group_name] = merged_entry
+        logger.warning(
+            "MoveIt kinematics configuration for group '%s' is missing. "
+            "Falling back to KDL defaults to keep pose goals working on ROS 2 Jazzy.",
+            group_name,
+        )
     robot_description_kinematics = (
         {'robot_description_kinematics': kinematics_data} if kinematics_data else None
     )
