@@ -41,6 +41,13 @@ def _fix_request_adapter_prefix(value: str) -> str:
     )
 
 
+def _maybe_fix_request_adapter(value: str, legacy: bool) -> str:
+    """Apply prefix fix only for legacy distros."""
+    if legacy:
+        return _fix_request_adapter_prefix(value)
+    return value
+
+
 def _string_to_list(value: str) -> list[str]:
     """Split whitespace/newline separated adapter strings into a list."""
     tokens: list[str] = []
@@ -87,7 +94,9 @@ def normalize_pipeline_config(data: Any) -> Any:
 
                 if isinstance(value, list):
                     processed_list = [
-                        _fix_request_adapter_prefix(item) if key == 'request_adapters' else item
+                        _maybe_fix_request_adapter(item, legacy_format)
+                        if key == 'request_adapters'
+                        else item
                         for item in value
                     ]
                     if legacy_format:
@@ -97,7 +106,7 @@ def normalize_pipeline_config(data: Any) -> Any:
                 elif isinstance(value, str):
                     if legacy_format:
                         new_value = (
-                            _fix_request_adapter_prefix(value)
+                            _maybe_fix_request_adapter(value, legacy_format)
                             if key == 'request_adapters'
                             else value
                         )
@@ -105,7 +114,8 @@ def normalize_pipeline_config(data: Any) -> Any:
                         processed_list = _string_to_list(value)
                         if key == 'request_adapters':
                             processed_list = [
-                                _fix_request_adapter_prefix(item) for item in processed_list
+                                _maybe_fix_request_adapter(item, legacy_format)
+                                for item in processed_list
                             ]
                         new_value = processed_list
 
