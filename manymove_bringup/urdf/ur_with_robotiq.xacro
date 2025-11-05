@@ -60,6 +60,11 @@
   <xacro:property name="initial_positions_file_path" value="$(arg initial_positions_file)"/>
   <xacro:property name="is_sim_gazebo" value="$(arg sim_gazebo)"/>
   <xacro:property name="is_sim_ignition" value="$(arg sim_ignition)"/>
+  <xacro:property name="ros_distro" value="$(optenv ROS_DISTRO humble)"/>
+  <xacro:property name="legacy_ur_description"
+    value="${ros_distro == 'foxy' or ros_distro == 'galactic' or ros_distro == 'humble' or ros_distro == 'iron'}"/>
+  <xacro:property name="initial_positions" value="${xacro.load_yaml(initial_positions_file_path)}"/>
+  <xacro:property name="force_abs_paths" value="${is_sim_gazebo or is_sim_ignition}"/>
 
   <link name="world"/>
 
@@ -90,43 +95,173 @@
   </xacro:if>
 
   <!-- UR arm -->
-  <xacro:ur_robot
-    name="$(arg name)"
-    tf_prefix="$(arg tf_prefix)"
-    parent="world"
-    joint_limits_parameters_file="$(arg joint_limit_params)"
-    kinematics_parameters_file="$(arg kinematics_params)"
-    physical_parameters_file="$(arg physical_params)"
-    visual_parameters_file="$(arg visual_params)"
-    safety_limits="$(arg safety_limits)"
-    safety_pos_margin="$(arg safety_pos_margin)"
-    safety_k_position="$(arg safety_k_position)"
-    use_fake_hardware="$(arg use_fake_hardware)"
-    fake_sensor_commands="$(arg fake_sensor_commands)"
-    sim_gazebo="$(arg sim_gazebo)"
-    sim_ignition="$(arg sim_ignition)"
-    headless_mode="$(arg headless_mode)"
-    initial_positions="${xacro.load_yaml(initial_positions_file_path)}"
-    use_tool_communication="$(arg use_tool_communication)"
-    tool_voltage="$(arg tool_voltage)"
-    tool_parity="$(arg tool_parity)"
-    tool_baud_rate="$(arg tool_baud_rate)"
-    tool_stop_bits="$(arg tool_stop_bits)"
-    tool_rx_idle_chars="$(arg tool_rx_idle_chars)"
-    tool_tx_idle_chars="$(arg tool_tx_idle_chars)"
-    tool_device_name="$(arg tool_device_name)"
-    tool_tcp_port="$(arg tool_tcp_port)"
-    robot_ip="$(arg robot_ip)"
-    script_filename="$(arg script_filename)"
-    output_recipe_filename="$(arg output_recipe_filename)"
-    input_recipe_filename="$(arg input_recipe_filename)"
-    reverse_ip="$(arg reverse_ip)"
-    script_command_port="$(arg script_command_port)"
-    reverse_port="$(arg reverse_port)"
-    script_sender_port="$(arg script_sender_port)"
-    trajectory_port="$(arg trajectory_port)">
-    <origin xyz="0 0 0" rpy="0 0 0"/>
-  </xacro:ur_robot>
+  <xacro:if value="${legacy_ur_description}">
+    <xacro:ur_robot
+      name="$(arg name)"
+      tf_prefix="$(arg tf_prefix)"
+      parent="world"
+      joint_limits_parameters_file="$(arg joint_limit_params)"
+      kinematics_parameters_file="$(arg kinematics_params)"
+      physical_parameters_file="$(arg physical_params)"
+      visual_parameters_file="$(arg visual_params)"
+      safety_limits="$(arg safety_limits)"
+      safety_pos_margin="$(arg safety_pos_margin)"
+      safety_k_position="$(arg safety_k_position)"
+      use_fake_hardware="$(arg use_fake_hardware)"
+      fake_sensor_commands="$(arg fake_sensor_commands)"
+      sim_gazebo="$(arg sim_gazebo)"
+      sim_ignition="$(arg sim_ignition)"
+      headless_mode="$(arg headless_mode)"
+      initial_positions="${initial_positions}"
+      use_tool_communication="$(arg use_tool_communication)"
+      tool_voltage="$(arg tool_voltage)"
+      tool_parity="$(arg tool_parity)"
+      tool_baud_rate="$(arg tool_baud_rate)"
+      tool_stop_bits="$(arg tool_stop_bits)"
+      tool_rx_idle_chars="$(arg tool_rx_idle_chars)"
+      tool_tx_idle_chars="$(arg tool_tx_idle_chars)"
+      tool_device_name="$(arg tool_device_name)"
+      tool_tcp_port="$(arg tool_tcp_port)"
+      robot_ip="$(arg robot_ip)"
+      script_filename="$(arg script_filename)"
+      output_recipe_filename="$(arg output_recipe_filename)"
+      input_recipe_filename="$(arg input_recipe_filename)"
+      reverse_ip="$(arg reverse_ip)"
+      script_command_port="$(arg script_command_port)"
+      reverse_port="$(arg reverse_port)"
+      script_sender_port="$(arg script_sender_port)"
+      trajectory_port="$(arg trajectory_port)">
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+    </xacro:ur_robot>
+  </xacro:if>
+  <xacro:unless value="${legacy_ur_description}">
+    <xacro:ur_robot
+      name="$(arg name)"
+      tf_prefix="$(arg tf_prefix)"
+      parent="world"
+      joint_limits_parameters_file="$(arg joint_limit_params)"
+      kinematics_parameters_file="$(arg kinematics_params)"
+      physical_parameters_file="$(arg physical_params)"
+      visual_parameters_file="$(arg visual_params)"
+      safety_limits="$(arg safety_limits)"
+      safety_pos_margin="$(arg safety_pos_margin)"
+      safety_k_position="$(arg safety_k_position)"
+      force_abs_paths="${force_abs_paths}">
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+    </xacro:ur_robot>
+
+    <ros2_control name="$(arg name)" type="system">
+      <hardware>
+        <plugin>mock_components/GenericSystem</plugin>
+        <param name="mock_sensor_commands">$(arg fake_sensor_commands)</param>
+        <param name="state_following_offset">0.0</param>
+        <param name="calculate_dynamics">true</param>
+      </hardware>
+
+      <joint name="$(arg tf_prefix)shoulder_pan_joint">
+        <command_interface name="position"/>
+        <command_interface name="velocity"/>
+        <command_interface name="effort"/>
+        <state_interface name="position">
+          <param name="initial_value">${initial_positions['shoulder_pan_joint']}</param>
+        </state_interface>
+        <state_interface name="velocity">
+          <param name="initial_value">0.0</param>
+        </state_interface>
+        <state_interface name="effort">
+          <param name="initial_value">0.0</param>
+        </state_interface>
+      </joint>
+      <joint name="$(arg tf_prefix)shoulder_lift_joint">
+        <command_interface name="position"/>
+        <command_interface name="velocity"/>
+        <command_interface name="effort"/>
+        <state_interface name="position">
+          <param name="initial_value">${initial_positions['shoulder_lift_joint']}</param>
+        </state_interface>
+        <state_interface name="velocity">
+          <param name="initial_value">0.0</param>
+        </state_interface>
+        <state_interface name="effort">
+          <param name="initial_value">0.0</param>
+        </state_interface>
+      </joint>
+      <joint name="$(arg tf_prefix)elbow_joint">
+        <command_interface name="position"/>
+        <command_interface name="velocity"/>
+        <command_interface name="effort"/>
+        <state_interface name="position">
+          <param name="initial_value">${initial_positions['elbow_joint']}</param>
+        </state_interface>
+        <state_interface name="velocity">
+          <param name="initial_value">0.0</param>
+        </state_interface>
+        <state_interface name="effort">
+          <param name="initial_value">0.0</param>
+        </state_interface>
+      </joint>
+      <joint name="$(arg tf_prefix)wrist_1_joint">
+        <command_interface name="position"/>
+        <command_interface name="velocity"/>
+        <command_interface name="effort"/>
+        <state_interface name="position">
+          <param name="initial_value">${initial_positions['wrist_1_joint']}</param>
+        </state_interface>
+        <state_interface name="velocity">
+          <param name="initial_value">0.0</param>
+        </state_interface>
+        <state_interface name="effort">
+          <param name="initial_value">0.0</param>
+        </state_interface>
+      </joint>
+      <joint name="$(arg tf_prefix)wrist_2_joint">
+        <command_interface name="position"/>
+        <command_interface name="velocity"/>
+        <command_interface name="effort"/>
+        <state_interface name="position">
+          <param name="initial_value">${initial_positions['wrist_2_joint']}</param>
+        </state_interface>
+        <state_interface name="velocity">
+          <param name="initial_value">0.0</param>
+        </state_interface>
+        <state_interface name="effort">
+          <param name="initial_value">0.0</param>
+        </state_interface>
+      </joint>
+      <joint name="$(arg tf_prefix)wrist_3_joint">
+        <command_interface name="position"/>
+        <command_interface name="velocity"/>
+        <command_interface name="effort"/>
+        <state_interface name="position">
+          <param name="initial_value">${initial_positions['wrist_3_joint']}</param>
+        </state_interface>
+        <state_interface name="velocity">
+          <param name="initial_value">0.0</param>
+        </state_interface>
+        <state_interface name="effort">
+          <param name="initial_value">0.0</param>
+        </state_interface>
+      </joint>
+
+      <sensor name="$(arg tf_prefix)tcp_fts_sensor">
+        <state_interface name="force.x"/>
+        <state_interface name="force.y"/>
+        <state_interface name="force.z"/>
+        <state_interface name="torque.x"/>
+        <state_interface name="torque.y"/>
+        <state_interface name="torque.z"/>
+      </sensor>
+      <sensor name="$(arg tf_prefix)tcp_pose">
+        <state_interface name="position.x"/>
+        <state_interface name="position.y"/>
+        <state_interface name="position.z"/>
+        <state_interface name="orientation.x"/>
+        <state_interface name="orientation.y"/>
+        <state_interface name="orientation.z"/>
+        <state_interface name="orientation.w"/>
+      </sensor>
+    </ros2_control>
+  </xacro:unless>
 
   <!-- Robotiq 2F-85 gripper -->
   <xacro:robotiq_gripper
