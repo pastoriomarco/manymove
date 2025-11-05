@@ -234,8 +234,21 @@ def launch_setup(context, *args, **kwargs):
         'publish_robot_description_semantic': publish_robot_description_semantic
     }
 
-    robot_description_kinematics_file = ParameterFile(
-        PathJoinSubstitution([FindPackageShare(moveit_config_package), 'config', 'kinematics.yaml'])
+    raw_kinematics_yaml = load_yaml(
+        moveit_config_pkg_name, os.path.join('config', 'kinematics.yaml')
+    )
+    kinematics_data = {}
+    if isinstance(raw_kinematics_yaml, dict):
+        if 'robot_description_kinematics' in raw_kinematics_yaml:
+            kinematics_data = raw_kinematics_yaml['robot_description_kinematics']
+        else:
+            kinematics_data = (
+                raw_kinematics_yaml.get('/**', {})
+                .get('ros__parameters', {})
+                .get('robot_description_kinematics', {})
+            )
+    robot_description_kinematics = (
+        {'robot_description_kinematics': kinematics_data} if kinematics_data else {}
     )
     robot_description_planning = {
         'robot_description_planning': load_yaml(
@@ -336,7 +349,6 @@ def launch_setup(context, *args, **kwargs):
         robot_description,
         robot_description_semantic,
         publish_robot_description_semantic_param,
-        robot_description_kinematics_file,
         robot_description_planning,
         planning_pipeline_config,
         trajectory_execution,
@@ -345,6 +357,8 @@ def launch_setup(context, *args, **kwargs):
         {'use_sim_time': use_sim_time},
         warehouse_ros_config,
     ]
+    if robot_description_kinematics:
+        moveit_parameter_overrides.append(robot_description_kinematics)
 
     controllers_file_path = os.path.join(
         get_package_share_directory('manymove_bringup'),
@@ -498,12 +512,13 @@ def launch_setup(context, *args, **kwargs):
         rviz_parameters = [
             robot_description,
             robot_description_semantic,
-            robot_description_kinematics_file,
             robot_description_planning,
             planning_pipeline_config,
             warehouse_ros_config,
             {'use_sim_time': use_sim_time},
         ]
+        if robot_description_kinematics:
+            rviz_parameters.append(robot_description_kinematics)
         rviz_node = Node(
             package='rviz2',
             executable='rviz2',

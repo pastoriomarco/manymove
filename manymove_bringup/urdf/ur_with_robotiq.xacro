@@ -65,6 +65,7 @@
     value="${ros_distro == 'foxy' or ros_distro == 'galactic' or ros_distro == 'humble' or ros_distro == 'iron'}"/>
   <xacro:property name="initial_positions" value="${xacro.load_yaml(initial_positions_file_path)}"/>
   <xacro:property name="force_abs_paths" value="${is_sim_gazebo or is_sim_ignition}"/>
+  <xacro:property name="gripper_open_position" value="0.7929"/>
 
   <link name="world"/>
 
@@ -243,6 +244,84 @@
         </state_interface>
       </joint>
 
+      <joint name="$(arg tf_prefix)robotiq_85_left_knuckle_joint">
+        <command_interface name="position"/>
+        <state_interface name="position">
+          <param name="initial_value">${gripper_open_position}</param>
+        </state_interface>
+        <state_interface name="velocity">
+          <param name="initial_value">0.0</param>
+        </state_interface>
+        <state_interface name="effort">
+          <param name="initial_value">0.0</param>
+        </state_interface>
+      </joint>
+      <joint name="$(arg tf_prefix)robotiq_85_right_knuckle_joint">
+        <param name="mimic">$(arg tf_prefix)robotiq_85_left_knuckle_joint</param>
+        <param name="multiplier">-1</param>
+        <state_interface name="position">
+          <param name="initial_value">${-float(gripper_open_position)}</param>
+        </state_interface>
+        <state_interface name="velocity">
+          <param name="initial_value">0.0</param>
+        </state_interface>
+        <state_interface name="effort">
+          <param name="initial_value">0.0</param>
+        </state_interface>
+      </joint>
+      <joint name="$(arg tf_prefix)robotiq_85_left_inner_knuckle_joint">
+        <param name="mimic">$(arg tf_prefix)robotiq_85_left_knuckle_joint</param>
+        <param name="multiplier">1</param>
+        <state_interface name="position">
+          <param name="initial_value">${gripper_open_position}</param>
+        </state_interface>
+        <state_interface name="velocity">
+          <param name="initial_value">0.0</param>
+        </state_interface>
+        <state_interface name="effort">
+          <param name="initial_value">0.0</param>
+        </state_interface>
+      </joint>
+      <joint name="$(arg tf_prefix)robotiq_85_right_inner_knuckle_joint">
+        <param name="mimic">$(arg tf_prefix)robotiq_85_left_knuckle_joint</param>
+        <param name="multiplier">-1</param>
+        <state_interface name="position">
+          <param name="initial_value">${-float(gripper_open_position)}</param>
+        </state_interface>
+        <state_interface name="velocity">
+          <param name="initial_value">0.0</param>
+        </state_interface>
+        <state_interface name="effort">
+          <param name="initial_value">0.0</param>
+        </state_interface>
+      </joint>
+      <joint name="$(arg tf_prefix)robotiq_85_left_finger_tip_joint">
+        <param name="mimic">$(arg tf_prefix)robotiq_85_left_knuckle_joint</param>
+        <param name="multiplier">-1</param>
+        <state_interface name="position">
+          <param name="initial_value">${-float(gripper_open_position)}</param>
+        </state_interface>
+        <state_interface name="velocity">
+          <param name="initial_value">0.0</param>
+        </state_interface>
+        <state_interface name="effort">
+          <param name="initial_value">0.0</param>
+        </state_interface>
+      </joint>
+      <joint name="$(arg tf_prefix)robotiq_85_right_finger_tip_joint">
+        <param name="mimic">$(arg tf_prefix)robotiq_85_left_knuckle_joint</param>
+        <param name="multiplier">1</param>
+        <state_interface name="position">
+          <param name="initial_value">${gripper_open_position}</param>
+        </state_interface>
+        <state_interface name="velocity">
+          <param name="initial_value">0.0</param>
+        </state_interface>
+        <state_interface name="effort">
+          <param name="initial_value">0.0</param>
+        </state_interface>
+      </joint>
+
       <sensor name="$(arg tf_prefix)tcp_fts_sensor">
         <state_interface name="force.x"/>
         <state_interface name="force.y"/>
@@ -260,22 +339,43 @@
         <state_interface name="orientation.z"/>
         <state_interface name="orientation.w"/>
       </sensor>
+
+      <gpio name="$(arg tf_prefix)reactivate_gripper">
+        <command_interface name="reactivate_gripper_cmd"/>
+        <command_interface name="reactivate_gripper_response"/>
+      </gpio>
     </ros2_control>
   </xacro:unless>
 
   <!-- Robotiq 2F-85 gripper -->
-  <xacro:robotiq_gripper
-    name="$(arg gripper_name)"
-    prefix="$(arg gripper_prefix)"
-    parent="$(arg gripper_parent_link)"
-    sim_ignition="$(arg gripper_sim_ignition)"
-    sim_isaac="$(arg gripper_sim_isaac)"
-    use_fake_hardware="$(arg gripper_use_fake_hardware)"
-    fake_sensor_commands="$(arg gripper_fake_sensor_commands)"
-    include_ros2_control="$(arg gripper_include_ros2_control)"
-    com_port="$(arg gripper_com_port)">
-    <origin xyz="$(arg gripper_mount_xyz)" rpy="$(arg gripper_mount_rpy)"/>
-  </xacro:robotiq_gripper>
+  <xacro:if value="${legacy_ur_description}">
+    <xacro:robotiq_gripper
+      name="$(arg gripper_name)"
+      prefix="$(arg gripper_prefix)"
+      parent="$(arg gripper_parent_link)"
+      sim_ignition="$(arg gripper_sim_ignition)"
+      sim_isaac="$(arg gripper_sim_isaac)"
+      use_fake_hardware="$(arg gripper_use_fake_hardware)"
+      fake_sensor_commands="$(arg gripper_fake_sensor_commands)"
+      include_ros2_control="true"
+      com_port="$(arg gripper_com_port)">
+      <origin xyz="$(arg gripper_mount_xyz)" rpy="$(arg gripper_mount_rpy)"/>
+    </xacro:robotiq_gripper>
+  </xacro:if>
+  <xacro:unless value="${legacy_ur_description}">
+    <xacro:robotiq_gripper
+      name="$(arg gripper_name)"
+      prefix="$(arg gripper_prefix)"
+      parent="$(arg gripper_parent_link)"
+      sim_ignition="$(arg gripper_sim_ignition)"
+      sim_isaac="$(arg gripper_sim_isaac)"
+      use_fake_hardware="$(arg gripper_use_fake_hardware)"
+      fake_sensor_commands="$(arg gripper_fake_sensor_commands)"
+      include_ros2_control="false"
+      com_port="$(arg gripper_com_port)">
+      <origin xyz="$(arg gripper_mount_xyz)" rpy="$(arg gripper_mount_rpy)"/>
+    </xacro:robotiq_gripper>
+  </xacro:unless>
 
   <xacro:if value="$(arg sim_gazebo)">
     <gazebo reference="world"/>
