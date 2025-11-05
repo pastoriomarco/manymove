@@ -34,12 +34,13 @@ from ament_index_python.packages import get_package_share_directory
 from launch import LaunchDescription
 from launch import logging
 from launch.actions import DeclareLaunchArgument
-from launch.actions import IncludeLaunchDescription
 from launch.actions import OpaqueFunction
 from launch.actions import RegisterEventHandler
+from launch.actions import SetLaunchConfiguration
 from launch.actions import TimerAction
+from launch.conditions import IfCondition
+from launch.conditions import UnlessCondition
 from launch.event_handlers import OnProcessStart
-from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch.substitutions import Command
 from launch.substitutions import FindExecutable
 from launch.substitutions import LaunchConfiguration
@@ -91,6 +92,7 @@ def launch_setup(context, *args, **kwargs):
     traj_controller = LaunchConfiguration('traj_controller').perform(context)
 
     prefix_clean = prefix_raw.strip('"')
+    set_tf_prefix = SetLaunchConfiguration('tf_prefix', prefix_clean)
 
     logger = logging.get_logger('ur_moveitcpp_fake_cpp_trees.launch')
 
@@ -129,10 +131,6 @@ def launch_setup(context, *args, **kwargs):
     is_robot_real = use_fake_value not in ('true', '1', 't', 'yes', 'on')
 
     moveit_config_pkg_name = moveit_config_package.perform(context)
-
-    kinematics_params = PathJoinSubstitution(
-        [FindPackageShare('ur_description'), 'config', ur_type, 'default_kinematics.yaml']
-    )
 
     description_file_value = description_file.perform(context)
     if '/' in description_file_value:
@@ -176,6 +174,18 @@ def launch_setup(context, *args, **kwargs):
             ' ',
             'prefix:=',
             LaunchConfiguration('prefix'),
+            ' ',
+            'tf_prefix:=',
+            LaunchConfiguration('tf_prefix'),
+            ' ',
+            'use_fake_hardware:=',
+            use_fake_hardware,
+            ' ',
+            'fake_sensor_commands:=false',
+            ' ',
+            'headless_mode:=false',
+            ' ',
+            'use_tool_communication:=false',
             ' ',
         ]
     )
@@ -336,26 +346,99 @@ def launch_setup(context, *args, **kwargs):
         warehouse_ros_config,
     ]
 
-    ur_control_launch = IncludeLaunchDescription(
-        PythonLaunchDescriptionSource(
-            PathJoinSubstitution(
-                [FindPackageShare('ur_robot_driver'), 'launch', 'ur_control.launch.py']
-            )
-        ),
-        launch_arguments={
-            'ur_type': ur_type,
-            'robot_ip': robot_ip,
-            'use_fake_hardware': use_fake_hardware,
-            'initial_joint_controller': initial_joint_controller,
-            'launch_rviz': 'false',
-            'runtime_config_package': 'manymove_bringup',
-            'controllers_file': 'ur/ur_with_robotiq_controllers.yaml',
-            'description_package': description_package,
-            'description_file': description_file,
-            'kinematics_params_file': kinematics_params,
-            'tf_prefix': prefix_clean,
-            'controller_spawner_timeout': controller_spawner_timeout,
-        }.items(),
+    controllers_file_path = os.path.join(
+        get_package_share_directory('manymove_bringup'),
+        'config',
+        'ur',
+        'ur_with_robotiq_controllers.yaml',
+    )
+    update_rate_config_file = os.path.join(
+        get_package_share_directory('ur_robot_driver'),
+        'config',
+        f'{ur_type_value}_update_rate.yaml',
+    )
+
+    ros2_control_parameters = [
+        robot_description,
+        ParameterFile(update_rate_config_file),
+        ParameterFile(controllers_file_path, allow_substs=True),
+    ]
+
+    control_node = Node(
+        package='controller_manager',
+        executable='ros2_control_node',
+        parameters=ros2_control_parameters,
+        output='screen',
+        condition=IfCondition(use_fake_hardware),
+    )
+    ur_control_node = Node(
+        package='ur_robot_driver',
+        executable='ur_ros2_control_node',
+        parameters=ros2_control_parameters,
+        output='screen',
+        condition=UnlessCondition(use_fake_hardware),
+    )
+
+    controllers_active = [
+        'joint_state_broadcaster',
+        'io_and_status_controller',
+        'speed_scaling_state_broadcaster',
+        'force_torque_sensor_broadcaster',
+        'tcp_pose_broadcaster',
+        'ur_configuration_controller',
+    ]
+    controllers_inactive = [
+        'scaled_joint_trajectory_controller',
+        'joint_trajectory_controller',
+        'forward_velocity_controller',
+        'forward_position_controller',
+        'force_mode_controller',
+        'passthrough_trajectory_controller',
+        'freedrive_mode_controller',
+        'tool_contact_controller',
+    ]
+
+    initial_joint_controller_value = initial_joint_controller.perform(context)
+    if initial_joint_controller_value not in controllers_active:
+        controllers_active.append(initial_joint_controller_value)
+    controllers_inactive = [c for c in controllers_inactive if c not in controllers_active]
+
+    if use_fake_value == 'true':
+        controllers_active = [c for c in controllers_active if c != 'tcp_pose_broadcaster']
+
+    controller_spawner_active = Node(
+        package='controller_manager',
+        executable='spawner',
+        arguments=[
+            '--controller-manager',
+            '/controller_manager',
+            '--controller-manager-timeout',
+            controller_spawner_timeout,
+            *controllers_active,
+        ],
+        output='screen',
+    )
+    controller_spawner_inactive = None
+    if controllers_inactive:
+        controller_spawner_inactive = Node(
+            package='controller_manager',
+            executable='spawner',
+            arguments=[
+                '--controller-manager',
+                '/controller_manager',
+                '--controller-manager-timeout',
+                controller_spawner_timeout,
+                '--inactive',
+                *controllers_inactive,
+            ],
+            output='screen',
+        )
+
+    robot_state_publisher_node = Node(
+        package='robot_state_publisher',
+        executable='robot_state_publisher',
+        output='both',
+        parameters=[robot_description, {'use_sim_time': use_sim_time}],
     )
 
     gripper_controller_spawners = TimerAction(
@@ -465,12 +548,23 @@ def launch_setup(context, *args, **kwargs):
     )
 
     launch_actions = [
-        ur_control_launch,
-        gripper_controller_spawners,
-        action_server_node,
+        set_tf_prefix,
+        control_node,
+        ur_control_node,
+        controller_spawner_active,
     ]
+    if controller_spawner_inactive is not None:
+        launch_actions.append(controller_spawner_inactive)
+    launch_actions.extend(
+        [
+            robot_state_publisher_node,
+            gripper_controller_spawners,
+            action_server_node,
+        ]
+    )
     if rviz_launch_requested and rviz_node is not None:
-        launch_actions.insert(1, rviz_node)
+        insert_index = launch_actions.index(action_server_node)
+        launch_actions.insert(insert_index, rviz_node)
 
     handlers = [
         RegisterEventHandler(
@@ -554,6 +648,11 @@ def generate_launch_description():
                 'prefix',
                 default_value='""',
                 description='Prefix applied to UR joints and frames.',
+            ),
+            DeclareLaunchArgument(
+                'tf_prefix',
+                default_value='',
+                description='tf_prefix applied inside UR controller parameters.',
             ),
             DeclareLaunchArgument(
                 'planner_type',
