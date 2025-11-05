@@ -31,6 +31,8 @@ from __future__ import annotations
 
 from typing import Any
 
+from .ros_compat import use_legacy_moveit_adapter_format
+
 
 def _fix_request_adapter_prefix(value: str) -> str:
     """Use the ROS 2 MoveIt adapter namespace (default_planner_request_adapters)."""
@@ -39,8 +41,18 @@ def _fix_request_adapter_prefix(value: str) -> str:
     )
 
 
+def _string_to_list(value: str) -> list[str]:
+    """Split whitespace/newline separated adapter strings into a list."""
+    tokens: list[str] = []
+    for chunk in value.replace('\n', ' ').split(' '):
+        entry = chunk.strip()
+        if entry:
+            tokens.append(entry)
+    return tokens
+
+
 def normalize_pipeline_config(data: Any) -> Any:
-    """Convert MoveIt adapter lists into newline-separated strings in-place."""
+    """Normalize MoveIt adapter fields to match the expected format for the current distro."""
     if isinstance(data, dict):
         for key in list(data.keys()):
             value = data[key]
@@ -52,12 +64,32 @@ def normalize_pipeline_config(data: Any) -> Any:
                 continue
 
             if key in ('request_adapters', 'response_adapters'):
-                new_value = value
-                if isinstance(new_value, list):
-                    new_value = '\n'.join(new_value)
+                legacy_format = use_legacy_moveit_adapter_format()
+                new_value: Any = value
 
-                if isinstance(new_value, str) and key == 'request_adapters':
-                    new_value = _fix_request_adapter_prefix(new_value)
+                if isinstance(value, list):
+                    processed_list = [
+                        _fix_request_adapter_prefix(item) if key == 'request_adapters' else item
+                        for item in value
+                    ]
+                    if legacy_format:
+                        new_value = '\n'.join(processed_list)
+                    else:
+                        new_value = processed_list
+                elif isinstance(value, str):
+                    if legacy_format:
+                        new_value = (
+                            _fix_request_adapter_prefix(value)
+                            if key == 'request_adapters'
+                            else value
+                        )
+                    else:
+                        processed_list = _string_to_list(value)
+                        if key == 'request_adapters':
+                            processed_list = [
+                                _fix_request_adapter_prefix(item) for item in processed_list
+                            ]
+                        new_value = processed_list
 
                 data[key] = new_value
             else:
