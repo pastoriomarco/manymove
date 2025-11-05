@@ -412,12 +412,25 @@ def launch_setup(context, *args, **kwargs):
         'tool_contact_controller',
     ]
 
-    initial_joint_controller_value = initial_joint_controller.perform(context)
-    if initial_joint_controller_value not in controllers_active:
-        controllers_active.append(initial_joint_controller_value)
-    controllers_inactive = [c for c in controllers_inactive if c not in controllers_active]
+    ros_distro = os.environ.get('ROS_DISTRO', '').strip().lower()
+    use_jazzy_fake_minimal = use_fake_value == 'true' and ros_distro == 'jazzy'
 
-    if use_fake_value == 'true':
+    if use_jazzy_fake_minimal:
+        controllers_active = [
+            'joint_state_broadcaster',
+            'joint_trajectory_controller',
+            'robotiq_activation_controller',
+            'robotiq_gripper_controller',
+        ]
+        controllers_inactive = []
+
+    initial_joint_controller_value = initial_joint_controller.perform(context)
+    if not use_jazzy_fake_minimal:
+        if initial_joint_controller_value not in controllers_active:
+            controllers_active.append(initial_joint_controller_value)
+        controllers_inactive = [c for c in controllers_inactive if c not in controllers_active]
+
+    if use_fake_value == 'true' and not use_jazzy_fake_minimal:
         controllers_active = [c for c in controllers_active if c != 'tcp_pose_broadcaster']
 
     controller_spawner_active = Node(
