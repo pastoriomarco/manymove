@@ -135,7 +135,7 @@ def launch_setup(context, *args, **kwargs):
     use_jazzy_fake_minimal = use_fake_value == 'true' and ros_distro == 'jazzy'
 
     if use_jazzy_fake_minimal and traj_controller == 'scaled_joint_trajectory_controller':
-        # Minimal Jazzy layout only spawns joint_trajectory_controller; align client-side expectations.
+        # Minimal Jazzy layout only spawns JTC; align client-side expectations.
         traj_controller = 'joint_trajectory_controller'
 
     moveit_config_pkg_name = moveit_config_package.perform(context)
@@ -233,22 +233,12 @@ def launch_setup(context, *args, **kwargs):
         'publish_robot_description_semantic': publish_robot_description_semantic
     }
 
-    raw_kinematics_yaml = load_yaml(
-        moveit_config_pkg_name, os.path.join('config', 'kinematics.yaml')
+    kinematics_file_path = os.path.join(
+        get_package_share_directory(moveit_config_pkg_name), 'config', 'kinematics.yaml'
     )
-    kinematics_data = {}
-    if isinstance(raw_kinematics_yaml, dict):
-        if 'robot_description_kinematics' in raw_kinematics_yaml:
-            kinematics_data = raw_kinematics_yaml['robot_description_kinematics']
-        else:
-            kinematics_data = (
-                raw_kinematics_yaml.get('/**', {})
-                .get('ros__parameters', {})
-                .get('robot_description_kinematics', {})
-            )
-    robot_description_kinematics = (
-        {'robot_description_kinematics': kinematics_data} if kinematics_data else {}
-    )
+    robot_description_kinematics = None
+    if os.path.exists(kinematics_file_path):
+        robot_description_kinematics = ParameterFile(kinematics_file_path)
     robot_description_planning = {
         'robot_description_planning': load_yaml(
             moveit_config_pkg_name,
@@ -322,7 +312,6 @@ def launch_setup(context, *args, **kwargs):
     if use_sim_time.perform(context).lower() == 'true' and not use_jazzy_fake_minimal:
         controllers_yaml['scaled_joint_trajectory_controller']['default'] = False
         controllers_yaml['joint_trajectory_controller']['default'] = True
-
 
     moveit_controllers = {
         'moveit_simple_controller_manager': controllers_yaml,
