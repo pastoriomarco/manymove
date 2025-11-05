@@ -29,6 +29,7 @@
 """Launch description for the panda movegroup fake cpp trees scenario."""
 
 import os
+import yaml
 
 from ament_index_python.packages import get_package_share_directory
 from launch import LaunchDescription
@@ -49,8 +50,16 @@ def launch_setup(context, *args, **kwargs):
     tcp_frame = LaunchConfiguration('tcp_frame')
     traj_controller = LaunchConfiguration('traj_controller')
 
-    gripper_action_server = (LaunchConfiguration('gripper_action_server'),)
-    contact_links = (LaunchConfiguration('contact_links'),)
+    gripper_action_server_value = LaunchConfiguration('gripper_action_server').perform(context)
+    contact_links_raw = LaunchConfiguration('contact_links').perform(context)
+    try:
+        contact_links_list = yaml.safe_load(contact_links_raw)
+        if not isinstance(contact_links_list, list):
+            contact_links_list = [str(contact_links_list)]
+        else:
+            contact_links_list = [str(item) for item in contact_links_list]
+    except Exception:
+        contact_links_list = [str(contact_links_raw)]
 
     ros2_control_hardware_type = DeclareLaunchArgument(
         'ros2_control_hardware_type',
@@ -222,8 +231,8 @@ def launch_setup(context, *args, **kwargs):
                 'robot_model': planning_group,
                 'robot_prefix': '',
                 'tcp_frame': tcp_frame,
-                'gripper_action_server': gripper_action_server,
-                'contact_links': contact_links,
+                'gripper_action_server': gripper_action_server_value,
+                'contact_links': contact_links_list,
                 'is_robot_real': False,
             }
         ],
