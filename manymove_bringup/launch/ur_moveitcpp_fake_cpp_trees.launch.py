@@ -50,6 +50,7 @@ from launch_ros.parameter_descriptions import ParameterFile
 from launch_ros.parameter_descriptions import ParameterValue
 from launch_ros.substitutions import FindPackageShare
 from manymove_bringup.pipeline_utils import normalize_pipeline_config
+from manymove_bringup.ros_compat import resolve_moveit_controller_config
 
 import yaml
 
@@ -292,7 +293,8 @@ def launch_setup(context, *args, **kwargs):
 
     MOVEIT_CONTROLLER = 'moveit_simple_controller_manager/MoveItSimpleControllerManager'
 
-    controllers_yaml = load_yaml(moveit_config_pkg_name, os.path.join('config', 'controllers.yaml'))
+    controllers_config_relpath = resolve_moveit_controller_config(moveit_config_pkg_name)
+    controllers_yaml = load_yaml(moveit_config_pkg_name, controllers_config_relpath)
     if use_sim_time.perform(context).lower() == 'true':
         controllers_yaml['scaled_joint_trajectory_controller']['default'] = False
         controllers_yaml['joint_trajectory_controller']['default'] = True
