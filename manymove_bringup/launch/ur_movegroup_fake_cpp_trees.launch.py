@@ -351,21 +351,33 @@ def launch_setup(context, *args, **kwargs):
         pipeline_entry = planning_pipeline_config.get(plugin_name)
         if isinstance(pipeline_entry, dict):
             pipeline_entry['planning_plugin'] = plugin
-            adapters = pipeline_entry.get('request_adapters')
-            if isinstance(adapters, str):
-                pipeline_entry['request_adapters'] = adapters.replace(
-                    'default_planning_request_adapters/', 'default_planner_request_adapters/'
-                )
 
     MOVEIT_CONTROLLER = 'moveit_simple_controller_manager/MoveItSimpleControllerManager'
-
+    controllers_yaml = None
+    controllers_config_relpath = ''
     if use_jazzy_fake_minimal:
         controllers_config_relpath = os.path.join('config', 'ur', 'controllers_fake_minimal.yaml')
         controllers_yaml = load_yaml('manymove_bringup', controllers_config_relpath)
     else:
-        controllers_config_relpath = resolve_moveit_controller_config(moveit_config_pkg_name)
-        controllers_yaml = load_yaml(moveit_config_pkg_name, controllers_config_relpath)
-    if use_sim_time.perform(context).lower() == 'true' and not use_jazzy_fake_minimal:
+        try:
+            controllers_config_relpath = resolve_moveit_controller_config(moveit_config_pkg_name)
+            controllers_yaml = load_yaml(moveit_config_pkg_name, controllers_config_relpath)
+        except (FileNotFoundError, OSError) as exc:
+            controllers_config_relpath = os.path.join('config', 'ur', 'controllers_fake_minimal.yaml')
+            logger.warning(
+                "MoveIt controller config is unavailable (%s). Falling back to '%s' from package "
+                "'manymove_bringup'.",
+                exc,
+                controllers_config_relpath,
+            )
+            controllers_yaml = load_yaml('manymove_bringup', controllers_config_relpath)
+    if (
+        use_sim_time.perform(context).lower() == 'true'
+        and not use_jazzy_fake_minimal
+        and isinstance(controllers_yaml, dict)
+        and 'scaled_joint_trajectory_controller' in controllers_yaml
+        and 'joint_trajectory_controller' in controllers_yaml
+    ):
         controllers_yaml['scaled_joint_trajectory_controller']['default'] = True
         controllers_yaml['joint_trajectory_controller']['default'] = False
 
@@ -469,15 +481,14 @@ def launch_setup(context, *args, **kwargs):
             'robotiq_gripper_controller',
         ]
         controllers_inactive = []
-
-    initial_joint_controller_value = initial_joint_controller.perform(context)
-    if not use_jazzy_fake_minimal:
+    else:
+        initial_joint_controller_value = initial_joint_controller.perform(context)
         if initial_joint_controller_value not in controllers_active:
             controllers_active.append(initial_joint_controller_value)
         controllers_inactive = [c for c in controllers_inactive if c not in controllers_active]
 
-    if use_fake_value == 'true' and not use_jazzy_fake_minimal:
-        controllers_active = [c for c in controllers_active if c != 'tcp_pose_broadcaster']
+        if use_fake_value == 'true':
+            controllers_active = [c for c in controllers_active if c != 'tcp_pose_broadcaster']
 
     controller_spawner_active = Node(
         package='controller_manager',

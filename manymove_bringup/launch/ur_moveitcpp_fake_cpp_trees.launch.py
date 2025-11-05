@@ -344,21 +344,33 @@ def launch_setup(context, *args, **kwargs):
         pipeline_entry = planning_pipeline_config.get(plugin_name)
         if isinstance(pipeline_entry, dict):
             pipeline_entry['planning_plugin'] = plugin
-            adapters = pipeline_entry.get('request_adapters')
-            if isinstance(adapters, str):
-                pipeline_entry['request_adapters'] = adapters.replace(
-                    'default_planning_request_adapters/', 'default_planner_request_adapters/'
-                )
 
     MOVEIT_CONTROLLER = 'moveit_simple_controller_manager/MoveItSimpleControllerManager'
-
+    controllers_yaml = None
+    controllers_config_relpath = ''
     if use_jazzy_fake_minimal:
         controllers_config_relpath = os.path.join('config', 'ur', 'controllers_fake_minimal.yaml')
         controllers_yaml = load_yaml('manymove_bringup', controllers_config_relpath)
     else:
-        controllers_config_relpath = resolve_moveit_controller_config(moveit_config_pkg_name)
-        controllers_yaml = load_yaml(moveit_config_pkg_name, controllers_config_relpath)
-    if use_sim_time.perform(context).lower() == 'true' and not use_jazzy_fake_minimal:
+        try:
+            controllers_config_relpath = resolve_moveit_controller_config(moveit_config_pkg_name)
+            controllers_yaml = load_yaml(moveit_config_pkg_name, controllers_config_relpath)
+        except (FileNotFoundError, OSError) as exc:
+            controllers_config_relpath = os.path.join('config', 'ur', 'controllers_fake_minimal.yaml')
+            logger.warning(
+                "MoveIt controller config is unavailable (%s). Falling back to '%s' from package "
+                "'manymove_bringup'.",
+                exc,
+                controllers_config_relpath,
+            )
+            controllers_yaml = load_yaml('manymove_bringup', controllers_config_relpath)
+    if (
+        use_sim_time.perform(context).lower() == 'true'
+        and not use_jazzy_fake_minimal
+        and isinstance(controllers_yaml, dict)
+        and 'scaled_joint_trajectory_controller' in controllers_yaml
+        and 'joint_trajectory_controller' in controllers_yaml
+    ):
         controllers_yaml['scaled_joint_trajectory_controller']['default'] = False
         controllers_yaml['joint_trajectory_controller']['default'] = True
 
