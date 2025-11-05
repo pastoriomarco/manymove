@@ -56,15 +56,21 @@ int main(int argc, char ** argv)
   // Adjusting only the move params of default moves
   auto & max_move = move_configs["max_move"];
   max_move.planner_id = "RRTConnectkConfigDefault";
-  max_move.planning_time = 0.1;
+  max_move.planning_time = 0.05;
+  max_move.plan_number_limit = 32;
+  max_move.plan_number_target = 12;
 
   auto & mid_move = move_configs["mid_move"];
   mid_move.planner_id = "RRTConnectkConfigDefault";
-  mid_move.planning_time = 0.1;
+  mid_move.planning_time = 0.05;
+  mid_move.plan_number_limit = 32;
+  mid_move.plan_number_target = 12;
 
   auto & slow_move = move_configs["slow_move"];
   slow_move.planner_id = "RRTConnectkConfigDefault";
-  slow_move.planning_time = 0.1;
+  slow_move.planning_time = 0.05;
+  slow_move.plan_number_limit = 32;
+  slow_move.plan_number_target = 12;
 
   // Typical UR 6-DOF configurations (radians) for rest and scanning poses.
   std::vector<double> joint_rest = {0.0, -1.57, 1.57, -1.57, -1.57, 0.0};
@@ -77,7 +83,7 @@ int main(int argc, char ** argv)
   blackboard->set("drop_target_key", drop_target);
 
   Pose approach_drop_target = drop_target;
-  approach_drop_target.position.z += 0.1;
+  approach_drop_target.position.z += 0.05;
   blackboard->set("approach_drop_target_key", approach_drop_target);
 
   std::string tcp_frame_name = rp.prefix + rp.tcp_frame;
@@ -87,7 +93,7 @@ int main(int argc, char ** argv)
   };
 
   std::vector<Move> pick_sequence = {
-    {rp.prefix, tcp_frame_name, "pose", move_configs["mid_move"], "approach_pick_target_key"},
+    {rp.prefix, tcp_frame_name, "pose", move_configs["max_move"], "approach_pick_target_key"},
     {rp.prefix, tcp_frame_name, "cartesian", move_configs["cartesian_slow_move"],
       "pick_target_key"},
   };
@@ -95,6 +101,7 @@ int main(int argc, char ** argv)
   std::vector<Move> drop_sequence = {
     {rp.prefix, tcp_frame_name, "cartesian", move_configs["cartesian_mid_move"],
       "approach_pick_target_key"},
+    // {rp.prefix, tcp_frame_name, "joint", move_configs["max_move"], "", joint_rest},
     {rp.prefix, tcp_frame_name, "pose", move_configs["max_move"], "approach_drop_target_key"},
     {rp.prefix, tcp_frame_name, "cartesian", move_configs["cartesian_slow_move"],
       "drop_target_key"},
@@ -127,93 +134,57 @@ int main(int argc, char ** argv)
   // 3) Build blocks for objects handling
   // ----------------------------------------------------------------------------
 
-  blackboard->set("ground_id_key", "obstacle_ground");
-  blackboard->set("ground_shape_key", "box");
-  blackboard->set("ground_dimension_key", std::vector<double>{1.0, 1.0, 0.1});
-  blackboard->set("ground_pose_key", createPoseRPY(0.0, 0.0, -0.051, 0.0, 0.0, 0.0));
-  blackboard->set("ground_scale_key", std::vector<double>{1.0, 1.0, 1.0});
-
-  blackboard->set("wall_id_key", "obstacle_wall");
-  blackboard->set("wall_shape_key", "box");
-  blackboard->set("wall_dimension_key", std::vector<double>{1.0, 0.02, 0.2});
-  blackboard->set("wall_pose_key", createPoseRPY(0.0, -0.15, 0.10, 0.0, 0.0, 0.0));
-  blackboard->set("wall_scale_key", std::vector<double>{1.0, 1.0, 1.0});
-
-  blackboard->set("mesh_id_key", "graspable_mesh");
-  blackboard->set("mesh_shape_key", "mesh");
-  blackboard->set("mesh_file_key", "package://manymove_object_manager/meshes/unit_tube.stl");
-  blackboard->set("mesh_scale_key", std::vector<double>{0.01, 0.01, 0.1});
-  blackboard->set(
-    "mesh_pose_key", createPoseRPY(
-      0.15, -0.4, 0.05, 0.785, 1.57, 0.0));
-
-  std::string check_ground_obj_xml =
-    buildObjectActionXML("check_ground", createCheckObjectExists("ground_id_key"));
-  std::string check_wall_obj_xml =
-    buildObjectActionXML("check_wall", createCheckObjectExists("wall_id_key"));
-  std::string check_mesh_obj_xml =
-    buildObjectActionXML("check_mesh", createCheckObjectExists("mesh_id_key"));
-
-  std::string add_ground_obj_xml = buildObjectActionXML(
-    "add_ground", createAddObject(
-      "ground_id_key", "ground_shape_key", "ground_dimension_key", "ground_pose_key",
-      "ground_scale_key", ""));
-  std::string add_wall_obj_xml = buildObjectActionXML(
-    "add_wall", createAddObject(
-      "wall_id_key", "wall_shape_key", "wall_dimension_key", "wall_pose_key",
-      "wall_scale_key", ""));
-  std::string add_mesh_obj_xml = buildObjectActionXML(
-    "add_mesh",
-    createAddObject(
-      "mesh_id_key", "mesh_shape_key", "", "mesh_pose_key", "mesh_scale_key", "mesh_file_key"));
-
-  std::string init_ground_obj_xml =
-    fallbackWrapperXML("init_ground_obj", {check_ground_obj_xml, add_ground_obj_xml});
-  std::string init_wall_obj_xml =
-    fallbackWrapperXML("init_wall_obj", {check_wall_obj_xml, add_wall_obj_xml});
-  std::string init_mesh_obj_xml =
-    fallbackWrapperXML("init_mesh_obj", {check_mesh_obj_xml, add_mesh_obj_xml});
-
   blackboard->set("tcp_frame_name_key", tcp_frame_name);
-  blackboard->set("object_to_manipulate_key", "graspable_mesh");
   blackboard->set(
     "touch_links",
     std::vector<std::string>{"robotiq_85_right_finger_tip_link",
       "robotiq_85_left_finger_tip_link"});
 
-  std::string attach_obj_xml = buildObjectActionXML(
-    "attach_obj_to_manipulate",
-    createAttachObject("object_to_manipulate_key", "tcp_frame_name_key", "touch_links"));
-  std::string detach_obj_xml = buildObjectActionXML(
-    "detach_obj_to_manipulate",
-    createDetachObject("object_to_manipulate_key", "tcp_frame_name_key"));
-  std::string remove_obj_xml =
-    buildObjectActionXML(
-    "remove_obj_to_manipulate",
-    createRemoveObject("object_to_manipulate_key"));
-
-  blackboard->set(
-    "pick_pre_transform_xyz_rpy_1_key", std::vector<double>{-0.15, 0.0, 0.0, 0.0, 1.57, 0.0});
-  blackboard->set(
-    "approach_pick_pre_transform_xyz_rpy_1_key",
-    std::vector<double>{-0.20, 0.0, 0.0, 0.0, 1.57, 0.0});
-  blackboard->set(
-    "pick_post_transform_xyz_rpy_1_key", std::vector<double>{0.0, 0.0, -0.03, -1.57, 0.0, 0.0});
-
   blackboard->set("world_frame_key", "world");
+  blackboard->set("identity_transform_key", std::vector<double>{0.0, 0.0, 0.0, 0.0, 0.0, 0.0});
 
+  // Objects in the scene:
+  // This is the new unified helper function to create all the snippets to handle any kind of
+  // objects
+  ObjectSnippets ground = createObjectSnippets(
+    blackboard, keys, "ground",  // object name
+    "box",  // shape
+    createPoseRPY(0.0, 0.0, -0.051, 0.0, 0.0, 0.0),  // pose of the object*/
+    {1.0, 1.0, 0.1},  // primitive dimensions
+    "",  // mesh file path
+    {1.0, 1.0, 1.0},  // scale
+    "",  // link name to attach/detach
+    {}  // contact links to attach/detach
+  );
+
+  ObjectSnippets wall = createObjectSnippets(
+    blackboard, keys, "wall", "box", createPoseRPY(0.0, -0.15, 0.1, 0.0, 0.0, 0.0),
+    {1.0, 0.02, 0.2});
+
+  ObjectSnippets graspable = createObjectSnippets(
+    blackboard, keys, "graspable", "box", createPoseRPY(0.15, -0.35, 0.1, 0.0, 0.0, -0.785),
+    {0.1, 0.01, 0.01}, "", {1.0, 1.0, 1.0}, "tcp_frame_name_key", "touch_links");
+
+  blackboard->set(
+    "pick_pre_transform_xyz_rpy_1_key", std::vector<double>{0.0, 0.0, -0.1675, 0.0, 0.0, 0.0});
+  blackboard->set(
+    "approach_pre_transform_xyz_rpy_1_key", std::vector<double>{0.0, 0.0, -0.225, 0.0, 0.0, 0.0});
+  blackboard->set(
+    "post_transform_xyz_rpy_1_key", std::vector<double>{0.0, 0.0, 0.0, 3.14, 0.0, 1.57});
+
+  // Translate get_pose_action to xml tree leaf
   std::string get_pick_pose_xml = buildObjectActionXML(
     "get_pick_pose", createGetObjectPose(
-      "object_to_manipulate_key", "pick_target_key", "world_frame_key",
-      "pick_pre_transform_xyz_rpy_1_key", "pick_post_transform_xyz_rpy_1_key"));
+      "graspable_key", "pick_target_key", "world_frame_key",
+      "pick_pre_transform_xyz_rpy_1_key", "post_transform_xyz_rpy_1_key"));
+
   std::string get_approach_pose_xml = buildObjectActionXML(
-    "get_approach_pose",
-    createGetObjectPose(
-      "object_to_manipulate_key", "approach_pick_target_key", "world_frame_key",
-      "approach_pick_pre_transform_xyz_rpy_1_key", "pick_post_transform_xyz_rpy_1_key"));
+    "get_approach_pose", createGetObjectPose(
+      "graspable_key", "approach_pick_target_key", "world_frame_key",
+      "approach_pre_transform_xyz_rpy_1_key", "post_transform_xyz_rpy_1_key"));
 
   // ----------------------------------------------------------------------------
-  // 5) Define Signals calls
+  // 4) Define Signals calls
   // ----------------------------------------------------------------------------
 
   std::string gripper_action_server = rp.gripper_action_server;
@@ -263,23 +234,23 @@ int main(int argc, char ** argv)
     "<Delay delay_msec=\"250\">\n<AlwaysSuccess />\n</Delay>\n");
 
   // ----------------------------------------------------------------------------
-  // 6) Full behavior composition
+  // 5) Full behavior composition
   // ----------------------------------------------------------------------------
 
   std::string spawn_fixed_objects_xml =
-    sequenceWrapperXML("SpawnFixedObjects", {init_ground_obj_xml, init_wall_obj_xml});
+    sequenceWrapperXML("SpawnFixedObjects", {ground.init_xml, wall.init_xml});
   std::string spawn_graspable_objects_xml =
-    sequenceWrapperXML("SpawnGraspableObjects", {init_mesh_obj_xml});
+    sequenceWrapperXML("SpawnGraspableObjects", {graspable.init_xml});
   std::string get_grasp_object_poses_xml =
     sequenceWrapperXML("GetGraspPoses", {get_pick_pose_xml, get_approach_pose_xml});
   std::string go_to_pick_pose_xml = sequenceWrapperXML("GoToPickPose", {pick_object_xml});
   std::string close_gripper_xml = sequenceWrapperXML(
-    "CloseGripper", {gripper_close_action_xml, attach_obj_xml});
+    "CloseGripper", {gripper_close_action_xml, graspable.attach_xml});
   std::string open_gripper_xml =
-    sequenceWrapperXML("OpenGripper", {gripper_open_action_xml, detach_obj_xml});
+    sequenceWrapperXML("OpenGripper", {gripper_open_action_xml, graspable.detach_xml});
 
   std::string reset_graspable_objects_xml =
-    sequenceWrapperXML("reset_graspable_objects", {open_gripper_xml, remove_obj_xml});
+    sequenceWrapperXML("reset_graspable_objects", {open_gripper_xml, graspable.remove_xml});
 
   std::string startup_sequence_xml = sequenceWrapperXML(
     "StartUpSequence", {check_reset_robot_xml, spawn_fixed_objects_xml,
@@ -296,7 +267,7 @@ int main(int argc, char ** argv)
     drop_object_xml,
     open_gripper_xml,
     home_sequence_xml,
-    remove_obj_xml
+    graspable.remove_xml
   },
     -1);
 
@@ -311,8 +282,9 @@ int main(int argc, char ** argv)
     node->get_logger(), "=== Programmatically Generated Tree XML ===\n%s", final_tree_xml.c_str());
 
   // ----------------------------------------------------------------------------
-  // 8) Register node types and build tree
+  // 6) Register node types and build tree
   // ----------------------------------------------------------------------------
+
   BT::BehaviorTreeFactory factory;
   registerAllNodeTypes(factory);
 

@@ -277,6 +277,19 @@ def launch_setup(context, *args, **kwargs):
     except Exception:
         pass
 
+    for plugin_name, plugin in {
+        'chomp': 'chomp_interface/CHOMPPlanner',
+        'pilz_industrial_motion_planner': 'pilz_industrial_motion_planner/CommandPlanner',
+    }.items():
+        pipeline_entry = planning_pipeline_config.get(plugin_name)
+        if isinstance(pipeline_entry, dict):
+            pipeline_entry['planning_plugin'] = plugin
+            adapters = pipeline_entry.get('request_adapters')
+            if isinstance(adapters, str):
+                pipeline_entry['request_adapters'] = adapters.replace(
+                    'default_planning_request_adapters/', 'default_planner_request_adapters/'
+                )
+
     MOVEIT_CONTROLLER = 'moveit_simple_controller_manager/MoveItSimpleControllerManager'
 
     controllers_yaml = load_yaml(moveit_config_pkg_name, os.path.join('config', 'controllers.yaml'))

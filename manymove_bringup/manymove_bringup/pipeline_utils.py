@@ -32,12 +32,34 @@ from __future__ import annotations
 from typing import Any
 
 
+def _fix_request_adapter_prefix(value: str) -> str:
+    """Use the ROS 2 MoveIt adapter namespace (default_planner_request_adapters)."""
+    return value.replace(
+        'default_planning_request_adapters/', 'default_planner_request_adapters/'
+    )
+
+
 def normalize_pipeline_config(data: Any) -> Any:
     """Convert MoveIt adapter lists into newline-separated strings in-place."""
     if isinstance(data, dict):
-        for key, value in data.items():
-            if key in ('request_adapters', 'response_adapters') and isinstance(value, list):
-                data[key] = '\n'.join(value)
+        for key in list(data.keys()):
+            value = data[key]
+
+            if key == 'planning_plugins' and isinstance(value, list):
+                if value and 'planning_plugin' not in data:
+                    data['planning_plugin'] = value[0]
+                data.pop('planning_plugins', None)
+                continue
+
+            if key in ('request_adapters', 'response_adapters'):
+                new_value = value
+                if isinstance(new_value, list):
+                    new_value = '\n'.join(new_value)
+
+                if isinstance(new_value, str) and key == 'request_adapters':
+                    new_value = _fix_request_adapter_prefix(new_value)
+
+                data[key] = new_value
             else:
                 normalize_pipeline_config(value)
     elif isinstance(data, list):
