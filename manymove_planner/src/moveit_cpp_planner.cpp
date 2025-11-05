@@ -29,10 +29,9 @@
 #include "manymove_planner/moveit_cpp_planner.hpp"
 
 #include <angles/angles.h>
-#include <moveit/kinematic_constraints/utils.h>
-#include <moveit/robot_model/joint_model.h>
 
 #include <geometry_msgs/msg/pose_stamped.hpp>
+#include "manymove_planner/compat/moveit_includes_compat.hpp"
 #include "manymove_planner/compat/cartesian_interpolator_compat.hpp"
 #include "manymove_planner/compat/moveit_compat.hpp"
 

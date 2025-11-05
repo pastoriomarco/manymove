@@ -29,8 +29,8 @@
 #include "manymove_planner/move_group_planner.hpp"
 
 #include <angles/angles.h>
-#include <moveit/robot_model/joint_model.h>
 
+#include "manymove_planner/compat/moveit_includes_compat.hpp"
 #include "manymove_planner/compat/moveit_compat.hpp"
 
 MoveGroupPlanner::MoveGroupPlanner(

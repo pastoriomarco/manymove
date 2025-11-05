@@ -54,6 +54,9 @@ RUN apt-get update && \
         ros-${ROS_DISTRO}-controller-manager-msgs \
         ros-${ROS_DISTRO}-moveit-resources-panda-moveit-config \
         ros-${ROS_DISTRO}-behaviortree-cpp-v3 \
+        ros-${ROS_DISTRO}-ur \
+        ros-${ROS_DISTRO}-robotiq-description \
+        ros-${ROS_DISTRO}-robotiq-controllers \
         ros-${ROS_DISTRO}-topic-based-ros2-control \
         ros-${ROS_DISTRO}-simulation-interfaces \
         ros-${ROS_DISTRO}-vision-msgs \
