@@ -133,6 +133,9 @@ def launch_setup(context, *args, **kwargs):
     use_fake_value = use_fake_hardware.perform(context).lower()
     is_robot_real = use_fake_value not in ('true', '1', 't', 'yes', 'on')
 
+    ros_distro = os.environ.get('ROS_DISTRO', '').strip().lower()
+    use_jazzy_fake_minimal = use_fake_value == 'true' and ros_distro == 'jazzy'
+
     moveit_config_pkg_name = moveit_config_package.perform(context)
 
     description_file_value = description_file.perform(context)
@@ -315,11 +318,16 @@ def launch_setup(context, *args, **kwargs):
 
     MOVEIT_CONTROLLER = 'moveit_simple_controller_manager/MoveItSimpleControllerManager'
 
-    controllers_config_relpath = resolve_moveit_controller_config(moveit_config_pkg_name)
-    controllers_yaml = load_yaml(moveit_config_pkg_name, controllers_config_relpath)
-    if use_sim_time.perform(context).lower() == 'true':
+    if use_jazzy_fake_minimal:
+        controllers_config_relpath = os.path.join('config', 'ur', 'controllers_fake_minimal.yaml')
+        controllers_yaml = load_yaml('manymove_bringup', controllers_config_relpath)
+    else:
+        controllers_config_relpath = resolve_moveit_controller_config(moveit_config_pkg_name)
+        controllers_yaml = load_yaml(moveit_config_pkg_name, controllers_config_relpath)
+    if use_sim_time.perform(context).lower() == 'true' and not use_jazzy_fake_minimal:
         controllers_yaml['scaled_joint_trajectory_controller']['default'] = True
         controllers_yaml['joint_trajectory_controller']['default'] = False
+
     moveit_controllers = {
         'moveit_simple_controller_manager': controllers_yaml,
         'moveit_controller_manager': MOVEIT_CONTROLLER,
@@ -412,9 +420,6 @@ def launch_setup(context, *args, **kwargs):
         'tool_contact_controller',
     ]
 
-    ros_distro = os.environ.get('ROS_DISTRO', '').strip().lower()
-    use_jazzy_fake_minimal = use_fake_value == 'true' and ros_distro == 'jazzy'
-
     if use_jazzy_fake_minimal:
         controllers_active = [
             'joint_state_broadcaster',
@@ -468,35 +473,37 @@ def launch_setup(context, *args, **kwargs):
         parameters=[robot_description, {'use_sim_time': use_sim_time}],
     )
 
-    gripper_controller_spawners = TimerAction(
-        period=3.0,
-        actions=[
-            Node(
-                package='controller_manager',
-                executable='spawner',
-                output='screen',
-                arguments=[
-                    '--controller-manager',
-                    '/controller_manager',
-                    '--controller-manager-timeout',
-                    controller_spawner_timeout,
-                    'robotiq_gripper_controller',
-                ],
-            ),
-            Node(
-                package='controller_manager',
-                executable='spawner',
-                output='screen',
-                arguments=[
-                    '--controller-manager',
-                    '/controller_manager',
-                    '--controller-manager-timeout',
-                    controller_spawner_timeout,
-                    'robotiq_activation_controller',
-                ],
-            ),
-        ],
-    )
+    gripper_controller_spawners = None
+    if not use_jazzy_fake_minimal:
+        gripper_controller_spawners = TimerAction(
+            period=3.0,
+            actions=[
+                Node(
+                    package='controller_manager',
+                    executable='spawner',
+                    output='screen',
+                    arguments=[
+                        '--controller-manager',
+                        '/controller_manager',
+                        '--controller-manager-timeout',
+                        controller_spawner_timeout,
+                        'robotiq_gripper_controller',
+                    ],
+                ),
+                Node(
+                    package='controller_manager',
+                    executable='spawner',
+                    output='screen',
+                    arguments=[
+                        '--controller-manager',
+                        '/controller_manager',
+                        '--controller-manager-timeout',
+                        controller_spawner_timeout,
+                        'robotiq_activation_controller',
+                    ],
+                ),
+            ],
+        )
 
     move_group_node = Node(
         package='moveit_ros_move_group',
@@ -601,15 +608,10 @@ def launch_setup(context, *args, **kwargs):
     ]
     if controller_spawner_inactive is not None:
         launch_actions.append(controller_spawner_inactive)
-    launch_actions.extend(
-        [
-            robot_state_publisher_node,
-            gripper_controller_spawners,
-            move_group_node,
-            servo_node,
-            action_server_node,
-        ]
-    )
+    launch_actions.append(robot_state_publisher_node)
+    if gripper_controller_spawners is not None:
+        launch_actions.append(gripper_controller_spawners)
+    launch_actions.extend([move_group_node, servo_node, action_server_node])
     if rviz_launch_requested and rviz_node is not None:
         insert_index = launch_actions.index(servo_node)
         launch_actions.insert(insert_index, rviz_node)
