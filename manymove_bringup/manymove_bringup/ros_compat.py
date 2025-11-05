@@ -45,5 +45,6 @@ def resolve_moveit_controller_config(package_name: str) -> str:
         (
             os.path.join('config', 'controllers.yaml'),
             os.path.join('config', 'ros2_controllers.yaml'),
+            os.path.join('config', 'moveit_controllers.yaml'),
         ),
     )
