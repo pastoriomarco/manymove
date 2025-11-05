@@ -95,12 +95,9 @@ resolve_manymove_branch() {
   printf 'fallback\nmain\n'
 }
 
-IFS=$'\n' read -r MANYMOVE_BRANCH_SOURCE MANYMOVE_BRANCH_DEFAULT < <(resolve_manymove_branch)
-
-if [[ -z "${MANYMOVE_BRANCH_DEFAULT}" ]]; then
-  MANYMOVE_BRANCH_SOURCE="fallback"
-  MANYMOVE_BRANCH_DEFAULT="main"
-fi
+mapfile -t MANYMOVE_BRANCH_INFO < <(resolve_manymove_branch)
+MANYMOVE_BRANCH_SOURCE="${MANYMOVE_BRANCH_INFO[0]:-fallback}"
+MANYMOVE_BRANCH_DEFAULT="${MANYMOVE_BRANCH_INFO[1]:-main}"
 
 IMAGE_TAG="manymove:${DISTRO}"
 CONTAINER_USER="${USER:-manymove}"
