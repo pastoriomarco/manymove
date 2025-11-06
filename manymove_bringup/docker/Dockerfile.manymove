@@ -56,6 +56,7 @@ RUN apt-get update && \
         libqt5svg5-dev \
         libqt5opengl5-dev \
         cppzmq-dev \
+        nano \
         ros-${ROS_DISTRO}-moveit \
         ros-${ROS_DISTRO}-moveit-msgs \
         ros-${ROS_DISTRO}-controller-manager \

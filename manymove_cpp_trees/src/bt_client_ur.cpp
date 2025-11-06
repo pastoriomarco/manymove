@@ -170,7 +170,7 @@ int main(int argc, char ** argv)
   blackboard->set(
     "approach_pre_transform_xyz_rpy_1_key", std::vector<double>{0.0, 0.0, -0.225, 0.0, 0.0, 0.0});
   blackboard->set(
-    "post_transform_xyz_rpy_1_key", std::vector<double>{0.0, 0.0, 0.0, 3.14, 0.0, 1.57});
+    "post_transform_xyz_rpy_1_key", std::vector<double>{0.0, 0.0, 0.0, 3.14, 0.0, -1.57});
 
   // Translate get_pose_action to xml tree leaf
   std::string get_pick_pose_xml = buildObjectActionXML(

@@ -693,6 +693,32 @@ bool MoveGroupPlanner::isStateValid(
   }
   temp_state.update(true);  // update transforms
 
+  constexpr double bounds_margin = 0.0;
+  if (!temp_state.satisfiesBounds(group, bounds_margin)) {
+    RCLCPP_WARN(
+      logger_,
+      "[MoveGroupPlanner] State violates joint limits for group '%s'.",
+      group->getName().c_str());
+    for (const auto * joint_model : group->getJointModels()) {
+      if (!temp_state.satisfiesBounds(joint_model, bounds_margin)) {
+        const auto & var_names = joint_model->getVariableNames();
+        const auto & bounds = joint_model->getVariableBounds();
+        for (std::size_t i = 0; i < var_names.size(); ++i) {
+          if (!bounds[i].position_bounded_) {
+            continue;
+          }
+          const double value = temp_state.getVariablePosition(var_names[i]);
+          if (value < bounds[i].min_position_ || value > bounds[i].max_position_) {
+            RCLCPP_WARN(
+              logger_, "  %s: %.6f outside [%.6f, %.6f]", var_names[i].c_str(), value,
+              bounds[i].min_position_, bounds[i].max_position_);
+          }
+        }
+      }
+    }
+    return false;
+  }
+
   collision_detection::CollisionRequest collision_request;
   collision_detection::CollisionResult collision_result;
   collision_request.contacts = true;   // Enable contact reporting
@@ -853,8 +879,17 @@ bool MoveGroupPlanner::isTrajectoryEndValid(
       return false;
     }
 
+    const auto robot_model = move_group_interface_->getRobotModel();
+
     for (size_t i = 0; i < last_point.positions.size(); ++i) {
       double diff = std::fabs(last_point.positions[i] - target_joint_values[i]);
+      if (robot_model) {
+        const auto * joint_model = robot_model->getJointModel(traj.joint_trajectory.joint_names[i]);
+        if (joint_model && joint_model->getType() == moveit::core::JointModel::REVOLUTE) {
+          diff = std::fabs(
+            angles::shortest_angular_distance(target_joint_values[i], last_point.positions[i]));
+        }
+      }
       if (diff > move_request.config.rotational_precision) {
         RCLCPP_INFO(
           logger_, "Joint %zu difference (%.6f) exceeds tolerance (%.6f) for end validation.", i,
