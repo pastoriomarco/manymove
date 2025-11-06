@@ -34,9 +34,11 @@
 #include "manymove_planner/compat/moveit_includes_compat.hpp"
 #include "manymove_planner/compat/cartesian_interpolator_compat.hpp"
 #include "manymove_planner/compat/moveit_compat.hpp"
+#include "manymove_planner/trajectory_utils.hpp"
 
 using manymove_msgs::msg::MovementConfig;
 using namespace std::chrono_literals;
+namespace utils = manymove_planner::trajectory_utils;
 
 namespace
 {
@@ -323,42 +325,14 @@ double MoveItCppPlanner::computePathLength(
 geometry_msgs::msg::Pose MoveItCppPlanner::getPoseFromRobotState(
   const moveit::core::RobotState & robot_state, const std::string & link_frame) const
 {
-  // Clone the state to ensure the original state isn't modified
-  moveit::core::RobotState state(robot_state);
-
-  // Update link transforms to ensure they are valid
-  state.updateLinkTransforms();
-
-  geometry_msgs::msg::Pose pose;
-
-  // Get the transform of the frame
-  const Eigen::Isometry3d & pose_eigen = state.getGlobalLinkTransform(link_frame);
-
-  // Extract position
-  pose.position.x = pose_eigen.translation().x();
-  pose.position.y = pose_eigen.translation().y();
-  pose.position.z = pose_eigen.translation().z();
-
-  // Extract orientation as a quaternion
-  Eigen::Quaterniond quat(pose_eigen.rotation());
-  pose.orientation.x = quat.x();
-  pose.orientation.y = quat.y();
-  pose.orientation.z = quat.z();
-  pose.orientation.w = quat.w();
-
-  return pose;
+  return utils::poseFromState(robot_state, link_frame);
 }
 
 // Function to compute the Euclidean distance between the start pose and the target pose
 double MoveItCppPlanner::computeCartesianDistance(
   const geometry_msgs::msg::Pose & start_pose, const geometry_msgs::msg::Pose & target_pose) const
 {
-  // Compute the Euclidean distance to the target pose
-  double dx = target_pose.position.x - start_pose.position.x;
-  double dy = target_pose.position.y - start_pose.position.y;
-  double dz = target_pose.position.z - start_pose.position.z;
-
-  return std::sqrt(dx * dx + dy * dy + dz * dz);
+  return utils::cartesianDistance(start_pose, target_pose);
 }
 
 // Function to get a pose from a trajectory and TCP frame
@@ -366,32 +340,7 @@ geometry_msgs::msg::Pose MoveItCppPlanner::getPoseFromTrajectory(
   const moveit_msgs::msg::RobotTrajectory & traj_msg, const moveit::core::RobotState & robot_state,
   const std::string & link_frame, bool use_last_point) const
 {
-  geometry_msgs::msg::Pose pose;
-
-  // Ensure the trajectory is not empty
-  if (traj_msg.joint_trajectory.points.empty()) {
-    throw std::runtime_error("Trajectory is empty, cannot extract pose.");
-  }
-
-  // Select the point to use (first or last)
-  const auto & point = use_last_point ? traj_msg.joint_trajectory.points.back() :
-    traj_msg.joint_trajectory.points.front();
-  const auto & joint_names = traj_msg.joint_trajectory.joint_names;
-  std::vector<double> joint_positions(point.positions.begin(), point.positions.end());
-
-  // Clone the robot state to avoid modifying the original
-  moveit::core::RobotState state(robot_state);
-
-  // Update link transforms to ensure they are valid
-  state.updateLinkTransforms();
-
-  // Set the joint positions in the cloned state
-  state.setVariablePositions(joint_names, joint_positions);
-
-  // Get the pose of the TCP frame
-  pose = getPoseFromRobotState(state, link_frame);
-
-  return pose;
+  return utils::poseFromTrajectory(traj_msg, robot_state, link_frame, use_last_point);
 }
 
 // Compute Max Cartesian Speed
@@ -399,25 +348,10 @@ double MoveItCppPlanner::computeMaxCartesianSpeed(
   const robot_trajectory::RobotTrajectoryPtr & trajectory,
   const manymove_msgs::msg::MovementConfig & config) const
 {
-  if (trajectory->getWayPointCount() < 2) {
+  if (!trajectory) {
     return 0.0;
   }
-  double max_speed = 0.0;
-  for (size_t i = 1; i < trajectory->getWayPointCount(); i++) {
-    Eigen::Isometry3d prev_pose =
-      trajectory->getWayPoint(i - 1).getGlobalLinkTransform(config.tcp_frame);
-    Eigen::Isometry3d curr_pose =
-      trajectory->getWayPoint(i).getGlobalLinkTransform(config.tcp_frame);
-    double dist = (curr_pose.translation() - prev_pose.translation()).norm();
-    double dt = trajectory->getWayPointDurationFromPrevious(i);
-    if (dt > 0.0) {
-      double speed = dist / dt;
-      if (speed > max_speed) {
-        max_speed = speed;
-      }
-    }
-  }
-  return max_speed;
+  return utils::maxCartesianSpeed(*trajectory, config.tcp_frame);
 }
 
 double MoveItCppPlanner::computeRotationPenalty(
@@ -425,46 +359,14 @@ double MoveItCppPlanner::computeRotationPenalty(
   const manymove_msgs::msg::MovementConfig & config) const
 {
   (void)config;
-  if (traj.joint_trajectory.points.size() < 2) {
-    return 0.0;
-  }
-
-  const double soft_threshold = 2.356194490192345;  // 135 degrees in radians
-  const double weight = rotation_penalty_weight_;
-
-  std::vector<double> accumulated(traj.joint_trajectory.joint_names.size(), 0.0);
-  for (size_t idx = 1; idx < traj.joint_trajectory.points.size(); ++idx) {
-    const auto & prev = traj.joint_trajectory.points[idx - 1];
-    const auto & curr = traj.joint_trajectory.points[idx];
-    for (size_t j = 0; j < accumulated.size(); ++j) {
-      if (j < curr.positions.size() && j < prev.positions.size()) {
-        accumulated[j] += std::abs(curr.positions[j] - prev.positions[j]);
-      }
-    }
-  }
-
-  double penalty = 0.0;
-  for (double travel : accumulated) {
-    const double over = std::max(0.0, travel - soft_threshold);
-    penalty += weight * over * over;
-  }
-  return penalty;
+  return utils::rotationPenalty(
+    traj, utils::kDefaultRotationSoftThresholdRad, rotation_penalty_weight_);
 }
 
 bool MoveItCppPlanner::areSameJointTargets(
   const std::vector<double> & j1, const std::vector<double> & j2, double tolerance) const
 {
-  if (j1.size() != j2.size()) {
-    return false;
-  }
-
-  for (size_t i = 0; i < j1.size(); i++) {
-    if (std::abs(j1[i] - j2[i]) > tolerance) {
-      return false;
-    }
-  }
-
-  return true;
+  return utils::jointTargetsEqual(j1, j2, tolerance);
 }
 
 moveit_msgs::msg::RobotTrajectory MoveItCppPlanner::convertToMsg(
@@ -1324,24 +1226,7 @@ void MoveItCppPlanner::jointStateCallback(const sensor_msgs::msg::JointState::Sh
 {
   // Lock mutex for thread-safe access
   std::lock_guard<std::mutex> lock(js_mutex_);
-
-  // Update position/velocity for each joint in the message
-  for (size_t i = 0; i < msg->name.size(); ++i) {
-    const std::string & joint_name = msg->name[i];
-
-    // Safety checks (avoid out of range)
-    double pos = 0.0;
-    double vel = 0.0;
-    if (i < msg->position.size()) {
-      pos = msg->position[i];
-    }
-    if (i < msg->velocity.size()) {
-      vel = msg->velocity[i];
-    }
-
-    current_positions_[joint_name] = pos;
-    current_velocities_[joint_name] = vel;
-  }
+  utils::updateJointStateMaps(*msg, current_positions_, current_velocities_);
 }
 
 bool MoveItCppPlanner::isTrajectoryValid(

@@ -52,6 +52,7 @@ from launch_ros.parameter_descriptions import ParameterValue
 from launch_ros.substitutions import FindPackageShare
 from manymove_bringup.pipeline_utils import normalize_pipeline_config
 from manymove_bringup.ros_compat import resolve_moveit_controller_config
+from manymove_bringup.ros_compat import use_legacy_moveit_adapter_format
 
 import yaml
 
@@ -304,10 +305,15 @@ def launch_setup(context, *args, **kwargs):
         )
 
     # Resolve planning pipeline YAMLs per package to avoid distro-specific symlinks
+    ompl_planning_relpath = os.path.join(
+        'config',
+        'ur',
+        'ompl_planning.legacy.yaml' if use_legacy_moveit_adapter_format() else 'ompl_planning.yaml',
+    )
     planning_pipeline_files = {
         'ompl': (
             'manymove_bringup',
-            os.path.join('config', 'ur', 'ompl_planning.yaml'),
+            ompl_planning_relpath,
         ),
         'chomp': (
             'moveit_resources_panda_moveit_config',
