@@ -345,6 +345,8 @@ def launch_setup(context, *args, **kwargs):
         if isinstance(pipeline_entry, dict):
             pipeline_entry['planning_plugin'] = plugin
 
+    planning_pipeline_config = normalize_pipeline_config(planning_pipeline_config)
+
     MOVEIT_CONTROLLER = 'moveit_simple_controller_manager/MoveItSimpleControllerManager'
     controllers_yaml = None
     controllers_config_relpath = ''
