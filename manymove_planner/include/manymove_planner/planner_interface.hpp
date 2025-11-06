@@ -39,6 +39,7 @@
 #include <manymove_msgs/msg/movement_config.hpp>
 #include <moveit_msgs/msg/constraints.hpp>
 #include <moveit_msgs/msg/robot_trajectory.hpp>
+#include <trajectory_msgs/msg/joint_trajectory.hpp>
 #include <rclcpp_action/rclcpp_action.hpp>
 
 #include "manymove_planner/compat/moveit_includes_compat.hpp"
@@ -181,6 +182,15 @@ public:
     const robot_trajectory::RobotTrajectory & trajectory,
     const moveit_msgs::msg::Constraints & path_constraints,
     const double time_from_start = 0) const = 0;
+
+  /**
+   * @brief Adjust joint trajectory values so they follow the current hardware joint wrapping.
+   * @param joint_traj Joint trajectory to be sent to the controller (modifiable in place).
+   * @param current_joint_state Current joint positions, ordered like joint_traj.joint_names.
+   */
+  virtual void alignTrajectoryToCurrentState(
+    trajectory_msgs::msg::JointTrajectory & joint_traj,
+    const std::vector<double> & current_joint_state) const = 0;
 
 protected:
   /**

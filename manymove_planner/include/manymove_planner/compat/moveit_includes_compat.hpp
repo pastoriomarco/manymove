@@ -78,6 +78,12 @@
 #include <moveit/planning_scene_monitor/planning_scene_monitor.h>
 #endif
 
+#if __has_include(<moveit/kinematic_constraints/utils.hpp>)
+#include <moveit/kinematic_constraints/utils.hpp>
+#else
+#include <moveit/kinematic_constraints/utils.h>
+#endif
+
 #if __has_include(<moveit/collision_detection/collision_common.hpp>)
 #include <moveit/collision_detection/collision_common.hpp>
 #else
@@ -89,6 +95,12 @@
 #include <moveit/robot_model/robot_model.hpp>
 #else
 #include <moveit/robot_model/robot_model.h>
+#endif
+
+#if __has_include(<moveit/robot_model/joint_model.hpp>)
+#include <moveit/robot_model/joint_model.hpp>
+#else
+#include <moveit/robot_model/joint_model.h>
 #endif
 
 // MoveItCpp + PlanningPipeline + PlanningComponent

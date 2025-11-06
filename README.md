@@ -1,4 +1,7 @@
-[![CI](https://github.com/pastoriomarco/manymove/actions/workflows/ci.yml/badge.svg)](https://github.com/pastoriomarco/manymove/actions/workflows/ci.yml)
+| Branch | Status |
+|--------|--------|
+| `main` | [![CI](https://github.com/pastoriomarco/manymove/actions/workflows/ci.yml/badge.svg)](https://github.com/pastoriomarco/manymove/actions/workflows/ci.yml) |
+| `dev`  | [![CI](https://github.com/pastoriomarco/manymove/actions/workflows/ci.yml/badge.svg?branch=dev)](https://github.com/pastoriomarco/manymove/actions/workflows/ci.yml) |
 
 # ManyMove project — ROS 2 Humble & Jazzy
 
@@ -178,24 +181,24 @@ This repository is composed of several sub-packages, each handling different res
    - Offers custom BT nodes (e.g., planning, object manipulation, signal I/O, conditions, etc.) so you can compose robotic behaviors in a modular, visual manner.
    - Contains a **BT client** nodes (e.g. `bt_client.cpp`) that demonstrates how to build, run, and manage complex behavior trees at runtime.
 
-5. **`manymove_py_trees`**
-   - A Python-based alternative using **py_trees** to build or test similar control flows.
-   - Useful if you prefer Python or need quick scripting for behavior logic.
-   - Mirrors some capabilities found in the C++ trees package.
-
-6. **`manymove_hmi`**
+5. **`manymove_hmi`**
    - Implements a **basic Human–Machine Interface (HMI)**.
    - Provides a GUI (`hmi_gui`) and related tools (`ros2_worker`) so that operators can issue commands, monitor status, or set parameters.
    - Can be integrated with the behavior trees (or any other logic) to pause, stop, or resume execution.
 
-7. **`manymove_bringup`**
+6. **`manymove_bringup`**
    - Contains the launchers for the complete multi-package examples listed below (and more).
 
 Specific packages for real robot signals:
 
-4. **`manymove_signals_xarm`**
+* **`manymove_signals_xarm`**
    - Handles **digital I/O signals** and checks the robot’s state via dedicated actions (e.g., `CheckRobotState`, `SetOutput`, `GetInput`).
    - Useful for toggling end-effector tools or reading sensor inputs in a flexible, standardized way.
+
+* **`manymove_py_trees`**
+   - A Python-based alternative using **py_trees** to build or test similar control flows.
+   - Useful if you prefer Python or need quick scripting for behavior logic.
+   - Mirrors some capabilities found in the C++ trees package.
 
 ---
 
@@ -225,10 +228,6 @@ ros2 launch manymove_bringup panda_moveitcpp_fake_cpp_trees.launch.py
 ```
 ```bash
 ros2 launch manymove_bringup panda_movegroup_fake_cpp_trees.launch.py
-```
-with **py_trees**:
-```bash
-ros2 launch manymove_bringup panda_movegroup_fake_py_trees.launch.py
 ```
 
 ### UFactory launchers and examples
@@ -274,11 +273,6 @@ ros2 launch manymove_bringup uf850_movegroup_fake_cpp_trees.launch.py
 ```bash
 ros2 launch manymove_bringup xarm7_movegroup_fake_cpp_trees.launch.py
 ```
-
-with MoveGroupInterface and **py_trees** (minimal):
-```bash
-ros2 launch manymove_bringup lite_movegroup_fake_py_trees.launch.py
-```
 #### Dual robot (Lite 6 + UF850)
 
 ```bash
@@ -318,7 +312,6 @@ We do not yet lint this automatically in CI, so please double-check before intro
 - **BehaviorTree.CPP v3.8** installed through ROS dependencies (`ros-humble-behaviortree-cpp-v3`)
   and its visualizer [Groot](https://github.com/BehaviorTree/Groot).
     - Groot is to be installed manually following the instructions in the [github page](https://github.com/BehaviorTree/Groot?tab=readme-ov-file#dependencies-installation-and-usage)
-- **py_trees_ros** from [splintered-reality/py_trees_ros](https://github.com/splintered-reality/py_trees_ros), installed through ROS dependencies, including its visualizer **ros-humble-py-trees-ros-viewer**.
 - The MoveIt 2 community and [xarm_ros2 on GitHub](https://github.com/xArm-Developer/xarm_ros2/tree/humble) for the underlying robot drivers and examples.
 
 ---

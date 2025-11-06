@@ -1,0 +1,72 @@
+# manymove_planner/config/moveit_cpp.yaml
+
+planning_scene_monitor_options:
+  name: "planning_scene_monitor"
+  robot_description: "robot_description"
+  joint_state_topic: "/joint_states"
+  attached_collision_object_topic: "/attached_collision_object"
+  publish_planning_scene_topic: "/planning_scene"
+  monitored_planning_scene_topic: "/monitored_planning_scene"
+  wait_for_initial_state_timeout: 10.0
+
+# Refactored planning pipeline configuration (MoveIt ≥ March 2024).
+planning_pipelines:
+  # Pipelines available to MoveIt.  Each must have a corresponding section.
+  pipeline_names: ["ompl", "chomp", "pilz_industrial_motion_planner"]
+
+# General planning request parameters.  Select the default pipeline here.
+plan_request_params:
+  planning_attempts: 1
+  planning_pipeline: ompl
+  planner_id: RRTConnect
+  max_velocity_scaling_factor: 1.0
+  max_acceleration_scaling_factor: 1.0
+
+# OMPL pipeline (sampling‑based planners such as RRTConnect).
+ompl:
+  planning_plugins:
+    - ompl_interface/OMPLPlanner
+  request_adapters:
+    - default_planning_request_adapters/ResolveConstraintFrames
+    - default_planning_request_adapters/ValidateWorkspaceBounds
+    - default_planning_request_adapters/CheckStartStateBounds
+    - default_planning_request_adapters/CheckStartStateCollision
+  response_adapters:
+    - default_planning_response_adapters/AddTimeOptimalParameterization
+    - default_planning_response_adapters/ValidateSolution
+    - default_planning_response_adapters/DisplayMotionPath
+  start_state_max_bounds_error: 0.1
+
+# CHOMP pipeline (gradient‑based optimisation).
+chomp:
+  planning_plugins:
+    - chomp_interface/CHOMPPlanner
+  request_adapters:
+    - default_planning_request_adapters/ResolveConstraintFrames
+    - default_planning_request_adapters/ValidateWorkspaceBounds
+    - default_planning_request_adapters/CheckStartStateBounds
+    - default_planning_request_adapters/CheckStartStateCollision
+  response_adapters:
+    - default_planning_response_adapters/AddTimeOptimalParameterization
+    - default_planning_response_adapters/ValidateSolution
+    - default_planning_response_adapters/DisplayMotionPath
+
+# Pilz industrial motion planner (PTP/LIN/CIRC Cartesian motions).
+pilz_industrial_motion_planner:
+  planning_plugins:
+    - pilz_industrial_motion_planner/CommandPlanner
+  request_adapters:
+    # Pilz planners operate on joint commands only; no need for ResolveConstraintFrames.
+    - default_planning_request_adapters/ValidateWorkspaceBounds
+    - default_planning_request_adapters/CheckStartStateBounds
+    - default_planning_request_adapters/CheckStartStateCollision
+  response_adapters:
+    - default_planning_response_adapters/ValidateSolution
+    - default_planning_response_adapters/AddTimeOptimalParameterization
+    - default_planning_response_adapters/DisplayMotionPath
+  # Choose the default motion type for Pilz planners.  Options include PTP, LIN and CIRC.
+  default_planner_config: PTP
+  # Expose Pilz sequence planning capabilities (optional).
+  capabilities: >
+    pilz_industrial_motion_planner/MoveGroupSequenceAction
+    pilz_industrial_motion_planner/MoveGroupSequenceService

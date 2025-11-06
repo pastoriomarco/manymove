@@ -31,6 +31,7 @@
 
 #include <behaviortree_cpp_v3/action_node.h>
 
+#include <chrono>
 #include <memory>
 #include <vector>
 #include <string>
@@ -78,9 +79,16 @@ private:
 
   rclcpp::Node::SharedPtr node_;
   rclcpp_action::Client<GripperCommand>::SharedPtr action_client_;
+  std::string action_server_name_;
 
   bool goal_sent_;
   bool result_received_;
+  bool server_ready_;
+  bool waiting_for_server_;
+
+  std::chrono::steady_clock::time_point server_wait_deadline_;
+  std::chrono::milliseconds server_wait_step_;
+  std::chrono::milliseconds server_wait_timeout_;
 
   // Store the final result from the action server
   GripperCommand::Result action_result_;

@@ -42,7 +42,14 @@ namespace manymove_cpp_trees
 // -------------------------------------------------
 GripperCommandAction::GripperCommandAction(
   const std::string & name, const BT::NodeConfiguration & config)
-: BT::StatefulActionNode(name, config), goal_sent_(false), result_received_(false)
+: BT::StatefulActionNode(name, config),
+  goal_sent_(false),
+  result_received_(false),
+  server_ready_(false),
+  waiting_for_server_(false),
+  server_wait_deadline_(std::chrono::steady_clock::now()),
+  server_wait_step_(200ms),
+  server_wait_timeout_(30s)
 {
   // Obtain the ROS node from the blackboard
   if (!config.blackboard) {
@@ -62,48 +69,75 @@ GripperCommandAction::GripperCommandAction(
     throw BT::RuntimeError("GripperCommandAction: Missing input [action_server]");
   }
 
-  action_client_ = rclcpp_action::create_client<GripperCommand>(node_, action_server_name);
+  action_server_name_ = action_server_name;
+  action_client_ = rclcpp_action::create_client<GripperCommand>(node_, action_server_name_);
 }
 
 BT::NodeStatus GripperCommandAction::onStart()
 {
-  if (!action_client_->wait_for_action_server(5s)) {
-    RCLCPP_ERROR(node_->get_logger(), "GripperCommandAction: action server not available!");
-    return BT::NodeStatus::FAILURE;
-  }
-
-  double position, max_effort;
-  if (!getInput("position", position)) {
-    RCLCPP_ERROR(node_->get_logger(), "Missing input [position]");
-    return BT::NodeStatus::FAILURE;
-  }
-  getInput("max_effort", max_effort);
-
-  // Build the goal
-  auto goal_msg = GripperCommand::Goal();
-  goal_msg.command.position = position;
-  goal_msg.command.max_effort = max_effort;
-
-  goal_sent_ = true;
+  goal_sent_ = false;
   result_received_ = false;
 
-  auto send_goal_options = rclcpp_action::Client<GripperCommand>::SendGoalOptions();
-  send_goal_options.goal_response_callback =
-    std::bind(&GripperCommandAction::goalResponseCallback, this, std::placeholders::_1);
-  send_goal_options.result_callback =
-    std::bind(&GripperCommandAction::resultCallback, this, std::placeholders::_1);
-  send_goal_options.feedback_callback = std::bind(
-    &GripperCommandAction::feedbackCallback, this, std::placeholders::_1, std::placeholders::_2);
+  if (!server_ready_) {
+    waiting_for_server_ = false;
+  }
 
-  action_client_->async_send_goal(goal_msg, send_goal_options);
   return BT::NodeStatus::RUNNING;
 }
 
 BT::NodeStatus GripperCommandAction::onRunning()
 {
-  // If the goal wasn't even sent, fail
+  if (!server_ready_) {
+    if (!waiting_for_server_) {
+      waiting_for_server_ = true;
+      server_wait_deadline_ = std::chrono::steady_clock::now() + server_wait_timeout_;
+    }
+
+    if (!action_client_->wait_for_action_server(server_wait_step_)) {
+      if (std::chrono::steady_clock::now() > server_wait_deadline_) {
+        RCLCPP_ERROR(
+          node_->get_logger(),
+          "GripperCommandAction: timed out waiting for action server '%s'.",
+          action_server_name_.c_str());
+        waiting_for_server_ = false;
+        return BT::NodeStatus::FAILURE;
+      }
+
+      RCLCPP_WARN_THROTTLE(
+        node_->get_logger(), *node_->get_clock(), 2000,
+        "GripperCommandAction: waiting for action server '%s'...", action_server_name_.c_str());
+      return BT::NodeStatus::RUNNING;
+    }
+
+    server_ready_ = true;
+    waiting_for_server_ = false;
+  }
+
   if (!goal_sent_) {
-    return BT::NodeStatus::FAILURE;
+    double position, max_effort;
+    if (!getInput("position", position)) {
+      RCLCPP_ERROR(node_->get_logger(), "Missing input [position]");
+      return BT::NodeStatus::FAILURE;
+    }
+    getInput("max_effort", max_effort);
+
+    auto goal_msg = GripperCommand::Goal();
+    goal_msg.command.position = position;
+    goal_msg.command.max_effort = max_effort;
+
+    goal_sent_ = true;
+    result_received_ = false;
+
+    auto send_goal_options = rclcpp_action::Client<GripperCommand>::SendGoalOptions();
+    send_goal_options.goal_response_callback =
+      std::bind(&GripperCommandAction::goalResponseCallback, this, std::placeholders::_1);
+    send_goal_options.result_callback =
+      std::bind(&GripperCommandAction::resultCallback, this, std::placeholders::_1);
+    send_goal_options.feedback_callback = std::bind(
+      &GripperCommandAction::feedbackCallback, this, std::placeholders::_1, std::placeholders::_2);
+
+    action_client_->async_send_goal(goal_msg, send_goal_options);
+    return BT::NodeStatus::RUNNING;
   }
 
   // If we're still waiting on the result, keep running
@@ -127,6 +161,9 @@ void GripperCommandAction::onHalted()
   if (goal_sent_ && !result_received_) {
     action_client_->async_cancel_all_goals();
   }
+
+  goal_sent_ = false;
+  result_received_ = false;
 }
 
 void GripperCommandAction::goalResponseCallback(

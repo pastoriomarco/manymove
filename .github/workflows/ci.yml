@@ -49,6 +49,10 @@ jobs:
             ros-$ROS_DISTRO-topic-based-ros2-control \
             python3-colcon-common-extensions python3-rosdep git \
             ros-$ROS_DISTRO-moveit \
+            ros-$ROS_DISTRO-ur \
+            ros-$ROS_DISTRO-ur-moveit-config \
+            ros-$ROS_DISTRO-robotiq-description \
+            ros-$ROS_DISTRO-robotiq-controllers \
             ros-$ROS_DISTRO-joint-state-publisher \
             ros-$ROS_DISTRO-control-toolbox \
             ros-$ROS_DISTRO-controller-manager \
@@ -64,8 +68,6 @@ jobs:
             ros-$ROS_DISTRO-behaviortree-cpp-v3 \
             ros-$ROS_DISTRO-moveit-visual-tools \
             ros-$ROS_DISTRO-vision-msgs \
-            ros-$ROS_DISTRO-py-trees \
-            ros-$ROS_DISTRO-py-trees-ros \
             ros-$ROS_DISTRO-simulation-interfaces
 
       - name: Setup rosdep

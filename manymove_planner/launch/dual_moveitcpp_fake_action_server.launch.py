@@ -45,6 +45,7 @@ from launch.substitutions import LaunchConfiguration  # , PathJoinSubstitution
 
 # from launch_ros.substitutions import FindPackageShare
 from launch_ros.actions import Node
+from manymove_bringup.pipeline_utils import normalize_pipeline_config
 from uf_ros_lib.moveit_configs_builder import DualMoveItConfigsBuilder
 from uf_ros_lib.uf_robot_utils import generate_dual_ros2_control_params_temp_file
 
@@ -301,6 +302,8 @@ def launch_setup(context, *args, **kwargs):
             file_path=get_package_share_directory('manymove_planner') + '/config/moveit_cpp.yaml'
         )
     ).to_moveit_configs()
+
+    normalize_pipeline_config(moveit_config.planning_pipelines)
 
     # robot state publisher node
     robot_state_publisher_node = Node(

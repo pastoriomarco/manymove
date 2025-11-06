@@ -885,6 +885,7 @@ bool ManipulatorActionServer::executeTrajectoryWithCollisionChecks(
   // 5) Build the FollowJointTrajectory goal
   control_msgs::action::FollowJointTrajectory::Goal fjt_goal;
   fjt_goal.trajectory = traj.joint_trajectory;
+  planner_->alignTrajectoryToCurrentState(fjt_goal.trajectory, current_joint_state);
 
   // 6) Prepare the SendGoalOptions with feedback and result callbacks.
   auto follow_joint_traj_client = planner_->getFollowJointTrajClient();
@@ -900,6 +901,7 @@ bool ManipulatorActionServer::executeTrajectoryWithCollisionChecks(
     move_state_ = MoveExecutionState::EXECUTING;
     executing_start_time_ = start_time;
     executing_traj_ = traj;
+    executing_traj_.joint_trajectory = fjt_goal.trajectory;
     move_manipulator_goal_ = goal_handle->get_goal()->plan_request;
   }
 

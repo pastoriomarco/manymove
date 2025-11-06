@@ -75,12 +75,9 @@ if [[ ! -f "${DOCKERFILE}" ]]; then
   exit 1
 fi
 
-MANYMOVE_BRANCH_SOURCE="fallback"
-
 resolve_manymove_branch() {
   if [[ -n "${MANYMOVE_BRANCH:-}" ]]; then
-    MANYMOVE_BRANCH_SOURCE="env"
-    echo "${MANYMOVE_BRANCH}"
+    printf 'env\n%s\n' "${MANYMOVE_BRANCH}"
     return
   fi
 
@@ -90,20 +87,22 @@ resolve_manymove_branch() {
     local current_branch=""
     current_branch="$(git -C "${repo_root}" rev-parse --abbrev-ref HEAD 2>/dev/null || true)"
     if [[ -n "${current_branch}" && "${current_branch}" != "HEAD" ]]; then
-      MANYMOVE_BRANCH_SOURCE="repo"
-      echo "${current_branch}"
+      printf 'repo\n%s\n' "${current_branch}"
       return
     fi
   fi
 
-  echo "main"
+  printf 'fallback\nmain\n'
 }
+
+mapfile -t MANYMOVE_BRANCH_INFO < <(resolve_manymove_branch)
+MANYMOVE_BRANCH_SOURCE="${MANYMOVE_BRANCH_INFO[0]:-fallback}"
+MANYMOVE_BRANCH_DEFAULT="${MANYMOVE_BRANCH_INFO[1]:-main}"
 
 IMAGE_TAG="manymove:${DISTRO}"
 CONTAINER_USER="${USER:-manymove}"
 
 MANYMOVE_REPO_DEFAULT="https://github.com/pastoriomarco/manymove.git"
-MANYMOVE_BRANCH_DEFAULT="$(resolve_manymove_branch)"
 TARGET_COMMIT=""
 LABEL_COMMIT=""
 
@@ -115,19 +114,17 @@ case "${MANYMOVE_BRANCH_SOURCE}" in
     echo "Using ManyMove branch '${MANYMOVE_BRANCH_DEFAULT}' detected from local git checkout."
     ;;
   *)
-    echo "Using ManyMove branch '${MANYMOVE_BRANCH_DEFAULT}' (fallback to main)."
+    echo "Using ManyMove branch '${MANYMOVE_BRANCH_DEFAULT}' (fallback to default 'main')."
     ;;
 esac
 
 IMAGE_PRESENT=false
-EXISTING_HASH=""
 LABEL_KEY="manymove.context.sha"
 COMMIT_LABEL_KEY="manymove.commit"
 EXISTING_COMMIT=""
 
 if docker image inspect "${IMAGE_TAG}" >/dev/null 2>&1; then
   IMAGE_PRESENT=true
-  EXISTING_HASH="$(docker image inspect "${IMAGE_TAG}" --format "{{ index .Config.Labels \"${LABEL_KEY}\" }}" 2>/dev/null || true)"
   EXISTING_COMMIT="$(docker image inspect "${IMAGE_TAG}" --format "{{ index .Config.Labels \"${COMMIT_LABEL_KEY}\" }}" 2>/dev/null || true)"
   if [[ -n "${EXISTING_COMMIT}" ]]; then
     LABEL_COMMIT="${EXISTING_COMMIT}"
@@ -173,23 +170,28 @@ CONTEXT_HASH="$(
   } | sha256sum | awk '{print $1}'
 )"
 
-NEEDS_BUILD=${FORCE_REBUILD}
+NEEDS_BUILD=false
 
-if [[ "${IMAGE_PRESENT}" == false ]]; then
+if [[ "${FORCE_REBUILD}" == true ]]; then
   NEEDS_BUILD=true
-elif [[ "${EXISTING_HASH}" != "${CONTEXT_HASH}" ]]; then
+elif [[ "${IMAGE_PRESENT}" == false ]]; then
   NEEDS_BUILD=true
-elif [[ -n "${TARGET_COMMIT}" && "${EXISTING_COMMIT}" != "${TARGET_COMMIT}" ]]; then
-  NEEDS_BUILD=true
+elif [[ "${PULL_LATEST}" == true ]]; then
+  if [[ -n "${TARGET_COMMIT}" ]]; then
+    if [[ "${EXISTING_COMMIT}" != "${TARGET_COMMIT}" ]]; then
+      NEEDS_BUILD=true
+    else
+      echo "ManyMove sources already up to date (commit ${TARGET_COMMIT}); skipping rebuild."
+    fi
+  else
+    echo "Unable to resolve latest ManyMove commit; rebuilding to ensure freshness."
+    NEEDS_BUILD=true
+  fi
 fi
 
-if [[ "${NEEDS_BUILD}" == false ]]; then
-  if [[ "${PULL_LATEST}" == true && -n "${TARGET_COMMIT}" ]]; then
-    echo "ManyMove sources already up to date (commit ${TARGET_COMMIT}); skipping rebuild."
-  fi
-else
+if [[ "${NEEDS_BUILD}" == true ]]; then
   if [[ "${IMAGE_PRESENT}" == true ]]; then
-    echo "Rebuilding image '${IMAGE_TAG}' (context or ManyMove sources changed)."
+    echo "Rebuilding image '${IMAGE_TAG}'."
   else
     echo "Building image '${IMAGE_TAG}' from ${DOCKERFILE}"
   fi
@@ -232,8 +234,11 @@ if [[ -n "${XAUTHORITY:-}" && -f "${XAUTHORITY}" ]]; then
   RUN_ARGS+=("-v" "${XAUTHORITY}:${XAUTHORITY}:rw")
 fi
 
-if command -v nvidia-smi >/dev/null 2>&1; then
+# Optional GPU disable flag
+if [[ -z "${MANYMOVE_NO_GPU:-}" ]] && command -v nvidia-smi >/dev/null 2>&1; then
   RUN_ARGS+=("--gpus" "all")
+else
+  echo "GPU support disabled (MANYMOVE_NO_GPU set or nvidia-smi missing)"
 fi
 
 if [[ "${BUILD_ONLY}" == true ]]; then

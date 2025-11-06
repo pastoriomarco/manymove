@@ -19,7 +19,6 @@ All launch descriptions share a core set of arguments for configuring the robots
 ### Lite robot scenarios
 - `tutorial_01.launch.py` - Introductory single-lite demo used in documentation; spins up fake hardware, a MoveItCpp action server, RViz, object manager, and C++ behaviour tree with perception meshes enabled. Key arguments include `robot_type`/`dof`, `prefix`, frame attachments, sensor toggles, gripper options, and `ros2_control_plugin`.
 - `lite_movegroup_fake_cpp_trees.launch.py` - Single-lite MoveGroup stack with the C++ fake task behaviour tree and HMI; accepts the common single-arm arguments (`robot_type`, `prefix`, `base_frame`, `tcp_frame`, attachment offsets, gripper toggles).
-- `lite_movegroup_fake_py_trees.launch.py` - MoveGroup bringup for a lite arm that launches the Python behaviour tree client from `manymove_py_trees`. Uses the standard single-arm argument set and gripper or sensor flags.
 - `lite_moveitcpp_fake_cpp_trees.launch.py` - Single-lite MoveItCpp stack with the C++ fake client and RViz; honours the common arguments (`robot_type`, `prefix`, `base_frame`, `tcp_frame`, `attach_xyz`, `add_gripper`, `ros2_control_plugin`).
 - `lite_cumotion_movegroup_fake_cpp_trees.launch.py` - MoveGroup configuration augmented with the `isaac_ros_cumotion` planner and the CuMotion-specific behaviour tree client. Requires the common single-arm arguments plus access to the CuMotion configuration resources.
 - `lite_foundationpose_movegroup_fake_cpp_trees.launch.py` - MoveGroup demo wired to the Isaac ROS FoundationPose behaviour tree client (`bt_client_foundationpose`) and HMI. Adds arguments for `gripper_action_server`, `contact_links`, and `log_level` in addition to the common bringup options.
@@ -29,7 +28,6 @@ All launch descriptions share a core set of arguments for configuring the robots
 
 ### Panda scenarios
 - `panda_movegroup_fake_cpp_trees.launch.py` - Fake-hardware MoveGroup bringup for a Franka Panda, launching the C++ behaviour tree client and HMI. Key arguments cover `planning_group`, `base_frame`, `tcp_frame`, `traj_controller`, `gripper_action_server`, and `contact_links` in addition to the usual gripper toggles.
-- `panda_movegroup_fake_py_trees.launch.py` - Panda MoveGroup demo using the Python behaviour tree client; exposes the same argument set (`planning_group`, frame configuration, `traj_controller`, `gripper_action_server`, `contact_links`).
 - `panda_moveitcpp_fake_cpp_trees.launch.py` - Panda MoveItCpp launch with the C++ fake client, RViz, and HMI; accepts `planning_group`, frame arguments, `traj_controller`, `gripper_action_server`, and `contact_links`.
 - `panda_cumotion_movegroup_fake_cpp_trees.launch.py` - Panda MoveGroup scenario extended with the CuMotion planner (`isaac_ros_cumotion_moveit`) and the `bt_client_panda_cumotion` behaviour tree. Requires the Panda-specific argument set plus CuMotion resources.
 
@@ -54,7 +52,7 @@ Adjust arguments to match your robots (frames, prefixes, degrees of freedom, gri
 
 ## Dependencies
 The launch files rely on:
-- Manymove runtime packages: `manymove_planner`, `manymove_object_manager`, `manymove_cpp_trees`, `manymove_hmi`, and `manymove_py_trees`.
+- Manymove runtime packages: `manymove_planner`, `manymove_object_manager`, `manymove_cpp_trees`, and `manymove_hmi`.
 - UFactory robot stack: `uf_ros_lib`, `xarm_api`, `xarm_controller`, and their configuration resources.
 - ROS 2 core tooling: `ros2_control` (`controller_manager`, joint state broadcaster), `robot_state_publisher`, `tf2_ros`, `rviz2`, `moveit_ros_move_group`, and standard MoveIt resources (e.g., `moveit_resources_panda_moveit_config` for Panda demos).
 - Scenario-specific extras: NVIDIA `isaac_ros_cumotion_moveit`, Isaac Sim control plugins, and (for foundation pose demos) the Isaac ROS FoundationPose stack.

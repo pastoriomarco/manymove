@@ -1,0 +1,22 @@
+controller_names:
+  - joint_trajectory_controller
+  - robotiq_gripper_controller
+
+joint_trajectory_controller:
+  type: FollowJointTrajectory
+  action_ns: ''
+  default: true
+  joints:
+    - shoulder_pan_joint
+    - shoulder_lift_joint
+    - elbow_joint
+    - wrist_1_joint
+    - wrist_2_joint
+    - wrist_3_joint
+
+robotiq_gripper_controller:
+  type: GripperCommand
+  action_ns: gripper_cmd
+  default: true
+  joints:
+    - robotiq_85_left_knuckle_joint

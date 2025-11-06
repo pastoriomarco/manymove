@@ -600,6 +600,12 @@ public:
     return default_trajectory_valid_response_;
   }
 
+  void alignTrajectoryToCurrentState(
+    trajectory_msgs::msg::JointTrajectory &,
+    const std::vector<double> &) const override
+  {
+  }
+
 private:
   rclcpp_action::Client<control_msgs::action::FollowJointTrajectory>::SharedPtr fjt_client_;
   mutable std::mutex mutex_;

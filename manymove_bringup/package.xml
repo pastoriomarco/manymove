@@ -2,17 +2,19 @@
 <?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
 <package format="3">
   <name>manymove_bringup</name>
-  <version>0.2.0</version>
+  <version>0.2.1</version>
   <description>Bringup for manymove repo</description>
   <maintainer email="pastoriomarco@gmail.com">Marco Pastorio</maintainer>
   <license>BSD-3-Clause</license>
   <author email="pastoriomarco@gmail.com">Marco Pastorio</author>
 
-  <test_depend>ament_lint_auto</test_depend>
-  <test_depend>ament_pep257</test_depend>
-  <test_depend>ament_copyright</test_depend>
-  <test_depend>python3-pytest</test_depend>
+  <buildtool_depend>ament_cmake</buildtool_depend>
 
+  <build_depend>ament_cmake_python</build_depend>
+
+  <exec_depend>launch</exec_depend>
+  <exec_depend>launch_ros</exec_depend>
+  <exec_depend>python3-numpy</exec_depend>
   <exec_depend>controller_manager</exec_depend>
   <exec_depend>joint_state_broadcaster</exec_depend>
   <exec_depend>joint_state_publisher</exec_depend>
@@ -20,7 +22,6 @@
   <exec_depend>manymove_hmi</exec_depend>
   <exec_depend>manymove_object_manager</exec_depend>
   <exec_depend>manymove_planner</exec_depend>
-  <exec_depend>manymove_py_trees</exec_depend>
   <exec_depend>moveit_configs_utils</exec_depend>
   <exec_depend>moveit_resources_panda_moveit_config</exec_depend>
   <exec_depend>moveit_ros_move_group</exec_depend>
@@ -28,8 +29,18 @@
   <exec_depend>rviz2</exec_depend>
   <exec_depend>tf2_ros</exec_depend>
   <exec_depend>xacro</exec_depend>
+  <exec_depend>ur_robot_driver</exec_depend>
+  <exec_depend>ur_description</exec_depend>
+  <exec_depend>ur_moveit_config</exec_depend>
+  <exec_depend>robotiq_description</exec_depend>
+  <exec_depend>robotiq_controllers</exec_depend>
+
+  <test_depend>ament_lint_auto</test_depend>
+  <test_depend>ament_pep257</test_depend>
+  <test_depend>ament_copyright</test_depend>
+  <test_depend>python3-pytest</test_depend>
 
   <export>
-    <build_type>ament_python</build_type>
+    <build_type>ament_cmake</build_type>
   </export>
 </package>

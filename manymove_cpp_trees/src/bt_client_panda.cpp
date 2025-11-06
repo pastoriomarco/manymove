@@ -63,6 +63,16 @@ int main(int argc, char ** argv)
    */
   auto move_configs = defineMovementConfigs();
 
+  // Adjusting only the move params of default moves
+  auto & max_move = move_configs["max_move"];
+  max_move.planner_id = "RRTConnectkConfigDefault";
+
+  auto & mid_move = move_configs["mid_move"];
+  mid_move.planner_id = "RRTConnectkConfigDefault";
+
+  auto & slow_move = move_configs["slow_move"];
+  slow_move.planner_id = "RRTConnectkConfigDefault";
+
   // We define the joint targets we need for the joint moves as vectors of doubles.
   // Be careful that the number of values must match the number of DOF of the robot (here, 7 DOF)
   std::vector<double> joint_ready = {0.0, -0.785, 0.0, -2.355, 0.0, 1.57, 0.785};

@@ -33,6 +33,7 @@ from launch.actions import DeclareLaunchArgument
 from launch.actions import OpaqueFunction
 from launch.substitutions import LaunchConfiguration
 from launch_ros.actions import Node
+from manymove_bringup.pipeline_utils import normalize_pipeline_config
 from uf_ros_lib.moveit_configs_builder import MoveItConfigsBuilder
 
 
@@ -147,6 +148,8 @@ def launch_setup(context, *args, **kwargs):
         geometry_mesh_tcp_xyz=geometry_mesh_tcp_xyz,
         geometry_mesh_tcp_rpy=geometry_mesh_tcp_rpy,
     ).to_moveit_configs()
+
+    normalize_pipeline_config(moveit_configs.planning_pipelines)
 
     # Define the action_server_node with new parameters
     action_server_node = Node(

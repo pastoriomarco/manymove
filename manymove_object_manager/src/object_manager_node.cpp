@@ -588,14 +588,30 @@ void ObjectManagerNode::handleAttachDetachExecute(
   auto attached_object_exists = attachedObjectExists(goal->object_id);
   auto collision_object_exists = objectExists(goal->object_id);
 
-  // Check if object exists at all, if not it wouldn't make sense to continue either for attaching
-  // or detaching
-  if ((!attached_object_exists && !collision_object_exists)) {
-    result->success = false;
-    result->message =
-      std::string("'") + goal->object_id + "' does not exist in the planning scene.";
-    goal_handle->abort(result);
-    return;
+  if (goal->attach) {
+    // When attaching, the object must exist in the planning scene (either attached or detached)
+    if (!attached_object_exists && !collision_object_exists) {
+      result->success = false;
+      result->message =
+        std::string("'") + goal->object_id + "' does not exist in the planning scene.";
+      goal_handle->abort(result);
+      return;
+    }
+  } else {
+    // Detach requests succeed when the object is already detached or absent
+    if (!attached_object_exists) {
+      result->success = true;
+      result->message = std::string("'") + goal->object_id + "' already detached.";
+      if (!collision_object_exists) {
+        result->message += " Object not present in the planning scene.";
+      }
+
+      goal_handle->succeed(result);
+      RCLCPP_INFO(
+        this->get_logger(), "Detach request for '%s' succeeded: object already detached.",
+        goal->object_id.c_str());
+      return;
+    }
   }
 
   // Check if the object is already attached
@@ -613,15 +629,6 @@ void ObjectManagerNode::handleAttachDetachExecute(
       goal_handle->abort(result);
       return;
     }
-  }
-
-  // Check if the object is attached for detach operation
-  if (!goal->attach && !attached_object_exists) {
-    result->success = false;
-    result->message = std::string("'") + goal->object_id + "' not attached to " +
-      getAttachedObjectLinkById(goal->object_id)->c_str() + ".";
-    goal_handle->abort(result);
-    return;
   }
 
   // Create a CollisionObject message for attaching/detaching

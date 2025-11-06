@@ -28,6 +28,10 @@
 
 #include "manymove_planner/moveit_cpp_planner.hpp"
 
+#include <angles/angles.h>
+
+#include <geometry_msgs/msg/pose_stamped.hpp>
+#include "manymove_planner/compat/moveit_includes_compat.hpp"
 #include "manymove_planner/compat/cartesian_interpolator_compat.hpp"
 #include "manymove_planner/compat/moveit_compat.hpp"
 
@@ -475,13 +479,34 @@ std::pair<bool, moveit_msgs::msg::RobotTrajectory> MoveItCppPlanner::plan(
   } else if (goal_msg.goal.movement_type == "pose") {
     RCLCPP_DEBUG_STREAM(logger_, "Setting pose target for " << goal_msg.goal.config.tcp_frame);
 
+    geometry_msgs::msg::PoseStamped target_pose;
+    target_pose.pose = goal_msg.goal.pose_target;
+
+    std::string planning_frame = base_frame_;
+    if (auto planning_scene_monitor =
+      manymove_planner_compat::getPlanningSceneMonitorRw(moveit_cpp_ptr_))
+    {
+      auto planning_scene = planning_scene_monitor->getPlanningScene();
+      if (planning_scene) {
+        planning_frame = planning_scene->getPlanningFrame();
+      }
+    }
+    target_pose.header.frame_id = planning_frame;
+
+    const double position_tolerance = (cfg.linear_precision > 0.0) ? cfg.linear_precision : 1e-3;
+    const double orientation_tolerance =
+      (cfg.rotational_precision > 0.0) ? cfg.rotational_precision : 1e-3;
+
+    std::vector<moveit_msgs::msg::Constraints> pose_constraints;
+    pose_constraints.push_back(
+      kinematic_constraints::constructGoalConstraints(
+        goal_msg.goal.config.tcp_frame, target_pose, position_tolerance, orientation_tolerance));
+
     int attempts = 0;
     while (attempts < goal_msg.goal.config.plan_number_limit &&
       static_cast<int>(trajectories.size()) < goal_msg.goal.config.plan_number_target)
     {
-      auto target_state = *robot_start_state_ptr;
-      target_state.setFromIK(joint_model_group_ptr, goal_msg.goal.pose_target);
-      planning_components_->setGoal(target_state);
+      planning_components_->setGoal(pose_constraints);
 
       auto solution = planning_components_->plan(params);
 
@@ -763,7 +788,7 @@ std::pair<bool, moveit_msgs::msg::RobotTrajectory> MoveItCppPlanner::applyTimePa
         logger_, "Adjusting cartesian speed from %.2f to <= %.2f. Reducing velocity scale...",
         max_speed, config.max_cartesian_speed);
 
-      double scale = (config.max_cartesian_speed * 0.99) / max_speed;
+      double scale = (config.max_cartesian_speed * 0.95) / max_speed;
       velocity_scaling_factor *= scale;
 
       // If it's too small, we abort
@@ -983,16 +1008,32 @@ bool MoveItCppPlanner::isTrajectoryStartValid(
     return false;
   }
 
+  const auto & joint_names = traj.joint_trajectory.joint_names;
+  if (joint_names.size() != first_point.positions.size()) {
+    RCLCPP_ERROR(
+      logger_, "Mismatch between joint names (%zu) and joint positions (%zu).", joint_names.size(),
+      first_point.positions.size());
+    return false;
+  }
+
+  const auto robot_model = moveit_cpp_ptr_->getRobotModel();
+
   // Check each joint's difference
   for (size_t i = 0; i < first_point.positions.size(); ++i) {
-    if (
-      std::fabs(first_point.positions[i] - current_joint_state[i]) >
-      move_request.config.rotational_precision)
-    {
+    double diff = std::fabs(first_point.positions[i] - current_joint_state[i]);
+
+    if (robot_model) {
+      const auto * joint_model = robot_model->getJointModel(joint_names[i]);
+      if (joint_model && joint_model->getType() == moveit::core::JointModel::REVOLUTE) {
+        diff = std::fabs(
+          angles::shortest_angular_distance(current_joint_state[i], first_point.positions[i]));
+      }
+    }
+
+    if (diff > move_request.config.rotational_precision) {
       RCLCPP_INFO(
-        logger_, "Joint %zu difference (%.6f) exceeds tolerance (%.6f).", i,
-        std::fabs(first_point.positions[i] - current_joint_state[i]),
-        move_request.config.rotational_precision);
+        logger_, "Joint %s difference (%.6f) exceeds tolerance (%.6f).", joint_names[i].c_str(),
+        diff, move_request.config.rotational_precision);
       return false;
     }
   }
@@ -1206,4 +1247,67 @@ bool MoveItCppPlanner::isTrajectoryValid(
     nullptr);
 
   return valid;
+}
+
+void MoveItCppPlanner::alignTrajectoryToCurrentState(
+  trajectory_msgs::msg::JointTrajectory & joint_traj,
+  const std::vector<double> & current_joint_state) const
+{
+  if (joint_traj.points.empty()) {
+    return;
+  }
+
+  const auto joint_count = joint_traj.joint_names.size();
+  if (joint_count != current_joint_state.size()) {
+    RCLCPP_WARN(
+      logger_,
+      "alignTrajectoryToCurrentState: joint name count (%zu) mismatch with state size (%zu).",
+      joint_count, current_joint_state.size());
+    return;
+  }
+
+  const auto robot_model = moveit_cpp_ptr_->getRobotModel();
+  if (!robot_model) {
+    RCLCPP_WARN(logger_, "alignTrajectoryToCurrentState: robot model unavailable.");
+    return;
+  }
+
+  constexpr double two_pi = 6.283185307179586;
+  constexpr double epsilon = 1e-6;
+  constexpr double fractional_threshold = 1e-3;
+
+  for (size_t idx = 0; idx < joint_count; ++idx) {
+    const auto * joint_model = robot_model->getJointModel(joint_traj.joint_names[idx]);
+    if (!joint_model || joint_model->getType() != moveit::core::JointModel::REVOLUTE) {
+      continue;
+    }
+
+    if (joint_traj.points.front().positions.size() <= idx) {
+      continue;
+    }
+
+    const double planned_start = joint_traj.points.front().positions[idx];
+    const double current = current_joint_state[idx];
+    const double delta = current - planned_start;
+
+    if (std::fabs(delta) < epsilon) {
+      continue;
+    }
+
+    const double relative_turns = delta / two_pi;
+    const double nearest_turns = std::round(relative_turns);
+
+    if (std::fabs(relative_turns - nearest_turns) > fractional_threshold ||
+      std::fabs(nearest_turns) < epsilon)
+    {
+      continue;
+    }
+
+    const double shift = delta;
+    for (auto & point : joint_traj.points) {
+      if (point.positions.size() > idx) {
+        point.positions[idx] += shift;
+      }
+    }
+  }
 }

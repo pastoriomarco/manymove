@@ -39,6 +39,9 @@ known_third_party = [
     "rclpy",
     "launch",
     "launch_ros",
+    "manymove_bringup",
+    "manymove_cpp_trees",
+    "manymove_planner",
     "uf_ros_lib"
 ]
 
@@ -49,12 +52,15 @@ default_section = "FIRSTPARTY"
 # -------------------------------------------------------------------
 # Ruff’s built-in isort mirror (keeps Ruff and isort in sync)
 # -------------------------------------------------------------------
-[tool.ruff.isort]
+[tool.ruff.lint.isort]
 known-first-party = ["manymove"]
 known-third-party = [
     "ament_index_python",
     "rclpy",
     "launch",
     "launch_ros",
+    "manymove_bringup",
+    "manymove_cpp_trees",
+    "manymove_planner",
     "uf_ros_lib"
 ]

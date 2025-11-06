@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<robot xmlns:xacro="http://wiki.ros.org/xacro" name="$(arg name)">
+
+  <xacro:arg name="name" default="ur"/>
+  <xacro:arg name="prefix" default=""/>
+
+  <!-- Manipulator group -->
+  <group name="ur_manipulator">
+    <chain base_link="$(arg prefix)base_link" tip_link="$(arg prefix)tool0"/>
+  </group>
+
+  <!-- Common joint states -->
+  <group_state name="home" group="ur_manipulator">
+    <joint name="$(arg prefix)shoulder_pan_joint" value="0"/>
+    <joint name="$(arg prefix)shoulder_lift_joint" value="-1.5707"/>
+    <joint name="$(arg prefix)elbow_joint" value="0"/>
+    <joint name="$(arg prefix)wrist_1_joint" value="0"/>
+    <joint name="$(arg prefix)wrist_2_joint" value="0"/>
+    <joint name="$(arg prefix)wrist_3_joint" value="0"/>
+  </group_state>
+  <group_state name="up" group="ur_manipulator">
+    <joint name="$(arg prefix)shoulder_pan_joint" value="0"/>
+    <joint name="$(arg prefix)shoulder_lift_joint" value="-1.5707"/>
+    <joint name="$(arg prefix)elbow_joint" value="0"/>
+    <joint name="$(arg prefix)wrist_1_joint" value="-1.5707"/>
+    <joint name="$(arg prefix)wrist_2_joint" value="0"/>
+    <joint name="$(arg prefix)wrist_3_joint" value="0"/>
+  </group_state>
+  <group_state name="test_configuration" group="ur_manipulator">
+    <joint name="$(arg prefix)shoulder_pan_joint" value="1.54"/>
+    <joint name="$(arg prefix)shoulder_lift_joint" value="-1.62"/>
+    <joint name="$(arg prefix)elbow_joint" value="1.4"/>
+    <joint name="$(arg prefix)wrist_1_joint" value="-1.2"/>
+    <joint name="$(arg prefix)wrist_2_joint" value="-1.6"/>
+    <joint name="$(arg prefix)wrist_3_joint" value="-0.11"/>
+  </group_state>
+
+  <!-- Disable standard UR self-collisions -->
+  <disable_collisions link1="$(arg prefix)base_link" link2="$(arg prefix)base_link_inertia" reason="Adjacent"/>
+  <disable_collisions link1="$(arg prefix)base_link_inertia" link2="$(arg prefix)shoulder_link" reason="Adjacent"/>
+  <disable_collisions link1="$(arg prefix)tool0" link2="$(arg prefix)wrist_1_link" reason="Never"/>
+  <disable_collisions link1="$(arg prefix)tool0" link2="$(arg prefix)wrist_2_link" reason="Never"/>
+  <disable_collisions link1="$(arg prefix)tool0" link2="$(arg prefix)wrist_3_link" reason="Adjacent"/>
+  <disable_collisions link1="$(arg prefix)forearm_link" link2="$(arg prefix)upper_arm_link" reason="Adjacent"/>
+  <disable_collisions link1="$(arg prefix)forearm_link" link2="$(arg prefix)wrist_1_link" reason="Adjacent"/>
+  <disable_collisions link1="$(arg prefix)shoulder_link" link2="$(arg prefix)upper_arm_link" reason="Adjacent"/>
+  <disable_collisions link1="$(arg prefix)wrist_1_link" link2="$(arg prefix)wrist_2_link" reason="Adjacent"/>
+  <disable_collisions link1="$(arg prefix)wrist_1_link" link2="$(arg prefix)wrist_3_link" reason="Never"/>
+  <disable_collisions link1="$(arg prefix)wrist_2_link" link2="$(arg prefix)wrist_3_link" reason="Adjacent"/>
+
+  <!-- Disable collisions for rigidly attached Robotiq base -->
+  <disable_collisions link1="$(arg prefix)wrist_3_link" link2="$(arg prefix)robotiq_85_base_link" reason="Adjacent"/>
+  <disable_collisions link1="$(arg prefix)tool0" link2="$(arg prefix)robotiq_85_base_link" reason="Adjacent"/>
+
+  <!-- Disable expected self-collisions within the Robotiq assembly -->
+  <disable_collisions link1="$(arg prefix)robotiq_85_base_link" link2="$(arg prefix)robotiq_85_left_knuckle_link" reason="Adjacent"/>
+  <disable_collisions link1="$(arg prefix)robotiq_85_base_link" link2="$(arg prefix)robotiq_85_right_knuckle_link" reason="Adjacent"/>
+  <disable_collisions link1="$(arg prefix)robotiq_85_base_link" link2="$(arg prefix)robotiq_85_left_inner_knuckle_link" reason="Adjacent"/>
+  <disable_collisions link1="$(arg prefix)robotiq_85_base_link" link2="$(arg prefix)robotiq_85_right_inner_knuckle_link" reason="Adjacent"/>
+  <disable_collisions link1="$(arg prefix)robotiq_85_left_knuckle_link" link2="$(arg prefix)robotiq_85_left_inner_knuckle_link" reason="Adjacent"/>
+  <disable_collisions link1="$(arg prefix)robotiq_85_right_knuckle_link" link2="$(arg prefix)robotiq_85_right_inner_knuckle_link" reason="Adjacent"/>
+  <disable_collisions link1="$(arg prefix)robotiq_85_left_knuckle_link" link2="$(arg prefix)robotiq_85_left_finger_link" reason="Adjacent"/>
+  <disable_collisions link1="$(arg prefix)robotiq_85_right_knuckle_link" link2="$(arg prefix)robotiq_85_right_finger_link" reason="Adjacent"/>
+  <disable_collisions link1="$(arg prefix)robotiq_85_left_inner_knuckle_link" link2="$(arg prefix)robotiq_85_left_finger_link" reason="Adjacent"/>
+  <disable_collisions link1="$(arg prefix)robotiq_85_right_inner_knuckle_link" link2="$(arg prefix)robotiq_85_right_finger_link" reason="Adjacent"/>
+  <disable_collisions link1="$(arg prefix)robotiq_85_left_inner_knuckle_link" link2="$(arg prefix)robotiq_85_left_finger_tip_link" reason="Adjacent"/>
+  <disable_collisions link1="$(arg prefix)robotiq_85_right_inner_knuckle_link" link2="$(arg prefix)robotiq_85_right_finger_tip_link" reason="Adjacent"/>
+  <disable_collisions link1="$(arg prefix)robotiq_85_left_finger_link" link2="$(arg prefix)robotiq_85_left_finger_tip_link" reason="Adjacent"/>
+  <disable_collisions link1="$(arg prefix)robotiq_85_right_finger_link" link2="$(arg prefix)robotiq_85_right_finger_tip_link" reason="Adjacent"/>
+
+</robot>

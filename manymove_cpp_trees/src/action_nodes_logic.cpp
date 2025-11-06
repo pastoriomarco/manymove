@@ -99,7 +99,7 @@ BT::NodeStatus RetryPauseResetNode::tick()
     setHMIMessage(config().blackboard, robot_prefix, "COLLISION DETECTED", "red");
 
     // reset the collision_detected value
-    config().blackboard->set("collision_detected", false);
+    config().blackboard->set(robot_prefix + "collision_detected", false);
   }
 
   BT::NodeStatus child_status = child_node_->executeTick();
@@ -110,7 +110,7 @@ BT::NodeStatus RetryPauseResetNode::tick()
     return BT::NodeStatus::RUNNING;
   } else if (child_status == BT::NodeStatus::SUCCESS) {
     // reset the collision_detected value
-    config().blackboard->set("collision_detected", false);
+    config().blackboard->set(robot_prefix + "collision_detected", false);
 
     return BT::NodeStatus::SUCCESS;
   } else {  // if (child_status == RUNNING)
