@@ -179,14 +179,14 @@ elif [[ "${IMAGE_PRESENT}" == false ]]; then
 elif [[ "${PULL_LATEST}" == true ]]; then
   if [[ -n "${TARGET_COMMIT}" ]]; then
     if [[ "${EXISTING_COMMIT}" != "${TARGET_COMMIT}" ]]; then
-      NEEDS_BUILD=true
+      echo "Latest ManyMove commit differs (have ${EXISTING_COMMIT:-unknown}, want ${TARGET_COMMIT}); rebuilding."
     else
-      echo "ManyMove sources already up to date (commit ${TARGET_COMMIT}); skipping rebuild."
+      echo "ManyMove sources already up to date (commit ${TARGET_COMMIT}); rebuilding to pull latest base layers."
     fi
   else
     echo "Unable to resolve latest ManyMove commit; rebuilding to ensure freshness."
-    NEEDS_BUILD=true
   fi
+  NEEDS_BUILD=true
 fi
 
 if [[ "${NEEDS_BUILD}" == true ]]; then
@@ -204,6 +204,12 @@ if [[ "${NEEDS_BUILD}" == true ]]; then
     "--label" "${LABEL_KEY}=${CONTEXT_HASH}"
     "--label" "${COMMIT_LABEL_KEY}=${LABEL_COMMIT}"
   )
+  if [[ "${PULL_LATEST}" == true ]]; then
+    BUILD_CMD+=("--pull")
+  fi
+  if [[ "${FORCE_REBUILD}" == true ]]; then
+    BUILD_CMD+=("--no-cache")
+  fi
   if [[ "${LABEL_COMMIT}" != "unknown" ]]; then
     BUILD_CMD+=("--build-arg" "MANYMOVE_COMMIT=${LABEL_COMMIT}")
   fi
