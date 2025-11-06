@@ -226,6 +226,7 @@ RUN_ARGS=(
   "--rm"
   "-it"
   "--network" "host"
+  "--ipc" "host"  # share /dev/shm so Fast DDS shared memory works across shells/containers
 )
 
 if [[ -n "${DISPLAY:-}" ]]; then
