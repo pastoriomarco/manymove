@@ -11,6 +11,38 @@ Forthcoming
 
 *TBD.*
 
+0.2.1 (2025-11-06)
+------------------
+
+Summary
+^^^^^^^
+- Ships new Universal Robots behavior-tree examples and walkthroughs.
+- Refreshes Dockerfiles and bootstrap scripts for reproducible developer containers.
+- ManyMove packages on ROS 2 Jazzy assorted bug fixes.
+- Extracts the former ``manymove_py_trees`` package into its own standalone repository.
+
+Highlights
+^^^^^^^^^^
+
+Universal Robots examples
+~~~~~~~~~~~~~~~~~~~~~~~~~
+- Adds end-to-end UR client demos that exercise the behavior-tree planners and workflow scripts.
+- Documents the setup steps so users can iterate quickly in simulation or with hardware.
+
+Docker and Jazzy compatibility
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+- Updates Dockerfiles and workspace bootstrap scripts to align toolchains across Humble and Jazzy.
+- Validates Jazzy support with CI runs while tightening dependency pins and colcon metadata.
+
+Bug fixes
+~~~~~~~~~
+- Resolves planner edge cases uncovered by the UR demos and improves HMI feedback loops.
+- Fixes minor regressions in message handlers and launch files encountered during container testing.
+
+Repository cleanup
+~~~~~~~~~~~~~~~~~~
+- Removes the in-repo ``manymove_py_trees`` package; users should use the new standalone release.
+
 0.2.0 (2025-10-20)
 ------------------
 
