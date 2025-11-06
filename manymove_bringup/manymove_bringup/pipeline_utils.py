@@ -33,7 +33,6 @@ from typing import Any
 
 from .ros_compat import use_legacy_moveit_adapter_format
 
-
 _LEGACY_ADAPTER_PREFIX = 'default_planner_request_adapters/'
 _MODERN_ADAPTER_PREFIX = 'default_planning_request_adapters/'
 

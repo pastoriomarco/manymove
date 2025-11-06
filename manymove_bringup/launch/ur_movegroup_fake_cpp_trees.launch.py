@@ -55,7 +55,6 @@ from manymove_bringup.ros_compat import resolve_moveit_controller_config
 
 import yaml
 
-
 DEFAULT_UR_KINEMATICS = {
     # Conservative defaults that work across ROS 2 releases when upstream configs omit them.
     'ur_manipulator': {
@@ -288,7 +287,7 @@ def launch_setup(context, *args, **kwargs):
         kinematics_data[group_name] = merged_entry
         logger.warning(
             "MoveIt kinematics configuration for group '%s' is missing. "
-            "Falling back to KDL defaults to keep pose goals working on ROS 2 Jazzy.",
+            'Falling back to KDL defaults to keep pose goals working on ROS 2 Jazzy.',
             group_name,
         )
     robot_description_kinematics = (
@@ -365,7 +364,9 @@ def launch_setup(context, *args, **kwargs):
             controllers_config_relpath = resolve_moveit_controller_config(moveit_config_pkg_name)
             controllers_yaml = load_yaml(moveit_config_pkg_name, controllers_config_relpath)
         except (FileNotFoundError, OSError) as exc:
-            controllers_config_relpath = os.path.join('config', 'ur', 'controllers_fake_minimal.yaml')
+            controllers_config_relpath = os.path.join(
+                'config', 'ur', 'controllers_fake_minimal.yaml'
+            )
             logger.warning(
                 "MoveIt controller config is unavailable (%s). Falling back to '%s' from package "
                 "'manymove_bringup'.",

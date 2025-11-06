@@ -29,7 +29,6 @@
 """Launch description for the panda movegroup fake cpp trees scenario."""
 
 import os
-import yaml
 
 from ament_index_python.packages import get_package_share_directory
 from launch import LaunchDescription
@@ -40,6 +39,7 @@ from launch.substitutions import LaunchConfiguration
 from launch_ros.actions import Node
 from manymove_bringup.pipeline_utils import normalize_pipeline_config
 
+import yaml
 from moveit_configs_utils import MoveItConfigsBuilder
 
 

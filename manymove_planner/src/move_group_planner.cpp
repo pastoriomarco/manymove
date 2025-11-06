@@ -29,9 +29,103 @@
 #include "manymove_planner/move_group_planner.hpp"
 
 #include <angles/angles.h>
-
 #include "manymove_planner/compat/moveit_includes_compat.hpp"
 #include "manymove_planner/compat/moveit_compat.hpp"
+
+namespace
+{
+void logTrajectoryInvalidDetails(
+  const robot_trajectory::RobotTrajectory & trajectory,
+  const planning_scene::PlanningSceneConstPtr & scene, const std::string & planning_group,
+  const rclcpp::Logger & logger, const char * prefix)
+{
+  if (!scene) {
+    RCLCPP_ERROR(
+      logger, "%s Unable to inspect invalid trajectory: planning scene unavailable.",
+      prefix);
+    return;
+  }
+
+  const auto robot_model = scene->getRobotModel();
+  if (!robot_model) {
+    RCLCPP_ERROR(
+      logger, "%s Unable to inspect invalid trajectory: robot model unavailable.", prefix);
+    return;
+  }
+
+  const auto * joint_model_group = robot_model->getJointModelGroup(planning_group);
+  auto report_joint_bounds =
+    [&](const moveit::core::RobotState & state, const moveit::core::JointModel * joint_model,
+      std::size_t waypoint_idx) -> bool
+    {
+      const auto & variable_names = joint_model->getVariableNames();
+      const auto & bounds = joint_model->getVariableBounds();
+      for (std::size_t i = 0; i < variable_names.size(); ++i) {
+        if (!bounds[i].position_bounded_) {
+          continue;
+        }
+        const double value = state.getVariablePosition(variable_names[i]);
+        if (value < bounds[i].min_position_ || value > bounds[i].max_position_) {
+          RCLCPP_ERROR(
+            logger,
+            "%s Waypoint %zu violates joint limit: %s = %.6f outside [%.6f, %.6f]", prefix,
+            waypoint_idx, variable_names[i].c_str(), value, bounds[i].min_position_,
+            bounds[i].max_position_);
+          return true;
+        }
+      }
+      return false;
+    };
+
+  for (std::size_t waypoint_idx = 0; waypoint_idx < trajectory.getWayPointCount(); ++waypoint_idx) {
+    const auto & state = trajectory.getWayPoint(waypoint_idx);
+
+    if (joint_model_group) {
+      for (const auto * joint_model : joint_model_group->getJointModels()) {
+        if (report_joint_bounds(state, joint_model, waypoint_idx)) {
+          RCLCPP_ERROR(
+            logger,
+            "%s Traj rejected: waypoint %zu violates joint limits for group '%s'.",
+            prefix, waypoint_idx, planning_group.c_str());
+          return;
+        }
+      }
+    } else {
+      for (const auto * joint_model : robot_model->getActiveJointModels()) {
+        if (report_joint_bounds(state, joint_model, waypoint_idx)) {
+          RCLCPP_ERROR(
+            logger,
+            "%s Traj rejected: waypoint %zu violates joint limits (group '%s' unavailable).",
+            prefix, waypoint_idx, planning_group.c_str());
+          return;
+        }
+      }
+    }
+
+    collision_detection::CollisionRequest collision_request;
+    collision_detection::CollisionResult collision_result;
+    collision_request.contacts = true;
+    collision_request.max_contacts = 5;
+    scene->checkCollision(collision_request, collision_result, state);
+    if (collision_result.collision) {
+      RCLCPP_ERROR(
+        logger, "%s Trajectory rejected because waypoint %zu is in collision.", prefix,
+        waypoint_idx);
+      for (const auto & contact : collision_result.contacts) {
+        RCLCPP_ERROR(
+          logger, "%s   Contact between '%s' and '%s'", prefix, contact.first.first.c_str(),
+          contact.first.second.c_str());
+      }
+      return;
+    }
+  }
+
+  RCLCPP_ERROR_STREAM(
+    logger,
+    prefix << " Traj invalid but no joint-limit or collision issue detected;" <<
+      "likely violates additional constraints.");
+}
+}  // namespace
 
 MoveGroupPlanner::MoveGroupPlanner(
   const rclcpp::Node::SharedPtr & node, const std::string & planning_group,
@@ -969,10 +1063,18 @@ bool MoveGroupPlanner::isTrajectoryValid(
   // Note that the isPathValid overload taking a robot_trajectory::RobotTrajectory,
   // constraints, group name, verbosity flag, and an optional invalid index vector
   // iterates over each waypoint and performs collision/constraint checking.
-  return lscene->isPathValid(
+  const bool path_valid = lscene->isPathValid(
     trajectory, path_constraints, planning_group_, /*verbose*/
     false,
     /*invalid_index*/ nullptr);
+
+  if (!path_valid) {
+    logTrajectoryInvalidDetails(
+      trajectory, static_cast<const planning_scene::PlanningSceneConstPtr &>(lscene),
+      planning_group_,
+      logger_, "[MoveGroupPlanner]");
+  }
+  return path_valid;
 }
 
 bool MoveGroupPlanner::isTrajectoryValid(
@@ -1049,6 +1151,12 @@ bool MoveGroupPlanner::isTrajectoryValid(
     *robot_traj_ptr, path_constraints, planning_group_,
     /*verbose*/ false, /*invalid_index*/
     nullptr);
+
+  if (!valid) {
+    logTrajectoryInvalidDetails(
+      *robot_traj_ptr, static_cast<const planning_scene::PlanningSceneConstPtr &>(lscene),
+      planning_group_, logger_, "[MoveGroupPlanner]");
+  }
 
   return valid;
 }
