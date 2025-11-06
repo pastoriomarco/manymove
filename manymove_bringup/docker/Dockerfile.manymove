@@ -9,6 +9,9 @@ ARG USER_GID=1000
 ARG MANYMOVE_REPO=https://github.com/pastoriomarco/manymove.git
 ARG MANYMOVE_BRANCH=main
 ARG MANYMOVE_COMMIT=""
+ARG GROOT_REPO=https://github.com/pastoriomarco/Groot.git
+ARG GROOT_BRANCH=master
+ARG GROOT_COMMIT=""
 
 ENV DEBIAN_FRONTEND=noninteractive \
     MANYMOVE_WS=/opt/manymove_ws \
@@ -19,12 +22,17 @@ ENV DEBIAN_FRONTEND=noninteractive \
     USERNAME=${USERNAME} \
     USER=${USERNAME} \
     QT_X11_NO_MITSHM=1 \
-    LIBGL_ALWAYS_SOFTWARE=1
+    LIBGL_ALWAYS_SOFTWARE=1 \
+    GROOT_REPO=${GROOT_REPO} \
+    GROOT_BRANCH=${GROOT_BRANCH} \
+    GROOT_COMMIT=${GROOT_COMMIT} \
+    GROOT_SOURCE_DIR=${MANYMOVE_WS}/src/Groot
 
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
+        cmake \
         build-essential \
         curl \
         git \
@@ -44,6 +52,10 @@ RUN apt-get update && \
         libxcb-xinerama0 \
         libxkbcommon-x11-0 \
         qtbase5-dev \
+        qttools5-dev-tools \
+        libqt5svg5-dev \
+        libqt5opengl5-dev \
+        cppzmq-dev \
         ros-${ROS_DISTRO}-moveit \
         ros-${ROS_DISTRO}-moveit-msgs \
         ros-${ROS_DISTRO}-controller-manager \
@@ -97,6 +109,20 @@ RUN gosu ${USERNAME} bash -lc "set -euo pipefail; \
         git checkout --detach ${MANYMOVE_COMMIT}; \
     fi && \
     git rev-parse HEAD > ${MANYMOVE_WS}/.manymove_commit"
+
+RUN gosu ${USERNAME} bash -lc "set -euo pipefail; \
+    cd ${MANYMOVE_WS}/src && \
+    rm -rf Groot && \
+    git clone --recurse-submodules --branch ${GROOT_BRANCH} ${GROOT_REPO} Groot && \
+    cd Groot && \
+    if [ -n \"${GROOT_COMMIT}\" ]; then \
+        git fetch --depth 1 origin ${GROOT_COMMIT} && \
+        git checkout --detach ${GROOT_COMMIT} && \
+        git submodule update --init --recursive; \
+    fi && \
+    cmake -S . -B build && \
+    cmake --build build --parallel && \
+    git rev-parse HEAD > ${MANYMOVE_WS}/.groot_commit"
 
 RUN source /opt/ros/${ROS_DISTRO}/setup.bash && \
     cd ${MANYMOVE_WS} && \
