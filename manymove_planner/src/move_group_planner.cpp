@@ -34,6 +34,15 @@
 
 namespace
 {
+struct TrajectoryScore
+{
+  moveit_msgs::msg::RobotTrajectory trajectory;
+  double duration{std::numeric_limits<double>::infinity()};
+  double rotation_penalty{0.0};
+
+  double cost() const {return duration + rotation_penalty;}
+};
+
 void logTrajectoryInvalidDetails(
   const robot_trajectory::RobotTrajectory & trajectory,
   const planning_scene::PlanningSceneConstPtr & scene, const std::string & planning_group,
@@ -55,8 +64,11 @@ void logTrajectoryInvalidDetails(
 
   const auto * joint_model_group = robot_model->getJointModelGroup(planning_group);
   auto report_joint_bounds =
-    [&](const moveit::core::RobotState & state, const moveit::core::JointModel * joint_model,
-      std::size_t waypoint_idx) -> bool
+    [&](
+    const moveit::core::RobotState & state,
+    const moveit::core::JointModel * joint_model,
+    std::size_t waypoint_idx
+    ) -> bool
     {
       const auto & variable_names = joint_model->getVariableNames();
       const auto & bounds = joint_model->getVariableBounds();
@@ -142,6 +154,10 @@ MoveGroupPlanner::MoveGroupPlanner(
   move_group_interface_->setPlanningTime(0.5);
 
   RCLCPP_INFO(logger_, "MoveGroupPlanner initialized with group: %s", planning_group_.c_str());
+  if (!node_->has_parameter("rotation_penalty_weight")) {
+    node_->declare_parameter<double>("rotation_penalty_weight", rotation_penalty_weight_);
+  }
+  (void)node_->get_parameter("rotation_penalty_weight", rotation_penalty_weight_);
 
   // Create a PlanningSceneMonitor
 
@@ -348,6 +364,37 @@ double MoveGroupPlanner::computeMaxCartesianSpeed(
   return max_speed;
 }
 
+double MoveGroupPlanner::computeRotationPenalty(
+  const moveit_msgs::msg::RobotTrajectory & traj,
+  const manymove_msgs::msg::MovementConfig & config) const
+{
+  (void)config;
+  if (traj.joint_trajectory.points.size() < 2) {
+    return 0.0;
+  }
+
+  const double soft_threshold = 2.356194490192345;  // 135 degrees
+  const double weight = rotation_penalty_weight_;
+
+  std::vector<double> accumulated(traj.joint_trajectory.joint_names.size(), 0.0);
+  for (size_t idx = 1; idx < traj.joint_trajectory.points.size(); ++idx) {
+    const auto & prev = traj.joint_trajectory.points[idx - 1];
+    const auto & curr = traj.joint_trajectory.points[idx];
+    for (size_t j = 0; j < accumulated.size(); ++j) {
+      if (j < curr.positions.size() && j < prev.positions.size()) {
+        accumulated[j] += std::abs(curr.positions[j] - prev.positions[j]);
+      }
+    }
+  }
+
+  double penalty = 0.0;
+  for (double travel : accumulated) {
+    const double over = std::max(0.0, travel - soft_threshold);
+    penalty += weight * over * over;
+  }
+  return penalty;
+}
+
 std::pair<bool, moveit_msgs::msg::RobotTrajectory> MoveGroupPlanner::applyTimeParameterization(
   const moveit_msgs::msg::RobotTrajectory & input_traj,
   const manymove_msgs::msg::MovementConfig & config)
@@ -456,7 +503,7 @@ std::pair<bool, moveit_msgs::msg::RobotTrajectory> MoveGroupPlanner::applyTimePa
 std::pair<bool, moveit_msgs::msg::RobotTrajectory> MoveGroupPlanner::plan(
   const manymove_msgs::action::PlanManipulator::Goal & goal_msg)
 {
-  std::vector<std::pair<moveit_msgs::msg::RobotTrajectory, double>> trajectories;
+  std::vector<TrajectoryScore> trajectories;
 
   // Handle start state
   if (!goal_msg.goal.start_joint_values.empty()) {
@@ -543,7 +590,11 @@ std::pair<bool, moveit_msgs::msg::RobotTrajectory> MoveGroupPlanner::plan(
           if (!pts.empty()) {
             // convert to seconds
             double duration = rclcpp::Duration(pts.back().time_from_start).seconds();
-            trajectories.emplace_back(timed_traj, duration);
+            TrajectoryScore score;
+            score.trajectory = std::move(timed_traj);
+            score.duration = duration;
+            score.rotation_penalty = computeRotationPenalty(score.trajectory, cfg);
+            trajectories.emplace_back(std::move(score));
           }
         }
       } else {
@@ -586,7 +637,11 @@ std::pair<bool, moveit_msgs::msg::RobotTrajectory> MoveGroupPlanner::plan(
           if (ok && !timed_traj.joint_trajectory.points.empty()) {
             double duration =
               rclcpp::Duration(timed_traj.joint_trajectory.points.back().time_from_start).seconds();
-            trajectories.emplace_back(timed_traj, duration);
+            TrajectoryScore score;
+            score.trajectory = std::move(timed_traj);
+            score.duration = duration;
+            score.rotation_penalty = computeRotationPenalty(score.trajectory, cfg);
+            trajectories.emplace_back(std::move(score));
           } else {
             RCLCPP_WARN(logger_, "Time‑param failed on Cartesian candidate.");
           }
@@ -610,12 +665,20 @@ std::pair<bool, moveit_msgs::msg::RobotTrajectory> MoveGroupPlanner::plan(
     return {false, moveit_msgs::msg::RobotTrajectory()};
   }
 
-  // Select the shortest trajectory
+  // Select the lowest-cost trajectory (duration + rotation penalty)
   auto shortest = std::min_element(
     trajectories.begin(), trajectories.end(),
-    [](const auto & a, const auto & b) {return a.second < b.second;});
+    [](const TrajectoryScore & a, const TrajectoryScore & b)
+    {
+      const double cost_a = a.cost();
+      const double cost_b = b.cost();
+      if (std::fabs(cost_a - cost_b) > 1e-6) {
+        return cost_a < cost_b;
+      }
+      return a.duration < b.duration;
+    });
 
-  return {true, shortest->first};
+  return {true, shortest->trajectory};
 }
 
 bool MoveGroupPlanner::areSameJointTargets(

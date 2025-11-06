@@ -39,6 +39,7 @@
 #include <type_traits>
 #include <utility>
 #include <vector>
+#include <limits>
 
 #include <geometry_msgs/msg/pose.hpp>
 #include <moveit_msgs/msg/robot_trajectory.hpp>

@@ -31,6 +31,10 @@
 
 #pragma once
 
+#include <algorithm>
+#include <cmath>
+#include <limits>
+
 // MoveGroupInterface
 #if __has_include(<moveit/move_group_interface/move_group_interface.hpp>)
 #include <moveit/move_group_interface/move_group_interface.hpp>
