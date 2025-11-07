@@ -194,6 +194,9 @@ if [[ "${NEEDS_BUILD}" == true ]]; then
     "--label" "${BASE_LABEL_KEY}=${BASE_IMAGE_ID}"
     "--label" "${COMMIT_LABEL_KEY}=${LABEL_XARM_COMMIT}"
   )
+  if [[ -n "${MANYMOVE_COLCON_WORKERS:-}" ]]; then
+    BUILD_CMD+=("--build-arg" "MANYMOVE_COLCON_WORKERS=${MANYMOVE_COLCON_WORKERS}")
+  fi
   if [[ "${LABEL_XARM_COMMIT}" != "unknown" ]]; then
     BUILD_CMD+=("--build-arg" "XARM_COMMIT=${LABEL_XARM_COMMIT}")
   fi

@@ -6,6 +6,7 @@ FROM ${BASE_IMAGE}
 ARG USERNAME=manymove
 ARG USER_UID=1000
 ARG USER_GID=1000
+ARG MANYMOVE_COLCON_WORKERS
 ARG MANYMOVE_REPO=https://github.com/pastoriomarco/manymove.git
 ARG MANYMOVE_BRANCH=main
 ARG MANYMOVE_COMMIT=""
@@ -25,7 +26,8 @@ ENV DEBIAN_FRONTEND=noninteractive \
     LIBGL_ALWAYS_SOFTWARE=1 \
     GROOT_REPO=${GROOT_REPO} \
     GROOT_BRANCH=${GROOT_BRANCH} \
-    GROOT_COMMIT=${GROOT_COMMIT}
+    GROOT_COMMIT=${GROOT_COMMIT} \
+    MANYMOVE_COLCON_WORKERS=${MANYMOVE_COLCON_WORKERS}
 ENV GROOT_SOURCE_DIR=${MANYMOVE_WS}/src/Groot
 
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
@@ -127,6 +129,9 @@ RUN gosu ${USERNAME} bash -lc "set -euo pipefail; \
     rm -rf Groot && \
     git clone --recurse-submodules --branch ${GROOT_BRANCH} ${GROOT_REPO} Groot && \
     cd Groot && \
+    if [[ -n \"${MANYMOVE_COLCON_WORKERS}\" && ${MANYMOVE_COLCON_WORKERS} =~ ^[0-9]+$ && ${MANYMOVE_COLCON_WORKERS} -gt 0 ]]; then \
+        export CMAKE_BUILD_PARALLEL_LEVEL=${MANYMOVE_COLCON_WORKERS}; \
+    fi && \
     if [ -n \"${GROOT_COMMIT}\" ]; then \
         git fetch --depth 1 origin ${GROOT_COMMIT} && \
         git checkout --detach ${GROOT_COMMIT} && \
@@ -143,7 +148,15 @@ RUN source /opt/ros/${ROS_DISTRO}/setup.bash && \
     rosdep update && \
     rosdep install --from-paths src --ignore-src --rosdistro ${ROS_DISTRO} -y -r && \
     apt-get clean && rm -rf /var/lib/apt/lists/*
-RUN gosu ${USERNAME} bash -lc "set -eo pipefail && source /opt/ros/${ROS_DISTRO}/setup.bash && cd ${MANYMOVE_WS} && colcon build --symlink-install"
+RUN gosu ${USERNAME} bash -lc "set -eo pipefail; \
+source /opt/ros/${ROS_DISTRO}/setup.bash; \
+cd ${MANYMOVE_WS}; \
+parallel_args=\"\"; \
+if [[ -n \"${MANYMOVE_COLCON_WORKERS}\" && ${MANYMOVE_COLCON_WORKERS} =~ ^[0-9]+$ && ${MANYMOVE_COLCON_WORKERS} -gt 0 ]]; then \
+  parallel_args=\"--parallel-workers ${MANYMOVE_COLCON_WORKERS}\"; \
+  export CMAKE_BUILD_PARALLEL_LEVEL=${MANYMOVE_COLCON_WORKERS}; \
+fi; \
+colcon build --symlink-install \${parallel_args}"
 RUN chown -R ${USERNAME}:${USER_GID} ${MANYMOVE_WS}
 
 WORKDIR ${MANYMOVE_WS}

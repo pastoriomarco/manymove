@@ -234,6 +234,9 @@ if [[ "${NEEDS_BUILD}" == true ]]; then
     "--label" "${USER_UID_LABEL_KEY}=${CONTAINER_UID}"
     "--label" "${USER_GID_LABEL_KEY}=${CONTAINER_GID}"
   )
+  if [[ -n "${MANYMOVE_COLCON_WORKERS:-}" ]]; then
+    BUILD_CMD+=("--build-arg" "MANYMOVE_COLCON_WORKERS=${MANYMOVE_COLCON_WORKERS}")
+  fi
   if [[ "${PULL_LATEST}" == true ]]; then
     BUILD_CMD+=("--pull")
   fi

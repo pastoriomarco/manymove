@@ -2,11 +2,14 @@
 ARG ROS_DISTRO=humble
 FROM manymove:${ROS_DISTRO}
 
+ARG MANYMOVE_COLCON_WORKERS
 ARG XARM_REPO=https://github.com/pastoriomarco/xarm_ros2.git
 ARG XARM_BRANCH=${ROS_DISTRO}
 ARG XARM_COMMIT=""
 
 USER root
+
+ENV MANYMOVE_COLCON_WORKERS=${MANYMOVE_COLCON_WORKERS}
 
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 
@@ -59,9 +62,14 @@ RUN source /opt/ros/${ROS_DISTRO}/setup.bash && \
     rosdep install --from-paths src --ignore-src --rosdistro ${ROS_DISTRO} -y && \
     apt-get clean && rm -rf /var/lib/apt/lists/*
 
-RUN gosu "${USERNAME}" bash -lc "set -eo pipefail && \
-    source /opt/ros/${ROS_DISTRO}/setup.bash && \
-    cd ${MANYMOVE_WS} && \
-    colcon build --symlink-install"
+RUN gosu "${USERNAME}" bash -lc "set -eo pipefail; \
+    source /opt/ros/${ROS_DISTRO}/setup.bash; \
+    cd ${MANYMOVE_WS}; \
+    parallel_args=\"\"; \
+    if [[ -n \"${MANYMOVE_COLCON_WORKERS}\" && ${MANYMOVE_COLCON_WORKERS} =~ ^[0-9]+$ && ${MANYMOVE_COLCON_WORKERS} -gt 0 ]]; then \
+        parallel_args=\"--parallel-workers ${MANYMOVE_COLCON_WORKERS}\"; \
+        export CMAKE_BUILD_PARALLEL_LEVEL=${MANYMOVE_COLCON_WORKERS}; \
+    fi; \
+    colcon build --symlink-install \${parallel_args}"
 
 USER ${USERNAME}
