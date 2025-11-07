@@ -256,6 +256,9 @@ private:
   double computeMaxCartesianSpeed(
     const robot_trajectory::RobotTrajectoryPtr & trajectory,
     const manymove_msgs::msg::MovementConfig & config) const;
+  double computeRotationPenalty(
+    const moveit_msgs::msg::RobotTrajectory & traj,
+    const manymove_msgs::msg::MovementConfig & config) const;
 
   /**
  * @brief Check if two joint targets (vectors of joint values) are equal within a specified
@@ -328,4 +331,5 @@ private:
   mutable std::mutex js_mutex_;
   std::map<std::string, double> current_positions_ RCPPUTILS_TSA_GUARDED_BY(js_mutex_);
   std::map<std::string, double> current_velocities_ RCPPUTILS_TSA_GUARDED_BY(js_mutex_);
+  double rotation_penalty_weight_{0.5};
 };

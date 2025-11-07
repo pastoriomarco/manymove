@@ -12,7 +12,8 @@
         sudo curl -sSL https://raw.githubusercontent.com/ros/rosdistro/master/ros.key -o /usr/share/keyrings/ros-archive-keyring.gpg
 
     # 1) install all system & ROS binaries needed before colcon build
-    RUN apt-get update && \
+    RUN apt-get -o Acquire::AllowReleaseInfoChange::Origin=true \
+            -o Acquire::AllowReleaseInfoChange::Label=true update && \
         apt-get install -y --no-install-recommends \
           build-essential git curl ninja-build python3-pip \
           python3-colcon-common-extensions \

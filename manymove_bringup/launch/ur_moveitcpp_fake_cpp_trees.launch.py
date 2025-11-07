@@ -52,9 +52,9 @@ from launch_ros.parameter_descriptions import ParameterValue
 from launch_ros.substitutions import FindPackageShare
 from manymove_bringup.pipeline_utils import normalize_pipeline_config
 from manymove_bringup.ros_compat import resolve_moveit_controller_config
+from manymove_bringup.ros_compat import use_legacy_moveit_adapter_format
 
 import yaml
-
 
 DEFAULT_UR_KINEMATICS = {
     # Conservative defaults that work across ROS 2 releases when the upstream
@@ -115,10 +115,11 @@ def launch_setup(context, *args, **kwargs):
         if stripped.endswith('gripper_command'):
             converted = stripped[: -len('gripper_command')] + 'gripper_cmd'
             logger.warning(
-                "Parameter 'gripper_action_server' value '%s' uses deprecated suffix "
-                "'gripper_command'; using '%s' instead.",
-                raw_value,
-                converted,
+                (
+                    "Parameter 'gripper_action_server' value "
+                    f"'{raw_value}' uses deprecated suffix 'gripper_command'; "
+                    f"using '{converted}' instead."
+                )
             )
             return converted
         return stripped
@@ -153,6 +154,19 @@ def launch_setup(context, *args, **kwargs):
 
     moveit_config_pkg_name = moveit_config_package.perform(context)
 
+    joint_limit_params = PathJoinSubstitution(
+        [FindPackageShare('ur_description'), 'config', ur_type, 'joint_limits.yaml']
+    )
+    kinematics_params = PathJoinSubstitution(
+        [FindPackageShare('ur_description'), 'config', ur_type, 'default_kinematics.yaml']
+    )
+    physical_params = PathJoinSubstitution(
+        [FindPackageShare('ur_description'), 'config', ur_type, 'physical_parameters.yaml']
+    )
+    visual_params = PathJoinSubstitution(
+        [FindPackageShare('ur_description'), 'config', ur_type, 'visual_parameters.yaml']
+    )
+
     description_file_value = description_file.perform(context)
     if '/' in description_file_value:
         description_path = PathJoinSubstitution(
@@ -171,6 +185,18 @@ def launch_setup(context, *args, **kwargs):
             ' ',
             'robot_ip:=',
             robot_ip,
+            ' ',
+            'joint_limit_params:=',
+            joint_limit_params,
+            ' ',
+            'kinematics_params:=',
+            kinematics_params,
+            ' ',
+            'physical_params:=',
+            physical_params,
+            ' ',
+            'visual_params:=',
+            visual_params,
             ' ',
             'safety_limits:=',
             safety_limits,
@@ -259,6 +285,16 @@ def launch_setup(context, *args, **kwargs):
                 .get('ros__parameters', {})
                 .get('robot_description_kinematics', {})
             )
+            if not kinematics_data:
+                kinematics_data = {
+                    key: value
+                    for key, value in raw_kinematics_yaml.items()
+                    if isinstance(value, dict)
+                    and (
+                        'kinematics_solver' in value
+                        or any(k.startswith('kinematics_') for k in value.keys())
+                    )
+                }
 
     fallback_candidates = {planning_group, 'ur_manipulator'}
     fallback_candidates.discard('')
@@ -281,9 +317,10 @@ def launch_setup(context, *args, **kwargs):
             merged_entry.update(existing_entry)
         kinematics_data[group_name] = merged_entry
         logger.warning(
-            "MoveIt kinematics configuration for group '%s' is missing. "
-            "Falling back to KDL defaults to keep pose goals working on ROS 2 Jazzy.",
-            group_name,
+            (
+                f"MoveIt kinematics configuration for group '{group_name}' is missing. "
+                'Falling back to KDL defaults to keep pose goals working on ROS 2 Jazzy.'
+            )
         )
     robot_description_kinematics = (
         {'robot_description_kinematics': kinematics_data} if kinematics_data else None
@@ -305,10 +342,15 @@ def launch_setup(context, *args, **kwargs):
         )
 
     # Resolve planning pipeline YAMLs per package to avoid distro-specific symlinks
+    ompl_planning_relpath = os.path.join(
+        'config',
+        'ur',
+        'ompl_planning.legacy.yaml' if use_legacy_moveit_adapter_format() else 'ompl_planning.yaml',
+    )
     planning_pipeline_files = {
         'ompl': (
             'manymove_bringup',
-            os.path.join('config', 'ur', 'ompl_planning.yaml'),
+            ompl_planning_relpath,
         ),
         'chomp': (
             'moveit_resources_panda_moveit_config',
@@ -358,12 +400,14 @@ def launch_setup(context, *args, **kwargs):
             controllers_config_relpath = resolve_moveit_controller_config(moveit_config_pkg_name)
             controllers_yaml = load_yaml(moveit_config_pkg_name, controllers_config_relpath)
         except (FileNotFoundError, OSError) as exc:
-            controllers_config_relpath = os.path.join('config', 'ur', 'controllers_fake_minimal.yaml')
+            controllers_config_relpath = os.path.join(
+                'config', 'ur', 'controllers_fake_minimal.yaml'
+            )
             logger.warning(
-                "MoveIt controller config is unavailable (%s). Falling back to '%s' from package "
-                "'manymove_bringup'.",
-                exc,
-                controllers_config_relpath,
+                (
+                    f'MoveIt controller config is unavailable ({exc}). '
+                    f"Falling back to '{controllers_config_relpath}' from 'manymove_bringup'."
+                )
             )
             controllers_yaml = load_yaml('manymove_bringup', controllers_config_relpath)
     if (

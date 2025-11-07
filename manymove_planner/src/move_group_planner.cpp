@@ -29,9 +29,118 @@
 #include "manymove_planner/move_group_planner.hpp"
 
 #include <angles/angles.h>
-
 #include "manymove_planner/compat/moveit_includes_compat.hpp"
 #include "manymove_planner/compat/moveit_compat.hpp"
+#include "manymove_planner/trajectory_utils.hpp"
+
+namespace utils = manymove_planner::trajectory_utils;
+
+namespace
+{
+struct TrajectoryScore
+{
+  moveit_msgs::msg::RobotTrajectory trajectory;
+  double duration{std::numeric_limits<double>::infinity()};
+  double rotation_penalty{0.0};
+
+  double cost() const {return duration + rotation_penalty;}
+};
+
+void logTrajectoryInvalidDetails(
+  const robot_trajectory::RobotTrajectory & trajectory,
+  const planning_scene::PlanningSceneConstPtr & scene, const std::string & planning_group,
+  const rclcpp::Logger & logger, const char * prefix)
+{
+  if (!scene) {
+    RCLCPP_ERROR(
+      logger, "%s Unable to inspect invalid trajectory: planning scene unavailable.",
+      prefix);
+    return;
+  }
+
+  const auto robot_model = scene->getRobotModel();
+  if (!robot_model) {
+    RCLCPP_ERROR(
+      logger, "%s Unable to inspect invalid trajectory: robot model unavailable.", prefix);
+    return;
+  }
+
+  const auto * joint_model_group = robot_model->getJointModelGroup(planning_group);
+  auto report_joint_bounds =
+    [&](
+    const moveit::core::RobotState & state,
+    const moveit::core::JointModel * joint_model,
+    std::size_t waypoint_idx
+    ) -> bool
+    {
+      const auto & variable_names = joint_model->getVariableNames();
+      const auto & bounds = joint_model->getVariableBounds();
+      for (std::size_t i = 0; i < variable_names.size(); ++i) {
+        if (!bounds[i].position_bounded_) {
+          continue;
+        }
+        const double value = state.getVariablePosition(variable_names[i]);
+        if (value < bounds[i].min_position_ || value > bounds[i].max_position_) {
+          RCLCPP_ERROR(
+            logger,
+            "%s Waypoint %zu violates joint limit: %s = %.6f outside [%.6f, %.6f]", prefix,
+            waypoint_idx, variable_names[i].c_str(), value, bounds[i].min_position_,
+            bounds[i].max_position_);
+          return true;
+        }
+      }
+      return false;
+    };
+
+  for (std::size_t waypoint_idx = 0; waypoint_idx < trajectory.getWayPointCount(); ++waypoint_idx) {
+    const auto & state = trajectory.getWayPoint(waypoint_idx);
+
+    if (joint_model_group) {
+      for (const auto * joint_model : joint_model_group->getJointModels()) {
+        if (report_joint_bounds(state, joint_model, waypoint_idx)) {
+          RCLCPP_ERROR(
+            logger,
+            "%s Traj rejected: waypoint %zu violates joint limits for group '%s'.",
+            prefix, waypoint_idx, planning_group.c_str());
+          return;
+        }
+      }
+    } else {
+      for (const auto * joint_model : robot_model->getActiveJointModels()) {
+        if (report_joint_bounds(state, joint_model, waypoint_idx)) {
+          RCLCPP_ERROR(
+            logger,
+            "%s Traj rejected: waypoint %zu violates joint limits (group '%s' unavailable).",
+            prefix, waypoint_idx, planning_group.c_str());
+          return;
+        }
+      }
+    }
+
+    collision_detection::CollisionRequest collision_request;
+    collision_detection::CollisionResult collision_result;
+    collision_request.contacts = true;
+    collision_request.max_contacts = 5;
+    scene->checkCollision(collision_request, collision_result, state);
+    if (collision_result.collision) {
+      RCLCPP_ERROR(
+        logger, "%s Trajectory rejected because waypoint %zu is in collision.", prefix,
+        waypoint_idx);
+      for (const auto & contact : collision_result.contacts) {
+        RCLCPP_ERROR(
+          logger, "%s   Contact between '%s' and '%s'", prefix, contact.first.first.c_str(),
+          contact.first.second.c_str());
+      }
+      return;
+    }
+  }
+
+  RCLCPP_ERROR_STREAM(
+    logger,
+    prefix << " Traj invalid but no joint-limit or collision issue detected;" <<
+      "likely violates additional constraints.");
+}
+}  // namespace
 
 MoveGroupPlanner::MoveGroupPlanner(
   const rclcpp::Node::SharedPtr & node, const std::string & planning_group,
@@ -48,6 +157,10 @@ MoveGroupPlanner::MoveGroupPlanner(
   move_group_interface_->setPlanningTime(0.5);
 
   RCLCPP_INFO(logger_, "MoveGroupPlanner initialized with group: %s", planning_group_.c_str());
+  if (!node_->has_parameter("rotation_penalty_weight")) {
+    node_->declare_parameter<double>("rotation_penalty_weight", rotation_penalty_weight_);
+  }
+  (void)node_->get_parameter("rotation_penalty_weight", rotation_penalty_weight_);
 
   // Create a PlanningSceneMonitor
 
@@ -158,42 +271,14 @@ double MoveGroupPlanner::computePathLength(
 geometry_msgs::msg::Pose MoveGroupPlanner::getPoseFromRobotState(
   const moveit::core::RobotState & robot_state, const std::string & link_frame) const
 {
-  // Clone the state to ensure the original state isn't modified
-  moveit::core::RobotState state(robot_state);
-
-  // Update link transforms to ensure they are valid
-  state.updateLinkTransforms();
-
-  geometry_msgs::msg::Pose pose;
-
-  // Get the transform of the frame
-  const Eigen::Isometry3d & pose_eigen = state.getGlobalLinkTransform(link_frame);
-
-  // Extract position
-  pose.position.x = pose_eigen.translation().x();
-  pose.position.y = pose_eigen.translation().y();
-  pose.position.z = pose_eigen.translation().z();
-
-  // Extract orientation as a quaternion
-  Eigen::Quaterniond quat(pose_eigen.rotation());
-  pose.orientation.x = quat.x();
-  pose.orientation.y = quat.y();
-  pose.orientation.z = quat.z();
-  pose.orientation.w = quat.w();
-
-  return pose;
+  return utils::poseFromState(robot_state, link_frame);
 }
 
 // Function to compute the Euclidean distance between the start pose and the target pose
 double MoveGroupPlanner::computeCartesianDistance(
   const geometry_msgs::msg::Pose & start_pose, const geometry_msgs::msg::Pose & target_pose) const
 {
-  // Compute the Euclidean distance to the target pose
-  double dx = target_pose.position.x - start_pose.position.x;
-  double dy = target_pose.position.y - start_pose.position.y;
-  double dz = target_pose.position.z - start_pose.position.z;
-
-  return std::sqrt(dx * dx + dy * dy + dz * dz);
+  return utils::cartesianDistance(start_pose, target_pose);
 }
 
 // Function to get a pose from a trajectory and TCP frame
@@ -201,57 +286,26 @@ geometry_msgs::msg::Pose MoveGroupPlanner::getPoseFromTrajectory(
   const moveit_msgs::msg::RobotTrajectory & traj_msg, const moveit::core::RobotState & robot_state,
   const std::string & link_frame, bool use_last_point) const
 {
-  geometry_msgs::msg::Pose pose;
-
-  // Ensure the trajectory is not empty
-  if (traj_msg.joint_trajectory.points.empty()) {
-    throw std::runtime_error("Trajectory is empty, cannot extract pose.");
-  }
-
-  // Select the point to use (first or last)
-  const auto & point = use_last_point ? traj_msg.joint_trajectory.points.back() :
-    traj_msg.joint_trajectory.points.front();
-  const auto & joint_names = traj_msg.joint_trajectory.joint_names;
-  std::vector<double> joint_positions(point.positions.begin(), point.positions.end());
-
-  // Clone the robot state to avoid modifying the original
-  moveit::core::RobotState state(robot_state);
-
-  // Update link transforms to ensure they are valid
-  state.updateLinkTransforms();
-
-  // Set the joint positions in the cloned state
-  state.setVariablePositions(joint_names, joint_positions);
-
-  // Get the pose of the TCP frame
-  pose = getPoseFromRobotState(state, link_frame);
-
-  return pose;
+  return utils::poseFromTrajectory(traj_msg, robot_state, link_frame, use_last_point);
 }
 
 double MoveGroupPlanner::computeMaxCartesianSpeed(
   const robot_trajectory::RobotTrajectoryPtr & trajectory,
   const manymove_msgs::msg::MovementConfig & config) const
 {
-  // Compute max Cartesian speed by analyzing consecutive waypoints
-  if (trajectory->getWayPointCount() < 2) {
+  if (!trajectory) {
     return 0.0;
   }
-  double max_speed = 0.0;
-  for (size_t i = 1; i < trajectory->getWayPointCount(); i++) {
-    Eigen::Isometry3d prev_pose =
-      trajectory->getWayPoint(i - 1).getGlobalLinkTransform(config.tcp_frame);
-    Eigen::Isometry3d curr_pose =
-      trajectory->getWayPoint(i).getGlobalLinkTransform(config.tcp_frame);
+  return utils::maxCartesianSpeed(*trajectory, config.tcp_frame);
+}
 
-    double dist = (curr_pose.translation() - prev_pose.translation()).norm();
-    double dt = trajectory->getWayPointDurationFromPrevious(i);
-    double speed = dist / dt;
-    if (speed > max_speed) {
-      max_speed = speed;
-    }
-  }
-  return max_speed;
+double MoveGroupPlanner::computeRotationPenalty(
+  const moveit_msgs::msg::RobotTrajectory & traj,
+  const manymove_msgs::msg::MovementConfig & config) const
+{
+  (void)config;
+  return utils::rotationPenalty(
+    traj, utils::kDefaultRotationSoftThresholdRad, rotation_penalty_weight_);
 }
 
 std::pair<bool, moveit_msgs::msg::RobotTrajectory> MoveGroupPlanner::applyTimeParameterization(
@@ -362,7 +416,7 @@ std::pair<bool, moveit_msgs::msg::RobotTrajectory> MoveGroupPlanner::applyTimePa
 std::pair<bool, moveit_msgs::msg::RobotTrajectory> MoveGroupPlanner::plan(
   const manymove_msgs::action::PlanManipulator::Goal & goal_msg)
 {
-  std::vector<std::pair<moveit_msgs::msg::RobotTrajectory, double>> trajectories;
+  std::vector<TrajectoryScore> trajectories;
 
   // Handle start state
   if (!goal_msg.goal.start_joint_values.empty()) {
@@ -449,7 +503,11 @@ std::pair<bool, moveit_msgs::msg::RobotTrajectory> MoveGroupPlanner::plan(
           if (!pts.empty()) {
             // convert to seconds
             double duration = rclcpp::Duration(pts.back().time_from_start).seconds();
-            trajectories.emplace_back(timed_traj, duration);
+            TrajectoryScore score;
+            score.trajectory = std::move(timed_traj);
+            score.duration = duration;
+            score.rotation_penalty = computeRotationPenalty(score.trajectory, cfg);
+            trajectories.emplace_back(std::move(score));
           }
         }
       } else {
@@ -492,7 +550,11 @@ std::pair<bool, moveit_msgs::msg::RobotTrajectory> MoveGroupPlanner::plan(
           if (ok && !timed_traj.joint_trajectory.points.empty()) {
             double duration =
               rclcpp::Duration(timed_traj.joint_trajectory.points.back().time_from_start).seconds();
-            trajectories.emplace_back(timed_traj, duration);
+            TrajectoryScore score;
+            score.trajectory = std::move(timed_traj);
+            score.duration = duration;
+            score.rotation_penalty = computeRotationPenalty(score.trajectory, cfg);
+            trajectories.emplace_back(std::move(score));
           } else {
             RCLCPP_WARN(logger_, "Time‑param failed on Cartesian candidate.");
           }
@@ -516,28 +578,26 @@ std::pair<bool, moveit_msgs::msg::RobotTrajectory> MoveGroupPlanner::plan(
     return {false, moveit_msgs::msg::RobotTrajectory()};
   }
 
-  // Select the shortest trajectory
+  // Select the lowest-cost trajectory (duration + rotation penalty)
   auto shortest = std::min_element(
     trajectories.begin(), trajectories.end(),
-    [](const auto & a, const auto & b) {return a.second < b.second;});
+    [](const TrajectoryScore & a, const TrajectoryScore & b)
+    {
+      const double cost_a = a.cost();
+      const double cost_b = b.cost();
+      if (std::fabs(cost_a - cost_b) > 1e-6) {
+        return cost_a < cost_b;
+      }
+      return a.duration < b.duration;
+    });
 
-  return {true, shortest->first};
+  return {true, shortest->trajectory};
 }
 
 bool MoveGroupPlanner::areSameJointTargets(
   const std::vector<double> & j1, const std::vector<double> & j2, double tolerance) const
 {
-  if (j1.size() != j2.size()) {
-    return false;
-  }
-
-  for (size_t i = 0; i < j1.size(); i++) {
-    if (std::abs(j1[i] - j2[i]) > tolerance) {
-      return false;
-    }
-  }
-
-  return true;
+  return utils::jointTargetsEqual(j1, j2, tolerance);
 }
 
 PlannerInterface::ControlledStopResult MoveGroupPlanner::sendControlledStop(
@@ -692,6 +752,32 @@ bool MoveGroupPlanner::isStateValid(
     }
   }
   temp_state.update(true);  // update transforms
+
+  constexpr double bounds_margin = 0.0;
+  if (!temp_state.satisfiesBounds(group, bounds_margin)) {
+    RCLCPP_WARN(
+      logger_,
+      "[MoveGroupPlanner] State violates joint limits for group '%s'.",
+      group->getName().c_str());
+    for (const auto * joint_model : group->getJointModels()) {
+      if (!temp_state.satisfiesBounds(joint_model, bounds_margin)) {
+        const auto & var_names = joint_model->getVariableNames();
+        const auto & bounds = joint_model->getVariableBounds();
+        for (std::size_t i = 0; i < var_names.size(); ++i) {
+          if (!bounds[i].position_bounded_) {
+            continue;
+          }
+          const double value = temp_state.getVariablePosition(var_names[i]);
+          if (value < bounds[i].min_position_ || value > bounds[i].max_position_) {
+            RCLCPP_WARN(
+              logger_, "  %s: %.6f outside [%.6f, %.6f]", var_names[i].c_str(), value,
+              bounds[i].min_position_, bounds[i].max_position_);
+          }
+        }
+      }
+    }
+    return false;
+  }
 
   collision_detection::CollisionRequest collision_request;
   collision_detection::CollisionResult collision_result;
@@ -853,8 +939,17 @@ bool MoveGroupPlanner::isTrajectoryEndValid(
       return false;
     }
 
+    const auto robot_model = move_group_interface_->getRobotModel();
+
     for (size_t i = 0; i < last_point.positions.size(); ++i) {
       double diff = std::fabs(last_point.positions[i] - target_joint_values[i]);
+      if (robot_model) {
+        const auto * joint_model = robot_model->getJointModel(traj.joint_trajectory.joint_names[i]);
+        if (joint_model && joint_model->getType() == moveit::core::JointModel::REVOLUTE) {
+          diff = std::fabs(
+            angles::shortest_angular_distance(target_joint_values[i], last_point.positions[i]));
+        }
+      }
       if (diff > move_request.config.rotational_precision) {
         RCLCPP_INFO(
           logger_, "Joint %zu difference (%.6f) exceeds tolerance (%.6f) for end validation.", i,
@@ -876,24 +971,7 @@ void MoveGroupPlanner::jointStateCallback(const sensor_msgs::msg::JointState::Sh
 {
   // Lock mutex for thread-safe access
   std::lock_guard<std::mutex> lock(js_mutex_);
-
-  // Update position/velocity for each joint in the message
-  for (size_t i = 0; i < msg->name.size(); ++i) {
-    const std::string & joint_name = msg->name[i];
-
-    // Safety checks (avoid out of range)
-    double pos = 0.0;
-    double vel = 0.0;
-    if (i < msg->position.size()) {
-      pos = msg->position[i];
-    }
-    if (i < msg->velocity.size()) {
-      vel = msg->velocity[i];
-    }
-
-    current_positions_[joint_name] = pos;
-    current_velocities_[joint_name] = vel;
-  }
+  utils::updateJointStateMaps(*msg, current_positions_, current_velocities_);
 }
 
 bool MoveGroupPlanner::isTrajectoryValid(
@@ -934,10 +1012,18 @@ bool MoveGroupPlanner::isTrajectoryValid(
   // Note that the isPathValid overload taking a robot_trajectory::RobotTrajectory,
   // constraints, group name, verbosity flag, and an optional invalid index vector
   // iterates over each waypoint and performs collision/constraint checking.
-  return lscene->isPathValid(
+  const bool path_valid = lscene->isPathValid(
     trajectory, path_constraints, planning_group_, /*verbose*/
     false,
     /*invalid_index*/ nullptr);
+
+  if (!path_valid) {
+    logTrajectoryInvalidDetails(
+      trajectory, static_cast<const planning_scene::PlanningSceneConstPtr &>(lscene),
+      planning_group_,
+      logger_, "[MoveGroupPlanner]");
+  }
+  return path_valid;
 }
 
 bool MoveGroupPlanner::isTrajectoryValid(
@@ -1014,6 +1100,12 @@ bool MoveGroupPlanner::isTrajectoryValid(
     *robot_traj_ptr, path_constraints, planning_group_,
     /*verbose*/ false, /*invalid_index*/
     nullptr);
+
+  if (!valid) {
+    logTrajectoryInvalidDetails(
+      *robot_traj_ptr, static_cast<const planning_scene::PlanningSceneConstPtr &>(lscene),
+      planning_group_, logger_, "[MoveGroupPlanner]");
+  }
 
   return valid;
 }

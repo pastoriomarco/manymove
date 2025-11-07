@@ -56,21 +56,21 @@ int main(int argc, char ** argv)
   // Adjusting only the move params of default moves
   auto & max_move = move_configs["max_move"];
   max_move.planner_id = "RRTConnectkConfigDefault";
-  max_move.planning_time = 0.05;
-  max_move.plan_number_limit = 32;
-  max_move.plan_number_target = 12;
+  max_move.planning_time = 0.25;
+  max_move.plan_number_limit = 16;
+  max_move.plan_number_target = 8;
 
   auto & mid_move = move_configs["mid_move"];
-  mid_move.planner_id = "RRTConnectkConfigDefault";
-  mid_move.planning_time = 0.05;
-  mid_move.plan_number_limit = 32;
-  mid_move.plan_number_target = 12;
+  mid_move.planner_id = max_move.planner_id;
+  mid_move.planning_time = max_move.planning_time;
+  mid_move.plan_number_limit = max_move.plan_number_limit;
+  mid_move.plan_number_target = max_move.plan_number_target;
 
   auto & slow_move = move_configs["slow_move"];
-  slow_move.planner_id = "RRTConnectkConfigDefault";
-  slow_move.planning_time = 0.05;
-  slow_move.plan_number_limit = 32;
-  slow_move.plan_number_target = 12;
+  slow_move.planner_id = max_move.planner_id;
+  slow_move.planning_time = max_move.planning_time;
+  slow_move.plan_number_limit = max_move.plan_number_limit;
+  slow_move.plan_number_target = max_move.plan_number_target;
 
   // Typical UR 6-DOF configurations (radians) for rest and scanning poses.
   std::vector<double> joint_rest = {0.0, -1.57, 1.57, -1.57, -1.57, 0.0};
@@ -116,14 +116,14 @@ int main(int argc, char ** argv)
   std::string to_rest_reset_xml =
     buildMoveXML(rp.prefix, rp.prefix + "toRest", rest_position, blackboard, true);
   std::string to_rest_xml =
-    buildMoveXML(rp.prefix, rp.prefix + "toRest", rest_position, blackboard);
+    buildMoveXML(rp.prefix, rp.prefix + "toRest", rest_position, blackboard, false, 3);
   std::string pick_object_xml =
-    buildMoveXML(rp.prefix, rp.prefix + "pick", pick_sequence, blackboard);
+    buildMoveXML(rp.prefix, rp.prefix + "pick", pick_sequence, blackboard, false, 3);
   std::string drop_object_xml =
-    buildMoveXML(rp.prefix, rp.prefix + "drop", drop_sequence, blackboard);
+    buildMoveXML(rp.prefix, rp.prefix + "drop", drop_sequence, blackboard, false, 3);
   std::string to_drop_exit_xml = buildMoveXML(
     rp.prefix, rp.prefix + "home", exit_drop_position,
-    blackboard);
+    blackboard, false, 3);
 
   std::string prep_sequence_xml =
     sequenceWrapperXML(rp.prefix + "ComposedPrepSequence", {to_rest_reset_xml});
@@ -170,7 +170,7 @@ int main(int argc, char ** argv)
   blackboard->set(
     "approach_pre_transform_xyz_rpy_1_key", std::vector<double>{0.0, 0.0, -0.225, 0.0, 0.0, 0.0});
   blackboard->set(
-    "post_transform_xyz_rpy_1_key", std::vector<double>{0.0, 0.0, 0.0, 3.14, 0.0, 1.57});
+    "post_transform_xyz_rpy_1_key", std::vector<double>{0.0, 0.0, 0.0, 3.14, 0.0, -1.57});
 
   // Translate get_pose_action to xml tree leaf
   std::string get_pick_pose_xml = buildObjectActionXML(

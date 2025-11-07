@@ -11,6 +11,36 @@ Forthcoming
 
 *TBD.*
 
+0.2.2 (2025-11-07)
+------------------
+
+Summary
+^^^^^^^
+- Hardens the MoveIt planners with richer trajectory scoring, diagnostics, and multi-turn joint safeguards.
+- Refreshes the Universal Robots launchers and configs so MoveGroup/MoveItCpp demos share the same pipeline defaults across Jazzy and Humble.
+- Streamlines developer containers and bootstrap scripts with Groot installation, UR/Robotiq dependencies, and optional sudo workflows.
+
+Highlights
+^^^^^^^^^^
+
+Planner diagnostics and trajectory quality
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+- Introduces the shared ``trajectory_utils`` helpers so both planners can evaluate candidate paths on duration, TCP motion, and accumulated rotation before selecting a winner.
+- Logs detailed joint-limit and collision reasons whenever MoveIt rejects a trajectory, making it easier to track down invalid waypoints.
+- Detects multi-revolution joint wraparounds plus duplicate joint targets to avoid dispatching stale solutions and to fall back cleanly when the robot sits near joint limits.
+
+Universal Robots launchers and configs
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+- Reworks the ``ur_movegroup_fake_cpp_trees`` and ``ur_moveitcpp_fake_cpp_trees`` launchers so pipeline arrays, controller selection, and fake hardware toggles are parsed consistently between MoveGroup and MoveItCpp demos.
+- Adds the Humble-friendly ``ompl_planning.legacy.yaml`` and wires in the upstream ``ur_moveit_config`` dependency so legacy adapters remain available while Jazzy defaults stay untouched.
+- Updates the C++ UR behavior-tree client to share planner knobs (planner IDs, plan budgets, pose builders) across the pick/place sequences, keeping the demos repeatable on hardware or simulation.
+
+Developer containers and bootstrap scripts
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+- Extends the Dockerfile and run scripts to optionally grant sudo inside the container, rebuild all layers on demand, and propagate workspace UID/GID overrides.
+- Adds ``docker/scripts/setup_workspace.sh`` which builds Groot from source (with pinning support), runs rosdep, and performs a ``colcon build`` as the unprivileged user.
+- Ensures UR and Robotiq dependencies are preinstalled in the bringup images so fake-tree bringup, color-signal clients, and MoveIt demos work out of the box.
+
 0.2.1 (2025-11-06)
 ------------------
 

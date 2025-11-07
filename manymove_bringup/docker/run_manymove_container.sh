@@ -101,6 +101,8 @@ MANYMOVE_BRANCH_DEFAULT="${MANYMOVE_BRANCH_INFO[1]:-main}"
 
 IMAGE_TAG="manymove:${DISTRO}"
 CONTAINER_USER="${USER:-manymove}"
+CONTAINER_UID="$(id -u)"
+CONTAINER_GID="$(id -g)"
 
 MANYMOVE_REPO_DEFAULT="https://github.com/pastoriomarco/manymove.git"
 TARGET_COMMIT=""
@@ -121,11 +123,20 @@ esac
 IMAGE_PRESENT=false
 LABEL_KEY="manymove.context.sha"
 COMMIT_LABEL_KEY="manymove.commit"
+USER_LABEL_KEY="manymove.user.name"
+USER_UID_LABEL_KEY="manymove.user.uid"
+USER_GID_LABEL_KEY="manymove.user.gid"
 EXISTING_COMMIT=""
+EXISTING_USER_NAME=""
+EXISTING_USER_UID=""
+EXISTING_USER_GID=""
 
 if docker image inspect "${IMAGE_TAG}" >/dev/null 2>&1; then
   IMAGE_PRESENT=true
   EXISTING_COMMIT="$(docker image inspect "${IMAGE_TAG}" --format "{{ index .Config.Labels \"${COMMIT_LABEL_KEY}\" }}" 2>/dev/null || true)"
+  EXISTING_USER_NAME="$(docker image inspect "${IMAGE_TAG}" --format "{{ index .Config.Labels \"${USER_LABEL_KEY}\" }}" 2>/dev/null || true)"
+  EXISTING_USER_UID="$(docker image inspect "${IMAGE_TAG}" --format "{{ index .Config.Labels \"${USER_UID_LABEL_KEY}\" }}" 2>/dev/null || true)"
+  EXISTING_USER_GID="$(docker image inspect "${IMAGE_TAG}" --format "{{ index .Config.Labels \"${USER_GID_LABEL_KEY}\" }}" 2>/dev/null || true)"
   if [[ -n "${EXISTING_COMMIT}" ]]; then
     LABEL_COMMIT="${EXISTING_COMMIT}"
   fi
@@ -179,12 +190,28 @@ elif [[ "${IMAGE_PRESENT}" == false ]]; then
 elif [[ "${PULL_LATEST}" == true ]]; then
   if [[ -n "${TARGET_COMMIT}" ]]; then
     if [[ "${EXISTING_COMMIT}" != "${TARGET_COMMIT}" ]]; then
-      NEEDS_BUILD=true
+      echo "Latest ManyMove commit differs (have ${EXISTING_COMMIT:-unknown}, want ${TARGET_COMMIT}); rebuilding."
     else
-      echo "ManyMove sources already up to date (commit ${TARGET_COMMIT}); skipping rebuild."
+      echo "ManyMove sources already up to date (commit ${TARGET_COMMIT}); rebuilding to pull latest base layers."
     fi
   else
     echo "Unable to resolve latest ManyMove commit; rebuilding to ensure freshness."
+  fi
+  NEEDS_BUILD=true
+fi
+
+if [[ "${IMAGE_PRESENT}" == true ]]; then
+  if [[ -z "${EXISTING_USER_NAME}" || -z "${EXISTING_USER_UID}" || -z "${EXISTING_USER_GID}" ]]; then
+    echo "Rebuilding to record container user metadata needed for passwordless sudo."
+    NEEDS_BUILD=true
+  elif [[ "${EXISTING_USER_NAME}" != "${CONTAINER_USER}" ]]; then
+    echo "Rebuilding because baked-in container user '${EXISTING_USER_NAME}' does not match current user '${CONTAINER_USER}'."
+    NEEDS_BUILD=true
+  elif [[ "${EXISTING_USER_UID}" != "${CONTAINER_UID}" ]]; then
+    echo "Rebuilding because baked-in UID '${EXISTING_USER_UID}' does not match current UID '${CONTAINER_UID}'."
+    NEEDS_BUILD=true
+  elif [[ "${EXISTING_USER_GID}" != "${CONTAINER_GID}" ]]; then
+    echo "Rebuilding because baked-in GID '${EXISTING_USER_GID}' does not match current GID '${CONTAINER_GID}'."
     NEEDS_BUILD=true
   fi
 fi
@@ -199,11 +226,20 @@ if [[ "${NEEDS_BUILD}" == true ]]; then
     docker build
     "--build-arg" "ROS_DISTRO=${DISTRO}"
     "--build-arg" "USERNAME=${CONTAINER_USER}"
-    "--build-arg" "USER_UID=$(id -u)"
-    "--build-arg" "USER_GID=$(id -g)"
+    "--build-arg" "USER_UID=${CONTAINER_UID}"
+    "--build-arg" "USER_GID=${CONTAINER_GID}"
     "--label" "${LABEL_KEY}=${CONTEXT_HASH}"
     "--label" "${COMMIT_LABEL_KEY}=${LABEL_COMMIT}"
+    "--label" "${USER_LABEL_KEY}=${CONTAINER_USER}"
+    "--label" "${USER_UID_LABEL_KEY}=${CONTAINER_UID}"
+    "--label" "${USER_GID_LABEL_KEY}=${CONTAINER_GID}"
   )
+  if [[ "${PULL_LATEST}" == true ]]; then
+    BUILD_CMD+=("--pull")
+  fi
+  if [[ "${FORCE_REBUILD}" == true ]]; then
+    BUILD_CMD+=("--no-cache")
+  fi
   if [[ "${LABEL_COMMIT}" != "unknown" ]]; then
     BUILD_CMD+=("--build-arg" "MANYMOVE_COMMIT=${LABEL_COMMIT}")
   fi
@@ -220,6 +256,7 @@ RUN_ARGS=(
   "--rm"
   "-it"
   "--network" "host"
+  "--ipc" "host"  # share /dev/shm so Fast DDS shared memory works across shells/containers
 )
 
 if [[ -n "${DISPLAY:-}" ]]; then
