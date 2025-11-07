@@ -25,8 +25,8 @@ ENV DEBIAN_FRONTEND=noninteractive \
     LIBGL_ALWAYS_SOFTWARE=1 \
     GROOT_REPO=${GROOT_REPO} \
     GROOT_BRANCH=${GROOT_BRANCH} \
-    GROOT_COMMIT=${GROOT_COMMIT} \
-    GROOT_SOURCE_DIR=${MANYMOVE_WS}/src/Groot
+    GROOT_COMMIT=${GROOT_COMMIT}
+ENV GROOT_SOURCE_DIR=${MANYMOVE_WS}/src/Groot
 
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 
@@ -80,22 +80,33 @@ RUN apt-get update && \
 
 RUN locale-gen en_US.UTF-8 && update-locale LANG=en_US.UTF-8
 
-RUN if getent group ${USER_GID} >/dev/null 2>&1; then \
-      groupadd --non-unique --gid ${USER_GID} ${USERNAME}; \
+RUN set -eux; \
+    existing_group="$(getent group ${USER_GID} | cut -d: -f1 || true)"; \
+    if [[ -n "${existing_group}" ]]; then \
+        if [[ "${existing_group}" != "${USERNAME}" ]]; then \
+            groupmod --new-name "${USERNAME}" "${existing_group}"; \
+        fi; \
     else \
-      groupadd --gid ${USER_GID} ${USERNAME}; \
-    fi \
-    && if getent passwd ${USERNAME} >/dev/null 2>&1; then \
-      usermod --gid ${USER_GID} "${USERNAME}"; \
-    elif getent passwd ${USER_UID} >/dev/null 2>&1; then \
-      useradd --non-unique --uid ${USER_UID} --gid ${USER_GID} -m -s /bin/bash "${USERNAME}"; \
+        groupadd --gid ${USER_GID} "${USERNAME}"; \
+    fi; \
+    existing_uid_user="$(getent passwd ${USER_UID} | cut -d: -f1 || true)"; \
+    if [[ -n "${existing_uid_user}" && "${existing_uid_user}" != "${USERNAME}" ]]; then \
+        usermod --login "${USERNAME}" \
+               --home "/home/${USERNAME}" \
+               --move-home \
+               "${existing_uid_user}"; \
+    elif getent passwd "${USERNAME}" >/dev/null 2>&1; then \
+        usermod --gid ${USER_GID} \
+               --home "/home/${USERNAME}" \
+               --move-home \
+               "${USERNAME}"; \
     else \
-      useradd --uid ${USER_UID} --gid ${USER_GID} -m -s /bin/bash "${USERNAME}"; \
-    fi \
-    && usermod --shell /bin/bash "${USERNAME}" \
-    && usermod -aG sudo "${USERNAME}" \
-    && echo "${USERNAME} ALL=(ALL) NOPASSWD:ALL" > /etc/sudoers.d/${USERNAME} \
-    && chmod 0440 /etc/sudoers.d/${USERNAME}
+        useradd --uid ${USER_UID} --gid ${USER_GID} -m -s /bin/bash "${USERNAME}"; \
+    fi; \
+    usermod --gid ${USER_GID} --shell /bin/bash "${USERNAME}"; \
+    usermod -aG sudo "${USERNAME}"; \
+    printf '%s ALL=(ALL) NOPASSWD:ALL\n' "${USERNAME}" > "/etc/sudoers.d/${USERNAME}"; \
+    chmod 0440 "/etc/sudoers.d/${USERNAME}"
 
 RUN mkdir -p /tmp/runtime-${USERNAME} && chown ${USERNAME}:${USER_GID} /tmp/runtime-${USERNAME}
 ENV XDG_RUNTIME_DIR=/tmp/runtime-${USERNAME}
