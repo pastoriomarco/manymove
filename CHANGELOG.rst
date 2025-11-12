@@ -9,15 +9,56 @@ high-level history.
 Forthcoming
 -----------
 
-- Decouples `manymove_msgs` from MoveIt by switching the `PlanManipulator`/`MoveManipulator`
-  actions to `trajectory_msgs/JointTrajectory` so downstream packages no longer pull in
-  `moveit_msgs` indirectly.
-- Updates `manymove_planner` to accept the slimmer action interface while still using
-  `moveit_msgs::msg::RobotTrajectory` internally, ensuring existing planners keep their MoveIt
-  features without leaking the dependency to callers.
-- Refreshes `manymove_cpp_trees` to store and exchange `trajectory_msgs::msg::JointTrajectory`
-  objects on the blackboard, removes MoveIt includes from the BehaviorTree nodes/tests, and
-  tightens package dependencies accordingly.
+- TBD.
+
+0.3.0 (2025-11-12)
+------------------
+
+Summary
+^^^^^^^
+- Switches both manipulator actions to `trajectory_msgs/JointTrajectory`, eliminating the implicit
+  MoveIt dependency from `manymove_msgs`, downstream planners, and behavior-tree clients.
+- Keeps `manymove_planner` behavior identical by translating to `moveit_msgs::msg::RobotTrajectory`
+  internally, preserving diagnostics/logging while presenting a leaner public API.
+- Adds `MANYMOVE_COLCON_WORKERS` across Dockerfiles, run scripts, and `setup_workspace.sh` so
+  developers and CI can cap `colcon`/CMake concurrency; polishes docs/tutorials accordingly.
+
+Highlights
+^^^^^^^^^^
+
+Manipulator actions now depend only on core ROS 2 interfaces - Planner compatibility preserved
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+- Rewrites `PlanManipulator` and `MoveManipulator` to exchange
+  `trajectory_msgs/JointTrajectory`, removing the transitive `moveit_msgs` dependency from
+  `manymove_msgs` (`manymove_msgs/action/*.action`) and slimming `package.xml` requirements.
+- Updates `manymove_cpp_trees` nodes/tests to pass JointTrajectory objects through the blackboard,
+  drops MoveIt headers from the tree helpers, and refreshes build/run dependencies so downstream
+  BehaviorTree clients remain lightweight.
+- Adjusts `manymove_planner` to deserialize the slimmer action goals, convert them back to
+  `moveit_msgs::msg::RobotTrajectory` internally, and keep all existing scoring, diagnostics, and
+  rejection paths intact for MoveIt-based pipelines.
+
+Docker and workspace tooling
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+- Threads the `MANYMOVE_COLCON_WORKERS` environment variable through
+  `Dockerfile.manymove(_xarm)`, `run_manymove(_xarm)_container.sh` and
+  `docker/scripts/setup_workspace.sh` so container builds, Groot compilation, and overlay rebuilds
+  can stay within a deterministic worker budget.
+- Documents the new knob in `manymove_bringup/docker/README.md`, clarifying how the limit also
+  drives `CMAKE_BUILD_PARALLEL_LEVEL` when present.
+
+Documentation
+~~~~~~~~~~~~~
+- Fixes the first `manymove_cpp_trees` tutorial solution so the example behavior tree matches the
+  intended flow after the action refactor.
+
+Breaking changes / migration notes
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+- Update any custom clients, launch files, or BehaviorTree nodes that consumed
+  `moveit_msgs::msg::RobotTrajectory` directly from the manipulator actions to the new
+  `trajectory_msgs::msg::JointTrajectory` fields.
+- Consumers that still need full `moveit_msgs::msg::RobotTrajectory` objects can convert the action
+  payload locally or query the planner nodes, but the public action API is now MoveIt-free.
 
 0.2.2 (2025-11-07)
 ------------------
@@ -47,7 +88,7 @@ Developer containers and bootstrap scripts
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 - Extends the Dockerfile and run scripts to optionally grant sudo inside the container, rebuild all layers on demand, and propagate workspace UID/GID overrides.
 - Adds ``docker/scripts/setup_workspace.sh`` which builds Groot from source (with pinning support), runs rosdep, and performs a ``colcon build`` as the unprivileged user.
-- Ensures UR and Robotiq dependencies are preinstalled in the bringup images so fake-tree bringup, color-signal clients, and MoveIt demos work out of the box.
+- Ensures UR and Robotiq dependencies are preinstalled in the bringup images so fake-tree bringup and MoveIt demos work out of the box.
 
 0.2.1 (2025-11-06)
 ------------------

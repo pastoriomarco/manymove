@@ -94,7 +94,7 @@ Pass additional `colcon build` arguments as needed:
 
 ### Limit build parallelism
 
-Set `MANYMOVE_COLCON_WORKERS` to a positive integer before launching any of the run scripts (including the color-signal/bootstrap helpers) to cap how many packages `colcon` builds at once inside Docker *and* during `/opt/manymove/setup_workspace.sh`:
+Set `MANYMOVE_COLCON_WORKERS` to a positive integer before launching any of the run scripts to cap how many packages `colcon` builds at once inside Docker *and* during `/opt/manymove/setup_workspace.sh`:
 
 ```bash
 export MANYMOVE_COLCON_WORKERS=2
