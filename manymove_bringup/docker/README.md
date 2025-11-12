@@ -92,6 +92,17 @@ Pass additional `colcon build` arguments as needed:
 /opt/manymove/setup_workspace.sh --packages-select manymove_bringup
 ```
 
+### Limit build parallelism
+
+Set `MANYMOVE_COLCON_WORKERS` to a positive integer before launching any of the run scripts to cap how many packages `colcon` builds at once inside Docker *and* during `/opt/manymove/setup_workspace.sh`:
+
+```bash
+export MANYMOVE_COLCON_WORKERS=2
+${MANYMOVE_ROS_WS}/src/manymove/manymove_bringup/docker/run_manymove_container.sh jazzy
+```
+
+The same variable applies to `run_manymove_xarm_container.sh` as well as the `manymove_color_signal` overlay. When set, it also drives `CMAKE_BUILD_PARALLEL_LEVEL`, so the Groot build and individual package builds follow the same limit. Unset the variable (or set it to an empty value) to restore the default “auto” worker count.
+
 Want hardware-accelerated RViz? Start the container with `--device /dev/dri` (or the equivalent for your GPU) and unset `LIBGL_ALWAYS_SOFTWARE` inside the shell:
 
 ```bash

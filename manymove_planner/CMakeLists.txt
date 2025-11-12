@@ -16,6 +16,7 @@ find_package(moveit_core REQUIRED)
 find_package(moveit_ros_planning_interface REQUIRED)
 find_package(tf2_geometry_msgs REQUIRED)
 find_package(geometry_msgs REQUIRED)
+find_package(trajectory_msgs REQUIRED)
 find_package(pluginlib REQUIRED)
 find_package(rclcpp_action REQUIRED)
 find_package(action_msgs REQUIRED)
@@ -41,6 +42,7 @@ ament_target_dependencies(move_group_planner_lib
   moveit_ros_planning_interface
   tf2_geometry_msgs
   geometry_msgs
+  trajectory_msgs
   control_msgs
   manymove_msgs
   rcpputils
@@ -56,6 +58,7 @@ ament_target_dependencies(moveit_cpp_planner_lib
   moveit_ros_planning_interface
   tf2_geometry_msgs
   geometry_msgs
+  trajectory_msgs
   control_msgs
   manymove_msgs
   rcpputils
@@ -78,6 +81,7 @@ ament_target_dependencies(manipulator_action_server_lib
   moveit_ros_planning_interface
   tf2_geometry_msgs
   geometry_msgs
+  trajectory_msgs
   moveit_msgs
   action_msgs
   controller_manager_msgs
@@ -165,6 +169,7 @@ ament_export_dependencies(
   moveit_ros_planning_interface
   tf2_geometry_msgs
   geometry_msgs
+  trajectory_msgs
   action_msgs
   rclcpp_action
   manymove_msgs

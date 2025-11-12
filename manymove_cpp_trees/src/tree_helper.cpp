@@ -31,6 +31,7 @@
 #include <sstream>
 
 #include <rclcpp/rclcpp.hpp>
+#include <trajectory_msgs/msg/joint_trajectory.hpp>
 
 // A static global counter to ensure unique move IDs across the entire tree
 static int g_global_move_id = 0;
@@ -176,7 +177,7 @@ std::string buildMoveXML(
     std::string key = "move_" + std::to_string(this_move_id);
     blackboard->set(key, std::make_shared<Move>(move));
     blackboard->set(
-      "trajectory_" + std::to_string(this_move_id), moveit_msgs::msg::RobotTrajectory());
+      "trajectory_" + std::to_string(this_move_id), trajectory_msgs::msg::JointTrajectory());
 
     RCLCPP_INFO(rclcpp::get_logger("bt_client_node"), "BB set: %s", key.c_str());
 

@@ -13,7 +13,7 @@ find_package(rosidl_default_generators REQUIRED)
 find_package(geometry_msgs REQUIRED)
 find_package(shape_msgs REQUIRED)
 find_package(action_msgs REQUIRED)
-find_package(moveit_msgs REQUIRED)
+find_package(trajectory_msgs REQUIRED)
 find_package(tf2 REQUIRED)
 find_package(tf2_ros REQUIRED)
 find_package(tf2_geometry_msgs REQUIRED)
@@ -52,7 +52,7 @@ DEPENDENCIES
     geometry_msgs
     shape_msgs
     action_msgs
-    moveit_msgs
+    trajectory_msgs
     std_msgs
     std_srvs
     control_msgs

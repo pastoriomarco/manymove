@@ -214,7 +214,7 @@ Remember that, if you want to change the inclination of the gripper, the positio
 <summary>Click to see the solution</summary>
 
 ```cpp
-    blackboard->set("post_transform_xyz_rpy_1_key", std::vector<double>{0.0, 0.0, 0.0, 3.14, 0.0, 0.0});
+    blackboard->set("post_transform_xyz_rpy_1_key", std::vector<double>{0.0, 0.0, 0.0, 3.4, 0.0, 0.0});
 ```
 
 If you use this line in the final program you can see how the inclination of the pick movements change!

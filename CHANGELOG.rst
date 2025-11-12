@@ -9,7 +9,86 @@ high-level history.
 Forthcoming
 -----------
 
-*TBD.*
+- TBD.
+
+0.3.0 (2025-11-12)
+------------------
+
+Summary
+^^^^^^^
+- Switches both manipulator actions to `trajectory_msgs/JointTrajectory`, eliminating the implicit
+  MoveIt dependency from `manymove_msgs`, downstream planners, and behavior-tree clients.
+- Keeps `manymove_planner` behavior identical by translating to `moveit_msgs::msg::RobotTrajectory`
+  internally, preserving diagnostics/logging while presenting a leaner public API.
+- Adds `MANYMOVE_COLCON_WORKERS` across Dockerfiles, run scripts, and `setup_workspace.sh` so
+  developers and CI can cap `colcon`/CMake concurrency; polishes docs/tutorials accordingly.
+
+Highlights
+^^^^^^^^^^
+
+Manipulator actions now depend only on core ROS 2 interfaces - Planner compatibility preserved
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+- Rewrites `PlanManipulator` and `MoveManipulator` to exchange
+  `trajectory_msgs/JointTrajectory`, removing the transitive `moveit_msgs` dependency from
+  `manymove_msgs` (`manymove_msgs/action/*.action`) and slimming `package.xml` requirements.
+- Updates `manymove_cpp_trees` nodes/tests to pass JointTrajectory objects through the blackboard,
+  drops MoveIt headers from the tree helpers, and refreshes build/run dependencies so downstream
+  BehaviorTree clients remain lightweight.
+- Adjusts `manymove_planner` to deserialize the slimmer action goals, convert them back to
+  `moveit_msgs::msg::RobotTrajectory` internally, and keep all existing scoring, diagnostics, and
+  rejection paths intact for MoveIt-based pipelines.
+
+Docker and workspace tooling
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+- Threads the `MANYMOVE_COLCON_WORKERS` environment variable through
+  `Dockerfile.manymove(_xarm)`, `run_manymove(_xarm)_container.sh` and
+  `docker/scripts/setup_workspace.sh` so container builds, Groot compilation, and overlay rebuilds
+  can stay within a deterministic worker budget.
+- Documents the new knob in `manymove_bringup/docker/README.md`, clarifying how the limit also
+  drives `CMAKE_BUILD_PARALLEL_LEVEL` when present.
+
+Documentation
+~~~~~~~~~~~~~
+- Fixes the first `manymove_cpp_trees` tutorial solution so the example behavior tree matches the
+  intended flow after the action refactor.
+
+Breaking changes / migration notes
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+- Update any custom clients, launch files, or BehaviorTree nodes that consumed
+  `moveit_msgs::msg::RobotTrajectory` directly from the manipulator actions to the new
+  `trajectory_msgs::msg::JointTrajectory` fields.
+- Consumers that still need full `moveit_msgs::msg::RobotTrajectory` objects can convert the action
+  payload locally or query the planner nodes, but the public action API is now MoveIt-free.
+
+0.2.2 (2025-11-07)
+------------------
+
+Summary
+^^^^^^^
+- Hardens the MoveIt planners with richer trajectory scoring, diagnostics, and multi-turn joint safeguards.
+- Refreshes the Universal Robots launchers and configs so MoveGroup/MoveItCpp demos share the same pipeline defaults across Jazzy and Humble.
+- Streamlines developer containers and bootstrap scripts with Groot installation, UR/Robotiq dependencies, and optional sudo workflows.
+
+Highlights
+^^^^^^^^^^
+
+Planner diagnostics and trajectory quality
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+- Introduces the shared ``trajectory_utils`` helpers so both planners can evaluate candidate paths on duration, TCP motion, and accumulated rotation before selecting a winner.
+- Logs detailed joint-limit and collision reasons whenever MoveIt rejects a trajectory, making it easier to track down invalid waypoints.
+- Detects multi-revolution joint wraparounds plus duplicate joint targets to avoid dispatching stale solutions and to fall back cleanly when the robot sits near joint limits.
+
+Universal Robots launchers and configs
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+- Reworks the ``ur_movegroup_fake_cpp_trees`` and ``ur_moveitcpp_fake_cpp_trees`` launchers so pipeline arrays, controller selection, and fake hardware toggles are parsed consistently between MoveGroup and MoveItCpp demos.
+- Adds the Humble-friendly ``ompl_planning.legacy.yaml`` and wires in the upstream ``ur_moveit_config`` dependency so legacy adapters remain available while Jazzy defaults stay untouched.
+- Updates the C++ UR behavior-tree client to share planner knobs (planner IDs, plan budgets, pose builders) across the pick/place sequences, keeping the demos repeatable on hardware or simulation.
+
+Developer containers and bootstrap scripts
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+- Extends the Dockerfile and run scripts to optionally grant sudo inside the container, rebuild all layers on demand, and propagate workspace UID/GID overrides.
+- Adds ``docker/scripts/setup_workspace.sh`` which builds Groot from source (with pinning support), runs rosdep, and performs a ``colcon build`` as the unprivileged user.
+- Ensures UR and Robotiq dependencies are preinstalled in the bringup images so fake-tree bringup and MoveIt demos work out of the box.
 
 0.2.2 (2025-11-07)
 ------------------

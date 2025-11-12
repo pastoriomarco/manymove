@@ -36,7 +36,6 @@
 #include <vector>
 
 #include <geometry_msgs/msg/pose.hpp>
-#include <moveit_msgs/msg/robot_trajectory.hpp>
 #include <rclcpp/rclcpp.hpp>
 #include <rclcpp_action/rclcpp_action.hpp>
 

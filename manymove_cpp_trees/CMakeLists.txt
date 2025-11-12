@@ -19,7 +19,7 @@ find_package(rclcpp                   REQUIRED)
 find_package(rclcpp_action            REQUIRED)
 find_package(behaviortree_cpp_v3      REQUIRED)
 find_package(manymove_planner         REQUIRED)
-find_package(moveit_msgs              REQUIRED)
+find_package(trajectory_msgs          REQUIRED)
 find_package(geometry_msgs            REQUIRED)
 find_package(manymove_object_manager  REQUIRED)
 find_package(tf2                      REQUIRED)
@@ -56,7 +56,7 @@ target_include_directories(manymove_cpp_trees_lib PUBLIC
 ament_target_dependencies(manymove_cpp_trees_lib
   rclcpp rclcpp_action behaviortree_cpp_v3
   manymove_planner manymove_object_manager
-  moveit_msgs geometry_msgs tf2 tf2_ros tf2_geometry_msgs std_srvs manymove_msgs control_msgs
+  trajectory_msgs geometry_msgs tf2 tf2_ros tf2_geometry_msgs std_srvs manymove_msgs control_msgs
   std_msgs topic_based_ros2_control simulation_interfaces vision_msgs rcpputils
 )
 
@@ -71,7 +71,7 @@ macro(bt_client_exec NAME)
   ament_target_dependencies(${NAME}
     rclcpp rclcpp_action behaviortree_cpp_v3
     manymove_planner manymove_object_manager
-    moveit_msgs tf2 std_srvs manymove_msgs control_msgs
+    trajectory_msgs tf2 std_srvs manymove_msgs control_msgs
     std_msgs topic_based_ros2_control simulation_interfaces rcpputils
   )
 endmacro()
@@ -126,7 +126,7 @@ ament_export_targets(export_manymove_cpp_trees_lib HAS_LIBRARY_TARGET)
 ament_export_dependencies(
   rclcpp rclcpp_action behaviortree_cpp_v3
   manymove_planner manymove_object_manager
-  moveit_msgs tf2 tf2_ros tf2_geometry_msgs std_srvs manymove_msgs control_msgs
+  trajectory_msgs tf2 tf2_ros tf2_geometry_msgs std_srvs manymove_msgs control_msgs
   std_msgs topic_based_ros2_control simulation_interfaces vision_msgs rcpputils
 )
 
@@ -147,7 +147,7 @@ if(BUILD_TESTING)
       ament_target_dependencies(${target}
         rclcpp rclcpp_action behaviortree_cpp_v3
         manymove_planner manymove_object_manager
-        moveit_msgs geometry_msgs tf2 tf2_ros tf2_geometry_msgs std_srvs manymove_msgs control_msgs
+        trajectory_msgs geometry_msgs tf2 tf2_ros tf2_geometry_msgs std_srvs manymove_msgs control_msgs
         std_msgs topic_based_ros2_control simulation_interfaces vision_msgs rcpputils)
     endif()
   endfunction()

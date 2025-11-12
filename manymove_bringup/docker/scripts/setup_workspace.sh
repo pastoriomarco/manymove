@@ -12,6 +12,7 @@ GROOT_REPO_URL="${GROOT_REPO:-${GROOT_REPO_DEFAULT}}"
 GROOT_BRANCH_DEFAULT="master"
 GROOT_BRANCH_NAME="${GROOT_BRANCH:-${GROOT_BRANCH_DEFAULT}}"
 GROOT_PINNED_COMMIT="${GROOT_COMMIT:-}"
+MANYMOVE_PARALLEL_LEVEL=""
 
 log() {
   echo "[setup-workspace] $*"
@@ -26,6 +27,22 @@ run_ws_cmd() {
     "${prefix[@]}" "$@"
   else
     "$@"
+  fi
+}
+
+configure_parallelism() {
+  local requested="${MANYMOVE_COLCON_WORKERS:-}"
+  if [[ -z "${requested}" ]]; then
+    return
+  fi
+  if ! [[ "${requested}" =~ ^[0-9]+$ ]] || [[ "${requested}" -le 0 ]]; then
+    log "Warning: ignoring MANYMOVE_COLCON_WORKERS='${requested}' (must be a positive integer)."
+    return
+  fi
+  MANYMOVE_PARALLEL_LEVEL="${requested}"
+  log "Limiting build parallelism to ${MANYMOVE_PARALLEL_LEVEL} worker(s)."
+  if [[ -z "${CMAKE_BUILD_PARALLEL_LEVEL:-}" ]]; then
+    export CMAKE_BUILD_PARALLEL_LEVEL="${MANYMOVE_PARALLEL_LEVEL}"
   fi
 }
 
@@ -98,6 +115,8 @@ if [[ -z "$(ls -A "${SRC_DIR}")" ]]; then
   exit 0
 fi
 
+configure_parallelism
+
 log "Using ROS distro '${ROS_DISTRO}'."
 
 if ! ensure_groot; then
@@ -129,6 +148,18 @@ fi
 BUILD_CMD=("colcon" "build" "--symlink-install")
 if [[ $# -gt 0 ]]; then
   BUILD_CMD=("colcon" "build" "$@")
+fi
+if [[ -n "${MANYMOVE_PARALLEL_LEVEL}" ]]; then
+  parallel_flag_present=false
+  for arg in "${BUILD_CMD[@]}"; do
+    if [[ "${arg}" == "--parallel-workers" ]] || [[ "${arg}" == --parallel-workers=* ]]; then
+      parallel_flag_present=true
+      break
+    fi
+  done
+  if [[ "${parallel_flag_present}" == false ]]; then
+    BUILD_CMD+=("--parallel-workers" "${MANYMOVE_PARALLEL_LEVEL}")
+  fi
 fi
 
 log "Invoking ${BUILD_CMD[*]}."

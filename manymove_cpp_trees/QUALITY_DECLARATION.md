@@ -12,7 +12,7 @@ The package follows ROS 2 and MoveIt coding standards and is actively maintained
 
 ## 2. Version Policy
 
-- Versioning: Semantic versioning (MAJOR.MINOR.PATCH) is followed. Current version: `0.2.2`.
+- Versioning: Semantic versioning (MAJOR.MINOR.PATCH) is followed. Current version: `0.3.0`.
 - Change control: All changes are proposed via pull requests and reviewed on GitHub; automated CI builds validate the workspace.
 - API stability: Public APIs (headers, node ports, expected blackboard keys, and XML helpers) are pre-1.0 and may change until `1.0.0`.
 
@@ -61,7 +61,7 @@ The package follows ROS 2 and MoveIt coding standards and is actively maintained
 
 ## 5. Dependencies
 
-- Depends on maintained ROS 2 packages and BehaviorTree.CPP, including: `rclcpp`, `rclcpp_action`, `behaviortree_cpp_v3`, `manymove_planner`, `manymove_object_manager`, `manymove_msgs`, `geometry_msgs`, `moveit_msgs`, `tf2`, `tf2_ros`, `tf2_geometry_msgs`, `control_msgs`, `std_msgs`, `std_srvs`, `topic_based_ros2_control`, `simulation_interfaces`, `vision_msgs`.
+- Depends on maintained ROS 2 packages and BehaviorTree.CPP, including: `rclcpp`, `rclcpp_action`, `behaviortree_cpp_v3`, `manymove_planner`, `manymove_object_manager`, `manymove_msgs`, `geometry_msgs`, `trajectory_msgs`, `tf2`, `tf2_ros`, `tf2_geometry_msgs`, `control_msgs`, `std_msgs`, `std_srvs`, `topic_based_ros2_control`, `simulation_interfaces`, `vision_msgs`.
 - Uses stable APIs available in ROS 2 Humble and later.
 
 Related ManyMove packages (same repository):
