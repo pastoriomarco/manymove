@@ -179,8 +179,8 @@ BT::NodeStatus MoveManipulatorAction::onRunning()
     }
 
     // Read existing trajectory.
-    moveit_msgs::msg::RobotTrajectory existing_trajectory;
-    if (!getInput<moveit_msgs::msg::RobotTrajectory>("trajectory", existing_trajectory)) {
+    trajectory_msgs::msg::JointTrajectory existing_trajectory;
+    if (!getInput<trajectory_msgs::msg::JointTrajectory>("trajectory", existing_trajectory)) {
       throw BT::RuntimeError("[MoveManipulatorAction]: missing InputPort [trajectory].");
     }
 
@@ -210,7 +210,7 @@ BT::NodeStatus MoveManipulatorAction::onRunning()
   if (result_received_) {
     if (action_result_.success) {
       if (invalidate_traj_on_exec) {
-        config().blackboard->set("trajectory_" + move_id_, moveit_msgs::msg::RobotTrajectory());
+        config().blackboard->set("trajectory_" + move_id_, trajectory_msgs::msg::JointTrajectory());
       } else {
         config().blackboard->set("trajectory_" + move_id_, action_result_.final_trajectory);
       }
@@ -221,7 +221,7 @@ BT::NodeStatus MoveManipulatorAction::onRunning()
       RCLCPP_INFO(node_->get_logger(), "[MoveManipulatorAction] success => returning SUCCESS");
       return BT::NodeStatus::SUCCESS;
     } else {
-      config().blackboard->set("trajectory_" + move_id_, moveit_msgs::msg::RobotTrajectory());
+      config().blackboard->set("trajectory_" + move_id_, trajectory_msgs::msg::JointTrajectory());
 
       current_try_++;
 
@@ -266,7 +266,7 @@ void MoveManipulatorAction::onHalted()
   result_received_ = false;
 
   // Invalidate trajectory on halt
-  config().blackboard->set("trajectory_" + move_id_, moveit_msgs::msg::RobotTrajectory());
+  config().blackboard->set("trajectory_" + move_id_, trajectory_msgs::msg::JointTrajectory());
 
   // HMI message
   setHMIMessage(config().blackboard, robot_prefix_, "MOTION HALTED", "red");
@@ -293,7 +293,7 @@ void MoveManipulatorAction::resultCallback(
   getInput<bool>("invalidate_traj_on_exec", invalidate_traj_on_exec);
   if (invalidate_traj_on_exec) {
     // Invalidate the trajectory: set the planning validity key to false and clear the trajectory.
-    config().blackboard->set("trajectory_" + move_id_, moveit_msgs::msg::RobotTrajectory());
+    config().blackboard->set("trajectory_" + move_id_, trajectory_msgs::msg::JointTrajectory());
   }
 
   result_received_ = true;
@@ -306,7 +306,7 @@ void MoveManipulatorAction::resultCallback(
       "Failure: result code=" + std::to_string(static_cast<int>(wrapped_result.code));
 
     // Execution failed, invalidate the trajectory
-    config().blackboard->set("trajectory_" + move_id_, moveit_msgs::msg::RobotTrajectory());
+    config().blackboard->set("trajectory_" + move_id_, trajectory_msgs::msg::JointTrajectory());
   }
 }
 
@@ -381,7 +381,7 @@ BT::NodeStatus ResetTrajectories::tick()
       int move_id = std::stoi(move_id_str);
 
       // Reset trajectory_{id} to empty
-      moveit_msgs::msg::RobotTrajectory empty_traj;
+      trajectory_msgs::msg::JointTrajectory empty_traj;
       std::string traj_key = "trajectory_" + move_id_str;
       config().blackboard->set(traj_key, empty_traj);
 

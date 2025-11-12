@@ -3,7 +3,7 @@ manymove_msgs/MoveManipulatorGoal goal
 ---
 # Result
 bool success
-moveit_msgs/RobotTrajectory trajectory
+trajectory_msgs/JointTrajectory trajectory
 ---
 # Feedback
 float32 progress

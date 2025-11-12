@@ -43,7 +43,6 @@
 #include <manymove_msgs/action/get_object_pose.hpp>
 #include <manymove_msgs/action/plan_manipulator.hpp>
 #include <manymove_msgs/action/remove_collision_object.hpp>
-#include <moveit_msgs/msg/robot_trajectory.hpp>
 #include <rclcpp/rclcpp.hpp>
 #include <rclcpp_action/rclcpp_action.hpp>
 

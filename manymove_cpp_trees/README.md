@@ -38,7 +38,7 @@ Each executable spins the BT factory, registers the custom nodes, and runs the `
 ## Dependencies
 - BehaviorTree.CPP (`behaviortree_cpp_v3`)
 - ManyMove core packages: `manymove_planner`, `manymove_object_manager`, `manymove_msgs`
-- Motion and transforms: `moveit_msgs`, `geometry_msgs`, `tf2`, `tf2_ros`, `tf2_geometry_msgs`
+- Motion and transforms: `trajectory_msgs`, `geometry_msgs`, `tf2`, `tf2_ros`, `tf2_geometry_msgs`
 - Control and runtime messaging: `rclcpp`, `rclcpp_action`, `control_msgs`, `std_msgs`, `std_srvs`, `topic_based_ros2_control`
 - Simulation and perception bridges: `simulation_interfaces`, `vision_msgs`
 

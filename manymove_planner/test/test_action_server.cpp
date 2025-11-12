@@ -144,7 +144,7 @@ manymove_msgs::action::MoveManipulator::Goal makeMoveGoal(
   const moveit_msgs::msg::RobotTrajectory & traj)
 {
   manymove_msgs::action::MoveManipulator::Goal goal;
-  goal.existing_trajectory = traj;
+  goal.existing_trajectory = traj.joint_trajectory;
   goal.plan_request.movement_type = "joint";
   goal.plan_request.joint_values = traj.joint_trajectory.points.back().positions;
   goal.plan_request.config.rotational_precision = 0.1;
@@ -905,7 +905,7 @@ TEST_F(ManipulatorActionServerFixture, FallsBackToPlanningWhenExistingTrajectory
   EXPECT_EQ(fake_planner_->plan_call_count(), 1u);
   EXPECT_EQ(fake_planner_->controlled_stop_call_count(), 0u);
   EXPECT_EQ(
-    wrapped_result.result->final_trajectory.joint_trajectory.points.size(),
+    wrapped_result.result->final_trajectory.points.size(),
     planned_traj.joint_trajectory.points.size());
 }
 

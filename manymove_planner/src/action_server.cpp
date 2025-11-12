@@ -286,21 +286,23 @@ void ManipulatorActionServer::execute_move(
   bool have_valid_traj = false;
 
   // 1) Check if the user provided an existing trajectory
-  if (!goal->existing_trajectory.joint_trajectory.points.empty()) {
+  if (!goal->existing_trajectory.points.empty()) {
+    moveit_msgs::msg::RobotTrajectory provided_traj;
+    provided_traj.joint_trajectory = goal->existing_trajectory;
+
     std::vector<double> current_joints;
     {
       std::lock_guard<std::mutex> lock(joint_states_mutex_);
-      for (const auto & jn : goal->existing_trajectory.joint_trajectory.joint_names) {
+      for (const auto & jn : goal->existing_trajectory.joint_names) {
         current_joints.push_back(current_joint_positions_[jn]);
       }
     }
     bool starts_ok = planner_->isTrajectoryStartValid(
-      goal->existing_trajectory, goal->plan_request, current_joints);
+      provided_traj, goal->plan_request, current_joints);
 
     bool all_ok = true;
-    // const auto &pts = goal->existing_trajectory.joint_trajectory.points;
     if (!planner_->isTrajectoryValid(
-        goal->existing_trajectory.joint_trajectory, moveit_msgs::msg::Constraints()))
+        goal->existing_trajectory, moveit_msgs::msg::Constraints()))
     {
       RCLCPP_WARN(node_->get_logger(), "[MoveManipulator] existing_trajectory fails.");
       all_ok = false;
@@ -308,7 +310,7 @@ void ManipulatorActionServer::execute_move(
 
     if (starts_ok && all_ok) {
       have_valid_traj = true;
-      final_traj = goal->existing_trajectory;
+      final_traj = provided_traj;
       RCLCPP_INFO(
         node_->get_logger(),
         "[MoveManipulator] existing_trajectory is valid => will try to execute it");
@@ -415,7 +417,7 @@ void ManipulatorActionServer::execute_move(
   RCLCPP_INFO(node_->get_logger(), "[MoveManipulator] Done. Execution success!");
   result->success = true;
   result->message = "Execution success";
-  result->final_trajectory = final_traj;
+  result->final_trajectory = final_traj.joint_trajectory;
 
   {
     std::lock_guard<std::mutex> lock(move_state_mutex_);

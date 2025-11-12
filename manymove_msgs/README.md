@@ -31,7 +31,7 @@
 
 ## Dependencies
 - `geometry_msgs` – Provides `Pose` primitives for target and object pose representations.
-- `moveit_msgs` – Supplies `RobotTrajectory` messages exchanged during planning and execution.
+- `trajectory_msgs` – Supplies `JointTrajectory` messages exchanged during planning and execution.
 - `control_msgs` and `controller_manager_msgs` – Define controller management interfaces used by the trajectory load/unload actions.
 - `std_msgs` and `std_srvs` – Contribute common message and service primitives leveraged across the interface set.
 - `shape_msgs` – Enables describing collision object geometry beyond basic primitives.

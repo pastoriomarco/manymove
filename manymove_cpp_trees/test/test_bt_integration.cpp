@@ -36,7 +36,6 @@
 #include <string>
 #include <thread>
 #include <manymove_msgs/action/move_manipulator.hpp>
-#include <moveit_msgs/msg/robot_trajectory.hpp>
 #include <rclcpp/rclcpp.hpp>
 #include <rclcpp_action/rclcpp_action.hpp>
 

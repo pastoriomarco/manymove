@@ -9,7 +9,15 @@ high-level history.
 Forthcoming
 -----------
 
-*TBD.*
+- Decouples `manymove_msgs` from MoveIt by switching the `PlanManipulator`/`MoveManipulator`
+  actions to `trajectory_msgs/JointTrajectory` so downstream packages no longer pull in
+  `moveit_msgs` indirectly.
+- Updates `manymove_planner` to accept the slimmer action interface while still using
+  `moveit_msgs::msg::RobotTrajectory` internally, ensuring existing planners keep their MoveIt
+  features without leaking the dependency to callers.
+- Refreshes `manymove_cpp_trees` to store and exchange `trajectory_msgs::msg::JointTrajectory`
+  objects on the blackboard, removes MoveIt includes from the BehaviorTree nodes/tests, and
+  tightens package dependencies accordingly.
 
 0.2.2 (2025-11-07)
 ------------------

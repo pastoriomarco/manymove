@@ -43,7 +43,7 @@
 #include <manymove_msgs/action/get_object_pose.hpp>
 #include <manymove_msgs/action/move_manipulator.hpp>
 #include <manymove_msgs/action/remove_collision_object.hpp>
-#include <moveit_msgs/msg/robot_trajectory.hpp>
+#include <trajectory_msgs/msg/joint_trajectory.hpp>
 #include <rclcpp/rclcpp.hpp>
 #include <rclcpp_action/rclcpp_action.hpp>
 
@@ -69,7 +69,7 @@ public:
     return {
       BT::InputPort<std::string>("move_id"),
       BT::InputPort<std::string>("robot_prefix"),
-      BT::InputPort<moveit_msgs::msg::RobotTrajectory>("trajectory"),
+      BT::InputPort<trajectory_msgs::msg::JointTrajectory>("trajectory"),
       BT::InputPort<std::string>("pose_key", "Optional key to retrieve the dynamic target pose"),
       BT::InputPort<bool>("collision_detected", "If a collision is detected, the execution fails"),
       BT::InputPort<bool>(

@@ -33,6 +33,7 @@
 #include <vector>
 
 #include <geometry_msgs/msg/pose.hpp>
+#include <trajectory_msgs/msg/joint_trajectory.hpp>
 
 #include "manymove_cpp_trees/tree_helper.hpp"
 #include "manymove_cpp_trees/move.hpp"
@@ -139,6 +140,6 @@ TEST(TreeHelper, BuildMoveXMLSeedsBlackboardAndNodes)
   // BlackBoard contains move_0 and trajectory_0
   std::shared_ptr<manymove_cpp_trees::Move> m0;
   EXPECT_TRUE(bb->get("move_0", m0));
-  moveit_msgs::msg::RobotTrajectory traj0;
+  trajectory_msgs::msg::JointTrajectory traj0;
   EXPECT_TRUE(bb->get("trajectory_0", traj0));
 }
