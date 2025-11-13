@@ -11,6 +11,22 @@ Forthcoming
 
 - TBD.
 
+0.3.1 (2025-11-13)
+------------------
+
+Summary
+^^^^^^^
+- Updates the ROSCon 2025 FR+DE workshop guide plus the color-signal demo assets so docs and
+  BehaviorTree examples stay aligned.
+
+Highlights
+^^^^^^^^^^
+
+ROSCon 2025 FR+DE Universal Robots demos
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+- Polishes `manymove_cpp_trees/src/bt_client_ur.cpp` so the UR pick/place flows mirror the
+  external package's `manymove_color_signal/src/bt_client_ur_color_signal.cpp` content.
+
 0.3.0 (2025-11-12)
 ------------------
 
