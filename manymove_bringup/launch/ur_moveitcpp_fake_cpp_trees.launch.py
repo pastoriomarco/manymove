@@ -96,7 +96,8 @@ def launch_setup(context, *args, **kwargs):
     moveit_config_file = LaunchConfiguration('moveit_config_file')
     moveit_joint_limits_file = LaunchConfiguration('moveit_joint_limits_file')
     srdf_package = LaunchConfiguration('srdf_package')
-    gripper_action_server_cfg = LaunchConfiguration('gripper_action_server')
+    gripper_action_server = LaunchConfiguration('gripper_action_server')
+    contact_links = LaunchConfiguration('contact_links')
 
     prefix_raw = LaunchConfiguration('prefix').perform(context)
     planner_type = LaunchConfiguration('planner_type').perform(context)
@@ -109,37 +110,6 @@ def launch_setup(context, *args, **kwargs):
     set_tf_prefix = SetLaunchConfiguration('tf_prefix', prefix_clean)
 
     logger = logging.get_logger('ur_moveitcpp_fake_cpp_trees.launch')
-
-    def normalize_gripper_action(raw_value: str) -> str:
-        stripped = raw_value.lstrip('/')
-        if stripped.endswith('gripper_command'):
-            converted = stripped[: -len('gripper_command')] + 'gripper_cmd'
-            logger.warning(
-                (
-                    "Parameter 'gripper_action_server' value "
-                    f"'{raw_value}' uses deprecated suffix 'gripper_command'; "
-                    f"using '{converted}' instead."
-                )
-            )
-            return converted
-        return stripped
-
-    default_gripper_action = 'robotiq_gripper_controller/gripper_cmd'
-    gripper_action_value = gripper_action_server_cfg.perform(context)
-    gripper_action_stripped = normalize_gripper_action(gripper_action_value)
-    if not gripper_action_stripped:
-        gripper_action_server = ''
-    elif gripper_action_stripped == default_gripper_action:
-        resolved_action = (
-            f'{prefix_clean}{gripper_action_stripped}' if prefix_clean else gripper_action_stripped
-        )
-        gripper_action_server = f'/{resolved_action}'
-    else:
-        gripper_action_server = (
-            gripper_action_value
-            if gripper_action_value.startswith('/')
-            else f'/{gripper_action_stripped}'
-        )
 
     ur_type_value = ur_type.perform(context)
     use_fake_value = use_fake_hardware.perform(context).lower()
@@ -668,6 +638,7 @@ def launch_setup(context, *args, **kwargs):
                 'robot_prefix': prefix_clean,
                 'tcp_frame': tcp_frame,
                 'gripper_action_server': gripper_action_server,
+                'contact_links': contact_links,
                 'is_robot_real': is_robot_real,
             }
         ],
@@ -818,6 +789,12 @@ def generate_launch_description():
                 'gripper_action_server',
                 default_value='robotiq_gripper_controller/gripper_cmd',
                 description='Gripper command action server name (prefix applied automatically).',
+            ),
+            DeclareLaunchArgument(
+                'contact_links',
+                default_value='["robotiq_85_right_finger_tip_link", '
+                '"robotiq_85_left_finger_tip_link"]',
+                description='List of links to exclude from collision checking',
             ),
             DeclareLaunchArgument(
                 'controller_spawner_timeout',
