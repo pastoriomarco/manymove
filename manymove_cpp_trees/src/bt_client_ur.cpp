@@ -58,7 +58,7 @@ int main(int argc, char ** argv)
   // ----------------------------------------------------------------------------
   // 2) Build blocks for objects handling
   // ----------------------------------------------------------------------------
-  
+
   // This is the unified helper function to create all the snippets to handle scene's objects
   ObjectSnippets ground = createObjectSnippets(
     blackboard, keys, "ground",  // object name
@@ -174,13 +174,13 @@ int main(int argc, char ** argv)
     buildMoveXML(rp.prefix, rp.prefix + "pick", pick_sequence, blackboard, false, 3);
   std::string drop_object_xml =
     buildMoveXML(rp.prefix, rp.prefix + "drop", drop_sequence, blackboard, false, 3);
-  std::string to_drop_exit_xml = 
+  std::string to_drop_exit_xml =
     buildMoveXML(rp.prefix, rp.prefix + "exit", exit_drop_position, blackboard, false, 3);
-    
+
   // ----------------------------------------------------------------------------
   // 5) Build higher level snippets
-  // ----------------------------------------------------------------------------  
-  
+  // ----------------------------------------------------------------------------
+
   // Objects handling
   std::string spawn_fixed_objects_xml =
     sequenceWrapperXML("SpawnFixedObjects", {ground.init_xml, wall.init_xml});
@@ -189,7 +189,7 @@ int main(int argc, char ** argv)
     sequenceWrapperXML("GetGraspPoses", {get_pick_pose_xml, get_approach_pose_xml});
   std::string spawn_graspable_objects_xml =
     sequenceWrapperXML("SpawnGraspableObjects", {graspable.init_xml, get_grasp_object_poses_xml});
-  
+
   // Gripper commands
   const std::string gripper_close_action_xml =
     ("<GripperCommandAction position=\"0.75\" max_effort=\"40.0\" action_server=\"" +
@@ -198,15 +198,15 @@ int main(int argc, char ** argv)
     ("<GripperCommandAction position=\"0.25\" max_effort=\"40.0\" action_server=\"" +
     rp.gripper_action_server + "\"/>");
 
-  std::string close_gripper_xml = 
-  sequenceWrapperXML("CloseGripper", {gripper_close_action_xml, graspable.attach_xml});
+  std::string close_gripper_xml =
+    sequenceWrapperXML("CloseGripper", {gripper_close_action_xml, graspable.attach_xml});
   std::string open_gripper_xml =
     sequenceWrapperXML("OpenGripper", {gripper_open_action_xml, graspable.detach_xml});
 
   // Composed action sequences:
-  std::string pick_sequence_xml = 
+  std::string pick_sequence_xml =
     sequenceWrapperXML("PickSequence", {pick_object_xml, close_gripper_xml});
-  std::string drop_sequence_xml = 
+  std::string drop_sequence_xml =
     sequenceWrapperXML("DropSequence", {drop_object_xml, open_gripper_xml});
 
   std::string reset_graspable_objects_xml =
@@ -221,22 +221,22 @@ int main(int argc, char ** argv)
   // ----------------------------------------------------------------------------
 
   std::string startup_sequence_xml = sequenceWrapperXML(
-    "StartUpSequence", 
-    {
-      spawn_fixed_objects_xml, 
-      reset_graspable_objects_xml,
-      to_rest_reset_xml
-    });
+    "StartUpSequence",
+  {
+    spawn_fixed_objects_xml,
+    reset_graspable_objects_xml,
+    to_rest_reset_xml
+  });
 
   std::string repeat_forever_wrapper_xml = repeatSequenceWrapperXML(
     "RepeatForeverRobotCycle",
-    {
-      spawn_graspable_objects_xml,
-      pick_sequence_xml,
-      drop_sequence_xml,
-      home_sequence_xml,
-      graspable.remove_xml
-    },
+  {
+    spawn_graspable_objects_xml,
+    pick_sequence_xml,
+    drop_sequence_xml,
+    home_sequence_xml,
+    graspable.remove_xml
+  },
     -1);
 
   std::string retry_forever_wrapper_xml =
