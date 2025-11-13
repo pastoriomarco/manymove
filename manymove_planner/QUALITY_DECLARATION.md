@@ -12,7 +12,7 @@ The package follows ROS 2 and MoveIt coding standards and is actively maintained
 
 ## 2. Version Policy
 
-- Versioning: Semantic versioning (MAJOR.MINOR.PATCH) is followed. Current version: `0.3.0`.
+- Versioning: Semantic versioning (MAJOR.MINOR.PATCH) is followed. Current version: `0.3.1`.
 - Change control: All changes are reviewed via GitHub pull requests; CI validates builds and tests.
 - API stability: Public APIs (headers, actions, and parameters) are pre-1.0 and may change until `1.0.0`.
 
