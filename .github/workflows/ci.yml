@@ -40,6 +40,21 @@ jobs:
           restore-keys: |
             ccache-${{ matrix.ros_distro }}-
 
+      - name: Add Isaac ROS apt repository (Jazzy)
+        if: matrix.ros_distro == 'jazzy'
+        shell: bash
+        run: |
+          set -euo pipefail
+          apt-get update
+          apt-get install -y curl gnupg
+          mkdir -p /usr/share/keyrings
+          curl -fsSL https://isaac.download.nvidia.com/isaac-ros/repos.key \
+            | gpg --dearmor -o /usr/share/keyrings/isaac-ros-archive-keyring.gpg
+          . /etc/os-release
+          echo "deb [signed-by=/usr/share/keyrings/isaac-ros-archive-keyring.gpg] https://isaac.download.nvidia.com/isaac-ros/release-4 ${VERSION_CODENAME} main" \
+            > /etc/apt/sources.list.d/isaac-ros.list
+          apt-get update
+
       - name: Install build tooling
         run: |
           set -e
