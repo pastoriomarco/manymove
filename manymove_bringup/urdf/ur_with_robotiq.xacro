@@ -359,7 +359,7 @@
       sim_isaac="$(arg gripper_sim_isaac)"
       use_fake_hardware="$(arg gripper_use_fake_hardware)"
       fake_sensor_commands="$(arg gripper_fake_sensor_commands)"
-      include_ros2_control="${False}"
+      include_ros2_control="$(arg gripper_include_ros2_control)"
       com_port="$(arg gripper_com_port)">
       <origin xyz="$(arg gripper_mount_xyz)" rpy="$(arg gripper_mount_rpy)"/>
     </xacro:robotiq_gripper>
@@ -373,7 +373,7 @@
       sim_isaac="$(arg gripper_sim_isaac)"
       use_fake_hardware="$(arg gripper_use_fake_hardware)"
       mock_sensor_commands="$(arg gripper_fake_sensor_commands)"
-      include_ros2_control="${False}"
+      include_ros2_control="$(arg gripper_include_ros2_control)"
       com_port="$(arg gripper_com_port)">
       <origin xyz="$(arg gripper_mount_xyz)" rpy="$(arg gripper_mount_rpy)"/>
     </xacro:robotiq_gripper>
