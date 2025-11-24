@@ -497,7 +497,6 @@ def launch_setup(context, *args, **kwargs):
         controllers_active = [
             'joint_state_broadcaster',
             'joint_trajectory_controller',
-            'robotiq_activation_controller',
             'robotiq_gripper_controller',
         ]
         controllers_inactive = []
@@ -561,18 +560,6 @@ def launch_setup(context, *args, **kwargs):
                         '--controller-manager-timeout',
                         controller_spawner_timeout,
                         'robotiq_gripper_controller',
-                    ],
-                ),
-                Node(
-                    package='controller_manager',
-                    executable='spawner',
-                    output='screen',
-                    arguments=[
-                        '--controller-manager',
-                        '/controller_manager',
-                        '--controller-manager-timeout',
-                        controller_spawner_timeout,
-                        'robotiq_activation_controller',
                     ],
                 ),
             ],
