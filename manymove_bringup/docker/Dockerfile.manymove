@@ -32,6 +32,20 @@ ENV GROOT_SOURCE_DIR=${MANYMOVE_WS}/src/Groot
 
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 
+# Add Isaac ROS apt repo for Jazzy to install topic-based-ros2-control
+RUN set -euo pipefail; \
+    if [[ "${ROS_DISTRO}" == "jazzy" ]]; then \
+        apt-get update && \
+        apt-get install -y curl gnupg && \
+        mkdir -p /usr/share/keyrings && \
+        curl -fsSL https://isaac.download.nvidia.com/isaac-ros/repos.key \
+          | gpg --dearmor -o /usr/share/keyrings/isaac-ros-archive-keyring.gpg && \
+        . /etc/os-release && \
+        printf 'deb [signed-by=/usr/share/keyrings/isaac-ros-archive-keyring.gpg] https://isaac.download.nvidia.com/isaac-ros/release-4 %s main\n' "${VERSION_CODENAME}" \
+          > /etc/apt/sources.list.d/isaac-ros.list && \
+        apt-get update; \
+    fi
+
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
         cmake \
@@ -57,7 +71,6 @@ RUN apt-get update && \
         qttools5-dev-tools \
         libqt5svg5-dev \
         libqt5opengl5-dev \
-        cppzmq-dev \
         nano \
         ros-${ROS_DISTRO}-moveit \
         ros-${ROS_DISTRO}-moveit-msgs \
