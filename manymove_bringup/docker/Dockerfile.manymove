@@ -67,6 +67,7 @@ RUN apt-get update && \
         libegl1 \
         libxcb-xinerama0 \
         libxkbcommon-x11-0 \
+        libzmq3-dev \
         qtbase5-dev \
         qttools5-dev-tools \
         libqt5svg5-dev \
@@ -92,6 +93,22 @@ RUN apt-get update && \
         ros-${ROS_DISTRO}-moveit-ros-planning-interface \
         ros-${ROS_DISTRO}-moveit-core && \
     rm -rf /var/lib/apt/lists/*
+
+RUN set -euo pipefail; \
+    if apt-cache show cppzmq-dev >/dev/null 2>&1; then \
+        apt-get update && \
+        apt-get install -y cppzmq-dev && \
+        rm -rf /var/lib/apt/lists/*; \
+    else \
+        apt-get update && \
+        apt-get install -y libzmq3-dev && \
+        tmpdir=$(mktemp -d); \
+        git clone --depth 1 https://github.com/zeromq/cppzmq.git "${tmpdir}/cppzmq"; \
+        cmake -S "${tmpdir}/cppzmq" -B "${tmpdir}/build" -DCPPZMQ_BUILD_TESTS=OFF -DCMAKE_INSTALL_PREFIX=/usr; \
+        cmake --build "${tmpdir}/build"; \
+        cmake --install "${tmpdir}/build"; \
+        rm -rf "${tmpdir}" /var/lib/apt/lists/*; \
+    fi
 
 RUN locale-gen en_US.UTF-8 && update-locale LANG=en_US.UTF-8
 
