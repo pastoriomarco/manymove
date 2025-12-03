@@ -65,6 +65,8 @@
     value="${ros_distro == 'foxy' or ros_distro == 'galactic' or ros_distro == 'humble' or ros_distro == 'iron'}"/>
   <xacro:property name="initial_positions" value="${xacro.load_yaml(initial_positions_file_path)}"/>
   <xacro:property name="force_abs_paths" value="${is_sim_gazebo or is_sim_ignition}"/>
+  <xacro:property name="gripper_sim_gazebo" value="${is_sim_gazebo or is_sim_ignition}"/>
+  <xacro:property name="gripper_sim_ign" value="$(arg gripper_sim_ignition)"/>
   <xacro:property name="gripper_open_position" value="0.7929"/>
 
   <link name="world"/>
@@ -353,11 +355,11 @@
       name="$(arg gripper_name)"
       prefix="$(arg gripper_prefix)"
       parent="$(arg gripper_parent_link)"
-      sim_ignition="$(arg gripper_sim_ignition)"
+      sim_ignition="${gripper_sim_ign}"
       sim_isaac="$(arg gripper_sim_isaac)"
       use_fake_hardware="$(arg gripper_use_fake_hardware)"
       fake_sensor_commands="$(arg gripper_fake_sensor_commands)"
-      include_ros2_control="true"
+      include_ros2_control="$(arg gripper_include_ros2_control)"
       com_port="$(arg gripper_com_port)">
       <origin xyz="$(arg gripper_mount_xyz)" rpy="$(arg gripper_mount_rpy)"/>
     </xacro:robotiq_gripper>
@@ -367,11 +369,11 @@
       name="$(arg gripper_name)"
       prefix="$(arg gripper_prefix)"
       parent="$(arg gripper_parent_link)"
-      sim_ignition="$(arg gripper_sim_ignition)"
+      sim_gazebo="${gripper_sim_gazebo}"
       sim_isaac="$(arg gripper_sim_isaac)"
       use_fake_hardware="$(arg gripper_use_fake_hardware)"
-      fake_sensor_commands="$(arg gripper_fake_sensor_commands)"
-      include_ros2_control="false"
+      mock_sensor_commands="$(arg gripper_fake_sensor_commands)"
+      include_ros2_control="$(arg gripper_include_ros2_control)"
       com_port="$(arg gripper_com_port)">
       <origin xyz="$(arg gripper_mount_xyz)" rpy="$(arg gripper_mount_rpy)"/>
     </xacro:robotiq_gripper>

@@ -11,6 +11,28 @@ Forthcoming
 
 - TBD.
 
+0.3.2 (2025-12-03)
+------------------
+
+Summary
+^^^^^^^
+- Keeps UR bringup working on Jazzy after upstream Robotiq changes by pruning the legacy activation controller and aligning xacro control flags with the new packages.
+- Restores Humble gripper controller spawning by honoring the `gripper_include_ros2_control` toggle in the Robotiq xacro.
+- Unblocks Jazzy CI and Docker builds by adding the Isaac ROS apt repository and ensuring `cppzmq`/ZeroMQ headers are present even when distro packages are missing.
+
+Highlights
+^^^^^^^^^^
+
+UR Robotiq bringup resilience
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+- Removes the `robotiq_activation_controller` spawner from the UR fake-tree launchers and threads new simulation/control properties through `ur_with_robotiq.xacro` so Jazzy launches track the updated UR/Robotiq packages without crashing.
+- Hooks the Robotiq xacro back up to `gripper_include_ros2_control`, restoring controller spawning on Humble while keeping Jazzy simulation toggles consistent.
+
+Jazzy container and CI dependencies
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+- Adds the Isaac ROS apt repository in both the Dockerfile and CI when targeting Jazzy so `topic-based-ros2-control` and related packages resolve during builds.
+- Ensures ZeroMQ headers are available in the bringup image by installing `libzmq3-dev` and falling back to building `cppzmq` from source when the distro package is unavailable, keeping Groot compilation working across runners.
+
 0.3.1 (2025-11-13)
 ------------------
 
