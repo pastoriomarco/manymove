@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.14.4)
-project(manymove_hmi VERSION 0.3.1 LANGUAGES CXX)
+project(manymove_hmi VERSION 0.3.2 LANGUAGES CXX)
 
 # ──────────────────────────────────────────────────────────────
 #  Global / Qt
