@@ -278,6 +278,9 @@ fi
 if [[ -z "${MANYMOVE_NO_GPU:-}" ]] && command -v nvidia-smi >/dev/null 2>&1; then
   RUN_ARGS+=("--gpus" "all")
 else
+  # Force the standard OCI runtime when GPU support is disabled so Docker
+  # doesn't fall back to a globally configured NVIDIA runtime.
+  RUN_ARGS+=("--runtime" "runc")
   echo "GPU support disabled (MANYMOVE_NO_GPU set or nvidia-smi missing)"
 fi
 
