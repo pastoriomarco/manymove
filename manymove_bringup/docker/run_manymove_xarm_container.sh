@@ -69,6 +69,29 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 DOCKER_DIR="${SCRIPT_DIR}"
 BASE_RUN_SCRIPT="${DOCKER_DIR}/run_manymove_container.sh"
 DOCKERFILE="${DOCKER_DIR}/Dockerfile.manymove_xarm"
+CONTAINER_WORKSPACE="/opt/manymove_ws"
+
+resolve_host_workspace() {
+  if [[ -n "${MANYMOVE_ROS_WS:-}" ]]; then
+    realpath "${MANYMOVE_ROS_WS}"
+    return
+  fi
+
+  local repo_root=""
+  repo_root="$(git -C "${SCRIPT_DIR}" rev-parse --show-toplevel 2>/dev/null || true)"
+  if [[ -n "${repo_root}" ]]; then
+    local parent_dir=""
+    local grandparent_dir=""
+    parent_dir="$(dirname "${repo_root}")"
+    grandparent_dir="$(dirname "${parent_dir}")"
+    if [[ "$(basename "${parent_dir}")" == "src" ]]; then
+      realpath "${grandparent_dir}"
+      return
+    fi
+  fi
+
+  return 1
+}
 
 if [[ ! -f "${DOCKERFILE}" ]]; then
   echo "xArm Dockerfile not found at ${DOCKERFILE}" >&2
@@ -108,6 +131,14 @@ IMAGE_TAG="manymove-xarm:${DISTRO}"
 LABEL_KEY="manymove.xarm.context.sha"
 COMMIT_LABEL_KEY="manymove.xarm.commit"
 BASE_LABEL_KEY="manymove.base.id"
+HOST_WORKSPACE=""
+
+if HOST_WORKSPACE="$(resolve_host_workspace 2>/dev/null)"; then
+  if [[ ! -d "${HOST_WORKSPACE}/src" ]]; then
+    echo "Resolved host workspace '${HOST_WORKSPACE}' is missing a src/ directory; ignoring host mount." >&2
+    HOST_WORKSPACE=""
+  fi
+fi
 
 IMAGE_PRESENT=false
 EXISTING_COMMIT=""
@@ -216,7 +247,16 @@ RUN_ARGS=(
   "--rm"
   "-it"
   "--network" "host"
+  "-e" "MANYMOVE_WS=${CONTAINER_WORKSPACE}"
+  "-w" "${CONTAINER_WORKSPACE}"
 )
+
+if [[ -n "${HOST_WORKSPACE}" ]]; then
+  RUN_ARGS+=("-v" "${HOST_WORKSPACE}:${CONTAINER_WORKSPACE}:rw")
+  echo "Mounting host workspace '${HOST_WORKSPACE}' at '${CONTAINER_WORKSPACE}'."
+else
+  echo "Host workspace could not be resolved; using the image workspace at '${CONTAINER_WORKSPACE}'."
+fi
 
 if [[ -n "${DISPLAY:-}" ]]; then
   RUN_ARGS+=("-e" "DISPLAY=${DISPLAY}")

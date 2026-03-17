@@ -75,6 +75,28 @@ if [[ ! -f "${DOCKERFILE}" ]]; then
   exit 1
 fi
 
+resolve_host_workspace() {
+  if [[ -n "${MANYMOVE_ROS_WS:-}" ]]; then
+    realpath "${MANYMOVE_ROS_WS}"
+    return
+  fi
+
+  local repo_root=""
+  repo_root="$(git -C "${SCRIPT_DIR}" rev-parse --show-toplevel 2>/dev/null || true)"
+  if [[ -n "${repo_root}" ]]; then
+    local parent_dir=""
+    local grandparent_dir=""
+    parent_dir="$(dirname "${repo_root}")"
+    grandparent_dir="$(dirname "${parent_dir}")"
+    if [[ "$(basename "${parent_dir}")" == "src" ]]; then
+      realpath "${grandparent_dir}"
+      return
+    fi
+  fi
+
+  return 1
+}
+
 resolve_manymove_branch() {
   if [[ -n "${MANYMOVE_BRANCH:-}" ]]; then
     printf 'env\n%s\n' "${MANYMOVE_BRANCH}"
@@ -100,9 +122,18 @@ MANYMOVE_BRANCH_SOURCE="${MANYMOVE_BRANCH_INFO[0]:-fallback}"
 MANYMOVE_BRANCH_DEFAULT="${MANYMOVE_BRANCH_INFO[1]:-main}"
 
 IMAGE_TAG="manymove:${DISTRO}"
+CONTAINER_WORKSPACE="/opt/manymove_ws"
 CONTAINER_USER="${USER:-manymove}"
 CONTAINER_UID="$(id -u)"
 CONTAINER_GID="$(id -g)"
+HOST_WORKSPACE=""
+
+if HOST_WORKSPACE="$(resolve_host_workspace 2>/dev/null)"; then
+  if [[ ! -d "${HOST_WORKSPACE}/src" ]]; then
+    echo "Resolved host workspace '${HOST_WORKSPACE}' is missing a src/ directory; ignoring host mount." >&2
+    HOST_WORKSPACE=""
+  fi
+fi
 
 MANYMOVE_REPO_DEFAULT="https://github.com/pastoriomarco/manymove.git"
 TARGET_COMMIT=""
@@ -260,7 +291,16 @@ RUN_ARGS=(
   "-it"
   "--network" "host"
   "--ipc" "host"  # share /dev/shm so Fast DDS shared memory works across shells/containers
+  "-e" "MANYMOVE_WS=${CONTAINER_WORKSPACE}"
+  "-w" "${CONTAINER_WORKSPACE}"
 )
+
+if [[ -n "${HOST_WORKSPACE}" ]]; then
+  RUN_ARGS+=("-v" "${HOST_WORKSPACE}:${CONTAINER_WORKSPACE}:rw")
+  echo "Mounting host workspace '${HOST_WORKSPACE}' at '${CONTAINER_WORKSPACE}'."
+else
+  echo "Host workspace could not be resolved; using the image workspace at '${CONTAINER_WORKSPACE}'."
+fi
 
 if [[ -n "${DISPLAY:-}" ]]; then
   RUN_ARGS+=("-e" "DISPLAY=${DISPLAY}")

@@ -21,7 +21,7 @@ Swap the final argument for `humble` to launch the Humble variant. The helper sc
 - Pass `--build-only` to refresh the image without starting a container (useful before launching composed stacks).
 - Clones the ManyMove branch that matches your local checkout (falls back to `main`) inside the image at `/opt/manymove_ws/src/manymove`. Set `MANYMOVE_BRANCH` to override explicitly.
 - Runs `rosdep` and `colcon build` during image creation so the overlay is ready out of the box.
-- Starts the container without mounting your host workspace, keeping the environment self-contained.
+- Mounts your host ROS workspace into the container at `/opt/manymove_ws` by default, so edits in your local checkout are visible immediately inside Docker. Set `MANYMOVE_ROS_WS` if auto-detection should use a different workspace root.
 - Forwards X11 variables when available and enables GPU access automatically if `nvidia-smi` exists on the host.
 - Forces software OpenGL rendering (via `LIBGL_ALWAYS_SOFTWARE=1`) so RViz works even without direct GPU access; pass your GPU devices and override the variable if you prefer hardware acceleration.
 
@@ -73,7 +73,7 @@ The ManyMove overlay is already built and auto-sourced for every interactive she
 ros2 pkg list | grep manymove
 ```
 
-Project sources are located at `/opt/manymove_ws/src/manymove`:
+Project sources are available from your mounted host workspace at `/opt/manymove_ws/src/manymove`:
 
 ```bash
 cd /opt/manymove_ws/src/manymove
@@ -127,7 +127,7 @@ docker build \
   .
 ```
 
-Adjust build arguments (e.g., `MANYMOVE_BRANCH`) and set `ROS_DISTRO=jazzy` for the Jazzy image. The built workspace lives at `/opt/manymove_ws`; mount or override it only if you intentionally want to develop against a host directory.
+Adjust build arguments (e.g., `MANYMOVE_BRANCH`) and set `ROS_DISTRO=jazzy` for the Jazzy image. The image still builds its own fallback workspace at `/opt/manymove_ws`, but the helper scripts now bind-mount your host workspace there by default when they can resolve it.
 
 For the xArm-enabled image:
 
