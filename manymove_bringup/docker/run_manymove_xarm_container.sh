@@ -70,6 +70,7 @@ DOCKER_DIR="${SCRIPT_DIR}"
 BASE_RUN_SCRIPT="${DOCKER_DIR}/run_manymove_container.sh"
 DOCKERFILE="${DOCKER_DIR}/Dockerfile.manymove_xarm"
 CONTAINER_WORKSPACE="/opt/manymove_ws"
+CONTAINER_SRC_DIR="${CONTAINER_WORKSPACE}/src"
 
 resolve_host_workspace() {
   if [[ -n "${MANYMOVE_ROS_WS:-}" ]]; then
@@ -132,11 +133,14 @@ LABEL_KEY="manymove.xarm.context.sha"
 COMMIT_LABEL_KEY="manymove.xarm.commit"
 BASE_LABEL_KEY="manymove.base.id"
 HOST_WORKSPACE=""
+HOST_SRC_DIR=""
 
 if HOST_WORKSPACE="$(resolve_host_workspace 2>/dev/null)"; then
-  if [[ ! -d "${HOST_WORKSPACE}/src" ]]; then
+  HOST_SRC_DIR="${HOST_WORKSPACE}/src"
+  if [[ ! -d "${HOST_SRC_DIR}" ]]; then
     echo "Resolved host workspace '${HOST_WORKSPACE}' is missing a src/ directory; ignoring host mount." >&2
     HOST_WORKSPACE=""
+    HOST_SRC_DIR=""
   fi
 fi
 
@@ -252,8 +256,8 @@ RUN_ARGS=(
 )
 
 if [[ -n "${HOST_WORKSPACE}" ]]; then
-  RUN_ARGS+=("-v" "${HOST_WORKSPACE}:${CONTAINER_WORKSPACE}:rw")
-  echo "Mounting host workspace '${HOST_WORKSPACE}' at '${CONTAINER_WORKSPACE}'."
+  RUN_ARGS+=("-v" "${HOST_SRC_DIR}:${CONTAINER_SRC_DIR}:rw")
+  echo "Mounting host sources '${HOST_SRC_DIR}' at '${CONTAINER_SRC_DIR}'."
 else
   echo "Host workspace could not be resolved; using the image workspace at '${CONTAINER_WORKSPACE}'."
 fi
