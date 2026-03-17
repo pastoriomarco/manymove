@@ -97,8 +97,14 @@ RUN apt-get update && \
     rm -rf /var/lib/apt/lists/*
 
 # Pre-register completions for ros2/colcon so every shell gets tab completion.
-RUN register-python-argcomplete ros2 >/etc/bash_completion.d/ros2 && \
-    register-python-argcomplete colcon >/etc/bash_completion.d/colcon
+RUN set -euo pipefail; \
+    register_argcomplete="$(command -v register-python-argcomplete || command -v register-python-argcomplete3 || true)"; \
+    if [[ -z "${register_argcomplete}" ]]; then \
+        echo "No register-python-argcomplete executable found." >&2; \
+        exit 1; \
+    fi; \
+    "${register_argcomplete}" ros2 >/etc/bash_completion.d/ros2 && \
+    "${register_argcomplete}" colcon >/etc/bash_completion.d/colcon
 
 RUN set -euo pipefail; \
     if apt-cache show cppzmq-dev >/dev/null 2>&1; then \
