@@ -240,7 +240,7 @@ More info in [my fork of xarm_ros2 HERE](https://github.com/pastoriomarco/xarm_r
 ```bash
 export MANYMOVE_ROS_WS=~/workspaces/dev_ws
 cd ${MANYMOVE_ROS_WS}/src
-git clone https://github.com/pastoriomarco/xarm_ros2.git --recursive -b $ROS_DISTRO
+git clone https://github.com/pastoriomarco/xarm_ros2.git --recursive -b ${ROS_DISTRO}_no_gazebo
 cd ${MANYMOVE_ROS_WS}/src/xarm_ros2
 git submodule update --init --recursive
 git pull --recurse-submodules

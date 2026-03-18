@@ -4,7 +4,7 @@ FROM manymove:${ROS_DISTRO}
 
 ARG MANYMOVE_COLCON_WORKERS
 ARG XARM_REPO=https://github.com/pastoriomarco/xarm_ros2.git
-ARG XARM_BRANCH=${ROS_DISTRO}
+ARG XARM_BRANCH=${ROS_DISTRO}_no_gazebo
 ARG XARM_COMMIT=""
 
 USER root

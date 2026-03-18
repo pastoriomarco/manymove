@@ -134,11 +134,11 @@ For the xArm-enabled image:
 ```bash
 docker build \
   --build-arg ROS_DISTRO=humble \
-  --build-arg XARM_BRANCH=humble \
-  --build-arg XARM_COMMIT=$(git ls-remote --heads https://github.com/pastoriomarco/xarm_ros2.git humble | awk '{print $1}') \
+  --build-arg XARM_BRANCH=humble_no_gazebo \
+  --build-arg XARM_COMMIT=$(git ls-remote --heads https://github.com/pastoriomarco/xarm_ros2.git humble_no_gazebo | awk '{print $1}') \
   -t manymove-xarm:humble \
   -f Dockerfile.manymove_xarm \
   .
 ```
 
-Set `ROS_DISTRO`/`XARM_BRANCH` to `jazzy` (or your preferred branch) to target Jazzy.
+Set `ROS_DISTRO`/`XARM_BRANCH` to `jazzy` / `jazzy_no_gazebo` to target Jazzy.

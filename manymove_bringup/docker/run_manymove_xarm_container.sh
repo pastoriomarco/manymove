@@ -124,7 +124,7 @@ fi
 BASE_IMAGE_ID="$(docker image inspect "${BASE_IMAGE_TAG}" --format '{{ .Id }}')"
 
 XARM_REPO_DEFAULT="https://github.com/pastoriomarco/xarm_ros2.git"
-XARM_BRANCH_DEFAULT="${DISTRO}"
+XARM_BRANCH_DEFAULT="${DISTRO}_no_gazebo"
 TARGET_XARM_COMMIT=""
 LABEL_XARM_COMMIT=""
 
