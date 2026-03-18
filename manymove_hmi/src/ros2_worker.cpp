@@ -92,13 +92,13 @@ void Ros2Worker::statusCallback(const std_msgs::msg::String::SharedPtr msg)
   const auto & knownKeys = appModule->getKnownKeys();
 
   auto stripQuotes = [](std::string & s) {
-      if (!s.empty() && s.front() == '"') {
-        s.erase(0, 1);
-      }
-      if (!s.empty() && s.back() == '"') {
-        s.pop_back();
-      }
-    };
+    if (!s.empty() && s.front() == '"') {
+      s.erase(0, 1);
+    }
+    if (!s.empty() && s.back() == '"') {
+      s.pop_back();
+    }
+  };
 
   for (const auto & bk : knownKeys) {
     /* keys in the JSON are *not* prefixed – keep original pattern */
@@ -195,25 +195,25 @@ void Ros2Worker::statusCallback(const std_msgs::msg::String::SharedPtr msg)
 
   /* ---------- per-robot message -------------------------------- */
   auto findString = [&](const std::string & key) -> std::string {
-      std::string pattern = "\"" + key + "\":";
-      size_t pos = data.find(pattern);
-      if (pos == std::string::npos) {
-        return std::string();
-      }
-      pos += pattern.size();
-      while (pos < data.size() && std::isspace(data[pos])) {
-        ++pos;
-      }
-      if (pos >= data.size() || data[pos] != '"') {
-        return std::string();
-      }
+    std::string pattern = "\"" + key + "\":";
+    size_t pos = data.find(pattern);
+    if (pos == std::string::npos) {
+      return std::string();
+    }
+    pos += pattern.size();
+    while (pos < data.size() && std::isspace(data[pos])) {
       ++pos;
-      size_t end = data.find('"', pos);
-      if (end == std::string::npos) {
-        return std::string();
-      }
-      return data.substr(pos, end - pos);
-    };
+    }
+    if (pos >= data.size() || data[pos] != '"') {
+      return std::string();
+    }
+    ++pos;
+    size_t end = data.find('"', pos);
+    if (end == std::string::npos) {
+      return std::string();
+    }
+    return data.substr(pos, end - pos);
+  };
 
   const std::string msgKey = robot_prefix_ + "message";
   const std::string colorKey = robot_prefix_ + "message_color";

@@ -245,71 +245,71 @@ double MoveItCppPlanner::computePathLength(
 
   // Helper to compute joint-space path length
   auto computeJointPathLength = [&](const moveit_msgs::msg::RobotTrajectory & traj) -> double {
-      double length = 0.0;
-      for (size_t i = 1; i < traj.joint_trajectory.points.size(); ++i) {
-        const auto & prev_point = traj.joint_trajectory.points[i - 1];
-        const auto & curr_point = traj.joint_trajectory.points[i];
+    double length = 0.0;
+    for (size_t i = 1; i < traj.joint_trajectory.points.size(); ++i) {
+      const auto & prev_point = traj.joint_trajectory.points[i - 1];
+      const auto & curr_point = traj.joint_trajectory.points[i];
 
-        // Ensure joint positions are valid
-        if (prev_point.positions.size() != curr_point.positions.size()) {
-          RCLCPP_ERROR(
-            logger_, "Mismatch in joint positions size at trajectory points %zu and %zu.", i - 1,
-            i);
-          return 0.0;
-        }
-
-        double segment_length = 0.0;
-        for (size_t j = 0; j < prev_point.positions.size(); ++j) {
-          double diff = curr_point.positions[j] - prev_point.positions[j];
-          segment_length += diff * diff;
-        }
-        length += std::sqrt(segment_length);
+      // Ensure joint positions are valid
+      if (prev_point.positions.size() != curr_point.positions.size()) {
+        RCLCPP_ERROR(
+          logger_, "Mismatch in joint positions size at trajectory points %zu and %zu.", i - 1,
+          i);
+        return 0.0;
       }
 
-      return length;
-    };
+      double segment_length = 0.0;
+      for (size_t j = 0; j < prev_point.positions.size(); ++j) {
+        double diff = curr_point.positions[j] - prev_point.positions[j];
+        segment_length += diff * diff;
+      }
+      length += std::sqrt(segment_length);
+    }
+
+    return length;
+  };
 
   // Helper to compute Cartesian path length using TCP pose
   auto computeCartesianPathLength = [&](const moveit_msgs::msg::RobotTrajectory & traj) -> double {
-      double length = 0.0;
+    double length = 0.0;
 
-      // Access the robot model
-      auto robot_model = moveit_cpp_ptr_->getRobotModel();
-      if (!robot_model) {
-        RCLCPP_ERROR(logger_, "Robot model is null.");
-        return 0.0;
-      }
+    // Access the robot model
+    auto robot_model = moveit_cpp_ptr_->getRobotModel();
+    if (!robot_model) {
+      RCLCPP_ERROR(logger_, "Robot model is null.");
+      return 0.0;
+    }
 
-      // Create a robot state
-      moveit::core::RobotState robot_state(robot_model);
-      const auto & joint_model_group = robot_model->getJointModelGroup(planning_group_);
-      if (!joint_model_group) {
-        RCLCPP_ERROR(logger_, "Invalid joint model group.");
-        return 0.0;
-      }
+    // Create a robot state
+    moveit::core::RobotState robot_state(robot_model);
+    const auto & joint_model_group = robot_model->getJointModelGroup(planning_group_);
+    if (!joint_model_group) {
+      RCLCPP_ERROR(logger_, "Invalid joint model group.");
+      return 0.0;
+    }
 
-      for (size_t i = 1; i < traj.joint_trajectory.points.size(); ++i) {
-        // Set the previous and current joint values
-        const auto & prev_point = traj.joint_trajectory.points[i - 1];
-        const auto & curr_point = traj.joint_trajectory.points[i];
+    for (size_t i = 1; i < traj.joint_trajectory.points.size(); ++i) {
+      // Set the previous and current joint values
+      const auto & prev_point = traj.joint_trajectory.points[i - 1];
+      const auto & curr_point = traj.joint_trajectory.points[i];
 
-        robot_state.setJointGroupPositions(joint_model_group, prev_point.positions);
-        const Eigen::Isometry3d prev_tcp_pose =
-          robot_state.getGlobalLinkTransform(config.tcp_frame);
+      robot_state.setJointGroupPositions(joint_model_group, prev_point.positions);
+      const Eigen::Isometry3d prev_tcp_pose =
+        robot_state.getGlobalLinkTransform(config.tcp_frame);
 
-        robot_state.setJointGroupPositions(joint_model_group, curr_point.positions);
-        const Eigen::Isometry3d curr_tcp_pose =
-          robot_state.getGlobalLinkTransform(config.tcp_frame);
+      robot_state.setJointGroupPositions(joint_model_group, curr_point.positions);
+      const Eigen::Isometry3d curr_tcp_pose =
+        robot_state.getGlobalLinkTransform(config.tcp_frame);
 
-        // Calculate the Cartesian distance
-        Eigen::Vector3d prev_position = prev_tcp_pose.translation();
-        Eigen::Vector3d curr_position = curr_tcp_pose.translation();
+      // Calculate the Cartesian distance
+      Eigen::Vector3d prev_position = prev_tcp_pose.translation();
+      Eigen::Vector3d curr_position = curr_tcp_pose.translation();
 
-        length += (curr_position - prev_position).norm();
-      }
+      length += (curr_position - prev_position).norm();
+    }
 
-      return length;
-    };
+    return length;
+  };
 
   // Compute both joint and Cartesian path lengths
   double joint_length = computeJointPathLength(trajectory);

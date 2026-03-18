@@ -462,7 +462,10 @@ bool loadFoundationPoseAdaptConfig(
   config = FoundationPoseAdaptPortConfig{};
 
   if (require_pick_pose_key) {
-    if (!tree_node.getInput("pick_pose_key", config.pick_pose_key) || config.pick_pose_key.empty()) {
+    if (!tree_node.getInput(
+        "pick_pose_key",
+        config.pick_pose_key) || config.pick_pose_key.empty())
+    {
       RCLCPP_ERROR(
         node->get_logger(), "[%s] Missing required input 'pick_pose_key'",
         tree_node.name().c_str());
@@ -523,7 +526,8 @@ FoundationPoseAdaptComputationResult computeFoundationPoseAdaptation(
   std_msgs::msg::Header detection_header, const FoundationPoseAdaptPortConfig & config)
 {
   FoundationPoseAdaptComputationResult result;
-  const std::string planning_frame = config.planning_frame.empty() ? "world" : config.planning_frame;
+  const std::string planning_frame =
+    config.planning_frame.empty() ? "world" : config.planning_frame;
   const std::string alignment_frame = "world";
 
   geometry_msgs::msg::PoseStamped detection_pose;
@@ -620,7 +624,8 @@ BT::NodeStatus publishFoundationPoseAdaptation(
     if (result.retryable) {
       RCLCPP_WARN_THROTTLE(
         node->get_logger(), *clock, 2000, "[%s] Failed to transform pose from '%s' to '%s': %s",
-        tree_node.name().c_str(), result.failure_from_frame.c_str(), result.failure_to_frame.c_str(),
+        tree_node.name().c_str(), result.failure_from_frame.c_str(),
+        result.failure_to_frame.c_str(),
         result.error_message.c_str());
 
       if (didFoundationPoseAdaptationTimeout(clock, start_time, timeout_seconds)) {

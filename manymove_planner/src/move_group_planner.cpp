@@ -228,37 +228,37 @@ double MoveGroupPlanner::computePathLength(
 
   // ---------- helper: joint‑space ----------
   auto jointLen = [&](const trajectory_msgs::msg::JointTrajectory & jt) {
-      double len = 0.0;
-      for (size_t i = 1; i < jt.points.size(); ++i) {
-        double seg = 0.0;
-        for (size_t j = 0; j < jt.points[i].positions.size(); ++j) {
-          double d = jt.points[i].positions[j] - jt.points[i - 1].positions[j];
-          seg += d * d;
-        }
-        len += std::sqrt(seg);
+    double len = 0.0;
+    for (size_t i = 1; i < jt.points.size(); ++i) {
+      double seg = 0.0;
+      for (size_t j = 0; j < jt.points[i].positions.size(); ++j) {
+        double d = jt.points[i].positions[j] - jt.points[i - 1].positions[j];
+        seg += d * d;
       }
-      return len;
-    };
+      len += std::sqrt(seg);
+    }
+    return len;
+  };
 
   // ---------- helper: TCP Cartesian ----------
   auto cartLen = [&](const moveit_msgs::msg::RobotTrajectory & t) {
-      const auto robot_model = move_group_interface_->getRobotModel();
-      const auto jmg = robot_model->getJointModelGroup(planning_group_);
+    const auto robot_model = move_group_interface_->getRobotModel();
+    const auto jmg = robot_model->getJointModelGroup(planning_group_);
 
-      moveit::core::RobotState st(robot_model);
-      double len = 0.0;
+    moveit::core::RobotState st(robot_model);
+    double len = 0.0;
 
-      for (size_t i = 1; i < t.joint_trajectory.points.size(); ++i) {
-        st.setJointGroupPositions(jmg, t.joint_trajectory.points[i - 1].positions);
-        Eigen::Vector3d p1 = st.getGlobalLinkTransform(config.tcp_frame).translation();
+    for (size_t i = 1; i < t.joint_trajectory.points.size(); ++i) {
+      st.setJointGroupPositions(jmg, t.joint_trajectory.points[i - 1].positions);
+      Eigen::Vector3d p1 = st.getGlobalLinkTransform(config.tcp_frame).translation();
 
-        st.setJointGroupPositions(jmg, t.joint_trajectory.points[i].positions);
-        Eigen::Vector3d p2 = st.getGlobalLinkTransform(config.tcp_frame).translation();
+      st.setJointGroupPositions(jmg, t.joint_trajectory.points[i].positions);
+      Eigen::Vector3d p2 = st.getGlobalLinkTransform(config.tcp_frame).translation();
 
-        len += (p2 - p1).norm();
-      }
-      return len;
-    };
+      len += (p2 - p1).norm();
+    }
+    return len;
+  };
 
   const double jl = jointLen(traj.joint_trajectory);
   const double cl = cartLen(traj);
