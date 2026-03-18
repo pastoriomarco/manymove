@@ -316,23 +316,20 @@ std::string buildFoundationPoseSequenceXML(
   const std::string & object_pose_key, bool z_threshold_activation, double z_threshold,
   bool normalize_pose, bool force_z_vertical, bool bounds_check, const std::vector<double> & bounds)
 {
+  const std::string raw_pose_key = sequence_name + "_foundationpose_raw_pose";
+  const std::string raw_header_key = sequence_name + "_foundationpose_raw_header";
+  const std::string raw_detections_key = sequence_name + "_foundationpose_raw_detections";
+
   std::ostringstream xml;
   xml << "<Sequence name=\"" << sequence_name << "\">";
-  xml << "<FoundationPoseAlignmentNode"
-      << " input_topic=\"" << input_topic << "\""
-      << " pick_pose_key=\"" << pick_pose_key << "\""
-      << " approach_pose_key=\"" << approach_pose_key << "\""
-      << " minimum_score=\"" << minimum_score << "\""
-      << " timeout=\"" << timeout << "\""
-      << " object_pose_key=\"" << object_pose_key << "\""
-      << " header_key=\"" << header_key << "\""
-      << " pick_transform=\"" << BT::convertToString(pick_transform) << "\""
-      << " approach_transform=\"" << BT::convertToString(approach_transform) << "\""
-      << " z_threshold_activation=\"" << (z_threshold_activation ? "true" : "false") << "\""
-      << " z_threshold=\"" << z_threshold << "\""
-      << " normalize_pose=\"" << (normalize_pose ? "true" : "false") << "\""
-      << " force_z_vertical=\"" << (force_z_vertical ? "true" : "false") << "\"";
-  xml << " />";
+  xml << buildFoundationPoseFetchTopicXML(
+    sequence_name + "_Fetch", input_topic, minimum_score, timeout, raw_pose_key, raw_header_key,
+    raw_detections_key);
+  xml << "\n";
+  xml << buildFoundationPoseAdaptXML(
+    sequence_name + "_Adapt", raw_pose_key, raw_header_key, pick_transform, approach_transform,
+    timeout, pick_pose_key, approach_pose_key, header_key, object_pose_key,
+    z_threshold_activation, z_threshold, normalize_pose, force_z_vertical);
 
   if (bounds_check) {
     if (bounds.size() != 6) {
@@ -344,6 +341,59 @@ std::string buildFoundationPoseSequenceXML(
   }
 
   xml << "</Sequence>";
+  return xml.str();
+}
+
+std::string buildFoundationPoseFetchTopicXML(
+  const std::string & node_name, const std::string & input_topic, double minimum_score,
+  double timeout, const std::string & raw_pose_key, const std::string & raw_header_key,
+  const std::string & raw_detections_key, const std::string & target_id)
+{
+  std::ostringstream xml;
+  xml << "<FoundationPoseFetchTopicNode"
+      << " name=\"" << node_name << "\""
+      << " input_topic=\"" << input_topic << "\""
+      << " minimum_score=\"" << minimum_score << "\""
+      << " timeout=\"" << timeout << "\""
+      << " raw_pose=\"{" << raw_pose_key << "}\""
+      << " raw_header=\"{" << raw_header_key << "}\"";
+
+  if (!target_id.empty()) {
+    xml << " target_id=\"" << target_id << "\"";
+  }
+  if (!raw_detections_key.empty()) {
+    xml << " raw_detections=\"{" << raw_detections_key << "}\"";
+  }
+
+  xml << " />";
+  return xml.str();
+}
+
+std::string buildFoundationPoseAdaptXML(
+  const std::string & node_name, const std::string & raw_pose_key,
+  const std::string & raw_header_key, const std::vector<double> & pick_transform,
+  const std::vector<double> & approach_transform, double timeout,
+  const std::string & pick_pose_key, const std::string & approach_pose_key,
+  const std::string & header_key, const std::string & object_pose_key,
+  bool z_threshold_activation, double z_threshold, bool normalize_pose, bool force_z_vertical)
+{
+  std::ostringstream xml;
+  xml << "<FoundationPoseAdaptPoseNode"
+      << " name=\"" << node_name << "\""
+      << " raw_pose=\"{" << raw_pose_key << "}\""
+      << " raw_header=\"{" << raw_header_key << "}\""
+      << " pick_pose_key=\"" << pick_pose_key << "\""
+      << " approach_pose_key=\"" << approach_pose_key << "\""
+      << " timeout=\"" << timeout << "\""
+      << " object_pose_key=\"" << object_pose_key << "\""
+      << " header_key=\"" << header_key << "\""
+      << " pick_transform=\"" << BT::convertToString(pick_transform) << "\""
+      << " approach_transform=\"" << BT::convertToString(approach_transform) << "\""
+      << " z_threshold_activation=\"" << (z_threshold_activation ? "true" : "false") << "\""
+      << " z_threshold=\"" << z_threshold << "\""
+      << " normalize_pose=\"" << (normalize_pose ? "true" : "false") << "\""
+      << " force_z_vertical=\"" << (force_z_vertical ? "true" : "false") << "\"";
+  xml << " />";
   return xml.str();
 }
 

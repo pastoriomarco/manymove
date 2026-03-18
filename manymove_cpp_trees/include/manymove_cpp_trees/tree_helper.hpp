@@ -89,6 +89,8 @@ inline void registerAllNodeTypes(BT::BehaviorTreeFactory & factory)
   factory.registerNodeType<SetEntityPoseNode>("SetEntityPoseNode");
   factory.registerNodeType<GetEntityPoseNode>("GetEntityPoseNode");
 
+  factory.registerNodeType<FoundationPoseFetchTopicNode>("FoundationPoseFetchTopicNode");
+  factory.registerNodeType<FoundationPoseAdaptPoseNode>("FoundationPoseAdaptPoseNode");
   factory.registerNodeType<FoundationPoseAlignmentNode>("FoundationPoseAlignmentNode");
 }
 
@@ -164,13 +166,13 @@ std::string buildMoveXML(
   int max_tries = 1);
 
 /**
- * @brief Build a self-contained sequence that subscribes to FoundationPose, selects a detection,
- *        aligns its pose, applies optional 6-DoF local transforms, and publishes results.
+ * @brief Build a self-contained sequence that fetches a FoundationPose result from the legacy
+ *        topic path, adapts the pose, applies optional 6-DoF local transforms, and publishes
+ *        results.
  *
- * The generated XML consists of a <Sequence> containing a single <FoundationPoseAlignmentNode>.
- * The node filters detections (by @p minimum_score and optional target filtering), transforms
- * the pose into a planning frame, optionally normalizes the orientation, applies a minimum-Z
- * clamp in the planning frame, then applies local transforms to the final outputs only.
+ * The generated XML consists of a <Sequence> containing a
+ * <FoundationPoseFetchTopicNode> followed by a <FoundationPoseAdaptPoseNode>.
+ * This keeps the builder signature stable while splitting fetch/unwrap from pose adaptation.
  *
  * @param sequence_name          Unique name for the wrapping <Sequence>.
  * @param input_topic            Topic publishing vision_msgs/Detection3DArray from FoundationPose.
@@ -213,6 +215,20 @@ std::string buildFoundationPoseSequenceXML(
   const std::string & object_pose_key, bool z_threshold_activation = false,
   double z_threshold = 0.0, bool normalize_pose = false, bool force_z_vertical = false,
   bool bounds_check = false, const std::vector<double> & bounds = {});
+
+std::string buildFoundationPoseFetchTopicXML(
+  const std::string & node_name, const std::string & input_topic, double minimum_score,
+  double timeout, const std::string & raw_pose_key, const std::string & raw_header_key,
+  const std::string & raw_detections_key = "", const std::string & target_id = "");
+
+std::string buildFoundationPoseAdaptXML(
+  const std::string & node_name, const std::string & raw_pose_key,
+  const std::string & raw_header_key, const std::vector<double> & pick_transform,
+  const std::vector<double> & approach_transform, double timeout,
+  const std::string & pick_pose_key, const std::string & approach_pose_key,
+  const std::string & header_key, const std::string & object_pose_key,
+  bool z_threshold_activation = false, double z_threshold = 0.0,
+  bool normalize_pose = false, bool force_z_vertical = false);
 
 /**
  * @brief Builds an XML snippet for a single object action node based on the provided ObjectAction.

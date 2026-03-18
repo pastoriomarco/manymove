@@ -143,3 +143,17 @@ TEST(TreeHelper, BuildMoveXMLSeedsBlackboardAndNodes)
   trajectory_msgs::msg::JointTrajectory traj0;
   EXPECT_TRUE(bb->get("trajectory_0", traj0));
 }
+
+TEST(TreeHelper, BuildFoundationPoseSequenceXMLUsesSplitNodes)
+{
+  std::string xml = manymove_cpp_trees::buildFoundationPoseSequenceXML(
+    "fp_seq", "/pose_estimation/output", {0.1, 0.0, 0.2, 0.0, 0.0, 0.0},
+    {0.0, 0.0, 0.3, 0.0, 0.0, 0.0}, 0.7, 2.0, "pick_pose", "approach_pose", "pose_header",
+    "object_pose", true, 0.05, true, false, true, {-1.0, -1.0, 0.0, 1.0, 1.0, 1.0});
+
+  EXPECT_NE(xml.find("FoundationPoseFetchTopicNode"), std::string::npos);
+  EXPECT_NE(xml.find("FoundationPoseAdaptPoseNode"), std::string::npos);
+  EXPECT_NE(xml.find("raw_pose=\"{fp_seq_foundationpose_raw_pose}\""), std::string::npos);
+  EXPECT_NE(xml.find("raw_header=\"{fp_seq_foundationpose_raw_header}\""), std::string::npos);
+  EXPECT_NE(xml.find("CheckPoseBounds"), std::string::npos);
+}
