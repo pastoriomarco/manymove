@@ -351,20 +351,20 @@ BT::NodeStatus PublishJointStateAction::tick()
 
   const auto N = names.size();
   auto broadcast_or_check = [&](std::vector<double> & v, const char * label) {
-    if (v.empty()) {
-      return;
-    }
-    if (v.size() == 1 && N > 1) {
-      v.assign(
+      if (v.empty()) {
+        return;
+      }
+      if (v.size() == 1 && N > 1) {
+        v.assign(
         N,
-        v[0]);         // broadcast single value
-    }
-    if (v.size() != N) {
-      throw BT::RuntimeError(
+        v[0]);           // broadcast single value
+      }
+      if (v.size() != N) {
+        throw BT::RuntimeError(
               std::string("PublishJointStateAction: '") + label +
               "' length must be 1 or equal to 'names' length");
-    }
-  };
+      }
+    };
 
   broadcast_or_check(pos, "positions");
   broadcast_or_check(vel, "velocities");

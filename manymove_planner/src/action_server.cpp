@@ -108,12 +108,12 @@ ManipulatorActionServer::ManipulatorActionServer(
   // report clear errors. This avoids tearing down the process during e.g. tests
   // or late-starting systems.
   auto warn_if_unavailable = [this](auto & client, const char * name) {
-    if (!client->service_is_ready()) {
-      RCLCPP_WARN(
+      if (!client->service_is_ready()) {
+        RCLCPP_WARN(
         node_->get_logger(),
         "Service '%s' not available at startup; will retry on demand.", name);
-    }
-  };
+      }
+    };
   warn_if_unavailable(unload_controller_client_, "/controller_manager/unload_controller");
   warn_if_unavailable(load_controller_client_, "/controller_manager/load_controller");
   warn_if_unavailable(switch_controller_client_, "/controller_manager/switch_controller");
@@ -956,14 +956,14 @@ bool ManipulatorActionServer::executeTrajectoryWithCollisionChecks(
   // Result callback: set the promise value based on execution result
   opts.result_callback = [this, result_promise, &collision_detected, &canceled_by_client](
     const auto & wrapped_result) {
-    if (wrapped_result.code == rclcpp_action::ResultCode::CANCELED) {
-      canceled_by_client.store(true);
-    }
-    bool success =
-      (!collision_detected.load()) &&
-      (wrapped_result.code == rclcpp_action::ResultCode::SUCCEEDED);
-    result_promise->set_value(success);
-  };
+      if (wrapped_result.code == rclcpp_action::ResultCode::CANCELED) {
+        canceled_by_client.store(true);
+      }
+      bool success =
+        (!collision_detected.load()) &&
+        (wrapped_result.code == rclcpp_action::ResultCode::SUCCEEDED);
+      result_promise->set_value(success);
+    };
 
   // 7) Ensure the FollowJointTrajectory action server is available, then send the goal
   if (!follow_joint_traj_client->wait_for_action_server(std::chrono::seconds(5))) {
