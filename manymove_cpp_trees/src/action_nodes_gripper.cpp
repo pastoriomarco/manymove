@@ -37,6 +37,28 @@ using namespace std::chrono_literals;
 namespace manymove_cpp_trees
 {
 
+namespace
+{
+
+void broadcastOrCheckJointValues(
+  std::vector<double> & values, std::size_t joint_count, const char * label)
+{
+  if (values.empty()) {
+    return;
+  }
+  if (values.size() == 1 && joint_count > 1) {
+    values.assign(joint_count, values.front());
+  }
+  if (values.size() != joint_count) {
+    std::string error_message = "PublishJointStateAction: '";
+    error_message += label;
+    error_message += "' length must be 1 or equal to 'names' length";
+    throw BT::RuntimeError(error_message);
+  }
+}
+
+}  // namespace
+
 // -------------------------------------------------
 // GripperCommandAction
 // -------------------------------------------------
@@ -350,25 +372,9 @@ BT::NodeStatus PublishJointStateAction::tick()
   }
 
   const auto N = names.size();
-  auto broadcast_or_check = [&](std::vector<double> & v, const char * label) {
-      if (v.empty()) {
-        return;
-      }
-      if (v.size() == 1 && N > 1) {
-        v.assign(
-        N,
-        v[0]);           // broadcast single value
-      }
-      if (v.size() != N) {
-        throw BT::RuntimeError(
-              std::string("PublishJointStateAction: '") + label +
-              "' length must be 1 or equal to 'names' length");
-      }
-    };
-
-  broadcast_or_check(pos, "positions");
-  broadcast_or_check(vel, "velocities");
-  broadcast_or_check(eff, "efforts");
+  broadcastOrCheckJointValues(pos, N, "positions");
+  broadcastOrCheckJointValues(vel, N, "velocities");
+  broadcastOrCheckJointValues(eff, N, "efforts");
 
   sensor_msgs::msg::JointState msg;
   bool stamp_now = true;

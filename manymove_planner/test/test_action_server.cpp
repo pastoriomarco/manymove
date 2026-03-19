@@ -73,11 +73,45 @@ class RobotTrajectory;
 
 namespace
 {
-const bool kConfigureRmwEnv = []() {
-    setenv("ROS_LOCALHOST_ONLY", "1", 1);
-    setenv("RCUTILS_LOGGING_USE_STDOUT", "1", 1);
-    return true;
-  }();
+bool configureRmwEnv()
+{
+  setenv("ROS_LOCALHOST_ONLY", "1", 1);
+  setenv("RCUTILS_LOGGING_USE_STDOUT", "1", 1);
+  return true;
+}
+
+bool isTruthyEnvValue(const char * value)
+{
+  if (!value) {
+    return false;
+  }
+  std::string normalized(value);
+  for (auto & c : normalized) {
+    c = static_cast<char>(std::tolower(c));
+  }
+  return normalized == "1" || normalized == "true" || normalized == "yes";
+}
+
+bool isFalsyEnvValue(const char * value)
+{
+  if (!value) {
+    return false;
+  }
+  std::string normalized(value);
+  for (auto & c : normalized) {
+    c = static_cast<char>(std::tolower(c));
+  }
+  return normalized == "0" || normalized == "false" || normalized == "no";
+}
+
+void appendUnique(std::vector<std::string> & values, const std::string & value)
+{
+  if (std::find(values.begin(), values.end(), value) == values.end()) {
+    values.push_back(value);
+  }
+}
+
+const bool kConfigureRmwEnv = configureRmwEnv();
 }  // namespace
 
 using FollowJointTrajectory = control_msgs::action::FollowJointTrajectory;
@@ -639,50 +673,21 @@ protected:
     // legacy opt-in var MANYMOVE_PLANNER_ENABLE_RCL_TESTS=0|false.
     const char * disable_env = std::getenv("MANYMOVE_PLANNER_DISABLE_RCL_TESTS");
     const char * enable_env = std::getenv("MANYMOVE_PLANNER_ENABLE_RCL_TESTS");
-    auto is_truthy = [](const char * v) {
-        if (!v) {
-          return false;
-        }
-        std::string s(v);
-        for (auto & c : s) {
-          c = static_cast<char>(std::tolower(c));
-        }
-        return s == "1" || s == "true" || s == "yes";
-      };
-    auto is_falsy = [](const char * v) {
-        if (!v) {
-          return false;
-        }
-        std::string s(v);
-        for (auto & c : s) {
-          c = static_cast<char>(std::tolower(c));
-        }
-        return s == "0" || s == "false" || s == "no";
-      };
 
-    if (is_truthy(disable_env) || is_falsy(enable_env)) {
+    if (isTruthyEnvValue(disable_env) || isFalsyEnvValue(enable_env)) {
       rcl_ready_ = false;
       init_error_ = "ROS-backed tests disabled by environment";
       return;
     }
     const char * current_rmw = std::getenv("RMW_IMPLEMENTATION");
     std::vector<std::string> rmw_candidates;
-    auto append_unique = [&rmw_candidates](const std::string & rmw) {
-        if (
-          std::find(
-          rmw_candidates.begin(), rmw_candidates.end(),
-          rmw) == rmw_candidates.end())
-        {
-          rmw_candidates.push_back(rmw);
-        }
-      };
     if (current_rmw && current_rmw[0] != '\0') {
-      append_unique(current_rmw);
+      appendUnique(rmw_candidates, current_rmw);
     } else {
-      append_unique("rmw_fastrtps_cpp");
+      appendUnique(rmw_candidates, "rmw_fastrtps_cpp");
     }
-    append_unique("rmw_fastrtps_cpp");
-    append_unique("rmw_cyclonedds_cpp");
+    appendUnique(rmw_candidates, "rmw_fastrtps_cpp");
+    appendUnique(rmw_candidates, "rmw_cyclonedds_cpp");
 
     std::string errors;
     for (const auto & rmw : rmw_candidates) {

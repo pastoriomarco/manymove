@@ -80,6 +80,30 @@ void setSwitchActivateAsap(RequestT & request, bool value)
 {
   setSwitchActivateAsapImpl(request, value, 0);
 }
+
+template<typename ClientT>
+void warnIfServiceUnavailable(const rclcpp::Logger & logger, ClientT & client, const char * name)
+{
+  if (!client->service_is_ready()) {
+    RCLCPP_WARN(
+      logger, "Service '%s' not available at startup; will retry on demand.", name);
+  }
+}
+
+void setTrajectoryExecutionResult(
+  const rclcpp_action::ClientGoalHandle<control_msgs::action::FollowJointTrajectory>::WrappedResult
+  & wrapped_result,
+  const std::shared_ptr<std::promise<bool>> & result_promise,
+  const std::atomic<bool> & collision_detected, std::atomic<bool> & canceled_by_client)
+{
+  if (wrapped_result.code == rclcpp_action::ResultCode::CANCELED) {
+    canceled_by_client.store(true);
+  }
+  const bool success =
+    (!collision_detected.load()) &&
+    (wrapped_result.code == rclcpp_action::ResultCode::SUCCEEDED);
+  result_promise->set_value(success);
+}
 }  // namespace
 
 ManipulatorActionServer::ManipulatorActionServer(
@@ -107,17 +131,15 @@ ManipulatorActionServer::ManipulatorActionServer(
   // The async helpers below check readiness before sending requests and will
   // report clear errors. This avoids tearing down the process during e.g. tests
   // or late-starting systems.
-  auto warn_if_unavailable = [this](auto & client, const char * name) {
-      if (!client->service_is_ready()) {
-        RCLCPP_WARN(
-        node_->get_logger(),
-        "Service '%s' not available at startup; will retry on demand.", name);
-      }
-    };
-  warn_if_unavailable(unload_controller_client_, "/controller_manager/unload_controller");
-  warn_if_unavailable(load_controller_client_, "/controller_manager/load_controller");
-  warn_if_unavailable(switch_controller_client_, "/controller_manager/switch_controller");
-  warn_if_unavailable(configure_controller_client_, "/controller_manager/configure_controller");
+  warnIfServiceUnavailable(
+    node_->get_logger(), unload_controller_client_, "/controller_manager/unload_controller");
+  warnIfServiceUnavailable(
+    node_->get_logger(), load_controller_client_, "/controller_manager/load_controller");
+  warnIfServiceUnavailable(
+    node_->get_logger(), switch_controller_client_, "/controller_manager/switch_controller");
+  warnIfServiceUnavailable(
+    node_->get_logger(), configure_controller_client_,
+    "/controller_manager/configure_controller");
 
   // Subscribe to /joint_states to let ExecuteTrajectory handle the collision check feedback
   joint_states_sub_ = node_->create_subscription<sensor_msgs::msg::JointState>(
@@ -954,16 +976,9 @@ bool ManipulatorActionServer::executeTrajectoryWithCollisionChecks(
     };
 
   // Result callback: set the promise value based on execution result
-  opts.result_callback = [this, result_promise, &collision_detected, &canceled_by_client](
-    const auto & wrapped_result) {
-      if (wrapped_result.code == rclcpp_action::ResultCode::CANCELED) {
-        canceled_by_client.store(true);
-      }
-      bool success =
-        (!collision_detected.load()) &&
-        (wrapped_result.code == rclcpp_action::ResultCode::SUCCEEDED);
-      result_promise->set_value(success);
-    };
+  opts.result_callback = std::bind(
+    setTrajectoryExecutionResult, std::placeholders::_1, result_promise,
+    std::cref(collision_detected), std::ref(canceled_by_client));
 
   // 7) Ensure the FollowJointTrajectory action server is available, then send the goal
   if (!follow_joint_traj_client->wait_for_action_server(std::chrono::seconds(5))) {
