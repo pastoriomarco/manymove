@@ -5,6 +5,7 @@ set -euo pipefail
 WORKSPACE_ROOT="${MANYMOVE_WS:-/opt/manymove_ws}"
 SRC_DIR="${WORKSPACE_ROOT}/src"
 INSTALL_SETUP="${WORKSPACE_ROOT}/install/setup.bash"
+TOPIC_BASED_OVERLAY="/opt/manymove/topic_based_ros2_control/install/setup.bash"
 GROOT_DIR_DEFAULT="Groot"
 GROOT_DIR="${GROOT_SOURCE_DIR:-${SRC_DIR}/${GROOT_DIR_DEFAULT}}"
 GROOT_REPO_DEFAULT="https://github.com/pastoriomarco/Groot.git"
@@ -126,6 +127,9 @@ fi
 
 set +u
 source "/opt/ros/${ROS_DISTRO}/setup.bash"
+if [[ -f "${TOPIC_BASED_OVERLAY}" ]]; then
+  source "${TOPIC_BASED_OVERLAY}"
+fi
 set -u
 
 if [[ "$(id -u)" -eq 0 && ! -f /etc/ros/rosdep/sources.list.d/20-default.list ]]; then
@@ -141,7 +145,7 @@ if ! rosdep update; then
 fi
 
 log "Installing system dependencies with rosdep."
-if ! rosdep install --from-paths "${SRC_DIR}" --ignore-src --rosdistro "${ROS_DISTRO}" -y -r; then
+if ! rosdep install --from-paths "${SRC_DIR}" --ignore-src --rosdistro "${ROS_DISTRO}" -y -r --skip-keys topic_based_ros2_control; then
   log "Warning: rosdep install encountered issues. Check the output above."
 fi
 
@@ -166,6 +170,9 @@ log "Invoking ${BUILD_CMD[*]}."
 if command -v gosu >/dev/null 2>&1 && id "${USERNAME:-}" >/dev/null 2>&1 && [[ "$(id -u)" -eq 0 ]]; then
   gosu "${USERNAME}" bash -lc "set -eo pipefail
 source /opt/ros/${ROS_DISTRO}/setup.bash
+if [[ -f "${TOPIC_BASED_OVERLAY}" ]]; then
+  source "${TOPIC_BASED_OVERLAY}"
+fi
 cd \"${WORKSPACE_ROOT}\"
 ${BUILD_CMD[*]}"
 else

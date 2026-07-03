@@ -56,14 +56,16 @@ RUN gosu "${USERNAME}" bash -lc "set -euo pipefail; \
     git rev-parse HEAD > \"${MANYMOVE_WS}/.xarm_ros2_commit\""
 
 RUN source /opt/ros/${ROS_DISTRO}/setup.bash && \
+    source /opt/manymove/topic_based_ros2_control/install/setup.bash && \
     cd ${MANYMOVE_WS} && \
     apt-get update && \
     rosdep update && \
-    rosdep install --from-paths src --ignore-src --rosdistro ${ROS_DISTRO} -y && \
+    rosdep install --from-paths src --ignore-src --rosdistro ${ROS_DISTRO} -y --skip-keys topic_based_ros2_control && \
     apt-get clean && rm -rf /var/lib/apt/lists/*
 
 RUN gosu "${USERNAME}" bash -lc "set -eo pipefail; \
     source /opt/ros/${ROS_DISTRO}/setup.bash; \
+    source /opt/manymove/topic_based_ros2_control/install/setup.bash; \
     cd ${MANYMOVE_WS}; \
     parallel_args=\"\"; \
     if [[ -n \"${MANYMOVE_COLCON_WORKERS}\" && \"${MANYMOVE_COLCON_WORKERS}\" =~ ^[0-9]+$ && \"${MANYMOVE_COLCON_WORKERS}\" -gt 0 ]]; then \

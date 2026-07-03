@@ -13,6 +13,8 @@ ARG MANYMOVE_COMMIT=""
 ARG GROOT_REPO=https://github.com/pastoriomarco/Groot.git
 ARG GROOT_BRANCH=master
 ARG GROOT_COMMIT=""
+ARG TOPIC_BASED_ROS2_CONTROL_REPO=https://github.com/karanchahal-nv/topic_based_ros2_control.git
+ARG TOPIC_BASED_ROS2_CONTROL_REF=7ee291ab13adba52ab5889deb9e520009fe2283d
 
 ENV DEBIAN_FRONTEND=noninteractive \
     MANYMOVE_WS=/opt/manymove_ws \
@@ -32,7 +34,9 @@ ENV GROOT_SOURCE_DIR=${MANYMOVE_WS}/src/Groot
 
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 
-# Add Isaac ROS apt repo for Jazzy to install topic-based-ros2-control
+# Keep the Isaac ROS apt repo available for Jazzy-only runtime dependencies.
+# topic_based_ros2_control is built from source below because the Debian package
+# is not reliably published for every supported Jazzy architecture.
 RUN set -euo pipefail; \
     if [[ "${ROS_DISTRO}" == "jazzy" ]]; then \
         apt-get update && \
@@ -87,7 +91,6 @@ RUN apt-get update && \
         ros-${ROS_DISTRO}-ur-moveit-config \
         ros-${ROS_DISTRO}-robotiq-description \
         ros-${ROS_DISTRO}-robotiq-controllers \
-        ros-${ROS_DISTRO}-topic-based-ros2-control \
         ros-${ROS_DISTRO}-simulation-interfaces \
         ros-${ROS_DISTRO}-vision-msgs \
         ros-${ROS_DISTRO}-moveit-ros-planning-interface \
@@ -95,6 +98,29 @@ RUN apt-get update && \
         bash-completion \
         python3-argcomplete && \
     rm -rf /var/lib/apt/lists/*
+
+RUN set -eux; \
+    mkdir -p /tmp/topic_based_ros2_control_ws/src /opt/manymove/topic_based_ros2_control; \
+    git clone "${TOPIC_BASED_ROS2_CONTROL_REPO}" /tmp/topic_based_ros2_control_ws/src/topic_based_ros2_control; \
+    cd /tmp/topic_based_ros2_control_ws/src/topic_based_ros2_control; \
+    git checkout "${TOPIC_BASED_ROS2_CONTROL_REF}"; \
+    cd /tmp/topic_based_ros2_control_ws; \
+    set +u; \
+    source /opt/ros/${ROS_DISTRO}/setup.bash; \
+    set -u; \
+    parallel_args=(); \
+    if [[ -n "${MANYMOVE_COLCON_WORKERS}" && "${MANYMOVE_COLCON_WORKERS}" =~ ^[0-9]+$ && "${MANYMOVE_COLCON_WORKERS}" -gt 0 ]]; then \
+        parallel_args=(--parallel-workers "${MANYMOVE_COLCON_WORKERS}"); \
+        export CMAKE_BUILD_PARALLEL_LEVEL=${MANYMOVE_COLCON_WORKERS}; \
+    fi; \
+    colcon build \
+      --merge-install \
+      --install-base /opt/manymove/topic_based_ros2_control/install \
+      "${parallel_args[@]}" \
+      --packages-select topic_based_ros2_control \
+      --cmake-args -DBUILD_TESTING=OFF; \
+    mkdir -p /opt/manymove/topic_based_ros2_control/install/include; \
+    rm -rf /tmp/topic_based_ros2_control_ws
 
 # Pre-register completions for ros2/colcon so every shell gets tab completion.
 RUN set -euo pipefail; \
@@ -184,6 +210,7 @@ RUN gosu ${USERNAME} bash -lc "set -euo pipefail; \
     git rev-parse HEAD > ${MANYMOVE_WS}/.groot_commit"
 
 RUN source /opt/ros/${ROS_DISTRO}/setup.bash && \
+    source /opt/manymove/topic_based_ros2_control/install/setup.bash && \
     cd ${MANYMOVE_WS} && \
     if [ ! -f /etc/ros/rosdep/sources.list.d/20-default.list ]; then rosdep init; fi && \
     apt-get update && \
@@ -192,6 +219,7 @@ RUN source /opt/ros/${ROS_DISTRO}/setup.bash && \
     apt-get clean && rm -rf /var/lib/apt/lists/*
 RUN gosu ${USERNAME} bash -lc "set -eo pipefail; \
 source /opt/ros/${ROS_DISTRO}/setup.bash; \
+source /opt/manymove/topic_based_ros2_control/install/setup.bash; \
 cd ${MANYMOVE_WS}; \
 parallel_args=\"\"; \
 if [[ -n \"${MANYMOVE_COLCON_WORKERS}\" && \"${MANYMOVE_COLCON_WORKERS}\" =~ ^[0-9]+$ && \"${MANYMOVE_COLCON_WORKERS}\" -gt 0 ]]; then \
