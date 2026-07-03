@@ -215,7 +215,7 @@ RUN source /opt/ros/${ROS_DISTRO}/setup.bash && \
     if [ ! -f /etc/ros/rosdep/sources.list.d/20-default.list ]; then rosdep init; fi && \
     apt-get update && \
     rosdep update && \
-    rosdep install --from-paths src --ignore-src --rosdistro ${ROS_DISTRO} -y -r && \
+    rosdep install --from-paths src --ignore-src --rosdistro ${ROS_DISTRO} -y -r --skip-keys topic_based_ros2_control && \
     apt-get clean && rm -rf /var/lib/apt/lists/*
 RUN gosu ${USERNAME} bash -lc "set -eo pipefail; \
 source /opt/ros/${ROS_DISTRO}/setup.bash; \
