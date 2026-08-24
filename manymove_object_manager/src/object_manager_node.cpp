@@ -60,6 +60,10 @@ ObjectManagerNode::ObjectManagerNode()
   this->declare_parameter<std::string>("frame_id", "world");
   frame_id_ = this->get_parameter("frame_id").as_string();
 
+  // Keep one listener alive so its buffer remains populated between pose requests.
+  tf_buffer_ = std::make_unique<tf2_ros::Buffer>(this->get_clock());
+  tf_listener_ = std::make_unique<tf2_ros::TransformListener>(*tf_buffer_);
+
   // Initialize publisher
   collision_object_publisher_ =
     this->create_publisher<moveit_msgs::msg::CollisionObject>("/collision_object", 10);
@@ -844,11 +848,8 @@ void ObjectManagerNode::handleGetObjectPoseExecute(
   // 3. If needed, transform from 'object_frame' => 'goal->link_name'
   //    only if the user specifies a different link_name
   if (!goal->link_name.empty() && goal->link_name != object_frame) {
-    tf2_ros::Buffer tfBuffer(this->get_clock());
-    tf2_ros::TransformListener tfListener(tfBuffer, this, true);
-
     try {
-      geometry_msgs::msg::TransformStamped transformStamped = tfBuffer.lookupTransform(
+      geometry_msgs::msg::TransformStamped transformStamped = tf_buffer_->lookupTransform(
         goal->link_name,  // target frame
         object_frame,     // source frame
         tf2::TimePointZero, tf2::durationFromSec(1.0));

@@ -331,6 +331,9 @@ private:
 
   std::string frame_id_;  ///< Reference frame in which collision objects are defined.
 
+  std::unique_ptr<tf2_ros::Buffer> tf_buffer_;  ///< Persistent buffer for TF transforms.
+  std::unique_ptr<tf2_ros::TransformListener> tf_listener_;  ///< Populates the TF buffer.
+
   // Callback groups
   rclcpp::CallbackGroup::SharedPtr service_callback_group_;  ///< Callback group for the
   // /get_planning_scene service.
