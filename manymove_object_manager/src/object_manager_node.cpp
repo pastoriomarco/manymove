@@ -803,6 +803,7 @@ void ObjectManagerNode::handleGetObjectPoseExecute(
 {
   auto goal = goal_handle->get_goal();
   auto result = std::make_shared<GetObjectPose::Result>();
+  const rclcpp::Time pose_request_time = this->get_clock()->now();
 
   if (!ensurePlanningSceneService(std::chrono::seconds(0))) {
     schedulePlanningSceneRetry();
@@ -849,10 +850,49 @@ void ObjectManagerNode::handleGetObjectPoseExecute(
   //    only if the user specifies a different link_name
   if (!goal->link_name.empty() && goal->link_name != object_frame) {
     try {
+      // Report how current the newest cached transform is. Keep this diagnostic lookup
+      // separate from the timestamped lookup below: a transform requested at an exact
+      // time is stamped with that requested time and cannot by itself reveal cache age.
+      try {
+        const auto latest_transform = tf_buffer_->lookupTransform(
+          goal->link_name, object_frame, tf2::TimePointZero, tf2::durationFromSec(0.0));
+        const rclcpp::Time freshness_checked_at = this->get_clock()->now();
+        const rclcpp::Time latest_transform_time(
+          latest_transform.header.stamp, this->get_clock()->get_clock_type());
+
+        RCLCPP_INFO(
+          this->get_logger(),
+          "TF freshness '%s' <- '%s': request=%.9f, latest=%.9f, "
+          "cache_age=%.1f ms, latest_minus_request=%.1f ms",
+          goal->link_name.c_str(), object_frame.c_str(), pose_request_time.seconds(),
+          latest_transform_time.seconds(),
+          (freshness_checked_at - latest_transform_time).seconds() * 1000.0,
+          (latest_transform_time - pose_request_time).seconds() * 1000.0);
+      } catch (const tf2::TransformException & ex) {
+        RCLCPP_WARN(
+          this->get_logger(), "Could not inspect TF freshness for '%s' <- '%s': %s",
+          goal->link_name.c_str(), object_frame.c_str(), ex.what());
+      }
+
+      const rclcpp::Time lookup_started = this->get_clock()->now();
       geometry_msgs::msg::TransformStamped transformStamped = tf_buffer_->lookupTransform(
         goal->link_name,  // target frame
         object_frame,     // source frame
-        tf2::TimePointZero, tf2::durationFromSec(1.0));
+        pose_request_time, rclcpp::Duration::from_seconds(1.0));
+      const rclcpp::Time lookup_finished = this->get_clock()->now();
+      const rclcpp::Time transform_time(
+        transformStamped.header.stamp, this->get_clock()->get_clock_type());
+
+      RCLCPP_INFO(
+        this->get_logger(),
+        "TF used for pose '%s' <- '%s': request=%.9f, stamp=%.9f, wait=%.1f ms, "
+        "translation=(%.6f, %.6f, %.6f), rotation=(%.6f, %.6f, %.6f, %.6f)",
+        goal->link_name.c_str(), object_frame.c_str(), pose_request_time.seconds(),
+        transform_time.seconds(), (lookup_finished - lookup_started).seconds() * 1000.0,
+        transformStamped.transform.translation.x, transformStamped.transform.translation.y,
+        transformStamped.transform.translation.z, transformStamped.transform.rotation.x,
+        transformStamped.transform.rotation.y, transformStamped.transform.rotation.z,
+        transformStamped.transform.rotation.w);
 
       // Apply that transform
       geometry_msgs::msg::Pose transformed_pose;
